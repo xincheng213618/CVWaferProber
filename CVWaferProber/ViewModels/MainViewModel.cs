@@ -175,7 +175,7 @@ namespace CVWaferProber.ViewModels
             List<CVMappingData> mappingData = null;
             //HZCCS2000MappingData data = new HZCCS2000MappingData();
             //HZCCS2000MappingDataTool.LoadMapping("D:\\work\\cv\\CVWaferProber\\ChipMapping\\WaferDevice.cc", ref data);
-            var dataMapping = S2000MappingDataReader.Read("D:\\work\\cv\\CVWaferProber\\ChipMapping\\WaferDevice.cc");
+            var dataMapping = S2000MappingDataReader.Read("E:\\work\\cv\\New版\\晶圆台\\src\\CVWaferProber\\ChipMapping\\WaferDevice.cc");
             // 转换Die数据为ViewModel
             List<ChipMapping.Models.HZCC.DieViewModel> _dieViewModels = dataMapping.DieTestResults?.Select((die, index) => DieDataConverter.ConvertToViewModel(die, index)).ToList();
             //new List<DieViewModel>();
