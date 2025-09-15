@@ -1,0 +1,9 @@
+﻿################################################################################
+# 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
+################################################################################
+
+/.vs/CVWaferProber
+/ChipMapping/bin/Debug/net8.0-windows
+/ChipMapping/obj
+/CVWaferProber/bin/Debug/net8.0-windows
+/CVWaferProber/obj

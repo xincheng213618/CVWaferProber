@@ -1,0 +1,13 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <sys:String x:Key="BtnOpenFile">Browse</sys:String>
+    <sys:String x:Key="BtnClear">Clear</sys:String>
+    <sys:String x:Key="BtnRefresh">Refresh</sys:String>
+    <sys:String x:Key="BtnStartAutoTest">StartAutoTest</sys:String>
+    <sys:String x:Key="BtnStopAutoTest">StopAutoTest</sys:String>
+    <sys:String x:Key="BtnRefreshStatus">StatusRefresh</sys:String>
+    <sys:String x:Key="ChkColorStatus">EnableColorStatus</sys:String>
+    <sys:String x:Key="DataGridHeaderName">Name</sys:String>
+    <sys:String x:Key="DataGridHeaderEmail">Email</sys:String>
+</ResourceDictionary>
