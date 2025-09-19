@@ -7,3 +7,14 @@
 /ChipMapping/obj
 /CVWaferProber/bin/Debug/net8.0-windows
 /CVWaferProber/obj
+/.vs
+/CVImageView/obj
+/CVImageView/bin/Debug/net8.0-windows
+/CVDB/bin
+/CVDB/obj
+/ChipMapping/bin/Release/net8.0-windows
+/CVWaferProber/bin/Release/net8.0-windows
+/CVWaferProber.Core/bin
+/CVWaferProber.Core/obj
+/CVWPFCameraImage/bin
+/CVWPFCameraImage/obj
