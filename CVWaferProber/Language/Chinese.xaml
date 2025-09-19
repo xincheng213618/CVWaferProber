@@ -7,6 +7,8 @@
     <sys:String x:Key="BtnStartAutoTest">开启自动测试</sys:String>
     <sys:String x:Key="BtnStopAutoTest">停止自动测试</sys:String>
     <sys:String x:Key="BtnRefreshStatus">刷新结果列表状态</sys:String>
+    <sys:String x:Key="BtnFlowLoad">流程加载</sys:String>
+    <sys:String x:Key="BtnReRegist">登录</sys:String>
     <sys:String x:Key="ChkColorStatus">启用结果状态颜色</sys:String>
     <sys:String x:Key="DataGridHeaderName">姓名</sys:String>
     <sys:String x:Key="DataGridHeaderEmail">电子邮件</sys:String>

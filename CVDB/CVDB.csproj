@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FreeSql.Provider.MySql" Version="3.5.213" />
+    <PackageReference Include="FreeSql.Provider.MySqlConnector" Version="3.5.213" />
+    <PackageReference Include="log4net" Version="2.0.17" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\CVWindowsService\CV.DBEntities\CV.DBEntities.csproj" />
+    <ProjectReference Include="..\..\..\..\CVWindowsService\CVCommCore\CVCommCore.csproj" />
+    <ProjectReference Include="..\..\..\..\CVWindowsService\CVMysqlLib\CVMysqlLib.csproj" />
+  </ItemGroup>
+
+</Project>

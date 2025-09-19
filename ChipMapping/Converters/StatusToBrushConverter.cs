@@ -1,5 +1,5 @@
-﻿using ChipMapping.Models;
-using ChipMapping.Models.Enums;
+﻿using CVWaferProber.Core.Models;
+using CVWaferProber.Core.Models.Enums;
 using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media;

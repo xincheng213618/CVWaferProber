@@ -1,4 +1,5 @@
 ﻿using ChipMapping.ViewModels;
+using CVWaferProber.Core.ViewModels;
 using CVWaferProber.ViewModels;
 using log4net;
 using System.Windows;

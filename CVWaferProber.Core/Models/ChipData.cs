@@ -1,6 +1,6 @@
-﻿using ChipMapping.Models.Enums;
+﻿using CVWaferProber.Core.Models.Enums;
 
-namespace ChipMapping.Models
+namespace CVWaferProber.Core.Models
 {
     public class ChipData
     {
@@ -10,7 +10,7 @@ namespace ChipMapping.Models
         public double RawX { get; set; }
         public double RawY { get; set; }
         public ChipStatus Status { get; set; }
-        public float Lv { get; set; }
+        public double? DataValue { get; set; } = null;
         public int Row { get; set; }
         public int Column { get; set; }
     }

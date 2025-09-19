@@ -6,23 +6,31 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\CVWindowsService\CV.DBEntities\CV.DBEntities.csproj" />
     <ProjectReference Include="..\ChipMapping\ChipMapping.csproj" />
+    <ProjectReference Include="..\CVDB\CVDB.csproj" />
+    <ProjectReference Include="..\CVWaferProber.Core\CVWaferProber.Core.csproj" />
+    <ProjectReference Include="..\CVWPFCameraImage\CVWPFCameraImage.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Models\" />
     <Folder Include="Services\" />
     <Folder Include="Resources\" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="log4net" Version="2.0.17" />
+    <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.9.0.20240103" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="cfg\MySql.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="log4net.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

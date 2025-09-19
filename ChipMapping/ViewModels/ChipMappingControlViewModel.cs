@@ -1,5 +1,7 @@
 ﻿using ChipMapping.Models;
-using ChipMapping.Models.Enums;
+using CVWaferProber.Core.Models;
+using CVWaferProber.Core.Models.Enums;
+using CVWaferProber.Core.ViewModels;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -30,8 +32,10 @@ namespace ChipMapping.ViewModels
         private int _columns = 40;
         private double _horizontalSpacing = 20;
         private double _verticalSpacing = 16;
-        private double _startX = 50;
-        private double _startY = 50;
+        private double _startX = 5;
+        private double _startY = 5;
+        private int _screenWidth = 640;
+        private int _screenHeight = 480;
 
         private bool selfClick = true;
 
@@ -327,8 +331,8 @@ namespace ChipMapping.ViewModels
 
         private void UpdateCanvasSize()
         {
-            CanvasWidth = StartX + 800;
-            CanvasHeight = StartY + 600;
+            CanvasWidth = _screenWidth;
+            CanvasHeight = _screenHeight;
             OnPropertyChanged(nameof(CanvasWidth));
             OnPropertyChanged(nameof(CanvasHeight));
         }
@@ -378,7 +382,7 @@ namespace ChipMapping.ViewModels
                     X = x,
                     Y = y,
                     Status = status,
-                    Lv = lv,
+                    DataValue = lv,
                     Row = row,
                     Column = col
                 };
@@ -423,7 +427,7 @@ namespace ChipMapping.ViewModels
                         X = x,
                         Y = y, 
                         Status = status,
-                        Lv = lv,
+                        DataValue = lv,
                         Row = row,
                         Column = col
                     };
@@ -448,7 +452,7 @@ namespace ChipMapping.ViewModels
                 var Hei = dataRange.MaxPosY - dataRange.MinPosY;
 
                 // 创建屏幕（假设为800x600像素）
-                System.Drawing.Size screenSize = new System.Drawing.Size(750, 550);
+                System.Drawing.Size screenSize = new System.Drawing.Size(_screenWidth-10, _screenHeight-10);
 
                 // 定义数学坐标系范围（x从-10到10，y从-5到5）
                 RectangleF mathBounds = new RectangleF((int)dataRange.MinPosX, (int)dataRange.MinPosY, (int)Wid, (int)Hei);
@@ -472,15 +476,15 @@ namespace ChipMapping.ViewModels
                         RawX = posMath.AxisPosX,
                         RawY = posMath.AxisPosY,
                         Status = status,
-                        Lv = lv,
+                        DataValue = lv,
                         Row = posMath.MapY,
                         Column = posMath.MapX,
                     };
 
                     var chipViewModel = new ChipViewModel(chipData)
                     {
-                        Width = 14,
-                        Height = 10
+                        Width = 12,
+                        Height = 9
                     };
 
                     Chips.Add(chipViewModel);

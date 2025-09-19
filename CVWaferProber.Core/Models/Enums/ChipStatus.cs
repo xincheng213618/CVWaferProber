@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChipMapping.Models.Enums
+namespace CVWaferProber.Core.Models.Enums
 {
     public enum ChipStatus
     {
@@ -15,7 +15,7 @@ namespace ChipMapping.Models.Enums
         // 2: 检测OK的mapping           绿
         OK,
         // 3: AOI外观检测NG的mapping    红
-        AOI_NG ,
+        AOI_NG,
         // 4: 定位NG的mapping           橙
         DW_NG,
         // 5: 完全不亮的mapping         灰

@@ -1,5 +1,6 @@
-﻿using ChipMapping.Models;
-using ChipMapping.Models.Enums;
+﻿using CVWaferProber.Core.Models;
+using CVWaferProber.Core.Models.Enums;
+using CVWaferProber.Core.ViewModels;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -9,6 +10,8 @@ namespace ChipMapping.ViewModels
     public class ChipViewModel : ViewModelBase
     {
         private ChipData? _chipData;
+        public ChipData? ChipData { get => _chipData; private set { _chipData = value; } }
+
         private Point _position;
         private Point _raw_position;
         //private Point _map_position;
@@ -33,7 +36,7 @@ namespace ChipMapping.ViewModels
         public uint? Id => _chipData?.Id;
         public ChipStatus? Status => _chipData?.Status;
         public int? Row => _chipData?.Row;
-        public float? Lv => _chipData?.Lv;
+        public double? DataValue => _chipData?.DataValue;
         public int? Column => _chipData?.Column;
 
         public Point RawPosition
@@ -117,6 +120,7 @@ namespace ChipMapping.ViewModels
         public void SetStatus(ChipStatus status)
         {
             _chipData.Status = status;
+            if (status == ChipStatus.WAITING) _chipData.DataValue = null;
             OnPropertyChanged(nameof(Status));         
         }
         private void BlinkTimer_Tick(object? sender, System.EventArgs e)
@@ -140,11 +144,11 @@ namespace ChipMapping.ViewModels
 
         public string ToolTip =>
             $"Die ID: {Id}\n" +
-            $"Position(Row/Y,Col/X): \n({Row}, {Column})\n" +
+            $"Row/Y,Col/X: \n({Row}, {Column})\n" +
             $"Screen(X,Y): \n({Position.X:F0}, {Position.Y:F0})\n" +
             $"Original(X,Y): \n({RawPosition.X:F3}, {RawPosition.Y:F3})\n" +
             $"Status: {Status}\n" +
-            $"Brightness: {Lv}\n";
+            $"Brightness: {string.Format("{0:F4}",DataValue)}\n";
             //$"尺寸: {Width}×{Height}";
     }
 }
