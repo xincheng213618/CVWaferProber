@@ -20,3 +20,8 @@
 /CVWPFCameraImage/obj
 /CVWPFSpectrometerCtrl/obj
 /CVWPFSpectrometerCtrl/bin
+/CVWPFCamImageCtrl/bin/Debug/net8.0-windows
+/CVWPFCamImageCtrl/obj
+/CVWPFSpectrumControl/bin/Debug/net8.0-windows
+/CVWPFSpectrumControl/obj
+/LargeImageViewer
