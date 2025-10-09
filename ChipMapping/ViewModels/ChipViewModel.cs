@@ -120,7 +120,7 @@ namespace ChipMapping.ViewModels
         public void SetStatus(ChipStatus status)
         {
             _chipData.Status = status;
-            if (status == ChipStatus.WAITING) _chipData.DataValue = null;
+            if (status == ChipStatus.WAITING) { _chipData.DataValue = null; }
             OnPropertyChanged(nameof(Status));         
         }
         private void BlinkTimer_Tick(object? sender, System.EventArgs e)

@@ -79,7 +79,7 @@ namespace CVWaferProber.Core.Restful.DTO
         public string Version { get; set; }
     }
 
-    public class RespDataFlowResultDTO<T>
+    public class RespDataBaseFlowResultDTO
     {
         /// <summary>
         /// 
@@ -105,13 +105,19 @@ namespace CVWaferProber.Core.Restful.DTO
         /// 
         /// </summary>
         public int TotalTime { get; set; }
+        [JsonIgnore]
+        public bool IsSuccess { get => ResultCode.HasValue ? ResultCode.Value == 0 : false; }
+        [JsonIgnore]
+        public bool IsFinished { get => ResultCode.HasValue; }
+
+    }
+    public class RespDataFlowResultDTO<T> : RespDataBaseFlowResultDTO
+    {
+
         /// <summary>
         /// 
         /// </summary>
         public List<T> Result { get; set; }
-
-        [JsonIgnore]
-        public bool IsSuccess { get => ResultCode.HasValue ? ResultCode.Value==0 : false; }
     }
 
 

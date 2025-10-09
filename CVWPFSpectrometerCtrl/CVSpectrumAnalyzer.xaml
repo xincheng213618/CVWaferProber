@@ -1,0 +1,270 @@
+﻿<UserControl x:Class="CVWPFSpectrometerCtrl.CVSpectrumAnalyzer"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:oxy="http://oxyplot.org/wpf"
+             xmlns:sp="clr-namespace:CVWPFSpectrumControl;assembly=CVWPFSpectrumControl"
+             xmlns:wpf="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
+             xmlns:local="clr-namespace:CVWPFSpectrometerCtrl.ViewModels"
+             mc:Ignorable="d">
+    <UserControl.DataContext>
+        <local:CVSpectrumViewModel/>
+    </UserControl.DataContext>
+    <UserControl.Resources>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+
+        <StackPanel Grid.Row="0"  Orientation="Horizontal" Margin="0">
+            <Button x:Name="btnConnect" Content="连接设备" Width="80" Margin="5" Command="{Binding DevConnectCommand}"/>
+            <Button x:Name="btnStart" Content="测试" Width="80" Margin="5" Command="{Binding DevTestCommand}"/>
+            <Button x:Name="btnExport" Content="导出数据" Width="80" Margin="5" Command="{Binding ExportCommand}"/>
+        </StackPanel>
+
+        <!-- Tab区域 -->
+        <TabControl Grid.Row="1"  SelectedIndex="{Binding SelectedTabIndex}" Margin="5">
+            <!-- 光谱分析Tab -->
+            <TabItem Header="光谱分析">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="8*"/>
+                        <RowDefinition Height="2*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- 图表区域 -->
+                    <oxy:PlotView Model="{Binding PlotModel}" Grid.Row="0" Margin="5" />
+
+                    <!-- DataGrid区域 -->
+                    <DataGrid Grid.Row="1" Margin="5"
+                        x:Name="measurementsGrid"
+                        ItemsSource="{Binding Measurements}"
+                        SelectedItem="{Binding SelectedMeasurement}"
+                        AutoGenerateColumns="False"
+                        IsReadOnly="True"
+                        SelectionMode="Single"
+                        SelectionUnit="FullRow"
+                        CanUserAddRows="False"
+                        CanUserDeleteRows="False"
+                        CanUserReorderColumns="False"
+                        CanUserResizeRows="False"
+                        CanUserSortColumns="True"
+                        GridLinesVisibility="All"
+                        RowHeight="25">
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="测量批次" Binding="{Binding MeasurementId}" Width="80"/>
+                            <DataGridTextColumn Header="时间" Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}" Width="120"/>
+                            <DataGridTextColumn Header="电压/V" Binding="{Binding V, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="电流/I" Binding="{Binding I, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="亮度(cd/m2)" Binding="{Binding Luminance, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="色坐标x" Binding="{Binding CIE_x, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="色坐标y" Binding="{Binding CIE_y, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="色坐标u" Binding="{Binding CIE_u, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="色坐标v" Binding="{Binding CIE_v, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="色温(K)" Binding="{Binding CCT, StringFormat='F1'}" Width="80"/>
+                            <DataGridTextColumn Header="主波长" Binding="{Binding PeakWavelength, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="峰值波长" Binding="{Binding PeakIntensity, StringFormat='F4'}" Width="80"/>
+                        </DataGrid.Columns>
+
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="LightBlue"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="光谱分析2">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="8*"/>
+                        <RowDefinition Height="2*"/>
+                    </Grid.RowDefinitions>
+
+                  
+                        <!-- 图表区域 -->
+                        <!--<sp:SpectrumControl x:Name="SpectralDisplay" Grid.Row="0" Background="#FF252526"
+                                         BorderBrush="#FF555555"
+                                         BorderThickness="1"
+                                         ShowSurface="True" ShowGrid="True" Margin="5" />-->
+            
+                    <!--<oxy:PlotView Model="{Binding PlotModel}" Grid.Row="0" Margin="5" />-->
+                    <!--<wpf:WpfPlot Name="SpectrumPlot" Grid.Row="0" Margin="5"/>-->
+                    <ContentControl Grid.Row="0" Content="{Binding PlotControl}" Margin="5"/>
+                    <!-- DataGrid区域 -->
+                    <DataGrid Grid.Row="1" Margin="5"
+              x:Name="measurementsGrid2"
+              ItemsSource="{Binding Measurements}"
+              SelectedItem="{Binding SelectedMeasurement}"
+              AutoGenerateColumns="False"
+              IsReadOnly="True"
+              SelectionMode="Single"
+              SelectionUnit="FullRow"
+              CanUserAddRows="False"
+              CanUserDeleteRows="False"
+              CanUserReorderColumns="False"
+              CanUserResizeRows="False"
+              CanUserSortColumns="True"
+              GridLinesVisibility="All"
+              RowHeight="25">
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="测量批次" Binding="{Binding MeasurementId}" Width="80"/>
+                            <DataGridTextColumn Header="时间" Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}" Width="120"/>
+                            <DataGridTextColumn Header="电压/V" Binding="{Binding V, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="电流/I" Binding="{Binding I, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="亮度(cd/m2)" Binding="{Binding Luminance, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="色坐标x" Binding="{Binding CIE_x, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="色坐标y" Binding="{Binding CIE_y, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="色坐标u" Binding="{Binding CIE_u, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="色坐标v" Binding="{Binding CIE_v, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="色温(K)" Binding="{Binding CCT, StringFormat='F1'}" Width="80"/>
+                            <DataGridTextColumn Header="主波长" Binding="{Binding PeakWavelength, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="峰值波长" Binding="{Binding PeakIntensity, StringFormat='F4'}" Width="80"/>
+                        </DataGrid.Columns>
+
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="LightBlue"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+            <!-- IV特性Tab -->
+            <TabItem Header="IV">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="8*"/>
+                        <RowDefinition Height="2*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- IV图表区域 -->
+                    <oxy:PlotView Model="{Binding IVPlotModel}" Grid.Row="0" Margin="5" />
+
+                    <!-- IV DataGrid区域 -->
+                    <DataGrid Grid.Row="1" Margin="5"
+                        ItemsSource="{Binding IVMeasurements}"
+                        AutoGenerateColumns="False"
+                        IsReadOnly="True"
+                        SelectionMode="Single"
+                        SelectionUnit="FullRow"
+                        CanUserAddRows="False"
+                        CanUserDeleteRows="False"
+                        CanUserReorderColumns="False"
+                        CanUserResizeRows="False"
+                        CanUserSortColumns="True"
+                        GridLinesVisibility="All"
+                        RowHeight="25">
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="序号" Binding="{Binding No}" Width="50"/>
+                            <DataGridTextColumn Header="时间" Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}" Width="120"/>
+                            <DataGridTextColumn Header="电压/V" Binding="{Binding Voltage, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="电流/A" Binding="{Binding Current, StringFormat='F4'}" Width="80"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- IL特性Tab -->
+            <TabItem Header="IL">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="8*"/>
+                        <RowDefinition Height="2*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- IL图表区域 -->
+                    <oxy:PlotView Model="{Binding ILPlotModel}" Grid.Row="0" Margin="5" />
+
+                    <!-- IL DataGrid区域 -->
+                    <DataGrid Grid.Row="1" Margin="5"
+                        ItemsSource="{Binding ILMeasurements}"
+                        AutoGenerateColumns="False"
+                        IsReadOnly="True"
+                        SelectionMode="Single"
+                        SelectionUnit="FullRow"
+                        CanUserAddRows="False"
+                        CanUserDeleteRows="False"
+                        CanUserReorderColumns="False"
+                        CanUserResizeRows="False"
+                        CanUserSortColumns="True"
+                        GridLinesVisibility="All"
+                        RowHeight="25">
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="序号" Binding="{Binding No}" Width="50"/>
+                            <DataGridTextColumn Header="时间" Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}" Width="120"/>
+                            <DataGridTextColumn Header="电流/mA" Binding="{Binding Current, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="亮度/cd/m2" Binding="{Binding Luminance, StringFormat='F4'}" Width="80"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+            <!-- IVLCamera特性Tab -->
+            <TabItem Header="IVLCamera">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="8*"/>
+                        <RowDefinition Height="2*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- 图像区域 -->
+                    <Border Grid.Row="0" BorderBrush="Gray" BorderThickness="1" Margin="5">
+                        <Image Source="{Binding IVLCameraImageSrc}"/>
+                    </Border>
+                    <!-- IVLCamera DataGrid区域 -->
+                    <DataGrid x:Name="ivlCameraGrid" Grid.Row="1" Margin="5"
+                        ItemsSource="{Binding IVLCameraMeasurements}"
+                        SelectedItem="{Binding SelectedCameraMeasurement}"                              
+                        AutoGenerateColumns="False"
+                        IsReadOnly="True"
+                        SelectionMode="Single"
+                        SelectionUnit="FullRow"
+                        CanUserAddRows="False"
+                        CanUserDeleteRows="False"
+                        CanUserReorderColumns="False"
+                        CanUserResizeRows="False"
+                        CanUserSortColumns="True"
+                        GridLinesVisibility="All"
+                        RowHeight="25">
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="序号" Binding="{Binding No}" Width="50"/>
+                            <DataGridTextColumn Header="时间" Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}" Width="130"/>
+                            <DataGridTextColumn Header="电压/V" Binding="{Binding V, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="电流/I" Binding="{Binding I, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="亮度(cd/m2)" Binding="{Binding Luminance, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn Header="图像" Binding="{Binding ImageFile}" Width="480"/>
+                        </DataGrid.Columns>
+
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="LightBlue"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

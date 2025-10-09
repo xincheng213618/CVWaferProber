@@ -3,16 +3,22 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:ChipMapping.Views;assembly=ChipMapping"
         xmlns:cvimg="clr-namespace:CVWPFCameraImage;assembly=CVWPFCameraImage"
+        xmlns:cvsp="clr-namespace:CVWPFSpectrometerCtrl;assembly=CVWPFSpectrometerCtrl"
         xmlns:cv="clr-namespace:CVWaferProber.Converters"
+        xmlns:ccv="clr-namespace:CVWaferProber.Core.Converters;assembly=CVWaferProber.Core"
+        xmlns:avalonDock="clr-namespace:AvalonDock;assembly=AvalonDock"
+        xmlns:avalonDockLayout="clr-namespace:AvalonDock.Layout;assembly=AvalonDock"
         xmlns:vm="clr-namespace:CVWaferProber.ViewModels"
         Title="晶圆台系统" Height="1000" Width="1200">
 
     <Window.Resources>
         <cv:StatusToColorConverter x:Key="StatusColorConverter"/>
+        <ccv:NotBooleanConverter x:Key="NotBooleanConverter"/>
     </Window.Resources>
     <Window.DataContext>
         <vm:MainViewModel/>
     </Window.DataContext>
+    
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="6*"/>
@@ -47,7 +53,7 @@
 
                     <!-- 在局部资源中定义转换器 -->
                     <Border.Resources>
-                        <cv:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+                        <ccv:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
                     </Border.Resources>
                     
                     <StackPanel Orientation="Vertical">
@@ -144,6 +150,12 @@
                                     <Button Content="{DynamicResource BtnStopAutoTest}" 
                                             Width="110" 
                                             Command="{Binding StopAutoTestCommand}" 
+                                            Margin="0,0,10,0"
+                                            BorderThickness="0"/>
+
+                                    <Button Content="{DynamicResource BtnStartManTest}" 
+                                            Width="110" 
+                                            Command="{Binding StartManTestCommand}" 
                                             BorderThickness="0"/>
 
                                     <Button Content="{DynamicResource BtnRefreshStatus}" 
@@ -152,7 +164,21 @@
                                             BorderThickness="0"
                                             Margin="10,0,0,0"/>
 
+
                                     <CheckBox Content="{DynamicResource ChkColorStatus}" IsChecked="{Binding IsColorEnabled}" Margin="10,5,10,0"/>
+
+                                    <Button Content="{DynamicResource BtnIVLTest}" 
+                                            Width="110" 
+                                            Command="{Binding IVLTestCommand}" 
+                                            BorderThickness="0"
+                                            Margin="10,0,0,0"/>
+
+                                    <!-- 替换原来的CheckBox为两个RadioButton -->
+                                    <StackPanel Orientation="Horizontal" Margin="10,5,10,0">
+                                        <RadioButton Content="光谱仪" IsChecked="{Binding IsIVLCameraEnabled, Converter={StaticResource NotBooleanConverter}}" GroupName="IVLDeviceGroup" Margin="0,0,10,0"/>
+                                        <RadioButton Content="相机" IsChecked="{Binding IsIVLCameraEnabled}" GroupName="IVLDeviceGroup"/>
+                                    </StackPanel>
+
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Height="30" Margin="5,5">
                                 </StackPanel>
@@ -228,8 +254,6 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="相机图像" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" Margin="5"/>
-
                     <cvimg:CVCameraImageViewer x:Name="MyImageControl" DataContext="{Binding CustomImageVM}"/>
                 </Grid>
             </Border>
@@ -237,14 +261,14 @@
             <!-- 右下图表 -->
             <Border Grid.Row="1" BorderBrush="Gray" BorderThickness="1" Margin="5">
                 <Grid>
-                    <Grid.RowDefinitions>
+                    <!--<Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
+                    </Grid.RowDefinitions>-->
 
-                    <TextBlock Grid.Row="0" Text="测试结果图表" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" Margin="5"/>
+                    <!--<TextBlock Grid.Row="0" Text="测试结果图表" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" Margin="5"/>-->
 
-                    <ContentControl Grid.Row="1" Content="{Binding ChartViewModel}" Margin="5"/>
+                    <cvsp:CVSpectrumAnalyzer x:Name="spaly" Grid.Row="1" DataContext="{Binding CustomSPVM}"/>
                 </Grid>
             </Border>
         </Grid>

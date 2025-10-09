@@ -55,11 +55,33 @@ namespace CVWaferProber.Models
             return null;
         }
 
-        public RespDataRunFlowDTO RcRunFlows(int fid, string serialNumber)
+        public RespDataRunFlowDTO RcRunFlowById(int fid, string serialNumber)
         {
             if (RegDTO != null)
             {
                 var contentResp = restful.RcRunFlow(fid, serialNumber, RegDTO.Token.AccessToken);
+                if (!string.IsNullOrEmpty(contentResp))
+                {
+                    RespDTO<RespDataRunFlowDTO>? respData = JsonConvert.DeserializeObject<RespDTO<RespDataRunFlowDTO>>(contentResp);
+                    if (respData != null && respData.IsSuccess)
+                    {
+                        if (logger.IsInfoEnabled) logger.InfoFormat("RunFlow ok => {0}", JsonConvert.SerializeObject(respData.Data));
+                        return respData.Data;
+                    }
+                }
+                if (logger.IsErrorEnabled) logger.ErrorFormat("RunFlow failed => {0}", contentResp);
+            }
+            else
+            {
+                if (logger.IsErrorEnabled) logger.ErrorFormat("Rc UnRegist.");
+            }
+            return null;
+        } 
+        public RespDataRunFlowDTO RcRunFlowByName(string fname, string serialNumber)
+        {
+            if (RegDTO != null)
+            {
+                var contentResp = restful.RcRunFlow(fname, serialNumber, RegDTO.Token.AccessToken);
                 if (!string.IsNullOrEmpty(contentResp))
                 {
                     RespDTO<RespDataRunFlowDTO>? respData = JsonConvert.DeserializeObject<RespDTO<RespDataRunFlowDTO>>(contentResp);
@@ -117,6 +139,54 @@ namespace CVWaferProber.Models
                     }
                 }
                 if (logger.IsErrorEnabled) logger.ErrorFormat("Get POI Result failed => {0}", contentResp);
+
+            }
+            else
+            {
+                if (logger.IsErrorEnabled) logger.ErrorFormat("Rc UnRegist.");
+            }
+            return null;
+        }
+
+        public RespDataFlowResultDTO<AlgResultItem>? RcGetFlowResult_SP(string serialNumber)
+        {
+            if (RegDTO != null)
+            {
+                var contentResp = restful.RcGetFlowResult_SP(serialNumber, RegDTO.Token.AccessToken);
+                if (!string.IsNullOrEmpty(contentResp))
+                {
+                    RespDTO<RespDataFlowResultDTO<AlgResultItem>>? respData = JsonConvert.DeserializeObject<RespDTO<RespDataFlowResultDTO<AlgResultItem>>>(contentResp);
+                    if (respData != null && respData.IsSuccess)
+                    {
+                        if (logger.IsInfoEnabled) logger.InfoFormat("GetFlow Result ok => {0}", JsonConvert.SerializeObject(respData.Data));
+                        return respData.Data;
+                    }
+                }
+                if (logger.IsErrorEnabled) logger.ErrorFormat("GetFlow Result failed => {0}", contentResp);
+
+            }
+            else
+            {
+                if (logger.IsErrorEnabled) logger.ErrorFormat("Rc UnRegist.");
+            }
+            return null;
+        }
+
+        public RespDTO<RespDataFlowResultDTO<AlgResultItem>>? RcGetFlowResult_AOI(string serialNumber)
+        {
+            if (RegDTO != null)
+            {
+                var contentResp = restful.RcGetFlowResult_AOI(serialNumber, RegDTO.Token.AccessToken);
+                if (!string.IsNullOrEmpty(contentResp))
+                {
+                    RespDTO<RespDataFlowResultDTO<AlgResultItem>>? respData = JsonConvert.DeserializeObject<RespDTO<RespDataFlowResultDTO<AlgResultItem>>>(contentResp);
+                    if (respData != null && respData.IsSuccess)
+                    {
+                        if (logger.IsInfoEnabled) logger.InfoFormat("GetFlow Result ok => {0}", JsonConvert.SerializeObject(respData.Data));
+                    }
+                    return respData;
+                }
+                if (logger.IsErrorEnabled) logger.ErrorFormat("GetFlow Result failed => {0}", contentResp);
 
             }
             else

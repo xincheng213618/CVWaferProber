@@ -5,12 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:ChipMapping.ViewModels"
         xmlns:conv="clr-namespace:ChipMapping.Converters"
+        xmlns:ccv="clr-namespace:CVWaferProber.Core.Converters;assembly=CVWaferProber.Core"
         xmlns:fa6="http://schemas.fontawesome.com/icons/fonts"
         mc:Ignorable="d"      
         Background="White">
 
     <UserControl.Resources>
-        <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <ccv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         <conv:StatusToBrushConverter x:Key="StatusToBrushConverter"/>
         <conv:EnumBooleanConverter x:Key="EnumBooleanConverter"/>
         <conv:PositionConverter x:Key="PositionConverter"/>

@@ -1,5 +1,4 @@
-﻿using ChipMapping.Models;
-using CVWaferProber.Core.Models;
+﻿using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
 using System.Globalization;

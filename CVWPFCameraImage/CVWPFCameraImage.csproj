@@ -21,4 +21,10 @@
     <ProjectReference Include="..\CVWaferProber.Core\CVWaferProber.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="CVCommCore">
+      <HintPath>..\DLL\CVCommCore.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

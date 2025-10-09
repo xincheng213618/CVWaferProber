@@ -13,10 +13,12 @@ namespace CVWaferProber.ViewModels
         public int? MapX => chipViewModel?.Column;
         public int? MapY => chipViewModel?.Row;
         public string? SerialNumber {  get; set; }
+        public bool IsIVLCameraEnabled {  get; set; }
 
         public DieViewModel(ChipViewModel die)
         {
             this.chipViewModel = die;
+            this.IsIVLCameraEnabled = false;
         }
 
         public ChipStatus? Status  => chipViewModel?.Status;
@@ -30,7 +32,7 @@ namespace CVWaferProber.ViewModels
         public void ChangeStatus(ChipStatus status, bool updateTime = false)
         {
             if (updateTime) EndTestTime = DateTime.Now;
-            if (status == ChipStatus.TESTING)
+            if (status == ChipStatus.TESTING || status == ChipStatus.IVL_TESTING)
             {
                 StartTestTime = DateTime.Now;
             }
@@ -41,6 +43,28 @@ namespace CVWaferProber.ViewModels
             }
             chipViewModel?.SetStatus(status);
             if (chipViewModel != null) chipViewModel.IsSelected = true;
+            FirePropertyChanged();
+        }
+
+        public void UnSelected()
+        {
+            if (chipViewModel != null) chipViewModel.IsSelected = false;
+        }
+
+        public void ResetStatus()
+        {
+            UnSelected();
+            chipViewModel?.SetStatus(ChipStatus.WAITING);
+            StartTestTime = null; 
+            EndTestTime = null;
+            TotalTime = null;
+            SerialNumber = null;
+            chipViewModel.ChipData.DataValue = null;
+            FirePropertyChanged();
+        }
+
+        private void FirePropertyChanged()
+        {
             OnPropertyChanged(nameof(DisplayStatus));
             OnPropertyChanged(nameof(StartTestTime));
             OnPropertyChanged(nameof(EndTestTime));
@@ -48,11 +72,6 @@ namespace CVWaferProber.ViewModels
             OnPropertyChanged(nameof(SerialNumber));
             OnPropertyChanged(nameof(TotalTime));
             OnPropertyChanged(nameof(DataValue));
-        }
-
-        public void UnSelected()
-        {
-            if (chipViewModel != null) chipViewModel.IsSelected = false;
         }
     }
 }

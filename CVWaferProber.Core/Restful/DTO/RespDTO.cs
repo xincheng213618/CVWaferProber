@@ -7,16 +7,19 @@ using System.Threading.Tasks;
 
 namespace CVWaferProber.Core.Restful.DTO
 {
-    public class RespDTO<T>
+    public class RespDTO<T> : BaseRespDTO
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public T Data { get; set; }
+    }
+     public class BaseRespDTO
     {
         /// <summary>
         /// 
         /// </summary>
         public int Code { get; set; }
-        /// <summary>
-        /// 
-        /// </summary>
-        public T Data { get; set; }
         /// <summary>
         /// 
         /// </summary>

@@ -2,7 +2,7 @@
 using System.Windows;
 using System.Windows.Data;
 
-namespace CVWaferProber.Converters
+namespace CVWaferProber.Core.Converters
 {
     public class BooleanToVisibilityConverter : IValueConverter
     {

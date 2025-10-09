@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace ChipMapping.Converters
+namespace CVWaferProber.Core.Converters
 {
     public class NullToVisibilityConverter : IValueConverter
     {

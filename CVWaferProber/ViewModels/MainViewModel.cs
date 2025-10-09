@@ -1,13 +1,24 @@
 ﻿using ChipMapping.Models;
 using ChipMapping.Models.HZCC;
 using ChipMapping.ViewModels;
+using CVCommCore;
+using CVDB.Services.Algorithm;
+using CVDB.Services.Buz;
+using CVMQTTLib;
+using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
+using CVWaferProber.Core.Restful.DTO;
 using CVWaferProber.Core.ViewModels;
 using CVWaferProber.Models;
 using CVWaferProber.Utils;
 using CVWPFCameraImage.ViewModels;
+using CVWPFCamImageCtrl;
+using CVWPFSpectrometerCtrl.ViewModels;
 using Microsoft.Win32;
+using Newtonsoft.Json;
 using System.Collections.ObjectModel;
+using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -17,9 +28,12 @@ namespace CVWaferProber.ViewModels
     public class MainViewModel : ViewModelBase
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(MainViewModel));
+
         public static MainViewModel? Instance { get; private set; }
-        public ChipMappingControlViewModel CustomVM { get; set; }
-        public CVCameraImageViewModel? CustomImageVM { get; set; }
+        public ChipMappingControlViewModel CustomMappingVM { get; set; }
+        public CVCamImagerViewModel? CustomImageVM { get; set; }
+        //public CVCameraImageViewModel? CustomImageVM { get; set; }
+        public CVSpectrumViewModel? CustomIVLVM { get; set; }
 
         private FlowViewModel? _selectedFlow;
         public FlowViewModel? SelectedFlow
@@ -29,36 +43,78 @@ namespace CVWaferProber.ViewModels
             {
                 if (_selectedFlow != value)
                 {
-                    _selectedFlow = value;
-                    OnPropertyChanged(); // 通知选中项变更
+                    SetProperty(ref _selectedFlow, value);
                 }
             }
         }
+        private WPFlowViewModel? _selectedWPFlow;
+        public WPFlowViewModel? SelectedWPFlow
+        {
+            get => _selectedWPFlow;
+            set
+            {
+                if (_selectedWPFlow != value)
+                {
+                    SetProperty(ref _selectedWPFlow, value);
+                }
+            }
+        }
+
         public ICommand LoadMappingFileCommand { get; }
         public ICommand ClearMappingCommand { get; }
         public ICommand FlowLoadCommand { get; }
         public ICommand StartAutoTestCommand { get; }
         public ICommand StopAutoTestCommand { get; }
+        public ICommand StartManTestCommand { get; }
+        public ICommand IVLTestCommand { get; }
         public ICommand OpenMappingFileCommand { get; }
         public ICommand RefreshStatusCommand { get; }
+        public ICommand ResetStatusCommand { get; }
         public ICommand RCRegCommand { get; }
         public ObservableCollection<DieViewModel> TestResults { get; } = new ObservableCollection<DieViewModel>();
         public RangeEnabledObservableCollection<FlowViewModel> FlowItems { get; } = new RangeEnabledObservableCollection<FlowViewModel>();
+        public ObservableCollection<WPFlowViewModel> WPFlows { get; } = new ObservableCollection<WPFlowViewModel>();
         public string MappingCsvFilePath { get; set; }
         public string ProberId { get; set; }
         public bool IsColorEnabled { get; set; }
 
         private bool _isProcessing = false;
-        private long Timestamp { get; set; }
+
+        private string _Timestamp;
+        public string Timestamp { get => _Timestamp;
+            set
+            {
+                SetProperty(ref _Timestamp, value);
+            }
+        }
 
         public bool IsNotProcessing => !_isProcessing;
-        public bool IsProcessing { 
+        public bool IsProcessing {
             get => _isProcessing;
-            set 
+            set
             {
-                _isProcessing = value;
-                OnPropertyChanged(nameof(IsProcessing));
-            } 
+                SetProperty(ref _isProcessing, value);
+            }
+        }
+
+        private bool _isIVLCameraEnabled;
+        public bool IsIVLCameraEnabled
+        {
+            get => _isIVLCameraEnabled;
+            set
+            {
+                SetProperty(ref _isIVLCameraEnabled, value);
+            }
+        }
+
+        private bool _isAutoSN;
+        public bool IsAutoSN
+        {
+            get => _isAutoSN;
+            set
+            {
+                SetProperty(ref _isAutoSN, value);
+            }
         }
 
         private readonly Random _random = new Random();
@@ -66,7 +122,7 @@ namespace CVWaferProber.ViewModels
         private DataGrid? _dataGrid; // 引用DataGrid
         private DispatcherTimer? _simAutoTestTimer;
         private RCRestModel rcModel;
-        private AlgResultModel algResultModel;
+        //private AlgResultModel algResultModel;
         /// <summary>
         /// false 外部控件关联触发
         /// </summary>
@@ -88,32 +144,41 @@ namespace CVWaferProber.ViewModels
                     {
                         if (selfClick)
                         {
-                            CustomVM.SetSelectedChip((uint)die.Id);
-                            ImageResultDisplay(die);
+                            CustomMappingVM.SetSelectedChip((uint)die.Id);
+                            DieResultDisplay(die);
                         }
                         else selfClick = true;
                     }
                 }
             }
         }
+
+        private CVMQTTWPClient mqtt;
         public MainViewModel()
         {
             Instance = this;
             _selectedItem = null;
             _selectedFlow = null;
             _dataGrid = null;
+            _isIVLCameraEnabled = false;
+            _isAutoSN = true;
             rcModel = new RCRestModel();
-            algResultModel = new AlgResultModel();
-            CustomVM = new ChipMappingControlViewModel();
-            CustomImageVM = new CVCameraImageViewModel();
+            //algResultModel = new AlgResultModel();
+            CustomMappingVM = new ChipMappingControlViewModel();
+            CustomImageVM = new CVCamImagerViewModel();
+            CustomIVLVM = new CVSpectrumViewModel();
+            //
             RefreshStatusCommand = new RelayCommand(RefreshStatus);
             OpenMappingFileCommand = new RelayCommand(OpenMappingFile);
             StartAutoTestCommand = new RelayCommand(StartAutoTest);
             StopAutoTestCommand = new RelayCommand(StopAutoTest);
+            StartManTestCommand = new RelayCommand(StartManTest);
+            ResetStatusCommand = new RelayCommand(ResetStatus);
             LoadMappingFileCommand = new RelayCommand(_ => LoadMappingFileFromCsv());
             ClearMappingCommand = new RelayCommand(_ => ClearMapping());
-            FlowLoadCommand = new RelayCommand(_ => LoadFlow());
+            FlowLoadCommand = new RelayCommand(_ => LoadBuzWPFlows());
             RCRegCommand = new RelayCommand(_ => RCReg());
+            //
             ProberId = "CVProber01";
             MappingCsvFilePath = "E:\\work\\cv\\New版\\晶圆台\\CVWaferProber\\ChipMapping\\ScanData_sc.csv";
 
@@ -122,7 +187,17 @@ namespace CVWaferProber.ViewModels
 
             LoadMappingFileFromCsv();
 
-            RCReg();
+            LoadBuzWPFlows();
+
+            mqtt = CVMQTTWPClient.Instance.Init("RC_local");
+        }
+
+        private void ResetStatus(object? obj)
+        {
+            foreach (var die in TestResults)
+            {
+                die.ResetStatus();
+            }
         }
 
         private void RCReg()
@@ -131,9 +206,24 @@ namespace CVWaferProber.ViewModels
             if (bR)
             {
                 LoadFlow();
+                //LoadBuzWPFlows();
             }
         }
+        private void LoadBuzWPFlows()
+        {
+            rcModel.RcRegist();
 
+            var flows = WaferProberService.LoadFlows();
+            WPFlows.Clear();
+            if (flows != null && flows.Count > 0)
+            {
+                foreach (var flow in flows)
+                {
+                    WPFlows.Add(new WPFlowViewModel(flow));
+                }
+                if (WPFlows.Count > 0) SelectedWPFlow = WPFlows[0];
+            }
+        }
         private void LoadFlow()
         {
             var flows = rcModel.RcLoadFlows();
@@ -172,7 +262,7 @@ namespace CVWaferProber.ViewModels
                 {
                     if (resp.IsSuccess)
                     {
-                        ImageResultDisplay(dieViewModel);
+                        DieResultDisplay(dieViewModel);
                         dieViewModel.ChangeStatus(ChipStatus.OK, true);
                     }
                     else if (resp.ResultStatus == "Pending")
@@ -187,11 +277,23 @@ namespace CVWaferProber.ViewModels
                 }
             }
         }
-
-        private void ImageResultDisplay(DieViewModel dieViewModel)
+        private void IVLResultDisplay(DieViewModel dieViewModel)
         {
-            CustomImageVM?.ClearImageResult();
-            CustomImageVM?.LoadImageResult(dieViewModel.chipViewModel.ChipData, dieViewModel.SerialNumber);
+            CustomIVLVM?.ClearResult();
+            CustomIVLVM?.LoadData(dieViewModel.SerialNumber, dieViewModel.IsIVLCameraEnabled);
+        }
+        private void DieResultDisplay(DieViewModel dieViewModel)
+        {
+            if (dieViewModel.Status == ChipStatus.IVL_TESTING || dieViewModel.Status == ChipStatus.IVL_COMPLETED)
+            {
+                IVLResultDisplay(dieViewModel);
+            }
+            else
+            {
+                CustomImageVM?.ClearImageResult();
+                CustomImageVM?.LoadImageResult(dieViewModel.chipViewModel.ChipData, dieViewModel.SerialNumber);
+            }
+
             //Task.Factory.StartNew(() => CustomImageVM?.LoadImageResult(dieViewModel.chipViewModel.ChipData, dieViewModel.SerialNumber));
         }
         private void NextTestingDie()
@@ -207,10 +309,10 @@ namespace CVWaferProber.ViewModels
 
         private void StartTestingDie(DieViewModel dieViewModel)
         {
-            string sn = BuildSN();
+            string sn = BuildFlowSN(dieViewModel);
             dieViewModel.SerialNumber = sn;
             dieViewModel.ChangeStatus(ChipStatus.TESTING);
-            Task.Factory.StartNew(() => rcModel.RcRunFlows(_selectedFlow.Id, sn));
+            Task.Factory.StartNew(() => rcModel.RcRunFlowByName(_selectedWPFlow.Name, sn));
         }
 
         /// <summary>
@@ -223,19 +325,93 @@ namespace CVWaferProber.ViewModels
             TestResults[CurTestDieIdx].ChangeStatus(status, true);
 
             DieViewModel dieViewModel = TestResults[CurTestDieIdx];
-            Task.Factory.StartNew(() => ImageResultDisplay(dieViewModel));
+            Task.Factory.StartNew(() => DieResultDisplay(dieViewModel));
 
             NextTestingDie();
         }
 
-        private string BuildSN()
+        private void StartTestingIVL(DieViewModel dieViewModel)
         {
-            return string.Format("{0}_{1}_{2:D4}[{3},{4}]", ProberId, Timestamp, Snowflake.Instance.NextSeqId(), TestResults[CurTestDieIdx].MapY, TestResults[CurTestDieIdx].MapX);
+            string sn = BuildFlowSN(dieViewModel);
+            dieViewModel.SerialNumber = sn;
+            dieViewModel.ChangeStatus(ChipStatus.IVL_TESTING);
+            CustomIVLVM?.ClearResult();
+            IsIVLCameraEnabled = _selectedWPFlow.FlowType == CVWaferProberFlowType.IVL_Camera;
+            dieViewModel.IsIVLCameraEnabled = IsIVLCameraEnabled;
+            if (IsIVLCameraEnabled) CustomIVLVM.SelectedTab = CVWPFSpectrometerCtrl.Models.TabType.IVLCamera;
+            else CustomIVLVM.SelectedTab = CVWPFSpectrometerCtrl.Models.TabType.Spectrum;
+            //Task.Factory.StartNew(() => RunIVLFlowAsync(_selectedFlow.Id, sn));
+            Task task = RunIVLFlowAsync(_selectedWPFlow.Name, dieViewModel);
         }
-        private void StartFlow()
+        private async Task RunIVLFlowAsync(string fname, DieViewModel dieViewModel)
         {
-            if (_selectedFlow != null)
+            try
             {
+                Task<RespDataBaseFlowResultDTO> resp = AsyncRunIVLFlow(fname, dieViewModel.SerialNumber);
+                await resp;
+                if (resp.Result.IsSuccess)
+                {
+                    IVLResultDisplay(dieViewModel);
+                    dieViewModel.ChangeStatus(ChipStatus.IVL_COMPLETED, true);
+                }
+                else
+                {
+                    dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // 处理取消操作
+                if (logger.IsDebugEnabled) logger.Debug("IVL Flow execution was cancelled.");
+            }
+            catch (Exception ex)
+            {
+                dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
+                // 处理其他异常
+                if (logger.IsDebugEnabled) logger.Debug($"IVL Flow execution failed: {ex.Message}");
+                throw;
+            }
+            finally
+            {
+                EndTesting();
+            }
+        }
+        private async Task<RespDataBaseFlowResultDTO> AsyncRunIVLFlow(string fname, string sn)
+        {
+            using var cancellationTokenSource = new CancellationTokenSource();
+            var cancellationToken = cancellationTokenSource.Token;
+
+            // 启动流程
+            rcModel.RcRunFlowByName(fname, sn);
+
+            // 异步轮询结果，避免阻塞UI线程
+           return await PollFlowResultWithRxAsync(sn, cancellationToken);
+        }
+        private async Task<RespDataBaseFlowResultDTO> PollFlowResultWithRxAsync(string sn, CancellationToken cancellationToken)
+        {
+           return await Observable.Interval(TimeSpan.FromSeconds(1))
+                .Select(_ => rcModel.RcGetFlowResult_AOI(sn))
+                .Where(resp => resp != null)
+                .FirstAsync(resp => (resp.IsSuccess && resp.Data.IsFinished) || !resp.IsSuccess)
+                .Select(resp =>
+                {
+                    if (!resp.IsSuccess) throw new InvalidOperationException($"Flow execution failed: {resp.Message}");
+                    return resp.Data;
+                })
+                .ToTask(cancellationToken);       
+        }
+        private string BuildFlowSN(DieViewModel dieViewModel)
+        {
+            if (string.IsNullOrEmpty(ProberId)) return string.Format("{1}[{3},{4}]", ProberId, Timestamp, Snowflake.Instance.NextSeqId(), dieViewModel.MapY, dieViewModel.MapX);
+            else return string.Format("{0}_{1}[{3},{4}]", ProberId, Timestamp, Snowflake.Instance.NextSeqId(), dieViewModel.MapY, dieViewModel.MapX);
+        }
+        private void StartAutoFlow()
+        {
+            if (SelectedWPFlow != null)
+            {
+                CustomMappingVM.DisabledInput = IsProcessing = true;
+                EnableBtn(false);
+
                 TestingReady();
 
                 StartTestingDie(TestResults[CurTestDieIdx]);
@@ -244,9 +420,122 @@ namespace CVWaferProber.ViewModels
                 _simAutoTestTimer?.Start();
             }
         }
+        private void StartManFlow()
+        {
+            if (SelectedWPFlow != null)
+            {
+                if (SelectedItem != null && SelectedItem is DieViewModel die)
+                {
+                    CustomMappingVM.DisabledInput = IsProcessing = true;
+                    EnableBtn(false);
+
+                    ManTestingReady(die);
+
+                    if (SelectedWPFlow.FlowType == CVWaferProberFlowType.AOI)
+                    {
+                        Task task = DoAsyncStartTestingDie(die);
+                    }
+                    else
+                    {
+                        StartTestingIVL(die);
+                    }
+                }
+                else
+                {
+                    if (logger.IsErrorEnabled) logger.Error("Die not selected.");
+                }
+            }
+            else
+            {
+                if (logger.IsErrorEnabled) logger.Error("Flow not selected.");
+            }
+        }
+        private void EndTesting()
+        {
+            CustomMappingVM.DisabledInput = IsProcessing = false;
+            EnableBtn(true);
+        }
+        private async Task DoAsyncStartTestingDie(DieViewModel die)
+        {
+            try
+            {
+                Task<RespDataBaseFlowResultDTO> resp = AsyncStartTestingDie(die);
+                await resp;
+                if (resp.Result.IsSuccess)
+                {
+                    DieResultDisplay(die);
+                    die.ChangeStatus(ChipStatus.OK, true);
+                }
+                else
+                {
+                    ChipStatus status = GetDieResultStatus(die.SerialNumber);
+                    die.ChangeStatus(status, true);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // 处理取消操作
+                if (logger.IsDebugEnabled) logger.Debug("Man Flow execution was cancelled.");
+            }
+            catch (Exception ex)
+            {
+                die.ChangeStatus(ChipStatus.FAILED, true);
+                // 处理其他异常
+                if (logger.IsDebugEnabled) logger.Debug($"Man Flow execution failed: {ex.Message}");
+                throw;
+            }finally
+            {
+                EndTesting();
+            }
+        }
+
+        private ChipStatus GetDieResultStatus(string serialNumber)
+        {
+            ChipStatus status = ChipStatus.FAILED;
+            var results = AlgResultService.LoadAlgResultByBatchCodeAndType(serialNumber, (int)CVResultType.Algorithm_OLED_AOI_ALL);
+            if (results != null && results.Count > 0)
+            {
+                foreach (var result in results)
+                {
+                    if (result.ResultCode.HasValue && result.ResultCode.Value != 0)
+                    {
+                        var aoi = AlgResultService.GetCommDetailResult(result.Id);
+                        if (results != null && results.Count == 1)
+                        {
+                            OLED_AOI_Result_E eResult = JsonConvert.DeserializeObject<OLED_AOI_Result_E>(aoi[0].Result);
+                            status = ChipStatusTool.GetStatusFromErrCode(eResult.ResultCode);
+                            logger.InfoFormat("AOI Result => {0}", status.ToString());
+                            break;
+                        }
+                    }
+                }
+            }
+            return status;
+        }
+
+        private async Task<RespDataBaseFlowResultDTO> AsyncStartTestingDie(DieViewModel die)
+        {
+            StartTestingDie(die);
+
+            using var cancellationTokenSource = new CancellationTokenSource();
+            var cancellationToken = cancellationTokenSource.Token;
+            //获取结果
+            return await PollFlowResultWithRxAsync(die.SerialNumber, cancellationToken);
+        }
+        private void ManTestingReady(DieViewModel die)
+        {
+            die.chipViewModel.SetStatus(ChipStatus.WAITING);
+            die.EndTestTime = null;
+            die.SerialNumber = null;
+            die.StartTestTime = null;
+            die.TotalTime = null;
+
+            if(_isAutoSN) Timestamp = DateTime.Now.ToString("yyyyMMdd'T'HHmmss.fff");
+        }
         private void TestingReady()
         {
-            foreach (var item in CustomVM.Chips)
+            CustomMappingVM.Cleanup();
+            foreach (var item in CustomMappingVM.Chips)
             {
                 item.SetStatus(ChipStatus.WAITING);
             }
@@ -261,7 +550,7 @@ namespace CVWaferProber.ViewModels
             _dataGrid?.Items.Refresh();
 
             CurTestDieIdx = 0;
-            Timestamp = Snowflake.GetTimestampToday();
+            if (_isAutoSN) Timestamp = DateTime.Now.ToString("yyyyMMdd'T'HHmmss.fff");
         }
         private void StartSim()
         {
@@ -272,9 +561,11 @@ namespace CVWaferProber.ViewModels
         }
         private void StartAutoTest(object? obj)
         {
-            CustomVM.DisabledInput = IsProcessing = true;
-            EnableBtn(false);
-            StartFlow();
+            StartAutoFlow();
+        }
+        private void StartManTest(object? obj)
+        {
+            StartManFlow();
         }
         private void EnableBtn(bool enabled)
         {
@@ -285,7 +576,7 @@ namespace CVWaferProber.ViewModels
             StopSim();
             for (int i = Math.Max(CurTestDieIdx - 3, 0); i < Math.Min(CurTestDieIdx + 3, TestResults.Count); i++)
                 TestResults[i].UnSelected();
-            CustomVM.DisabledInput = IsProcessing = false;
+            CustomMappingVM.DisabledInput = IsProcessing = false;
             EnableBtn(true);
         }
         private void StopSim()
@@ -306,8 +597,8 @@ namespace CVWaferProber.ViewModels
 
         private void ClearMapping()
         {
-            CustomVM.SelectedChip = null;
-            CustomVM.Chips.Clear();
+            CustomMappingVM.Cleanup();
+            CustomMappingVM.Chips.Clear();
             TestResults.Clear();
         }
 
@@ -323,9 +614,9 @@ namespace CVWaferProber.ViewModels
             bool bR = CsvMappingDataTool.LoadMappingCsv(MappingCsvFilePath, ref mappingData);
             if (bR && mappingData != null && mappingData.Count > 0)
             {
-                CustomVM.RefreshFromMap(mappingData);
+                CustomMappingVM.RefreshFromMap(mappingData);
                 ObservableCollection<DieViewModel> _TestResults = new ObservableCollection<DieViewModel>();
-                foreach (var map in CustomVM.Chips)
+                foreach (var map in CustomMappingVM.Chips)
                 {
                     DieViewModel dieViewModel = new DieViewModel(map);
                     _TestResults.Add(dieViewModel);

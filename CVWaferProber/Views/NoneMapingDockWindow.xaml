@@ -1,0 +1,207 @@
+﻿<Window x:Class="CVWaferProber.Views.NoneMapingDockWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CVWaferProber.Views"
+        mc:Ignorable="d"
+        xmlns:cvimg="clr-namespace:CVWPFCameraImage;assembly=CVWPFCameraImage"
+        xmlns:cvsp="clr-namespace:CVWPFSpectrometerCtrl;assembly=CVWPFSpectrometerCtrl"
+        xmlns:cv="clr-namespace:CVWaferProber.Converters"
+        xmlns:ccv="clr-namespace:CVWaferProber.Core.Converters;assembly=CVWaferProber.Core"
+        xmlns:avalon="https://github.com/Dirkster99/AvalonDock"
+        xmlns:vm="clr-namespace:CVWaferProber.ViewModels"
+        Title="晶圆台系统" Height="1000" Width="1200">
+    <Window.Resources>
+        <cv:StatusToColorConverter x:Key="StatusColorConverter"/>
+        <ccv:NotBooleanConverter x:Key="NotBooleanConverter"/>
+    </Window.Resources>
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>    
+    <Grid>
+        <avalon:DockingManager x:Name="DockingManager">
+            <avalon:DockingManager.Theme>
+                <avalon:GenericTheme />
+            </avalon:DockingManager.Theme>
+
+            <avalon:LayoutRoot>
+                <!-- 主布局面板 - 垂直方向分割 -->
+                <avalon:LayoutPanel Orientation="Horizontal">
+
+                    <!-- 左半部分面板 -->
+                    <avalon:LayoutPanel Orientation="Vertical" DockWidth="3*">
+
+                        <!-- 左上角面板 -->
+                        <avalon:LayoutAnchorablePaneGroup DockWidth="300" Orientation="Vertical">
+                            <avalon:LayoutAnchorablePane>
+                                <avalon:LayoutAnchorable Title="NoneMapping" 
+                                                  CanHide="True" CanClose="False"
+                                                  AutoHideWidth="300"
+                                                  AutoHideMinWidth="250">
+                                    <Border Grid.Row="1" BorderBrush="Gray" BorderThickness="1" Margin="5">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="180"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+                                            <!-- 操作区域 -->
+                                            <Border Grid.Row="0" Background="#FFF0F0F0"
+                                                  BorderBrush="#FFCCCCCC"
+                                                  BorderThickness="1"
+                                                  Padding="2"
+                                                  HorizontalAlignment="Stretch"
+                                                  VerticalAlignment="Top">
+                                                <!-- 在局部资源中定义转换器 -->
+                                                <Border.Resources>
+                                                    <ccv:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+                                                </Border.Resources>
+
+                                                <StackPanel Orientation="Vertical">
+                                                    <!-- 设置统一的边距来模拟间距 -->
+                                                    <StackPanel.Resources>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Margin" Value="0,0,0,10"/>
+                                                        </Style>
+                                                    </StackPanel.Resources>
+                                                    <!-- 测量操作区域 -->
+                                                    <Border CornerRadius="6"
+                                                          Background="#FFFFFFFF"
+                                                          Padding="5"
+                                                          Height="90"
+                                                          Margin="0,0,0,0">
+                                                        <StackPanel>
+                                                            <StackPanel Orientation="Horizontal" Height="30" Margin="5,5">
+                                                                <Button Content="{DynamicResource BtnReRegist}" Command="{Binding RCRegCommand}"  IsEnabled="{Binding IsNotProcessing}" Width="120" Margin="0,0,10,0"/>
+                                                                <ComboBox Width="250" Height="30" ItemsSource="{Binding FlowItems}" SelectedItem="{Binding SelectedFlow, Mode=TwoWay}"  IsEnabled="{Binding IsNotProcessing}" VerticalAlignment="Center">
+                                                                    <ComboBox.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <StackPanel Orientation="Horizontal">
+                                                                                <TextBlock Text="{Binding Name}" Width="150"/>
+                                                                                <TextBlock Text=" (ID: " Foreground="Blue"/>
+                                                                                <TextBlock Text="{Binding Id}" Foreground="Blue"/>
+                                                                                <TextBlock Text=")" Foreground="Blue"/>
+                                                                            </StackPanel>
+                                                                        </DataTemplate>
+                                                                    </ComboBox.ItemTemplate>
+                                                                </ComboBox>
+                                                                <Button Content="{DynamicResource BtnFlowLoad}" Command="{Binding FlowLoadCommand}" Width="120" IsEnabled="{Binding IsNotProcessing}" Margin="10,0,0,0"/>
+                                                            </StackPanel>
+                                                            <StackPanel Orientation="Horizontal" Height="30" Margin="5,5">
+                                                                <!-- 使用Margin来设置间距 -->
+
+                                                                <Button Content="{DynamicResource BtnStartManTest}" 
+                  Width="110" 
+                  Command="{Binding StartManTestCommand}" 
+                  BorderThickness="0"/>
+
+
+                                                                <Button Content="{DynamicResource BtnIVLTest}" 
+                  Width="110" 
+                  Command="{Binding IVLTestCommand}" 
+                  BorderThickness="0"
+                  Margin="10,0,0,0"/>
+
+                                                                <!-- 替换原来的CheckBox为两个RadioButton -->
+                                                                <StackPanel Orientation="Horizontal" Margin="10,5,10,0">
+                                                                    <RadioButton Content="光谱仪" IsChecked="{Binding IsIVLCameraEnabled, Converter={StaticResource NotBooleanConverter}}" GroupName="IVLDeviceGroup" Margin="0,0,10,0"/>
+                                                                    <RadioButton Content="相机" IsChecked="{Binding IsIVLCameraEnabled}" GroupName="IVLDeviceGroup"/>
+                                                                </StackPanel>
+
+                                                            </StackPanel>
+                                                            <StackPanel Orientation="Horizontal" Height="30" Margin="5,5">
+                                                            </StackPanel>
+                                                        </StackPanel>
+                                                    </Border>
+
+                                                    <!-- 状态指示 -->
+                                                    <Border CornerRadius="6" Background="#FFFFFFFF" Padding="10" Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Ellipse Width="12" Height="12" Fill="#FF198754">
+                                                                <Ellipse.RenderTransform>
+                                                                    <RotateTransform x:Name="SpinnerTransform" Angle="0" CenterX="6" CenterY="6"/>
+                                                                </Ellipse.RenderTransform>
+                                                                <Ellipse.Triggers>
+                                                                    <EventTrigger RoutedEvent="Loaded">
+                                                                        <BeginStoryboard>
+                                                                            <Storyboard>
+                                                                                <DoubleAnimation Storyboard.TargetName="SpinnerTransform" 
+                           Storyboard.TargetProperty="Angle"
+                           From="0" To="360" Duration="0:0:1" 
+                           RepeatBehavior="Forever"/>
+                                                                            </Storyboard>
+                                                                        </BeginStoryboard>
+                                                                    </EventTrigger>
+                                                                </Ellipse.Triggers>
+                                                            </Ellipse>
+                                                            <TextBlock Text="测量运行中..." Foreground="#FF666666" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <DataGrid x:Name="TestResultDataGrid" Grid.Row="1" ItemsSource="{Binding TestManResults}" 
+                                                    AutoGenerateColumns="False" IsReadOnly="True"
+                                                    SelectedItem="{Binding SelectedManItem, Mode=TwoWay}"
+                                                    SelectionMode="Single" SelectionUnit="FullRow"
+                                                    Margin="5">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn Header="序号" Binding="{Binding Id}" Width="50"/>
+                                                    <DataGridTextColumn Header="序列号" Binding="{Binding SerialNumber}" Width="200"/>
+                                                    <DataGridTextColumn Header="开始时间" Binding="{Binding StartTestTime}" Width="180"/>
+                                                    <DataGridTextColumn Header="结束时间" Binding="{Binding EndTestTime}" Width="180"/>
+                                                    <DataGridTextColumn Header="测试状态" Binding="{Binding DisplayStatus}" Width="*"/>
+                                                    <DataGridTextColumn Header="均匀性" Binding="{Binding DataValue}" Width="100"/>
+                                                    <DataGridTextColumn Header="总用时" Binding="{Binding TotalTime}" Width="180"/>
+                                                </DataGrid.Columns>
+
+                                                <DataGrid.RowStyle>
+                                                    <Style TargetType="DataGridRow">
+                                                        <Setter Property="Background" Value="{Binding Status, Converter={StaticResource StatusColorConverter}}"/>
+                                                    </Style>
+                                                </DataGrid.RowStyle>
+                                            </DataGrid>
+                                        </Grid>
+                                    </Border>
+                                </avalon:LayoutAnchorable>
+                            </avalon:LayoutAnchorablePane>
+                        </avalon:LayoutAnchorablePaneGroup>
+
+                    </avalon:LayoutPanel>
+
+                    <!-- 右半部分面板 -->
+                    <avalon:LayoutPanel Orientation="Vertical" DockWidth="7*">
+
+                        <!-- 右上角面板 -->
+                        <avalon:LayoutAnchorablePaneGroup DockWidth="300">
+                            <avalon:LayoutAnchorablePane>
+                                <avalon:LayoutAnchorable Title="相机窗口" 
+                                                 CanHide="True" CanClose="False"
+                                                 AutoHideMinHeight="100">
+                                    <cvimg:CVCameraImageViewer x:Name="MyImageControl" DataContext="{Binding CustomImageVM}"/>
+                                </avalon:LayoutAnchorable>
+                            </avalon:LayoutAnchorablePane>
+                        </avalon:LayoutAnchorablePaneGroup>
+
+                        <!-- 右下角面板 -->
+                        <avalon:LayoutAnchorablePaneGroup>
+                            <avalon:LayoutAnchorablePane>
+                                <avalon:LayoutAnchorable Title="光谱仪/IVL" 
+                                                 CanHide="True" CanClose="False">
+                                    <Border Grid.Row="1" BorderBrush="Gray" BorderThickness="1" Margin="5">
+                                        <Grid>
+                                            <cvsp:CVSpectrumAnalyzer x:Name="spaly" Grid.Row="1" DataContext="{Binding CustomSPVM}"/>
+                                        </Grid>
+                                    </Border>
+                                </avalon:LayoutAnchorable>
+                            </avalon:LayoutAnchorablePane>
+                        </avalon:LayoutAnchorablePaneGroup>
+
+                    </avalon:LayoutPanel>
+
+                </avalon:LayoutPanel>
+
+            </avalon:LayoutRoot>
+        </avalon:DockingManager>
+    </Grid>
+</Window>

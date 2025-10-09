@@ -65,6 +65,17 @@ namespace CVWaferProber.Core.Restful
             string? contentResp = RestPost(rcUrl, url, accessToken, body);
             return contentResp;
 
+        } 
+        public string? RcRunFlow(string fname,string serialNumber, string accessToken)
+        {
+            ReqBodyRunFlowDTO data = new ReqBodyRunFlowDTO() { Id = -1,Name = fname };
+            RequestDTO<ReqBodyRunFlowDTO> reqBody = new RequestDTO<ReqBodyRunFlowDTO>() { DeviceCode = "DEV.Flow.Default", SerialNumber = serialNumber, Data = data };
+            var body = JsonConvert.SerializeObject(reqBody);
+            string url = "/API/Services/Flow/SVR.Flow.Default/Startup";
+            AddReqMsg(url, reqBody);
+            string? contentResp = RestPost(rcUrl, url, accessToken, body);
+            return contentResp;
+
         }   
         public string? RcRunNameFlow(int fid, string serialNumber, string name, string accessToken)
         {
@@ -80,6 +91,22 @@ namespace CVWaferProber.Core.Restful
         public string? RcGetFlowResult_POI(string serialNumber, string accessToken)
         {
             string res = string.Format("/API/Services/Flow/Result/{0}/Algorithm_POI_Y", serialNumber);
+            AddReqMsg(string.Format("GET {0}", res));
+            string? contentResp = RestGet(rcUrl, res, accessToken);
+            //AddLog(contentResp);
+            return contentResp;
+        }
+        public string? RcGetFlowResult_SP(string serialNumber, string accessToken)
+        {
+            string res = string.Format("/API/Services/Flow/Result/{0}/Spectrum", serialNumber);
+            AddReqMsg(string.Format("GET {0}", res));
+            string? contentResp = RestGet(rcUrl, res, accessToken);
+            //AddLog(contentResp);
+            return contentResp;
+        }
+        public string? RcGetFlowResult_AOI(string serialNumber, string accessToken)
+        {
+            string res = string.Format("/API/Services/Flow/Result/{0}/Algorithm_OLED_AOI_ALL", serialNumber);
             AddReqMsg(string.Format("GET {0}", res));
             string? contentResp = RestGet(rcUrl, res, accessToken);
             //AddLog(contentResp);

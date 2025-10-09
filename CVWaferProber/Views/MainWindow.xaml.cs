@@ -17,15 +17,6 @@ namespace CVWaferProber.Views
             InitializeComponent();
             MyChipMappingControl.ValueChangedCommand = new RelayCommand(ExecuteCustomCommand);
             log.Info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-            // 等待DataGrid加载完成后设置引用
-            Loaded += (s, e) =>
-            {
-                if (this.DataContext is MainViewModel viewModel)
-                {
-                    //viewModel.SetMainWin(this);
-                    viewModel.SetDataGrid(TestResultDataGrid);
-                }
-            };
         }
 
         private void ExecuteCustomCommand(object? obj)

@@ -128,6 +128,7 @@ namespace ChipMapping.ViewModels
             {
                 SelectedChip.IsSelected = false;
             }
+            SelectedChip = null;
         }
 
         // 芯片详细信息

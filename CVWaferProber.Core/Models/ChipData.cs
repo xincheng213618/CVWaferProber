@@ -46,8 +46,11 @@ namespace CVWaferProber.Core.Models
             {
                 ChipStatus.WAITING => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0xFF)),
                 ChipStatus.TESTING => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0xFF, 0)),
+                ChipStatus.IVL_TESTING => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0xFF, 0)),
                 ChipStatus.OK => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x7C, 0xFC, 0)),
+                ChipStatus.IVL_COMPLETED => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x7C, 0xFC, 0)),
                 ChipStatus.AOI_NG => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0, 0)),
+                ChipStatus.FAILED => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0, 0)),
                 ChipStatus.DW_NG => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0xA5, 0)),
                 ChipStatus.BLIND => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x80, 0x80, 0x80)),
                 ChipStatus.CAL_NG => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x80, 0, 0x80)),
@@ -70,8 +73,33 @@ namespace CVWaferProber.Core.Models
                 ChipStatus.CAL_NG => "提取失败",
                 ChipStatus.I2C_NG => "I2C状态异常",
                 ChipStatus.AOI_LINE_NG => "线缺陷检测NG",
+                ChipStatus.IVL_TESTING => "正在IVL检测",
+                ChipStatus.IVL_COMPLETED => "IVL检测完成",
+                ChipStatus.FAILED => "运行失败",
                 _ => "未知"
             };
+        }
+
+        public static ChipStatus GetStatusFromErrCode(string errCode)
+        {
+            ChipStatus result = ChipStatus.AOI_NG;
+            switch (errCode)
+            {
+                case "MURA_E":
+                    result = ChipStatus.AOI_NG;
+                    break;
+                case "PARTICLE_E":
+                    result = ChipStatus.AOI_NG;
+                    break;
+                case "VH_LINE_E":
+                    result = ChipStatus.AOI_LINE_NG;
+                    break;
+                default:
+                    result = ChipStatus.AOI_NG;
+                    break;
+            }
+
+            return result;
         }
     }
 }

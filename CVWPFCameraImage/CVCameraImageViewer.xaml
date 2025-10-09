@@ -13,8 +13,8 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="7*"/>
-            <RowDefinition Height="3*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="250"/>
         </Grid.RowDefinitions>
         <!-- 工具栏 -->
         <ToolBar Grid.Row="0">
@@ -34,62 +34,78 @@
                 <fa6:FontAwesome Icon="Solid_Expand" FontSize="14" />
             </Button>
         </ToolBar>
-        <!-- 图像区域 -->
-        <ScrollViewer x:Name="scrollViewer" Grid.Row="1"
+        <Border Grid.Row="1" BorderBrush="Gray" BorderThickness="1" Margin="5">
+            <!-- 图像区域 -->
+            <ScrollViewer x:Name="scrollViewer"
                     HorizontalScrollBarVisibility="Auto"
                     VerticalScrollBarVisibility="Auto"
                     Focusable="False">
-            <Grid x:Name="container" Height="500" Width="700" RenderTransformOrigin="0.5,0.5">
-                <!--<Grid.RenderTransform>
+                <Grid x:Name="container" Height="500" Width="700" RenderTransformOrigin="0.5,0.5">
+                    <!--<Grid.RenderTransform>
                   <TransformGroup>
                       <ScaleTransform x:Name="scaleTransform"/>
                       <TranslateTransform x:Name="translateTransform"/>
                   </TransformGroup>
               </Grid.RenderTransform>-->
 
-                <Image x:Name="displayImage" 
-                     Source="{Binding ImageSource}" Stretch="Fill"/>
+                    <Image x:Name="displayImage" 
+                     Source="{Binding ImageSrc}" Stretch="Fill"/>
 
-                <Canvas x:Name="overlayCanvas" IsHitTestVisible="False">
-                    <ItemsControl ItemsSource="{Binding POIMarkers}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <Canvas/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemContainerStyle>
-                            <Style>
-                                <Setter Property="Canvas.Left" Value="{Binding X}"/>
-                                <Setter Property="Canvas.Top" Value="{Binding Y}"/>
-                            </Style>
-                        </ItemsControl.ItemContainerStyle>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Ellipse Width="{Binding Width}" 
+                    <Canvas x:Name="overlayCanvas" IsHitTestVisible="False">
+                        <ItemsControl ItemsSource="{Binding POIMarkers}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <Canvas/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemContainerStyle>
+                                <Style>
+                                    <Setter Property="Canvas.Left" Value="{Binding X}"/>
+                                    <Setter Property="Canvas.Top" Value="{Binding Y}"/>
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Ellipse Width="{Binding Width}" 
                                        Height="{Binding Height}"
                                        Fill="{Binding Fill}"
                                        Stroke="{Binding Stroke}"
                                        StrokeThickness="{Binding StrokeThickness}"/>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Canvas>
-            </Grid>
-        </ScrollViewer>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Canvas>
+                </Grid>
+            </ScrollViewer>
+        </Border>
         <!-- 列表 -->
-        <DataGrid x:Name="ImageResultDataGrid" Grid.Row="2" ItemsSource="{Binding ImageResults}" 
-            AutoGenerateColumns="False" IsReadOnly="True"
-            SelectionMode="Single" SelectionUnit="FullRow"
-            Margin="5">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="序号" Binding="{Binding Id}" Width="50"/>
-                <DataGridTextColumn Header="序列号" Binding="{Binding SerialNumber}" Width="180"/>
-                <!--<DataGridTextColumn Header="图像信息" Binding="{Binding ImageInfo}" Width="160"/>-->
-                <DataGridTextColumn Header="类型" Binding="{Binding ResultType}" Width="180"/>
-                <DataGridTextColumn Header="测试时间" Binding="{Binding TestTime}" Width="180"/>
-                <DataGridTextColumn Header="均匀性" Binding="{Binding BrightnessUniformity}" Width="180"/>
-                <DataGridTextColumn Header="图像文件" Binding="{Binding ImageFile}" Width="*"/>
-            </DataGrid.Columns>
-        </DataGrid>
+        <Border Grid.Row="2" BorderBrush="Gray" BorderThickness="0" Margin="5">
+            <DataGrid x:Name="ImageResultDataGrid"
+                ItemsSource="{Binding ImageResults}" 
+                AutoGenerateColumns="False"
+                IsReadOnly="True"
+                SelectionMode="Single"
+                SelectionUnit="FullRow"
+                CanUserAddRows="False"
+                CanUserDeleteRows="False"
+                CanUserReorderColumns="False"
+                CanUserResizeRows="False"
+                CanUserSortColumns="True"
+                GridLinesVisibility="All"
+                ScrollViewer.VerticalScrollBarVisibility="Auto"
+                ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                VerticalAlignment="Stretch"
+                HorizontalAlignment="Stretch">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="序号" Binding="{Binding Id}" Width="50"/>
+                    <DataGridTextColumn Header="序列号" Binding="{Binding SerialNumber}" Width="180"/>
+                    <!--<DataGridTextColumn Header="图像信息" Binding="{Binding ImageInfo}" Width="160"/>-->
+                    <DataGridTextColumn Header="类型" Binding="{Binding ResultType}" Width="180"/>
+                    <DataGridTextColumn Header="测试时间" Binding="{Binding TestTime}" Width="180"/>
+                    <DataGridTextColumn Header="均匀性" Binding="{Binding BrightnessUniformity}" Width="180"/>
+                    <DataGridTextColumn Header="图像文件" Binding="{Binding ImageFile}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
     </Grid>
 </UserControl>

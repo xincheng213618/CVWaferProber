@@ -26,6 +26,9 @@ namespace CVWaferProber.Core.Models.Enums
         I2C_NG,
         // 8: 线缺陷检测NG的mapping     橄榄
         AOI_LINE_NG,
+        IVL_TESTING,
+        IVL_COMPLETED,
+        FAILED,
     }
 
     enum JY_ERROR

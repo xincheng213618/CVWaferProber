@@ -7,13 +7,13 @@ using CVWPFCameraImage.Models;
 using Microsoft.Win32;
 using Newtonsoft.Json;
 using OpenCvSharp;
-using OpenCvSharp.Text;
 using OpenCvSharp.WpfExtensions;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Xml.Linq;
 
 namespace CVWPFCameraImage.ViewModels
 {
@@ -24,7 +24,7 @@ namespace CVWPFCameraImage.ViewModels
         private double _zoomLevel = 1.0;
         public ObservableCollection<CVImageResultViewModel> _imageResults;
 
-        public ImageSource? ImageSource
+        public ImageSource? ImageSrc
         {
             get => _imageSource;
             set => SetProperty(ref _imageSource, value);
@@ -77,7 +77,7 @@ namespace CVWPFCameraImage.ViewModels
                 try
                 {
                     var image = OpenCvSharp.Cv2.ImRead(openFileDialog.FileName, OpenCvSharp.ImreadModes.Unchanged);
-                    ImageSource = image.ToBitmapSource();
+                    ImageSrc = image.ToBitmapSource();
                 }
                 catch (Exception ex)
                 {
@@ -110,6 +110,7 @@ namespace CVWPFCameraImage.ViewModels
             string? ImageDisplayBrightnessUniformity = null;
             var results = AlgResultService.LoadAlgResultByBatchCode(serialNumber);
             if (results == null || results.Count == 0) return;
+            List<POIMarker> POIMarkers = new List<POIMarker>();
             foreach (var result in results)
             {
                 AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
@@ -123,11 +124,7 @@ namespace CVWPFCameraImage.ViewModels
                     var details = AlgResultService.GetPOIDetailResult(result.Id);
                     foreach (var poi in details)
                     {
-                        // 在UI线程更新集合
-                        Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            _poiMarkers.Add(new POIMarker() { X = (double)poi.PoiX, Y = (double)poi.PoiY, Width = (double)poi.PoiWidth, Height = (double)poi.PoiHeight, Fill = null });
-                        });
+                        POIMarkers.Add(new POIMarker() { X = (double)poi.PoiX, Y = (double)poi.PoiY, Width = (double)poi.PoiWidth, Height = (double)poi.PoiHeight, Fill = null });
                     }
                 }
                 else if (resultType == AlgorithmResultType.PoiAnalysis)
@@ -173,34 +170,26 @@ namespace CVWPFCameraImage.ViewModels
                 }
             }
 
-       
-            ShowImage(ImageDisplayBrightnessUniformity, resultImageFile);
+            if (!string.IsNullOrEmpty(resultImageFile))
+            {
+                OpenCvSharp.Mat? image = null;
+                if (!CVImageFileUtil.LoadImgFile(resultImageFile, ref image)) return;
+                OpenCvMatTools.PutTextToImage(ImageDisplayBrightnessUniformity, ref image, Scalar.Green);
+                // 在UI线程更新集合
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    foreach (var marker in POIMarkers)
+                    {
+                        _poiMarkers.Add(marker);
+                    }
+                    ImageSrc = image.ToBitmapSource();
+                });
+                //ShowImage(ImageDisplayBrightnessUniformity, resultImageFile);
+            }
         }
+
         private void ShowImage(string? name, OpenCvSharp.Mat? image)
         {
-            // 设置文字参数
-            string text = name;
-            //SrcFrameInfo frameInfo = fileInfo.FrameInfo;
-            //OpenCvSharp.Mat image = new OpenCvSharp.Mat(frameInfo.heightInt, frameInfo.widthInt, OpenCvMatTools.GetMatType(frameInfo.bpp, frameInfo.channels), fileInfo.data);
-            Mat grayImage8U = OpenCvMatTools.ConvertImage32To8ByNorm(image);
-            Cv2.CvtColor(grayImage8U, image, ColorConversionCodes.GRAY2BGR);
-            // 创建检测器
-            OpenCvSharp.Point center = new OpenCvSharp.Point(image.Cols / 2, image.Rows / 2);
-            HersheyFonts font = HersheyFonts.HersheySimplex;
-            double fontScale = 1;
-            int thickness = 2;
-
-            // 计算文字尺寸
-            OpenCvSharp.Size textSize = Cv2.GetTextSize(text, font, fontScale, thickness, out int baseline);
-            Scalar textColor = new Scalar(0, 255, 0); // 白色文字
-            // 计算文字起始位置
-            OpenCvSharp.Point textOrigin = new OpenCvSharp.Point(center.X - textSize.Width / 2, center.Y + textSize.Height / 2);
-            //// 绘制半透明背景
-            //Mat overlay = image.Clone();
-            //Cv2.Rectangle(overlay, bgRect, bgColor, -1);
-            //Cv2.AddWeighted(overlay, 0.6, image, 0.4, 0, image);
-            // 绘制文字
-            Cv2.PutText(image, text, textOrigin, font, fontScale, textColor, thickness);
             //try
             //{
             //    var detector = OCRTesseract.Create();
@@ -214,22 +203,24 @@ namespace CVWPFCameraImage.ViewModels
             //}
             //catch (Exception ex) { }
             // 在UI线程更新集合
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                ImageSource = image.ToBitmapSource();
-            });
-        }
+       }
         private void ShowImage(string? name, string? resultImageFile = null)
         {
             string? FileName = resultImageFile;
             OpenCvSharp.Mat? image = null;
             if (!CVImageFileUtil.LoadImgFile(FileName, ref image)) return;
             //
-            ShowImage(name, image);
+            OpenCvMatTools.PutTextToImage(name, ref image, Scalar.Green);
+            // 在UI线程更新集合
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                ImageSrc = image.ToBitmapSource();
+            });
         }
 
         public void ClearImageResult()
         {
+            ImageSrc = null;
             _poiMarkers.Clear();
             ImageResults.Clear();
             id = 1;
@@ -253,6 +244,5 @@ namespace CVWPFCameraImage.ViewModels
         {
             POIMarkers.Clear();
         }
-
     }
 }
