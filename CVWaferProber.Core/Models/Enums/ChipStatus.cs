@@ -28,7 +28,10 @@ namespace CVWaferProber.Core.Models.Enums
         AOI_LINE_NG,
         IVL_TESTING,
         IVL_COMPLETED,
+        //失败
         FAILED,
+        //超时
+        OVERTIME,
     }
 
     enum JY_ERROR

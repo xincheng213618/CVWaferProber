@@ -1,0 +1,163 @@
+﻿<Window x:Class="GSWinMsgSim.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GSWinMsgSim"
+        mc:Ignorable="d"
+        Title="Windows消息模拟器" Height="650" Width="800">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="100"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- 窗口查找部分 -->
+        <GroupBox Grid.Row="0" Grid.ColumnSpan="2" Header="窗口查找" Margin="0,0,0,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="80"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBox x:Name="txtWindowTitle" Grid.Column="0" Margin="5" Text="晶圆探针台" ToolTip="输入窗口标题（支持模糊匹配）"/>
+                <Button x:Name="btnFindWindows" Grid.Column="1" Margin="5" Content="查找窗口" Click="BtnFindWindows_Click"/>
+                <Button x:Name="btnRefresh" Grid.Column="2" Margin="5" Content="刷新" Click="BtnRefresh_Click"/>
+            </Grid>
+        </GroupBox>
+
+        <!-- 窗口列表 -->
+        <GroupBox Grid.Row="1" Grid.ColumnSpan="2" Header="找到的窗口" Margin="0,0,0,10">
+            <ListView x:Name="lstWindows" Height="80" SelectionChanged="LstWindows_SelectionChanged">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="句柄" Width="80" DisplayMemberBinding="{Binding Handle}"/>
+                        <GridViewColumn Header="标题" Width="200" DisplayMemberBinding="{Binding Title}"/>
+                        <GridViewColumn Header="类名" Width="150" DisplayMemberBinding="{Binding ClassName}"/>
+                        <GridViewColumn Header="进程ID" Width="80" DisplayMemberBinding="{Binding ProcessId}"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </GroupBox>
+
+        <!-- 消息发送部分 -->
+        <GroupBox Grid.Row="2" Grid.ColumnSpan="2" Header="发送消息" Margin="0,0,0,10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="消息类型:" Margin="5" VerticalAlignment="Center"/>
+                <ComboBox x:Name="cmbMessageType" Grid.Row="0" Grid.Column="1" Margin="5" SelectionChanged="cmbMessageType_SelectionChanged">
+                    <ComboBoxItem Content="WM_KEYDOWN"/>
+                    <ComboBoxItem Content="WM_KEYUP"/>
+                    <ComboBoxItem Content="WM_CHAR"/>
+                    <ComboBoxItem Content="WM_LBUTTONDOWN"/>
+                    <ComboBoxItem Content="WM_LBUTTONUP"/>
+                    <ComboBoxItem Content="WM_CLOSE"/>
+                    <ComboBoxItem Content="WM_COMMAND"/>
+                    <ComboBoxItem IsSelected="True" Content="自定义"/>
+                </ComboBox>
+                
+                <!--<TextBlock Grid.Row="0" Grid.Column="2" Text="自定义消息:" Margin="5" VerticalAlignment="Center"/>
+                <TextBox x:Name="txtCustomMsg" Grid.Row="0" Grid.Column="3" Margin="5" Text="2015" 
+                        ToolTip="十六进制消息值，如0x0112"/>-->
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="自定义消息:" Margin="5" VerticalAlignment="Center"/>
+                <ComboBox x:Name="cmbCustomMsg" Grid.Row="0" Grid.Column="3" Margin="5" ToolTip="选择消息类型">
+                    <ComboBoxItem IsSelected="True" Tag="WM_GS_SOT_MULTI_SITE">WM_GS_SOT_MULTI_SITE - 多芯START信号，P→T</ComboBoxItem>
+                    <ComboBoxItem Tag="WM_STOP_GS_TEST">WM_STOP_GS_TEST - 结束测试</ComboBoxItem>
+                </ComboBox>
+
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="参数WParam:" Margin="5" VerticalAlignment="Center"/>
+                <TextBox x:Name="txtWParam" Grid.Row="1" Grid.Column="3" Margin="5" Text="0"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="参数LParam:" Margin="5" VerticalAlignment="Center"/>
+                <TextBox x:Name="txtLParam" Grid.Row="1" Grid.Column="1" Margin="5" Text="0"/>
+
+                <!-- 行输入区域 -->
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="行:" Margin="5" VerticalAlignment="Center"/>
+                <Grid Grid.Row="2" Grid.Column="1" Margin="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="txtRow" Grid.Column="0" Text="0" ToolTip="行号"/>
+                    <StackPanel Grid.Column="1" Orientation="Vertical" Margin="2,0,0,0">
+                        <Button x:Name="btnRowUp" Content="▲" Width="20" Height="12" FontSize="8" Click="BtnRowUp_Click" ToolTip="增加行号"/>
+                        <Button x:Name="btnRowDown" Content="▼" Width="20" Height="12" FontSize="8" Click="BtnRowDown_Click" ToolTip="减少行号"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- 列输入区域 -->
+                <TextBlock Grid.Row="2" Grid.Column="2" Text="列:" Margin="5" VerticalAlignment="Center"/>
+                <Grid Grid.Row="2" Grid.Column="3" Margin="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="txtCol" Grid.Column="0" Text="0" ToolTip="列号"/>
+                    <StackPanel Grid.Column="1" Orientation="Vertical" Margin="2,0,0,0">
+                        <Button x:Name="btnColUp" Content="▲" Width="20" Height="12" FontSize="8" Click="BtnColUp_Click" ToolTip="增加列号"/>
+                        <Button x:Name="btnColDown" Content="▼" Width="20" Height="12" FontSize="8" Click="BtnColDown_Click" ToolTip="减少列号"/>
+                    </StackPanel>
+                </Grid>
+
+                <Button x:Name="btnSendMessage" Grid.Row="3" Grid.ColumnSpan="4" Margin="5" Content="发送消息" Click="BtnSendMessage_Click"/>
+            </Grid>
+        </GroupBox>
+
+        <!-- 常用操作 -->
+        <GroupBox Grid.Row="3" Grid.ColumnSpan="2" Header="常用操作" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="btnSendText" Margin="5" Content="发送文本" Click="BtnSendText_Click"/>
+                <Button x:Name="btnSendEnter" Margin="5" Content="发送回车" Click="BtnSendEnter_Click"/>
+                <Button x:Name="btnSendClick" Margin="5" Content="模拟点击" Click="BtnSendClick_Click"/>
+                <Button x:Name="btnCloseWindow" Margin="5" Content="关闭窗口" Click="BtnCloseWindow_Click"/>
+                <Button x:Name="btnMinimize" Margin="5" Content="最小化" Click="BtnMinimize_Click"/>
+                <Button x:Name="btnMaximize" Margin="5" Content="最大化" Click="BtnMaximize_Click"/>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- 日志 -->
+        <!-- 日志 -->
+        <GroupBox Grid.Row="4" Grid.ColumnSpan="2" Header="操作日志">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBox x:Name="txtLog" Grid.Row="0" IsReadOnly="True" VerticalScrollBarVisibility="Auto" 
+                HorizontalScrollBarVisibility="Auto" FontFamily="Consolas"/>
+
+                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">
+                    <Button x:Name="btnClearLog" Content="清空日志" Padding="10,3" Click="BtnClearLog_Click"/>
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+
+        <!-- 状态栏 -->
+        <StatusBar Grid.Row="5" Grid.ColumnSpan="2">
+            <TextBlock x:Name="txtStatus" Text="就绪"/>
+        </StatusBar>
+    </Grid>
+</Window>

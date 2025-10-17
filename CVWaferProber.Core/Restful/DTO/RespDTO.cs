@@ -27,6 +27,8 @@ namespace CVWaferProber.Core.Restful.DTO
 
         [JsonIgnore]
         public bool IsSuccess { get => Code == 200; }
+        [JsonIgnore]
+        public bool IsProcessing { get => Code == 102; }
     }
 
 

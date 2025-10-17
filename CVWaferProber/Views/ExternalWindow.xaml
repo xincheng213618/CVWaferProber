@@ -1,0 +1,24 @@
+﻿<Window x:Class="CVWaferProber.Views.ExternalWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CVWaferProber.Views"
+        mc:Ignorable="d"
+        Title="ExternalWindow" Height="450" Width="800">
+    <Grid>
+        <StackPanel>
+            <DockPanel Height="30" Margin="10">
+                <TextBox x:Name="AppPathTextBox" Width="300" Margin="0,0,10,0" Text="C:\Program Files\ColorVision Inc\ColorVision\ColorVision.exe"/>
+                <!--<Button Content="启动应用" Click="StartVEyeButton_Click" Width="100"/>-->
+                <Button Content="设置应用" Click="SetVEyeButton_Click" Width="100"/>
+                <!--<Button Content="关闭应用" Click="StoptVEyeButton_Click" Width="100" Margin="10,0,0,0"/>-->
+            </DockPanel>
+
+            <Border BorderBrush="Gray" BorderThickness="1" Margin="10">
+                <ContentControl x:Name="HostContainer_VEye"/>
+            </Border>
+
+        </StackPanel>
+    </Grid>
+</Window>

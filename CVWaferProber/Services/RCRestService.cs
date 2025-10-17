@@ -2,11 +2,11 @@
 using CVWaferProber.Core.Restful.DTO;
 using Newtonsoft.Json;
 
-namespace CVWaferProber.Models
+namespace CVWaferProber.Services
 {
-    public class RCRestModel
+    public class RCRestService
     {
-        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(RCRestModel));
+        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(RCRestService));
 
         private CVRestfulHelper restful = new CVRestfulHelper();
         private RespDataRegDTO? RegDTO;
@@ -22,12 +22,12 @@ namespace CVWaferProber.Models
                     if (respData.IsSuccess)
                     {
                         RegDTO = respData.Data;
-                        if (logger.IsInfoEnabled) logger.InfoFormat("Rc Regist ok => {0}", JsonConvert.SerializeObject(RegDTO));
+                        if (logger.IsInfoEnabled) logger.InfoFormat("Rc Regist ok => {0}", JsonConvert.SerializeObject(RegDTO, Formatting.Indented));
                     }
                     return respData.IsSuccess;
                 }
             }
-            if(logger.IsErrorEnabled) logger.ErrorFormat("Rc Regist failed => {0}", contentResp);
+            if (logger.IsErrorEnabled) logger.ErrorFormat("Rc Regist failed => {0}", contentResp);
             return false;
         }
 
@@ -63,9 +63,9 @@ namespace CVWaferProber.Models
                 if (!string.IsNullOrEmpty(contentResp))
                 {
                     RespDTO<RespDataRunFlowDTO>? respData = JsonConvert.DeserializeObject<RespDTO<RespDataRunFlowDTO>>(contentResp);
-                    if (respData != null && respData.IsSuccess)
+                    if (respData != null && (respData.IsSuccess || respData.IsProcessing))
                     {
-                        if (logger.IsInfoEnabled) logger.InfoFormat("RunFlow ok => {0}", JsonConvert.SerializeObject(respData.Data));
+                        if (logger.IsInfoEnabled) logger.InfoFormat("RunFlow is Pending => {0}", JsonConvert.SerializeObject(respData.Data));
                         return respData.Data;
                     }
                 }
@@ -76,7 +76,7 @@ namespace CVWaferProber.Models
                 if (logger.IsErrorEnabled) logger.ErrorFormat("Rc UnRegist.");
             }
             return null;
-        } 
+        }
         public RespDataRunFlowDTO RcRunFlowByName(string fname, string serialNumber)
         {
             if (RegDTO != null)
@@ -85,9 +85,9 @@ namespace CVWaferProber.Models
                 if (!string.IsNullOrEmpty(contentResp))
                 {
                     RespDTO<RespDataRunFlowDTO>? respData = JsonConvert.DeserializeObject<RespDTO<RespDataRunFlowDTO>>(contentResp);
-                    if (respData != null && respData.IsSuccess)
+                    if (respData != null && (respData.IsSuccess || respData.IsProcessing))
                     {
-                        if (logger.IsInfoEnabled) logger.InfoFormat("RunFlow ok => {0}", JsonConvert.SerializeObject(respData.Data));
+                        if (logger.IsInfoEnabled) logger.InfoFormat("RunFlow is Pending => {0}", JsonConvert.SerializeObject(respData.Data));
                         return respData.Data;
                     }
                 }
@@ -100,7 +100,7 @@ namespace CVWaferProber.Models
             return null;
         }
 
-        public RespDataFlowResultDTO<AlgResultItem>? RcGetFlowResult_POI(string serialNumber) 
+        public RespDataFlowResultDTO<AlgResultItem>? RcGetFlowResult_POI(string serialNumber)
         {
             if (RegDTO != null)
             {
@@ -110,7 +110,8 @@ namespace CVWaferProber.Models
                     RespDTO<RespDataFlowResultDTO<AlgResultItem>>? respData = JsonConvert.DeserializeObject<RespDTO<RespDataFlowResultDTO<AlgResultItem>>>(contentResp);
                     if (respData != null && respData.IsSuccess)
                     {
-                        if (logger.IsInfoEnabled) logger.InfoFormat("GetFlow Result ok => {0}", JsonConvert.SerializeObject(respData.Data));
+                        if (logger.IsInfoEnabled) logger.InfoFormat("GetFlow Result ok => {0}", respData.Data.IsFinished ? "Finished" : "Pending");
+                        //if (logger.IsDebugEnabled) logger.DebugFormat("Flow Result Data => {0}", JsonConvert.SerializeObject(respData.Data));
                         return respData.Data;
                     }
                 }
@@ -182,16 +183,18 @@ namespace CVWaferProber.Models
                     RespDTO<RespDataFlowResultDTO<AlgResultItem>>? respData = JsonConvert.DeserializeObject<RespDTO<RespDataFlowResultDTO<AlgResultItem>>>(contentResp);
                     if (respData != null && respData.IsSuccess)
                     {
-                        if (logger.IsInfoEnabled) logger.InfoFormat("GetFlow Result ok => {0}", JsonConvert.SerializeObject(respData.Data));
+                        if (logger.IsInfoEnabled) logger.InfoFormat("GetFlow Result ok => {0}", respData.Data.ToDisString());
+                        if (respData.Data.IsFinished && logger.IsDebugEnabled) logger.DebugFormat("Flow Result Data => {0}", JsonConvert.SerializeObject(respData.Data, Formatting.Indented));
                     }
                     return respData;
                 }
                 if (logger.IsErrorEnabled) logger.ErrorFormat("GetFlow Result failed => {0}", contentResp);
-
+                throw new Exception("GetFlow Result failed");
             }
             else
             {
                 if (logger.IsErrorEnabled) logger.ErrorFormat("Rc UnRegist.");
+                throw new Exception("Rc UnRegist");
             }
             return null;
         }

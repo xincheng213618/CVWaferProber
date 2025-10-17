@@ -5,15 +5,57 @@
     <sys:String x:Key="BtnClear">清空</sys:String>
     <sys:String x:Key="BtnReload">重载</sys:String>
     <sys:String x:Key="BtnResetStatus">重置状态</sys:String>
-    <sys:String x:Key="BtnStartAutoTest">开启自动测试</sys:String>
-    <sys:String x:Key="BtnStopAutoTest">停止自动测试</sys:String>
+    <sys:String x:Key="BtnStartAutoTest">开启联机测试</sys:String>
+    <sys:String x:Key="BtnStopAutoTest">停止测试</sys:String>
     <sys:String x:Key="BtnStartManTest">手动测试</sys:String>
     <sys:String x:Key="BtnRefreshStatus">刷新结果列表状态</sys:String>
     <sys:String x:Key="BtnFlowLoad">流程加载</sys:String>
     <sys:String x:Key="BtnReRegist">登录</sys:String>
     <sys:String x:Key="BtnIVLTest">IVL测试</sys:String>
+    <sys:String x:Key="BtnOpenVEyeWindow">VEye软件</sys:String>
+    <sys:String x:Key="BtnSaveTestResult">保存测试结果</sys:String>
+    <sys:String x:Key="BtnLoadTestResult">加载测试结果</sys:String>
+    
     <sys:String x:Key="ChkColorStatus">启用结果状态颜色</sys:String>
     <sys:String x:Key="IsIVLCamera">是否启用IVL相机</sys:String>
     <sys:String x:Key="DataGridHeaderName">姓名</sys:String>
     <sys:String x:Key="DataGridHeaderEmail">电子邮件</sys:String>
+
+    <sys:String x:Key="MenuLogClear">清空日志</sys:String>
+
+    <sys:String x:Key="GridHeader.No">序号</sys:String>
+    <sys:String x:Key="Maping.GridHeader.Row">行</sys:String>
+    <sys:String x:Key="Maping.GridHeader.Col">列</sys:String>
+    <sys:String x:Key="Maping.GridHeader.ScreenX">屏幕X</sys:String>
+    <sys:String x:Key="Maping.GridHeader.ScreenY">屏幕Y</sys:String>
+    <sys:String x:Key="Maping.GridHeader.SerialNumber">序列号</sys:String>
+    <sys:String x:Key="Maping.GridHeader.StartTestTime">开始时间</sys:String>
+    <sys:String x:Key="Maping.GridHeader.EndTestTime">结束时间</sys:String>
+    <sys:String x:Key="Maping.GridHeader.TestStatus">测试状态</sys:String>
+    <sys:String x:Key="Maping.GridHeader.Uniformity">均匀性</sys:String>
+    <sys:String x:Key="Maping.GridHeader.TotalTime">总用时</sys:String>
+
+    <sys:String x:Key="Dock.Layout.Title.SP">光谱/IVL</sys:String>
+    <sys:String x:Key="Dock.Layout.Title.Log">日志</sys:String>
+
+    <!-- 光谱曲线相关 -->
+    <sys:String x:Key="Sp.Spectral">光谱</sys:String>
+    <sys:String x:Key="Sp.SpectralCurve">光谱曲线</sys:String>
+    <sys:String x:Key="Sp.Wavelength">波长 (nm)</sys:String>
+    <!-- 测量参数 -->
+    <sys:String x:Key="Sp.MeasurementBatch">测量批次</sys:String>
+    <sys:String x:Key="Sp.Voltage">电压/V</sys:String>
+    <sys:String x:Key="Sp.Current">电流/A</sys:String>
+    <sys:String x:Key="Sp.Luminance">亮度 (cd/m²)</sys:String>
+    <sys:String x:Key="Sp.Time">时间</sys:String>
+    <sys:String x:Key="ColorCoordinateX">色坐标x</sys:String>
+    <sys:String x:Key="ColorCoordinateY">色坐标y</sys:String>
+    <sys:String x:Key="ColorCoordinateU">色坐标u</sys:String>
+    <sys:String x:Key="ColorCoordinateV">色坐标v</sys:String>
+    <sys:String x:Key="ColorTemperature">色温(K)</sys:String>
+    <sys:String x:Key="DominantWavelength">主波长</sys:String>
+    <sys:String x:Key="PeakWavelength">峰值波长</sys:String>
+
+    <sys:String x:Key="IVLCamera">相机IVL</sys:String>
+    <sys:String x:Key="Image">图像</sys:String>
 </ResourceDictionary>

@@ -139,7 +139,7 @@
                                                 <CheckBox x:Name="ChkIsAutoSN" Content="自动SN" IsChecked="{Binding IsAutoSN}" IsEnabled="{Binding IsNotProcessing}"/>
                                             </StackPanel>
                                         </StackPanel>
-                                        <StackPanel Orientation="Horizontal" Height="30" Margin="5,5">
+                                        <DockPanel Height="30" Margin="5,5">
                                             <!-- 使用Margin来设置间距 -->
                                             <Button Content="{DynamicResource BtnStartAutoTest}" IsEnabled="{Binding IsNotProcessing}" Width="110" Command="{Binding StartAutoTestCommand}" BorderThickness="0" Margin="0,0,10,0"/>
 
@@ -149,8 +149,14 @@
 
                                             <CheckBox Content="{DynamicResource ChkColorStatus}" IsChecked="{Binding IsColorEnabled}" Margin="10,5,10,0"/>
 
-                                            <Button Content="{DynamicResource BtnStartManTest}" Width="110" Command="{Binding StartManTestCommand}" IsEnabled="{Binding IsNotProcessing}" BorderThickness="0"/>
-                                        </StackPanel>
+                                            <Button Content="{DynamicResource BtnStartManTest}" Width="110" Command="{Binding StartManTestCommand}" IsEnabled="{Binding IsNotProcessing}" Margin="0,0,10,0" BorderThickness="0"/>
+                                            <!--<Button Content="{DynamicResource BtnOpenVEyeWindow}" Width="110" Command="{Binding OpenVEyeWindowCommand}" Margin="0,0,10,0" BorderThickness="0"/>-->
+
+                                            <DockPanel Width="230" HorizontalAlignment="Right">
+                                                <Button Content="{DynamicResource BtnSaveTestResult}" Width="110" Command="{Binding SaveTestResultCommand}" IsEnabled="{Binding IsNotProcessing}" Margin="0,0,10,0" BorderThickness="0"/>
+                                                <Button Content="{DynamicResource BtnLoadTestResult}" Width="110" Command="{Binding LoadTestResultCommand}" IsEnabled="{Binding IsNotProcessing}" BorderThickness="0"/>
+                                            </DockPanel>
+                                        </DockPanel>
                                     </StackPanel>
                                 </Border>
 
@@ -165,10 +171,7 @@
                                                 <EventTrigger RoutedEvent="Loaded">
                                                     <BeginStoryboard>
                                                         <Storyboard>
-                                                            <DoubleAnimation Storyboard.TargetName="SpinnerTransform" 
-                           Storyboard.TargetProperty="Angle"
-                           From="0" To="360" Duration="0:0:1" 
-                           RepeatBehavior="Forever"/>
+                                                            <DoubleAnimation Storyboard.TargetName="SpinnerTransform" Storyboard.TargetProperty="Angle" From="0" To="360" Duration="0:0:1" RepeatBehavior="Forever"/>
                                                         </Storyboard>
                                                     </BeginStoryboard>
                                                 </EventTrigger>
@@ -183,17 +186,17 @@
                         <Border Grid.Row="1" BorderBrush="Gray" BorderThickness="0" Margin="0,5">
                             <DataGrid x:Name="TestResultDataGrid" ItemsSource="{Binding TestResults}" AutoGenerateColumns="False" IsReadOnly="True" SelectedItem="{Binding SelectedItem, Mode=TwoWay}" SelectionMode="Single" SelectionUnit="FullRow">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="序号" Binding="{Binding Id}" Width="50"/>
-                                    <DataGridTextColumn Header="MapYRow" Binding="{Binding MapY}" Width="60"/>
-                                    <DataGridTextColumn Header="MapXCol" Binding="{Binding MapX}" Width="60"/>
-                                    <DataGridTextColumn Header="屏幕X坐标" Binding="{Binding ScreenX}" Width="60"/>
-                                    <DataGridTextColumn Header="屏幕Y坐标" Binding="{Binding ScreenY}" Width="60"/>
-                                    <DataGridTextColumn Header="序列号" Binding="{Binding SerialNumber}" Width="250"/>
-                                    <DataGridTextColumn Header="开始时间" Binding="{Binding StartTestTime}" Width="180"/>
-                                    <DataGridTextColumn Header="结束时间" Binding="{Binding EndTestTime}" Width="180"/>
-                                    <DataGridTextColumn Header="测试状态" Binding="{Binding DisplayStatus}" Width="*"/>
-                                    <DataGridTextColumn Header="均匀性" Binding="{Binding DataValue}" Width="100"/>
-                                    <DataGridTextColumn Header="总用时" Binding="{Binding TotalTime}" Width="180"/>
+                                    <DataGridTextColumn Header="{DynamicResource GridHeader.No}" Binding="{Binding Id}" Width="50"/>
+                                    <DataGridTextColumn Header="{DynamicResource Maping.GridHeader.Row}" Binding="{Binding MapY}" Width="60"/>
+                                    <DataGridTextColumn Header="{DynamicResource Maping.GridHeader.Col}" Binding="{Binding MapX}" Width="60"/>
+                                    <DataGridTextColumn Header="{DynamicResource Maping.GridHeader.ScreenX}" Binding="{Binding ScreenX}" Width="60"/>
+                                    <DataGridTextColumn Header="{DynamicResource Maping.GridHeader.ScreenY}" Binding="{Binding ScreenY}" Width="60"/>
+                                    <DataGridTextColumn Header="{DynamicResource Maping.GridHeader.SerialNumber}" Binding="{Binding SerialNumber}" Width="250"/>
+                                    <DataGridTextColumn Header="{DynamicResource Maping.GridHeader.StartTestTime}" Binding="{Binding StartTestTime}" Width="180"/>
+                                    <DataGridTextColumn Header="{DynamicResource Maping.GridHeader.EndTestTime}" Binding="{Binding EndTestTime}" Width="180"/>
+                                    <DataGridTextColumn Header="{DynamicResource Maping.GridHeader.TestStatus}" Binding="{Binding DisplayStatus}" Width="*"/>
+                                    <DataGridTextColumn Header="{DynamicResource Maping.GridHeader.Uniformity}" Binding="{Binding DataValue}" Width="100"/>
+                                    <DataGridTextColumn Header="{DynamicResource Maping.GridHeader.TotalTime}" Binding="{Binding TotalTime}" Width="180"/>
                                 </DataGrid.Columns>
 
                                 <DataGrid.RowStyle>

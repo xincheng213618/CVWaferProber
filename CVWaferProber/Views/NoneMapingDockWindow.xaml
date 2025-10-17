@@ -5,7 +5,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CVWaferProber.Views"
         mc:Ignorable="d"
-        xmlns:cvimg="clr-namespace:CVWPFCameraImage;assembly=CVWPFCameraImage"
         xmlns:cvsp="clr-namespace:CVWPFSpectrometerCtrl;assembly=CVWPFSpectrometerCtrl"
         xmlns:cv="clr-namespace:CVWaferProber.Converters"
         xmlns:ccv="clr-namespace:CVWaferProber.Core.Converters;assembly=CVWaferProber.Core"
@@ -178,7 +177,7 @@
                                 <avalon:LayoutAnchorable Title="相机窗口" 
                                                  CanHide="True" CanClose="False"
                                                  AutoHideMinHeight="100">
-                                    <cvimg:CVCameraImageViewer x:Name="MyImageControl" DataContext="{Binding CustomImageVM}"/>
+                                    <!--<cvimg:CVCameraImageViewer x:Name="MyImageControl" DataContext="{Binding CustomImageVM}"/>-->
                                 </avalon:LayoutAnchorable>
                             </avalon:LayoutAnchorablePane>
                         </avalon:LayoutAnchorablePaneGroup>

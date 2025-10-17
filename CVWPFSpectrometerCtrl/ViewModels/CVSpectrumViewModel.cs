@@ -16,6 +16,7 @@ using ScottPlot.WPF;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
+using System.Windows;
 using System.Windows.Media.Imaging;
 
 namespace CVWPFSpectrometerCtrl.ViewModels
@@ -651,7 +652,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             PlotModel = new PlotModel
             {
-                Title = "光谱曲线",
+                Title = (string)Application.Current.FindResource("Sp.SpectralCurve"),
                 TitleFontSize = 14
             };
 
@@ -659,7 +660,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var xAxis = new LinearAxis
             {
                 Position = AxisPosition.Bottom,
-                Title = "波长 (nm)",
+                Title = (string)Application.Current.FindResource("Sp.Wavelength"),
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
             };
@@ -669,7 +670,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var yAxis = new LinearAxis
             {
                 Position = AxisPosition.Left,
-                Title = "光谱",
+                Title = (string)Application.Current.FindResource("Sp.Spectral"),
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
             };
@@ -758,8 +759,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 TextPosition = new DataPoint((AxisX.DefaultMin + AxisX.DefaultMax) / 2, (AxisY.DefaultMin + AxisY.DefaultMax) / 2),
                 TextColor = OxyColors.Gray,
                 FontSize = 16,
-                TextHorizontalAlignment = HorizontalAlignment.Center,
-                TextVerticalAlignment = VerticalAlignment.Middle
+                TextHorizontalAlignment = OxyPlot.HorizontalAlignment.Center,
+                TextVerticalAlignment = OxyPlot.VerticalAlignment.Middle
             };
 
             PlotModel.Annotations.Add(textAnnotation);

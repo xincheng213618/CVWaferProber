@@ -2,33 +2,52 @@
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
+using System.Windows;
 
 namespace CVWaferProber.ViewModels
 {
     public class DieViewModel : ViewModelBase
     {
         public uint? Id => chipViewModel?.Id;
-        public int? ScreenX => (int)chipViewModel?.Position.X;
-        public int? ScreenY => (int)chipViewModel?.Position.Y;
+        public int? ScreenX => (int?)chipViewModel?.Position.X;
+        public int? ScreenY => (int?)chipViewModel?.Position.Y;
         public int? MapX => chipViewModel?.Column;
         public int? MapY => chipViewModel?.Row;
         public string? SerialNumber {  get; set; }
         public bool IsIVLCameraEnabled {  get; set; }
+        public bool IsChinese {  get; set; }
 
         public DieViewModel(ChipViewModel die)
         {
             this.chipViewModel = die;
             this.IsIVLCameraEnabled = false;
+            this.IsChinese = GetCurrentLanguage() == "Chinese";
         }
 
-        public ChipStatus? Status  => chipViewModel?.Status;
-        public string? DisplayStatus => ChipStatusTool.GetStatusDisplay((ChipStatus)Status);
+        public ChipStatus? Status => chipViewModel?.Status;
+        public string? DisplayStatus => Status.HasValue ? ChipStatusTool.GetStatusDisplay(Status.Value, IsChinese) : "Unknown";
         public DateTime? EndTestTime { get; set; }
         public DateTime? StartTestTime { get; set; }
         public string? TotalTime { get; set; }
         public ChipViewModel? chipViewModel { get; set; }
         public string? DataValue => string.Format("{0:F4}",chipViewModel?.DataValue);
 
+        public static string GetCurrentLanguage()
+        {
+            var app = Application.Current;
+            if (app?.Resources?.MergedDictionaries?.FirstOrDefault() is ResourceDictionary resourceDict)
+            {
+                var source = resourceDict.Source?.ToString();
+                if (source != null)
+                {
+                    if (source.Contains("Chinese.xaml"))
+                        return "Chinese";
+                    else if (source.Contains("English.xaml"))
+                        return "English";
+                }
+            }
+            return "Unknown";
+        }
         public void ChangeStatus(ChipStatus status, bool updateTime = false)
         {
             if (updateTime) EndTestTime = DateTime.Now;
@@ -45,6 +64,11 @@ namespace CVWaferProber.ViewModels
             if (chipViewModel != null) chipViewModel.IsSelected = true;
             FirePropertyChanged();
         }
+        public void ChangeStatusOnly(ChipStatus status)
+        {
+            chipViewModel?.SetStatus(status);
+            FirePropertyChanged();
+        }
 
         public void UnSelected()
         {
@@ -55,11 +79,11 @@ namespace CVWaferProber.ViewModels
         {
             UnSelected();
             chipViewModel?.SetStatus(ChipStatus.WAITING);
-            StartTestTime = null; 
+            StartTestTime = null;
             EndTestTime = null;
             TotalTime = null;
             SerialNumber = null;
-            chipViewModel.ChipData.DataValue = null;
+            if (chipViewModel != null && chipViewModel.ChipData != null) chipViewModel.ChipData.DataValue = null;
             FirePropertyChanged();
         }
 

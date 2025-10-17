@@ -9,9 +9,52 @@
     <sys:String x:Key="BtnStopAutoTest">StopAutoTest</sys:String>
     <sys:String x:Key="BtnStartManTest">ManualTest</sys:String>
     <sys:String x:Key="BtnRefreshStatus">StatusRefresh</sys:String>
+    <sys:String x:Key="BtnFlowLoad">LoadFlow</sys:String>
     <sys:String x:Key="BtnIVLTest">IVLTest</sys:String>
+    <sys:String x:Key="BtnSaveTestResult">SaveTestResult</sys:String>
+    <sys:String x:Key="BtnLoadTestResult">LoadTestResult</sys:String>
+    <sys:String x:Key="BtnOpenVEyeWindow">OpenVEye</sys:String>
+
     <sys:String x:Key="ChkColorStatus">Enable Color Status</sys:String>
     <sys:String x:Key="IsIVLCamera">Enable IVL Camera</sys:String>
     <sys:String x:Key="DataGridHeaderName">Name</sys:String>
     <sys:String x:Key="DataGridHeaderEmail">Email</sys:String>
+
+    <sys:String x:Key="MenuLogClear">ClearLog</sys:String>
+
+    <sys:String x:Key="GridHeader.No">No</sys:String>
+    <sys:String x:Key="Maping.GridHeader.Row">Row</sys:String>
+    <sys:String x:Key="Maping.GridHeader.Col">Col</sys:String>
+    <sys:String x:Key="Maping.GridHeader.ScreenX">ScreenX</sys:String>
+    <sys:String x:Key="Maping.GridHeader.ScreenY">ScreenY</sys:String>
+    <sys:String x:Key="Maping.GridHeader.SerialNumber">SerialNumber</sys:String>
+    <sys:String x:Key="Maping.GridHeader.StartTestTime">StartTestTime</sys:String>
+    <sys:String x:Key="Maping.GridHeader.EndTestTime">EndTestTime</sys:String>
+    <sys:String x:Key="Maping.GridHeader.TestStatus">Status</sys:String>
+    <sys:String x:Key="Maping.GridHeader.Uniformity">Uniformity</sys:String>
+    <sys:String x:Key="Maping.GridHeader.TotalTime">TotalTime</sys:String>
+
+    <sys:String x:Key="Dock.Layout.Title.SP">Spectral/IVL</sys:String>
+    <sys:String x:Key="Dock.Layout.Title.Log">SysLog</sys:String>
+
+    <!-- 光谱曲线相关 -->
+    <sys:String x:Key="Sp.Spectral">Spectral</sys:String>
+    <sys:String x:Key="Sp.SpectralCurve">Spectral Curve</sys:String>
+    <sys:String x:Key="Sp.Wavelength">Wavelength (nm)</sys:String>
+    <!-- 测量参数 -->
+    <sys:String x:Key="Sp.MeasurementBatch">Measurement Batch</sys:String>
+    <sys:String x:Key="Sp.Voltage">Voltage/V</sys:String>
+    <sys:String x:Key="Sp.Current">Current/A</sys:String>
+    <sys:String x:Key="Sp.Luminance">Luminance (cd/m²)</sys:String>
+    <sys:String x:Key="Sp.Time">Time</sys:String>
+    <sys:String x:Key="ColorCoordinateX">CIE x</sys:String>
+    <sys:String x:Key="ColorCoordinateY">CIE y</sys:String>
+    <sys:String x:Key="ColorCoordinateU">CIE u</sys:String>
+    <sys:String x:Key="ColorCoordinateV">CIE v</sys:String>
+    <sys:String x:Key="ColorTemperature">ColorTemperature(K)</sys:String>
+    <sys:String x:Key="DominantWavelength">DominantWavelength</sys:String>
+    <sys:String x:Key="PeakWavelength">PeakWavelength</sys:String>
+
+    <sys:String x:Key="IVLCamera">IVLCamera</sys:String>
+    <sys:String x:Key="Image">Image</sys:String>
 </ResourceDictionary>

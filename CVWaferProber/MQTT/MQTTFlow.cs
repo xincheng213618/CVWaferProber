@@ -207,6 +207,22 @@ namespace CVWaferProber.MQTT
             this.Devices = new Dictionary<string, MQTTDeviceMO>();
         }
     }
+    public class MQTTNodeService
+    {
+        public string ServiceToken { get; set; }
+        public string ServiceCode { get; set; }
+        public string ServiceName { get; set; }
+        public string ServiceType { get; set; }
+        public string UpChannel { get; set; }
+        public string DownChannel { get; set; }
+        public Dictionary<string, MQTTDevice> Devices { get; set; }
+
+        public class MQTTDevice
+        {
+            public string Code { get; set; }
+            public string Name { get; set; }
+        }
+    }
     public class MQTTFlowEventEnum
     {
         public const string Event_Flow_CombinedRun = "Flow_CombinedRun";
@@ -218,6 +234,21 @@ namespace CVWaferProber.MQTT
         public const string Event_Flow_GetCombinedResult = "Flow_GetCombinedResult";
     }
 
+    public class MQTTNodeServiceEventEnum
+    {
+        public const string Event_SetToken = "SetToken";
+        public const string Event_Regist = "Regist";
+        public const string Event_NotRegist = "NotRegist";
+        public const string Event_Startup = "Startup";
+        public const string Event_AddService = "AddService";
+        public const string Event_StopService = "StopService";
+        public const string Event_StopAllServices = "StopAllServices";
+        public const string Event_LoadAllServices = "LoadAllServices";
+        public const string Event_ReloadService = "ReloadService";
+        public const string Event_QueryServices = "QueryServices";
+        public const string Event_QueryServiceStatus = "QueryServiceStatus";
+        public const string Event_ServiceHeartbeat = "ServiceHeartbeat";
+    }
     public class MQTTRCServiceTypeConst
     {
         public const string RCServiceType = "MQTTRCService";

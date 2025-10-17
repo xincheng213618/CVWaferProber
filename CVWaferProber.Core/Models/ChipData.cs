@@ -60,24 +60,33 @@ namespace CVWaferProber.Core.Models
             };
         }
 
-        public static string GetStatusDisplay(ChipStatus status)
+        public static string GetStatusDisplay(ChipStatus status, bool isChinese)
         {
-            return status switch
+            if(isChinese)
             {
-                ChipStatus.WAITING => "未检测",
-                ChipStatus.TESTING => "正在检测",
-                ChipStatus.OK => "检测合格",
-                ChipStatus.AOI_NG => "AOI外观检测NG",
-                ChipStatus.DW_NG => "定位NG",
-                ChipStatus.BLIND => "完全不亮",
-                ChipStatus.CAL_NG => "提取失败",
-                ChipStatus.I2C_NG => "I2C状态异常",
-                ChipStatus.AOI_LINE_NG => "线缺陷检测NG",
-                ChipStatus.IVL_TESTING => "正在IVL检测",
-                ChipStatus.IVL_COMPLETED => "IVL检测完成",
-                ChipStatus.FAILED => "运行失败",
-                _ => "未知"
-            };
+                return status switch
+                {
+                    ChipStatus.WAITING => "未检测",
+                    ChipStatus.TESTING => "正在检测",
+                    ChipStatus.OK => "检测合格",
+                    ChipStatus.AOI_NG => "AOI外观检测NG",
+                    ChipStatus.DW_NG => "定位NG",
+                    ChipStatus.BLIND => "完全不亮",
+                    ChipStatus.CAL_NG => "提取失败",
+                    ChipStatus.I2C_NG => "I2C状态异常",
+                    ChipStatus.AOI_LINE_NG => "线缺陷检测NG",
+                    ChipStatus.IVL_TESTING => "正在IVL检测",
+                    ChipStatus.IVL_COMPLETED => "IVL检测完成",
+                    ChipStatus.FAILED => "运行失败",
+                    ChipStatus.OVERTIME => "超时",
+                    _ => "未知"
+                };
+            }
+            else
+            {
+                return status.ToString();
+            }
+          
         }
 
         public static ChipStatus GetStatusFromErrCode(string errCode)

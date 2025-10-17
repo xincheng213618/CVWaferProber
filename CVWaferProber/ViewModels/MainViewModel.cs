@@ -1,17 +1,17 @@
 ﻿using ChipMapping.Models;
-using ChipMapping.Models.HZCC;
 using ChipMapping.ViewModels;
 using CVCommCore;
 using CVDB.Services.Algorithm;
 using CVDB.Services.Buz;
-using CVMQTTLib;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.Restful.DTO;
 using CVWaferProber.Core.ViewModels;
-using CVWaferProber.Models;
+using CVWaferProber.MQTT;
+using CVWaferProber.Services;
 using CVWaferProber.Utils;
-using CVWPFCameraImage.ViewModels;
+using CVWaferProber.Views;
+using CVWaferProber.WinMsg;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
 using Microsoft.Win32;
@@ -19,6 +19,7 @@ using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -34,6 +35,8 @@ namespace CVWaferProber.ViewModels
         public CVCamImagerViewModel? CustomImageVM { get; set; }
         //public CVCameraImageViewModel? CustomImageVM { get; set; }
         public CVSpectrumViewModel? CustomIVLVM { get; set; }
+
+        private GSWMProcessor _wmProcessor;
 
         private FlowViewModel? _selectedFlow;
         public FlowViewModel? SelectedFlow
@@ -66,11 +69,14 @@ namespace CVWaferProber.ViewModels
         public ICommand StartAutoTestCommand { get; }
         public ICommand StopAutoTestCommand { get; }
         public ICommand StartManTestCommand { get; }
+        public ICommand SaveTestResultCommand { get; }
+        public ICommand LoadTestResultCommand { get; }
         public ICommand IVLTestCommand { get; }
         public ICommand OpenMappingFileCommand { get; }
         public ICommand RefreshStatusCommand { get; }
         public ICommand ResetStatusCommand { get; }
         public ICommand RCRegCommand { get; }
+        public ICommand OpenVEyeWindowCommand { get; }
         public ObservableCollection<DieViewModel> TestResults { get; } = new ObservableCollection<DieViewModel>();
         public RangeEnabledObservableCollection<FlowViewModel> FlowItems { get; } = new RangeEnabledObservableCollection<FlowViewModel>();
         public ObservableCollection<WPFlowViewModel> WPFlows { get; } = new ObservableCollection<WPFlowViewModel>();
@@ -121,7 +127,7 @@ namespace CVWaferProber.ViewModels
 
         private DataGrid? _dataGrid; // 引用DataGrid
         private DispatcherTimer? _simAutoTestTimer;
-        private RCRestModel rcModel;
+        private RCRestService rcModel;
         //private AlgResultModel algResultModel;
         /// <summary>
         /// false 外部控件关联触发
@@ -154,6 +160,7 @@ namespace CVWaferProber.ViewModels
         }
 
         private CVMQTTWPClient mqtt;
+        private int _overTimefRestapi = 30; //S
         public MainViewModel()
         {
             Instance = this;
@@ -162,17 +169,20 @@ namespace CVWaferProber.ViewModels
             _dataGrid = null;
             _isIVLCameraEnabled = false;
             _isAutoSN = true;
-            rcModel = new RCRestModel();
+            rcModel = new RCRestService();
             //algResultModel = new AlgResultModel();
             CustomMappingVM = new ChipMappingControlViewModel();
             CustomImageVM = new CVCamImagerViewModel();
             CustomIVLVM = new CVSpectrumViewModel();
             //
+            OpenVEyeWindowCommand = new RelayCommand(OpenVEyeWindow);
             RefreshStatusCommand = new RelayCommand(RefreshStatus);
             OpenMappingFileCommand = new RelayCommand(OpenMappingFile);
             StartAutoTestCommand = new RelayCommand(StartAutoTest);
             StopAutoTestCommand = new RelayCommand(StopAutoTest);
             StartManTestCommand = new RelayCommand(StartManTest);
+            SaveTestResultCommand = new RelayCommand(SaveTestResult);
+            LoadTestResultCommand = new RelayCommand(LoadTestResult);
             ResetStatusCommand = new RelayCommand(ResetStatus);
             LoadMappingFileCommand = new RelayCommand(_ => LoadMappingFileFromCsv());
             ClearMappingCommand = new RelayCommand(_ => ClearMapping());
@@ -181,7 +191,7 @@ namespace CVWaferProber.ViewModels
             //
             ProberId = "CVProber01";
             MappingCsvFilePath = "E:\\work\\cv\\New版\\晶圆台\\CVWaferProber\\ChipMapping\\ScanData_sc.csv";
-
+            if (!System.IO.File.Exists(MappingCsvFilePath)) MappingCsvFilePath = "ScanData_sc.csv";
             Snowflake.Instance.SnowflakesInit(1, 1);
             InitializeSimAutoTestTimer();
 
@@ -189,6 +199,33 @@ namespace CVWaferProber.ViewModels
 
             LoadBuzWPFlows();
 
+            InitMQTT();
+        }
+
+        private void OpenVEyeWindow(object? obj)
+        {
+            ExternalWindow newWindow = new ExternalWindow();
+            newWindow.Show();
+        }
+
+        public void WinLoadInit(Window win)
+        {
+            _wmProcessor = new GSWMProcessor(win);
+            _wmProcessor.OnStopTest += _wmProcessor_OnStopTest;
+            _wmProcessor.OnSOT += _wmProcessor_OnSOT;
+        }
+
+        private void _wmProcessor_OnSOT(object sender, int row, int col)
+        {
+            StartTestingDie(row,col);
+        }
+
+        private void _wmProcessor_OnStopTest(object sender)
+        {
+             StopAutoTest(this);
+        }
+        private void InitMQTT()
+        {
             mqtt = CVMQTTWPClient.Instance.Init("RC_local");
         }
 
@@ -238,7 +275,52 @@ namespace CVWaferProber.ViewModels
                 if (FlowItems.Count > 0) SelectedFlow = FlowItems[FlowItems.Count - 1];
             }
         }
+        private void SaveTestResult(object? obj)
+        {
+            var saveFileDialog = new SaveFileDialog
+            {
+                Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*",
+                DefaultExt = ".csv",
+                FileName = string.Format("{0}_{1}_result.csv", ProberId, _Timestamp),
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+            };
 
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    ResultService.SaveToCSV(saveFileDialog.FileName, TestResults);
+                    if (logger.IsInfoEnabled) logger.InfoFormat("Save result ok => {0}", saveFileDialog.FileName);
+                }
+                catch (Exception ex)
+                {
+                    if (logger.IsErrorEnabled) logger.Error(ex);
+                }
+            }
+        }
+        private void LoadTestResult(object? obj)
+        {
+            var openFileDialog = new OpenFileDialog
+            {
+                Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*",
+                DefaultExt = ".csv",
+                FileName = "result.csv",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+            };
+            if (openFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    ResultService.LoadFromCSV(openFileDialog.FileName, TestResults);
+                    _dataGrid?.Items.Refresh();
+                    if (logger.IsInfoEnabled) logger.InfoFormat("Load result ok => {0}", openFileDialog.FileName);
+                }
+                catch (Exception ex)
+                {
+                    if (logger.IsErrorEnabled) logger.Error(ex);
+                }
+            }
+        }
         private void RefreshStatus(object? obj)
         {
             _dataGrid?.Items.Refresh();
@@ -298,13 +380,21 @@ namespace CVWaferProber.ViewModels
         }
         private void NextTestingDie()
         {
-            TestResults[CurTestDieIdx].UnSelected();
-            CurTestDieIdx++;
-            //
-            var itemToSelect = TestResults[CurTestDieIdx];
-            ScrollToItem(itemToSelect);
+            var sel = TestResults[CurTestDieIdx];
+            sel.UnSelected();
+            if (IsLocalSim)
+            {
+                CurTestDieIdx++;
+                //
+                var itemToSelect = TestResults[CurTestDieIdx];
+                ScrollToItem(itemToSelect);
 
-            StartTestingDie(itemToSelect);
+                StartTestingDie(itemToSelect);
+            }
+            else if (sel.Status.HasValue && sel.MapX.HasValue && sel.MapY.HasValue)
+            {
+                _wmProcessor.MeasurementProcessResult((ChipStatus)sel.Status, (int)sel.MapY, (int)sel.MapX);
+            }
         }
 
         private void StartTestingDie(DieViewModel dieViewModel)
@@ -313,6 +403,26 @@ namespace CVWaferProber.ViewModels
             dieViewModel.SerialNumber = sn;
             dieViewModel.ChangeStatus(ChipStatus.TESTING);
             Task.Factory.StartNew(() => rcModel.RcRunFlowByName(_selectedWPFlow.Name, sn));
+        }
+        private void StartTestingDie(int row, int col)
+        {
+            if (CurTestDieIdx>=0)
+            {
+                TestResults[CurTestDieIdx].UnSelected();
+            }
+            var itemToSelect = TestResults.FirstOrDefault(d => d.MapX == col && d.MapY == row);
+            if (itemToSelect != null)
+            {
+                CurTestDieIdx = TestResults.IndexOf(itemToSelect);
+
+                ScrollToItem(itemToSelect);
+                Task task = DoAsyncStartTestingDie(itemToSelect, false);
+                //StartTestingDie(itemToSelect);
+            }
+            else
+            {
+                logger.ErrorFormat("Die not found By Row={0},Col={1}", row, col);
+            }
         }
 
         /// <summary>
@@ -405,6 +515,7 @@ namespace CVWaferProber.ViewModels
             if (string.IsNullOrEmpty(ProberId)) return string.Format("{1}[{3},{4}]", ProberId, Timestamp, Snowflake.Instance.NextSeqId(), dieViewModel.MapY, dieViewModel.MapX);
             else return string.Format("{0}_{1}[{3},{4}]", ProberId, Timestamp, Snowflake.Instance.NextSeqId(), dieViewModel.MapY, dieViewModel.MapX);
         }
+        private bool IsLocalSim = false;
         private void StartAutoFlow()
         {
             if (SelectedWPFlow != null)
@@ -414,10 +525,16 @@ namespace CVWaferProber.ViewModels
 
                 TestingReady();
 
-                StartTestingDie(TestResults[CurTestDieIdx]);
-
-                //获取结果
-                _simAutoTestTimer?.Start();
+                if (IsLocalSim)
+                {
+                    StartTestingDie(TestResults[CurTestDieIdx]);
+                    //获取结果
+                    _simAutoTestTimer?.Start();
+                }
+                else
+                {
+                    _wmProcessor.MeasurementReady();
+                }
             }
         }
         private void StartManFlow()
@@ -455,7 +572,7 @@ namespace CVWaferProber.ViewModels
             CustomMappingVM.DisabledInput = IsProcessing = false;
             EnableBtn(true);
         }
-        private async Task DoAsyncStartTestingDie(DieViewModel die)
+        private async Task DoAsyncStartTestingDie(DieViewModel die,bool isEnd = true)
         {
             try
             {
@@ -474,18 +591,20 @@ namespace CVWaferProber.ViewModels
             }
             catch (OperationCanceledException)
             {
+                die.ChangeStatus(ChipStatus.OVERTIME, true);
                 // 处理取消操作
-                if (logger.IsDebugEnabled) logger.Debug("Man Flow execution was cancelled.");
+                if (logger.IsErrorEnabled) logger.Error("Man Flow execution was cancelled.");
             }
             catch (Exception ex)
             {
                 die.ChangeStatus(ChipStatus.FAILED, true);
                 // 处理其他异常
-                if (logger.IsDebugEnabled) logger.Debug($"Man Flow execution failed: {ex.Message}");
+                if (logger.IsErrorEnabled) logger.Error($"Man Flow execution failed: {ex.Message}");
                 throw;
             }finally
             {
-                EndTesting();
+                _wmProcessor.MeasurementProcessResult(die);
+                if (isEnd) EndTesting();
             }
         }
 
@@ -504,7 +623,7 @@ namespace CVWaferProber.ViewModels
                         {
                             OLED_AOI_Result_E eResult = JsonConvert.DeserializeObject<OLED_AOI_Result_E>(aoi[0].Result);
                             status = ChipStatusTool.GetStatusFromErrCode(eResult.ResultCode);
-                            logger.InfoFormat("AOI Result => {0}", status.ToString());
+                            if(logger.IsInfoEnabled) logger.InfoFormat("AOI Result => {0}", status.ToString());
                             break;
                         }
                     }
@@ -517,7 +636,7 @@ namespace CVWaferProber.ViewModels
         {
             StartTestingDie(die);
 
-            using var cancellationTokenSource = new CancellationTokenSource();
+            using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(_overTimefRestapi));
             var cancellationToken = cancellationTokenSource.Token;
             //获取结果
             return await PollFlowResultWithRxAsync(die.SerialNumber, cancellationToken);
@@ -548,7 +667,6 @@ namespace CVWaferProber.ViewModels
             }
 
             _dataGrid?.Items.Refresh();
-
             CurTestDieIdx = 0;
             if (_isAutoSN) Timestamp = DateTime.Now.ToString("yyyyMMdd'T'HHmmss.fff");
         }
@@ -578,6 +696,8 @@ namespace CVWaferProber.ViewModels
                 TestResults[i].UnSelected();
             CustomMappingVM.DisabledInput = IsProcessing = false;
             EnableBtn(true);
+
+            _wmProcessor.MeasurementStoped();
         }
         private void StopSim()
         {
@@ -605,12 +725,11 @@ namespace CVWaferProber.ViewModels
         private void LoadMappingFileFromCsv()
         {
             List<CVMappingData> mappingData = null;
-            //HZCCS2000MappingData data = new HZCCS2000MappingData();
-            //HZCCS2000MappingDataTool.LoadMapping("D:\\work\\cv\\CVWaferProber\\ChipMapping\\WaferDevice.cc", ref data);
-            var dataMapping = S2000MappingDataReader.Read("E:\\work\\cv\\New版\\晶圆台\\src\\CVWaferProber\\ChipMapping\\WaferDevice.cc");
-            // 转换Die数据为ViewModel
-            List<ChipMapping.Models.HZCC.DieViewModel> _dieViewModels = dataMapping.DieTestResults?.Select((die, index) => DieDataConverter.ConvertToViewModel(die, index)).ToList();
-            //new List<DieViewModel>();
+            if (!System.IO.File.Exists(MappingCsvFilePath))
+            {
+                if (logger.IsWarnEnabled) logger.WarnFormat("File not exist => {0}", MappingCsvFilePath);
+                return;
+            }
             bool bR = CsvMappingDataTool.LoadMappingCsv(MappingCsvFilePath, ref mappingData);
             if (bR && mappingData != null && mappingData.Count > 0)
             {
@@ -666,11 +785,5 @@ namespace CVWaferProber.ViewModels
         {
             if (obj != null) SelectItemById((uint)obj);
         }
-
-        //private MainWindow _mainWindow;
-        //public void SetMainWin(MainWindow mainWindow)
-        //{
-        //    this._mainWindow = mainWindow;
-        //}
     }
 }

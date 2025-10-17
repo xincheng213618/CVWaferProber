@@ -110,6 +110,11 @@ namespace CVWaferProber.Core.Restful.DTO
         [JsonIgnore]
         public bool IsFinished { get => ResultCode.HasValue; }
 
+        public string ToDisString()
+        {
+            if (IsFinished) return string.Format("Finished:{0}/{1}ms", ResultStatus, TotalTime);
+            else return string.Format("Pending");
+        }
     }
     public class RespDataFlowResultDTO<T> : RespDataBaseFlowResultDTO
     {

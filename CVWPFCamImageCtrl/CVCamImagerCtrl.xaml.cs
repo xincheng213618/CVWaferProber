@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using CVCommCore.CVImage;
+using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -15,10 +16,11 @@ namespace CVWPFCamImageCtrl
     /// </summary>
     public partial class CVCamImagerCtrl : UserControl
     {
-        private ObservableCollection<ImageItem> _imageItems;
+        //private ObservableCollection<ImageItem> _imageItems;
         private int _currentImageIndex = -1;
         private bool _isUpdatingZoomSlider = false;
         private int _nextImageId = 1;
+        private CVCamImagerViewModel _model;
 
         // 支持的图像格式
         private readonly string[] _supportedImageExtensions = {
@@ -33,10 +35,21 @@ namespace CVWPFCamImageCtrl
             //StartMemoryMonitoring();
 
             ImageDisplay.ZoomChanged += ImageDisplay_ZoomChanged;
+            this.Loaded += CVCamImagerCtrl_Loaded;
         }
+
+        private void CVCamImagerCtrl_Loaded(object sender, RoutedEventArgs e)
+        {
+            if(this.DataContext is CVCamImagerViewModel model)
+            {
+                _model = model;
+                model.SetImageCtrl(ImageDisplay);
+            }
+        }
+
         private void InitializeData()
         {
-            _imageItems = new ObservableCollection<ImageItem>();
+            //_imageItems = new ObservableCollection<ImageItem>();
 
             //AddImageFolder(@"F:\img\晶圆台\陈高\0826\1");
 
@@ -71,7 +84,7 @@ namespace CVWPFCamImageCtrl
                     Task<List<ImageItem>> task = LoadImageFilesAsync(openFileDialog.FileNames);
                     await task;
 
-                    ImageDataGrid.ItemsSource = _imageItems;
+                    ImageDataGrid.ItemsSource = _model.ImageResults;
                     ImageDataGrid.Items.Refresh();
                 }
             }
@@ -92,7 +105,7 @@ namespace CVWPFCamImageCtrl
                     if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
                     {
                         //string selectedFolderPath = dialog.FileName;
-                        _imageItems.Clear();
+                        _model.ImageResults.Clear();
                         var folderPath = dialog.FileName;
                         if (Directory.Exists(folderPath))
                         {
@@ -111,7 +124,7 @@ namespace CVWPFCamImageCtrl
                                 Task<List<ImageItem>> task= LoadImageFilesAsync(imageFiles);
                                 await task;
 
-                                ImageDataGrid.ItemsSource = _imageItems;
+                                ImageDataGrid.ItemsSource = _model.ImageResults;
                                 ImageDataGrid.Items.Refresh();
                                 //foreach (var imageItem in task.Result)
                                 //{
@@ -173,7 +186,7 @@ namespace CVWPFCamImageCtrl
                                 // 在UI线程上添加项目
                                 //Dispatcher.Invoke(() =>
                                 //{
-                                _imageItems.Add(imageItem);
+                                _model.ImageResults.Add(imageItem);
                                 //    //LoadingProgressBar.Value++;
                                 //    loadedCount++;
                                 //    UpdateProgressText(loadedCount, totalCount);
@@ -189,7 +202,7 @@ namespace CVWPFCamImageCtrl
                 });
 
                 //加载完成后选择第一个文件
-                if (_imageItems.Any())
+                if (_model.ImageResults.Any())
                 {
                     ImageDataGrid.SelectedIndex = 0;
                     //StatusText.Text = $"成功加载 {loadedCount} 个图像文件";
@@ -286,7 +299,7 @@ namespace CVWPFCamImageCtrl
         #endregion
         private void ClearAllImages()
         {
-            _imageItems.Clear();
+            _model.ImageResults.Clear();
             ImageDisplay.CurrentImage = null;
             ClearImageInfoDisplay();
             //UpdateImageCount();
@@ -332,7 +345,7 @@ namespace CVWPFCamImageCtrl
                     var imageData = ImageItem.CreateFromFile(file);
                     if (imageData != null)
                     {
-                        _imageItems.Add(imageData);
+                        _model.ImageResults.Add(imageData);
                     }
                 }
             }
@@ -429,30 +442,65 @@ namespace CVWPFCamImageCtrl
                     //    // 获取图像信息
 
                     //});
-                    var info = OpenCVImageLoader.GetImageInfo(selectedImage.ImagePath);
-                    var bitmapSource = OpenCVImageLoader.LoadTiffImage(selectedImage.ImagePath, 0.1);
-                    var imageInfo = (info, bitmapSource);
-                    if (imageInfo.bitmapSource != null)
+                    string fExt = System.IO.Path.GetExtension(selectedImage.ImagePath).ToLower();
+                    if (fExt == ".cvcie" || fExt == ".cvraw")
                     {
-                        // 更新图像显示
-                        ImageDisplay.CurrentImage = imageInfo.bitmapSource;
+                        CVCIEFileInfo fileInfo = new CVCIEFileInfo();
+                        if(CVImageFileUtil.LoadImgFile_Raw(selectedImage.ImagePath,ref fileInfo))
+                        {
+                            var infoCV = (fileInfo.FrameInfo.widthInt, fileInfo.FrameInfo.heightInt, fileInfo.FrameInfo.channelsInt);
+                            var bitmapSourceCV = OpenCVImageLoader.ConvertMatToBitmap(OpenCvMatTools.ConvertImage32To8ByNorm(new OpenCvSharp.Mat(fileInfo.FrameInfo.heightInt, fileInfo.FrameInfo.widthInt,OpenCvMatTools.GetMatType(fileInfo.FrameInfo.bppInt, fileInfo.FrameInfo.channelsInt), fileInfo.data)));
+                            var imageInfoCV = (infoCV, bitmapSourceCV);
+                            if (imageInfoCV.bitmapSourceCV != null)
+                            {
+                                // 更新图像显示
+                                ImageDisplay.CurrentImage = imageInfoCV.bitmapSourceCV;
 
-                        // 更新图像信息显示
-                        UpdateImageInfoDisplay(imageInfo.info, imageInfo.bitmapSource);
+                                // 更新图像信息显示
+                                UpdateImageInfoDisplay(imageInfoCV.infoCV, imageInfoCV.bitmapSourceCV);
 
-                        selectedImage.Status = "已加载";
-                        //StatusText.Text = "图像加载完成";
-                        ImageDisplay.ZoomToFit();
+                                selectedImage.Status = "已加载";
+                                //StatusText.Text = "图像加载完成";
+                                ImageDisplay.ZoomToFit();
+                            }
+                            else
+                            {
+                                ImageDisplay.CurrentImage = null;
+                                ClearImageInfoDisplay();
+                                selectedImage.Status = "加载失败";
+                                //StatusText.Text = "图像加载失败";
+                            }
+                        }
                     }
                     else
                     {
-                        ClearImageInfoDisplay();
-                        selectedImage.Status = "加载失败";
-                        //StatusText.Text = "图像加载失败";
+                        var info = OpenCVImageLoader.GetImageInfo(selectedImage.ImagePath);
+                        var bitmapSource = OpenCVImageLoader.LoadTiffImage(selectedImage.ImagePath, 0.1);
+                        var imageInfo = (info, bitmapSource);
+                        if (imageInfo.bitmapSource != null)
+                        {
+                            // 更新图像显示
+                            ImageDisplay.CurrentImage = imageInfo.bitmapSource;
+
+                            // 更新图像信息显示
+                            UpdateImageInfoDisplay(imageInfo.info, imageInfo.bitmapSource);
+
+                            selectedImage.Status = "已加载";
+                            //StatusText.Text = "图像加载完成";
+                            ImageDisplay.ZoomToFit();
+                        }
+                        else
+                        {
+                            ImageDisplay.CurrentImage = null;
+                            ClearImageInfoDisplay();
+                            selectedImage.Status = "加载失败";
+                            //StatusText.Text = "图像加载失败";
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
+                    ImageDisplay.CurrentImage = null;
                     ClearImageInfoDisplay();
                     selectedImage.Status = "错误";
                     //StatusText.Text = $"加载错误: {ex.Message}";
@@ -529,7 +577,7 @@ namespace CVWPFCamImageCtrl
 
         private void PreviousImage_Click(object sender, RoutedEventArgs e)
         {
-            if (_imageItems.Any() && _currentImageIndex > 0)
+            if (_model.ImageResults.Any() && _currentImageIndex > 0)
             {
                 ImageDataGrid.SelectedIndex = _currentImageIndex - 1;
             }
@@ -537,7 +585,7 @@ namespace CVWPFCamImageCtrl
 
         private void NextImage_Click(object sender, RoutedEventArgs e)
         {
-            if (_imageItems.Any() && _currentImageIndex < _imageItems.Count - 1)
+            if (_model.ImageResults.Any() && _currentImageIndex < _model.ImageResults.Count - 1)
             {
                 ImageDataGrid.SelectedIndex = _currentImageIndex + 1;
             }

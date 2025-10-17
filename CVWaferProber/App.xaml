@@ -7,7 +7,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Language/Chinese.xaml"/>
-                <!-- <ResourceDictionary Source="Language/English.xaml"/> -->
+                 <!--<ResourceDictionary Source="Language/English.xaml"/>--> 
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

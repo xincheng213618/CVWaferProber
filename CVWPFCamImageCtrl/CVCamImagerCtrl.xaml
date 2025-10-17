@@ -105,7 +105,9 @@
             </Grid.ColumnDefinitions>
 
             <!-- 左侧图像显示区域 -->
-            <local:CVImager x:Name="ImageDisplay" CurrentImage="{Binding ImageSrc}" Grid.Column="0" Margin="5"/>
+            <Grid x:Name="container" RenderTransformOrigin="0.5,0.5" Grid.Column="0">
+                <local:CVImager x:Name="ImageDisplay" CurrentImage="{Binding ImageSrc}"  Margin="5"/>
+            </Grid>
             <!-- 右侧数据网格区域 -->
             <GridSplitter Grid.Column="0" Width="3" HorizontalAlignment="Right" 
                          Background="Transparent" ShowsPreview="True"/>

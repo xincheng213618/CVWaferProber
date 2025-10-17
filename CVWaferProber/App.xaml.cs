@@ -1,5 +1,4 @@
-﻿using CVWaferProber.Views;
-using log4net;
+﻿using log4net;
 using log4net.Config;
 using System.Reflection;
 using System.Windows;
@@ -23,6 +22,8 @@ namespace CVWaferProber
             // 或者使用单独的配置文件
             var configFile = new System.IO.FileInfo("log4net.config");
             XmlConfigurator.Configure(logRepository, configFile);
+
+            AppSettingsManager.InitializeLanguage();
 
             log.Info("Application starting...");
 

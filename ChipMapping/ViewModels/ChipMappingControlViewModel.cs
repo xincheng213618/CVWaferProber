@@ -165,6 +165,10 @@ namespace ChipMapping.ViewModels
 
         public void SetSelectedChip(uint id)
         {
+            if (SelectedChip != null)
+            {
+                SelectedChip.IsSelected = false;
+            }
             foreach (var chip in Chips)
             {
                 if(chip.Id == id)

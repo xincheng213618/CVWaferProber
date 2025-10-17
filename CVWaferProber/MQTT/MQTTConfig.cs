@@ -4,7 +4,7 @@ using CVDB.Services;
 using CVMysql;
 using Newtonsoft.Json;
 
-namespace CVWaferProber.Models
+namespace CVWaferProber.MQTT
 {
     public abstract class CVConfig : CustomConfigurationFileReader
     {
@@ -15,12 +15,12 @@ namespace CVWaferProber.Models
         {
             if (logger.IsInfoEnabled) logger.InfoFormat("Load service config file => {0}", configFileName);
 
-            this.CfgType = cType;
+            CfgType = cType;
         }
         protected void ReadValue(System.Configuration.Configuration config)
         {
-            this.NodeName = config.AppSettings.Settings["NodeName"]?.Value;
-            if (!string.IsNullOrEmpty(this.NodeName))
+            NodeName = config.AppSettings.Settings["NodeName"]?.Value;
+            if (!string.IsNullOrEmpty(NodeName))
             {
                 //从数据库读取配置
                 var cfg = CfgService.GetCfgByName(NodeName, (int)CfgType);
@@ -46,7 +46,7 @@ namespace CVWaferProber.Models
     {
         public MQTTConfig(string configFileName) : base(configFileName, CVConfigType.MQTT)
         {
-            ReadValue(this.Config);
+            ReadValue(Config);
         }
         public MQTTConfig() : this("127.0.0.1", 1883, false)
         {
@@ -84,7 +84,7 @@ namespace CVWaferProber.Models
             TScgdSysMqttCfg mqttCfg = JsonConvert.DeserializeObject<TScgdSysMqttCfg>(cfg);
             string MQTTHost = mqttCfg.Host;
             int MQTTPort = (int)mqttCfg.Port;
-            bool IsDebugOut = mqttCfg.IsDebug==1?true:false;
+            bool IsDebugOut = mqttCfg.IsDebug == 1 ? true : false;
             bool IsSvr = false;
             Init(MQTTHost, MQTTPort, string.Empty, string.Empty, Convert.ToBoolean(IsSvr), IsDebugOut);
             return true;
@@ -112,7 +112,7 @@ namespace CVWaferProber.Models
         }
         public static MQTTConfig FromCustomConfigFile(string cfgFileName = "MQTT.config")
         {
-            string cfgPath = System.AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
+            string cfgPath = AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
             string cfgFile = System.IO.Path.Combine(cfgPath, "cfg", cfgFileName);
             return new MQTTConfig(cfgFile);
         }

@@ -70,7 +70,7 @@ namespace CVWPFCamImageCtrl
             return (0, 0, 0);
         }
 
-        private static BitmapSource ConvertMatToBitmap(Mat mat)
+        public static BitmapSource ConvertMatToBitmap(Mat mat)
         {
             if (mat.Empty()) return null;
 

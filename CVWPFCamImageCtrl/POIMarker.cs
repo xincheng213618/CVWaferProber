@@ -17,6 +17,8 @@ namespace CVWPFCamImageCtrl
         public Brush Stroke { get; set; } = Brushes.Red;
         public double StrokeThickness { get; set; } = 1;
         public object Tag { get; set; }
+        public string Label { get; set; }
+        public OpenCvSharp.Scalar Color { get; set; } = OpenCvSharp.Scalar.Red;
     }
 
     // 矩形标记
@@ -28,6 +30,6 @@ namespace CVWPFCamImageCtrl
     // 圆形标记
     public class CircleMarker : POIMarker
     {
-        // 可以添加圆形特定的属性
-    }
+        public double Radius => Width / 2.0;
+   }
 }

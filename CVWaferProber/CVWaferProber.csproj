@@ -7,6 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <PlatformTarget>x64</PlatformTarget>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,13 +15,11 @@
     <ProjectReference Include="..\ChipMapping\ChipMapping.csproj" />
     <ProjectReference Include="..\CVDB\CVDB.csproj" />
     <ProjectReference Include="..\CVWaferProber.Core\CVWaferProber.Core.csproj" />
-    <ProjectReference Include="..\CVWPFCameraImage\CVWPFCameraImage.csproj" />
     <ProjectReference Include="..\CVWPFCamImageCtrl\CVWPFCamImageCtrl.csproj" />
     <ProjectReference Include="..\CVWPFSpectrometerCtrl\CVWPFSpectrometerCtrl.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Services\" />
     <Folder Include="Resources\" />
   </ItemGroup>
 
@@ -45,11 +44,26 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="cfg\MQTT.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="cfg\MySql.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="log4net.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
 
