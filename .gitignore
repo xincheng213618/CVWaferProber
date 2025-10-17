@@ -25,3 +25,8 @@
 /CVWPFSpectrumControl/bin/Debug/net8.0-windows
 /CVWPFSpectrumControl/obj
 /LargeImageViewer
+/CVWPFSpectrumControl/bin/Release/net8.0-windows
+/CVWaferProber/bin/Release
+/CVWPFCamImageCtrl/bin/Release/net8.0-windows
+/GSWinMsgSim/obj
+/GSWinMsgSim/bin
