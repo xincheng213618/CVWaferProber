@@ -11,7 +11,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\CVWindowsService\CV.DBEntities\CV.DBEntities.csproj" />
     <ProjectReference Include="..\ChipMapping\ChipMapping.csproj" />
     <ProjectReference Include="..\CVDB\CVDB.csproj" />
     <ProjectReference Include="..\CVWaferProber.Core\CVWaferProber.Core.csproj" />
@@ -32,6 +31,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="CV.DBEntities">
+      <HintPath>D:\Services\CVWindowsService\CommonDll\CV.DBEntities.dll</HintPath>
+    </Reference>
     <Reference Include="CVCommCore">
       <HintPath>..\DLL\CVCommCore.dll</HintPath>
     </Reference>

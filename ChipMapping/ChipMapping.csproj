@@ -22,4 +22,10 @@
     <Folder Include="Models\Enums\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="CV.DBEntities">
+      <HintPath>D:\Services\CVWindowsService\CommonDll\CV.DBEntities.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

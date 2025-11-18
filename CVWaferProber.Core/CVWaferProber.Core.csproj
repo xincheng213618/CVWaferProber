@@ -14,4 +14,10 @@
     <PackageReference Include="RestSharp" Version="112.1.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="CV.DBEntities">
+      <HintPath>D:\Services\CVWindowsService\CommonDll\CV.DBEntities.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

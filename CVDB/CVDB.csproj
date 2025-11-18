@@ -16,10 +16,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\CVWindowsService\CV.DBEntities\CV.DBEntities.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <Reference Include="CV.DBEntities">
+      <HintPath>D:\Services\CVWindowsService\CommonDll\CV.DBEntities.dll</HintPath>
+    </Reference>
     <Reference Include="CVMysqlLib">
       <HintPath>..\DLL\CVMysqlLib.dll</HintPath>
     </Reference>

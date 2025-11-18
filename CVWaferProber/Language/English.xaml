@@ -1,6 +1,7 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib">
     <sys:String x:Key="BtnOpenFile">Browse</sys:String>
     <sys:String x:Key="BtnClear">Clear</sys:String>
     <sys:String x:Key="BtnReload">Reload</sys:String>
@@ -17,6 +18,7 @@
 
     <sys:String x:Key="ChkColorStatus">Enable Color Status</sys:String>
     <sys:String x:Key="IsIVLCamera">Enable IVL Camera</sys:String>
+    <sys:String x:Key="Auto SN">Auto SN</sys:String>
     <sys:String x:Key="DataGridHeaderName">Name</sys:String>
     <sys:String x:Key="DataGridHeaderEmail">Email</sys:String>
 
@@ -37,11 +39,11 @@
     <sys:String x:Key="Dock.Layout.Title.SP">Spectral/IVL</sys:String>
     <sys:String x:Key="Dock.Layout.Title.Log">SysLog</sys:String>
 
-    <!-- 光谱曲线相关 -->
+    <!--  光谱曲线相关  -->
     <sys:String x:Key="Sp.Spectral">Spectral</sys:String>
     <sys:String x:Key="Sp.SpectralCurve">Spectral Curve</sys:String>
     <sys:String x:Key="Sp.Wavelength">Wavelength (nm)</sys:String>
-    <!-- 测量参数 -->
+    <!--  测量参数  -->
     <sys:String x:Key="Sp.MeasurementBatch">Measurement Batch</sys:String>
     <sys:String x:Key="Sp.Voltage">Voltage/V</sys:String>
     <sys:String x:Key="Sp.Current">Current/A</sys:String>
@@ -57,4 +59,34 @@
 
     <sys:String x:Key="IVLCamera">IVLCamera</sys:String>
     <sys:String x:Key="Image">Image</sys:String>
+    <sys:String x:Key="Export Data">Export Data</sys:String>
+
+    <!--  相机图像相关  -->
+    <sys:String x:Key="Zoom in">🔍Zoom in</sys:String>
+    <sys:String x:Key="Zoom out">🔍Zoom out</sys:String>
+    <sys:String x:Key="Original">⭕Original</sys:String>
+    <sys:String x:Key="Fit">📏Fit</sys:String>
+    <sys:String x:Key="Previous">⬅Previous</sys:String>
+    <sys:String x:Key="Next">➡Next</sys:String>
+    <sys:String x:Key="File">🖼️File</sys:String>
+    <sys:String x:Key="Folder">📁Folder</sys:String>
+    <sys:String x:Key="Reload">🔄Reload</sys:String>
+    <sys:String x:Key="Clear">❌Clear</sys:String>
+
+    <sys:String x:Key="Zoom level:">Zoom level:</sys:String>
+    <sys:String x:Key="Zoom:">Zoom:</sys:String>
+    <sys:String x:Key="Image Dimensions:">Image Dimensions:</sys:String>
+    <sys:String x:Key="0 × 0 pixels">0 × 0 pixels</sys:String>
+    <sys:String x:Key="Display Dimensions:">Display Dimensions:</sys:String>
+    <sys:String x:Key="Resolution:">Resolution:</sys:String>
+    <sys:String x:Key="CurrentFile:">CurrentFile:</sys:String>
+    <sys:String x:Key="Unselected">Unselected</sys:String>
+    <sys:String x:Key="FileSize:">FileSize:</sys:String>
+    <sys:String x:Key="Progress:">Progress:</sys:String>
+
+    <sys:String x:Key="Image.GridHeader.Id">Id</sys:String>
+    <sys:String x:Key="Image.GridHeader.FileName">FileName</sys:String>
+    <sys:String x:Key="Image.GridHeader.FilePath">FilePath</sys:String>
+    <sys:String x:Key="Image.GridHeader.FileSize">FileSize</sys:String>
+    <sys:String x:Key="Image.GridHeader.Status">Status</sys:String>
 </ResourceDictionary>

@@ -1,81 +1,134 @@
-﻿<UserControl x:Class="CVWPFSpectrometerCtrl.CVSpectrumAnalyzer"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:oxy="http://oxyplot.org/wpf"
-             xmlns:sp="clr-namespace:CVWPFSpectrumControl;assembly=CVWPFSpectrumControl"
-             xmlns:wpf="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
-             xmlns:local="clr-namespace:CVWPFSpectrometerCtrl.ViewModels"
-             mc:Ignorable="d">
+﻿<UserControl
+    x:Class="CVWPFSpectrometerCtrl.CVSpectrumAnalyzer"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:CVWPFSpectrometerCtrl.ViewModels"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:oxy="http://oxyplot.org/wpf"
+    xmlns:sp="clr-namespace:CVWPFSpectrumControl;assembly=CVWPFSpectrumControl"
+    xmlns:wpf="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
+    mc:Ignorable="d">
     <UserControl.DataContext>
-        <local:CVSpectrumViewModel/>
+        <local:CVSpectrumViewModel />
     </UserControl.DataContext>
-    <UserControl.Resources>
-    </UserControl.Resources>
+    <UserControl.Resources />
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
 
-        <StackPanel Grid.Row="0"  Orientation="Horizontal" Margin="0">
+        <StackPanel
+            Grid.Row="0"
+            Margin="0"
+            Orientation="Horizontal">
             <!--<Button x:Name="btnConnect" Content="连接设备" IsEnabled="False" Width="80" Margin="5" Command="{Binding DevConnectCommand}"/>
             <Button x:Name="btnStart" Content="测试" IsEnabled="False"  Width="80" Margin="5" Command="{Binding DevTestCommand}"/>-->
-            <Button x:Name="btnExport" Content="导出数据" IsEnabled="False"  Width="80" Margin="5" Command="{Binding ExportCommand}"/>
+            <Button
+                x:Name="btnExport"
+                Width="80"
+                Margin="5"
+                Command="{Binding ExportCommand}"
+                Content="{DynamicResource Export Data}"
+                IsEnabled="False" />
         </StackPanel>
 
-        <!-- Tab区域 -->
-        <TabControl Grid.Row="1"  SelectedIndex="{Binding SelectedTabIndex}" Margin="5">
-            <!-- 光谱分析Tab -->
+        <!--  Tab区域  -->
+        <TabControl
+            Grid.Row="1"
+            Margin="5"
+            SelectedIndex="{Binding SelectedTabIndex}">
+            <!--  光谱分析Tab  -->
             <TabItem Header="{DynamicResource Sp.Spectral}">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="8*"/>
-                        <RowDefinition Height="2*"/>
+                        <RowDefinition Height="8*" />
+                        <RowDefinition Height="2*" />
                     </Grid.RowDefinitions>
 
-                    <!-- 图表区域 -->
-                    <oxy:PlotView Model="{Binding PlotModel}" Grid.Row="0" Margin="5" />
+                    <!--  图表区域  -->
+                    <oxy:PlotView
+                        Grid.Row="0"
+                        Margin="5"
+                        Model="{Binding PlotModel}" />
 
-                    <!-- DataGrid区域 -->
-                    <DataGrid Grid.Row="1" Margin="5"
+                    <!--  DataGrid区域  -->
+                    <DataGrid
                         x:Name="measurementsGrid"
-                        ItemsSource="{Binding Measurements}"
-                        SelectedItem="{Binding SelectedMeasurement}"
+                        Grid.Row="1"
+                        Margin="5"
                         AutoGenerateColumns="False"
-                        IsReadOnly="True"
-                        SelectionMode="Single"
-                        SelectionUnit="FullRow"
                         CanUserAddRows="False"
                         CanUserDeleteRows="False"
                         CanUserReorderColumns="False"
                         CanUserResizeRows="False"
                         CanUserSortColumns="True"
                         GridLinesVisibility="All"
-                        RowHeight="25">
+                        IsReadOnly="True"
+                        ItemsSource="{Binding Measurements}"
+                        RowHeight="25"
+                        SelectedItem="{Binding SelectedMeasurement}"
+                        SelectionMode="Single"
+                        SelectionUnit="FullRow">
 
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="{DynamicResource Sp.MeasurementBatch}" Binding="{Binding MeasurementId}" Width="80"/>
-                            <DataGridTextColumn Header="{DynamicResource Sp.Time}" Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}" Width="120"/>
-                            <DataGridTextColumn Header="{DynamicResource Sp.Voltage}" Binding="{Binding V, StringFormat='F4'}" Width="80"/>
-                            <DataGridTextColumn Header="{DynamicResource Sp.Current}" Binding="{Binding I, StringFormat='F4'}" Width="80"/>
-                            <DataGridTextColumn Header="{DynamicResource Sp.Luminance}" Binding="{Binding Luminance, StringFormat='F4'}" Width="80"/>
-                            <DataGridTextColumn Header="{DynamicResource ColorCoordinateX}" Binding="{Binding CIE_x, StringFormat='F4'}" Width="80"/>
-                            <DataGridTextColumn Header="{DynamicResource ColorCoordinateY}" Binding="{Binding CIE_y, StringFormat='F4'}" Width="80"/>
-                            <DataGridTextColumn Header="{DynamicResource ColorCoordinateU}" Binding="{Binding CIE_u, StringFormat='F4'}" Width="80"/>
-                            <DataGridTextColumn Header="{DynamicResource ColorCoordinateV}" Binding="{Binding CIE_v, StringFormat='F4'}" Width="80"/>
-                            <DataGridTextColumn Header="{DynamicResource ColorTemperature}" Binding="{Binding CCT, StringFormat='F1'}" Width="80"/>
-                            <DataGridTextColumn Header="{DynamicResource DominantWavelength}" Binding="{Binding PeakWavelength, StringFormat='F4'}" Width="80"/>
-                            <DataGridTextColumn Header="{DynamicResource PeakWavelength}" Binding="{Binding PeakIntensity, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding MeasurementId}"
+                                Header="{DynamicResource Sp.MeasurementBatch}" />
+                            <DataGridTextColumn
+                                Width="120"
+                                Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}"
+                                Header="{DynamicResource Sp.Time}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding V, StringFormat='F4'}"
+                                Header="{DynamicResource Sp.Voltage}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding I, StringFormat='F4'}"
+                                Header="{DynamicResource Sp.Current}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding Luminance, StringFormat='F4'}"
+                                Header="{DynamicResource Sp.Luminance}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding CIE_x, StringFormat='F4'}"
+                                Header="{DynamicResource ColorCoordinateX}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding CIE_y, StringFormat='F4'}"
+                                Header="{DynamicResource ColorCoordinateY}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding CIE_u, StringFormat='F4'}"
+                                Header="{DynamicResource ColorCoordinateU}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding CIE_v, StringFormat='F4'}"
+                                Header="{DynamicResource ColorCoordinateV}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding CCT, StringFormat='F1'}"
+                                Header="{DynamicResource ColorTemperature}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding PeakWavelength, StringFormat='F4'}"
+                                Header="{DynamicResource DominantWavelength}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding PeakIntensity, StringFormat='F4'}"
+                                Header="{DynamicResource PeakWavelength}" />
                         </DataGrid.Columns>
 
                         <DataGrid.RowStyle>
                             <Style TargetType="DataGridRow">
                                 <Style.Triggers>
                                     <Trigger Property="IsSelected" Value="True">
-                                        <Setter Property="Background" Value="LightBlue"/>
+                                        <Setter Property="Background" Value="LightBlue" />
                                     </Trigger>
                                 </Style.Triggers>
                             </Style>
@@ -84,119 +137,178 @@
                 </Grid>
             </TabItem>
 
-            <!-- IV特性Tab -->
+            <!--  IV特性Tab  -->
             <TabItem Header="IV">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="8*"/>
-                        <RowDefinition Height="2*"/>
+                        <RowDefinition Height="8*" />
+                        <RowDefinition Height="2*" />
                     </Grid.RowDefinitions>
 
-                    <!-- IV图表区域 -->
-                    <oxy:PlotView Model="{Binding IVPlotModel}" Grid.Row="0" Margin="5" />
+                    <!--  IV图表区域  -->
+                    <oxy:PlotView
+                        Grid.Row="0"
+                        Margin="5"
+                        Model="{Binding IVPlotModel}" />
 
-                    <!-- IV DataGrid区域 -->
-                    <DataGrid Grid.Row="1" Margin="5"
-                        ItemsSource="{Binding IVMeasurements}"
+                    <!--  IV DataGrid区域  -->
+                    <DataGrid
+                        Grid.Row="1"
+                        Margin="5"
                         AutoGenerateColumns="False"
-                        IsReadOnly="True"
-                        SelectionMode="Single"
-                        SelectionUnit="FullRow"
                         CanUserAddRows="False"
                         CanUserDeleteRows="False"
                         CanUserReorderColumns="False"
                         CanUserResizeRows="False"
                         CanUserSortColumns="True"
                         GridLinesVisibility="All"
-                        RowHeight="25">
+                        IsReadOnly="True"
+                        ItemsSource="{Binding IVMeasurements}"
+                        RowHeight="25"
+                        SelectionMode="Single"
+                        SelectionUnit="FullRow">
 
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="{DynamicResource GridHeader.No}" Binding="{Binding No}" Width="50"/>
-                            <DataGridTextColumn Header="{DynamicResource Sp.Time}" Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}" Width="120"/>
-                            <DataGridTextColumn Header="{DynamicResource Sp.Voltage}" Binding="{Binding Voltage, StringFormat='F4'}" Width="80"/>
-                            <DataGridTextColumn Header="{DynamicResource Sp.Current}" Binding="{Binding Current, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn
+                                Width="50"
+                                Binding="{Binding No}"
+                                Header="{DynamicResource GridHeader.No}" />
+                            <DataGridTextColumn
+                                Width="120"
+                                Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}"
+                                Header="{DynamicResource Sp.Time}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding Voltage, StringFormat='F4'}"
+                                Header="{DynamicResource Sp.Voltage}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding Current, StringFormat='F4'}"
+                                Header="{DynamicResource Sp.Current}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
             </TabItem>
 
-            <!-- IL特性Tab -->
+            <!--  IL特性Tab  -->
             <TabItem Header="IL">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="8*"/>
-                        <RowDefinition Height="2*"/>
+                        <RowDefinition Height="8*" />
+                        <RowDefinition Height="2*" />
                     </Grid.RowDefinitions>
 
-                    <!-- IL图表区域 -->
-                    <oxy:PlotView Model="{Binding ILPlotModel}" Grid.Row="0" Margin="5" />
+                    <!--  IL图表区域  -->
+                    <oxy:PlotView
+                        Grid.Row="0"
+                        Margin="5"
+                        Model="{Binding ILPlotModel}" />
 
-                    <!-- IL DataGrid区域 -->
-                    <DataGrid Grid.Row="1" Margin="5"
-                        ItemsSource="{Binding ILMeasurements}"
+                    <!--  IL DataGrid区域  -->
+                    <DataGrid
+                        Grid.Row="1"
+                        Margin="5"
                         AutoGenerateColumns="False"
-                        IsReadOnly="True"
-                        SelectionMode="Single"
-                        SelectionUnit="FullRow"
                         CanUserAddRows="False"
                         CanUserDeleteRows="False"
                         CanUserReorderColumns="False"
                         CanUserResizeRows="False"
                         CanUserSortColumns="True"
                         GridLinesVisibility="All"
-                        RowHeight="25">
+                        IsReadOnly="True"
+                        ItemsSource="{Binding ILMeasurements}"
+                        RowHeight="25"
+                        SelectionMode="Single"
+                        SelectionUnit="FullRow">
 
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="{DynamicResource GridHeader.No}" Binding="{Binding No}" Width="50"/>
-                            <DataGridTextColumn Header="{DynamicResource Sp.Time}" Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}" Width="120"/>
-                            <DataGridTextColumn Header="{DynamicResource Sp.Current}" Binding="{Binding Current, StringFormat='F4'}" Width="80"/>
-                            <DataGridTextColumn Header="{DynamicResource Sp.Luminance}" Binding="{Binding Luminance, StringFormat='F4'}" Width="80"/>
+                            <DataGridTextColumn
+                                Width="50"
+                                Binding="{Binding No}"
+                                Header="{DynamicResource GridHeader.No}" />
+                            <DataGridTextColumn
+                                Width="120"
+                                Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}"
+                                Header="{DynamicResource Sp.Time}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding Current, StringFormat='F4'}"
+                                Header="{DynamicResource Sp.Current}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding Luminance, StringFormat='F4'}"
+                                Header="{DynamicResource Sp.Luminance}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
             </TabItem>
-            <!-- IVLCamera特性Tab -->
+            <!--  IVLCamera特性Tab  -->
             <TabItem Header="{DynamicResource IVLCamera}">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="8*"/>
-                        <RowDefinition Height="2*"/>
+                        <RowDefinition Height="8*" />
+                        <RowDefinition Height="2*" />
                     </Grid.RowDefinitions>
 
-                    <!-- 图像区域 -->
-                    <Border Grid.Row="0" BorderBrush="Gray" BorderThickness="1" Margin="5">
-                        <Image Source="{Binding IVLCameraImageSrc}"/>
+                    <!--  图像区域  -->
+                    <Border
+                        Grid.Row="0"
+                        Margin="5"
+                        BorderBrush="Gray"
+                        BorderThickness="1">
+                        <Image Source="{Binding IVLCameraImageSrc}" />
                     </Border>
-                    <!-- IVLCamera DataGrid区域 -->
-                    <DataGrid x:Name="ivlCameraGrid" Grid.Row="1" Margin="5"
-                        ItemsSource="{Binding IVLCameraMeasurements}"
-                        SelectedItem="{Binding SelectedCameraMeasurement}"                              
+                    <!--  IVLCamera DataGrid区域  -->
+                    <DataGrid
+                        x:Name="ivlCameraGrid"
+                        Grid.Row="1"
+                        Margin="5"
                         AutoGenerateColumns="False"
-                        IsReadOnly="True"
-                        SelectionMode="Single"
-                        SelectionUnit="FullRow"
                         CanUserAddRows="False"
                         CanUserDeleteRows="False"
                         CanUserReorderColumns="False"
                         CanUserResizeRows="False"
                         CanUserSortColumns="True"
                         GridLinesVisibility="All"
-                        RowHeight="25">
+                        IsReadOnly="True"
+                        ItemsSource="{Binding IVLCameraMeasurements}"
+                        RowHeight="25"
+                        SelectedItem="{Binding SelectedCameraMeasurement}"
+                        SelectionMode="Single"
+                        SelectionUnit="FullRow">
 
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="{DynamicResource GridHeader.No}" Binding="{Binding No}" Width="50"/>
-                            <DataGridTextColumn Header="{DynamicResource Sp.Time}" Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}" Width="130"/>
-                            <DataGridTextColumn Header="{DynamicResource Sp.Voltage}" Binding="{Binding V, StringFormat='F4'}" Width="80"/>
-                            <DataGridTextColumn Header="{DynamicResource Sp.Current}" Binding="{Binding I, StringFormat='F4'}" Width="80"/>
-                            <DataGridTextColumn Header="{DynamicResource Sp.Luminance}" Binding="{Binding Luminance, StringFormat='F4'}" Width="80"/>
-                            <DataGridTextColumn Header="{DynamicResource Image}" Binding="{Binding ImageFile}" Width="480"/>
+                            <DataGridTextColumn
+                                Width="50"
+                                Binding="{Binding No}"
+                                Header="{DynamicResource GridHeader.No}" />
+                            <DataGridTextColumn
+                                Width="130"
+                                Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}"
+                                Header="{DynamicResource Sp.Time}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding V, StringFormat='F4'}"
+                                Header="{DynamicResource Sp.Voltage}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding I, StringFormat='F4'}"
+                                Header="{DynamicResource Sp.Current}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding Luminance, StringFormat='F4'}"
+                                Header="{DynamicResource Sp.Luminance}" />
+                            <DataGridTextColumn
+                                Width="480"
+                                Binding="{Binding ImageFile}"
+                                Header="{DynamicResource Image}" />
                         </DataGrid.Columns>
 
                         <DataGrid.RowStyle>
                             <Style TargetType="DataGridRow">
                                 <Style.Triggers>
                                     <Trigger Property="IsSelected" Value="True">
-                                        <Setter Property="Background" Value="LightBlue"/>
+                                        <Setter Property="Background" Value="LightBlue" />
                                     </Trigger>
                                 </Style.Triggers>
                             </Style>

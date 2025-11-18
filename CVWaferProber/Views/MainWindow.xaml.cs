@@ -26,5 +26,10 @@ namespace CVWaferProber.Views
                 viewModel.SetSelectedDataGridItem(obj);
             }
         }
+
+        private void TestResultDataGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+
+        }
     }
 }

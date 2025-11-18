@@ -1,93 +1,161 @@
-﻿<UserControl x:Class="CVWPFCamImageCtrl.CVCamImagerCtrl"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:CVWPFCamImageCtrl"
-             xmlns:cv="clr-namespace:CVWPFCamImageCtrl.Converters">
+﻿<UserControl
+    x:Class="CVWPFCamImageCtrl.CVCamImagerCtrl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:cv="clr-namespace:CVWPFCamImageCtrl.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:CVWPFCamImageCtrl"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
     <UserControl.Resources>
-        <cv:ZoomScaleConverter x:Key="ZoomScaleConverter"/>
+        <cv:ZoomScaleConverter x:Key="ZoomScaleConverter" />
         <Style TargetType="Button">
-            <Setter Property="Padding" Value="8,4"/>
-            <Setter Property="Margin" Value="2"/>
-            <Setter Property="MinWidth" Value="60"/>
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Margin" Value="2" />
+            <Setter Property="MinWidth" Value="60" />
         </Style>
     </UserControl.Resources>
     <UserControl.DataContext>
-        <local:CVCamImagerViewModel/>
+        <local:CVCamImagerViewModel />
     </UserControl.DataContext>
     <DockPanel>
-        <!-- 顶部工具栏 - 增强版 -->
-        <ToolBar DockPanel.Dock="Top" Background="#FFF0F0F0" Height="40">
-            <!-- 基本操作按钮组 -->
-            <StackPanel Orientation="Horizontal" Margin="5,0">
-                <Button Content="🔍放大" Click="ZoomIn_Click" ToolTip="放大图像 (Ctrl + +)"/>
-                <Button Content="🔍缩小" Click="ZoomOut_Click" ToolTip="缩小图像 (Ctrl + -)"/>
-                <Button Content="⭕原始" Click="ZoomOriginal_Click" ToolTip="恢复到原始大小 (Ctrl + 0)"/>
-                <Button Content="📏适应" Click="ZoomFit_Click" ToolTip="适应窗口大小 (Ctrl + F)"/>
-                <Separator/>
-                <Button Content="⬅上一张" Click="PreviousImage_Click" ToolTip="上一张图像 (Ctrl + ←)"/>
-                <Button Content="➡下一张" Click="NextImage_Click" ToolTip="下一张图像 (Ctrl + →)"/>
+        <!--  顶部工具栏 - 增强版  -->
+        <ToolBar
+            Height="40"
+            Background="#FFF0F0F0"
+            DockPanel.Dock="Top">
+            <!--  基本操作按钮组  -->
+            <StackPanel Margin="5,0" Orientation="Horizontal">
+                <Button
+                    Click="ZoomIn_Click"
+                    Content="{DynamicResource Zoom in}"
+                    ToolTip="放大图像 (Ctrl + +)" />
+                <Button
+                    Click="ZoomOut_Click"
+                    Content="{DynamicResource Zoom out}"
+                    ToolTip="缩小图像 (Ctrl + -)" />
+                <Button
+                    Click="ZoomOriginal_Click"
+                    Content="{DynamicResource Original}"
+                    ToolTip="恢复到原始大小 (Ctrl + 0)" />
+                <Button
+                    Click="ZoomFit_Click"
+                    Content="{DynamicResource Fit}"
+                    ToolTip="适应窗口大小 (Ctrl + F)" />
+                <Separator />
+                <Button
+                    Click="PreviousImage_Click"
+                    Content="{DynamicResource Previous}"
+                    ToolTip="上一张图像 (Ctrl + ←)" />
+                <Button
+                    Click="NextImage_Click"
+                    Content="{DynamicResource Next}"
+                    ToolTip="下一张图像 (Ctrl + →)" />
             </StackPanel>
 
-            <Separator/>
+            <Separator />
 
-            <!-- 缩放信息显示组 -->
-            <StackPanel Orientation="Horizontal" Margin="10,0">
-                <!-- 缩放滑块 -->
-                <TextBlock Text="缩放级别:"/>
-                <Slider x:Name="ZoomSlider" Width="120" Minimum="1" Maximum="5000" 
-                       Value="100" TickFrequency="10" IsSnapToTickEnabled="False"
-                       ValueChanged="ZoomSlider_ValueChanged"/>
+            <!--  缩放信息显示组  -->
+            <StackPanel Margin="10,0" Orientation="Horizontal">
+                <!--  缩放滑块  -->
+                <TextBlock Text="{DynamicResource Zoom level:}" />
+                <Slider
+                    x:Name="ZoomSlider"
+                    Width="120"
+                    IsSnapToTickEnabled="False"
+                    Maximum="5000"
+                    Minimum="1"
+                    TickFrequency="10"
+                    ValueChanged="ZoomSlider_ValueChanged"
+                    Value="100" />
 
-                <TextBlock Text="|" Foreground="#FFCCCCCC" Margin="8,0"/>
-                <TextBlock Text="缩放:" FontWeight="Bold" Foreground="#FF333333"/>
-                <TextBlock x:Name="ZoomPercentageText" Text="{Binding Value, ElementName=ZoomSlider,Converter={StaticResource ZoomScaleConverter}}" 
-                         FontWeight="Bold" Foreground="#FF0066CC" MinWidth="40"/>
+                <TextBlock
+                    Margin="8,0"
+                    Foreground="#FFCCCCCC"
+                    Text="|" />
+                <TextBlock
+                    FontWeight="Bold"
+                    Foreground="#FF333333"
+                    Text="{DynamicResource Zoom:}" />
+                <TextBlock
+                    x:Name="ZoomPercentageText"
+                    MinWidth="40"
+                    FontWeight="Bold"
+                    Foreground="#FF0066CC"
+                    Text="{Binding Value, ElementName=ZoomSlider, Converter={StaticResource ZoomScaleConverter}}" />
 
             </StackPanel>
 
-            <Separator/>
+            <Separator />
 
             <StackPanel Orientation="Vertical">
-            <!-- 图像尺寸信息组 -->
-            <StackPanel Orientation="Horizontal" Margin="10,0">
-                <TextBlock Text="图像尺寸:" FontWeight="Bold" Foreground="#FF333333"/>
-                <TextBlock x:Name="ImageDimensionsText" Text="0 × 0 像素" 
-                          MinWidth="100" ToolTip="原始图像尺寸"/>
-                <TextBlock Text="|" Foreground="#FFCCCCCC" Margin="8,0"/>
+                <!--  图像尺寸信息组  -->
+                <StackPanel Margin="10,0" Orientation="Horizontal">
+                    <TextBlock
+                        FontWeight="Bold"
+                        Foreground="#FF333333"
+                        Text="{DynamicResource Image Dimensions:}" />
+                    <TextBlock
+                        x:Name="ImageDimensionsText"
+                        MinWidth="100"
+                        Text="{DynamicResource 0 × 0 pixels}"
+                        ToolTip="原始图像尺寸" />
+                    <TextBlock
+                        Margin="8,0"
+                        Foreground="#FFCCCCCC"
+                        Text="|" />
 
-                <TextBlock Text="显示尺寸:"/>
-                <TextBlock x:Name="DisplayDimensionsText" Text="0 × 0 像素" 
-                          MinWidth="100" ToolTip="当前显示尺寸"/>
-                <TextBlock Text="|" Foreground="#FFCCCCCC" Margin="8,0"/>
+                    <TextBlock Text="{DynamicResource Display Dimensions:}" />
+                    <TextBlock
+                        x:Name="DisplayDimensionsText"
+                        MinWidth="100"
+                        Text="{DynamicResource 0 × 0 pixels}"
+                        ToolTip="当前显示尺寸" />
+                    <TextBlock
+                        Margin="8,0"
+                        Foreground="#FFCCCCCC"
+                        Text="|" />
 
-                <TextBlock Text="分辨率:"/>
-                <TextBlock x:Name="ResolutionText" Text="0 DPI" MinWidth="60"/>
-            </StackPanel>
+                    <TextBlock Text="{DynamicResource Resolution:}" />
+                    <TextBlock
+                        x:Name="ResolutionText"
+                        MinWidth="60"
+                        Text="0 DPI" />
+                </StackPanel>
 
-            <Separator/>
+                <Separator />
 
-            <!-- 文件信息组 -->
-            <StackPanel Orientation="Horizontal" Margin="10,0">
-                <TextBlock Text="当前文件:" FontWeight="Bold"/>
-                <TextBlock x:Name="CurrentFileNameText" Text="未选择" 
-                          MaxWidth="200" TextTrimming="CharacterEllipsis"
-                          ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
-                <TextBlock Text="|" Foreground="#FFCCCCCC" Margin="8,0"/>
+                <!--  文件信息组  -->
+                <StackPanel Margin="10,0" Orientation="Horizontal">
+                    <TextBlock FontWeight="Bold" Text="{DynamicResource CurrentFile:}" />
+                    <TextBlock
+                        x:Name="CurrentFileNameText"
+                        MaxWidth="200"
+                        Text="{DynamicResource Unselected}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                    <TextBlock
+                        Margin="8,0"
+                        Foreground="#FFCCCCCC"
+                        Text="|" />
 
-                <TextBlock Text="文件大小:"/>
-                <TextBlock x:Name="FileSizeText" Text="0 MB" MinWidth="60"/>
+                    <TextBlock Text="{DynamicResource FileSize:}" />
+                    <TextBlock
+                        x:Name="FileSizeText"
+                        MinWidth="60"
+                        Text="0 MB" />
 
-                <TextBlock Text="进度:"/>
-                <TextBlock x:Name="LoadingProgressText" Text="0/0" MinWidth="40"/>
+                    <TextBlock Text="{DynamicResource Progress:}" />
+                    <TextBlock
+                        x:Name="LoadingProgressText"
+                        MinWidth="40"
+                        Text="0/0" />
 
                 </StackPanel>
             </StackPanel>
-            
+
         </ToolBar>
 
-        <!-- 状态栏 -->
+        <!--  状态栏  -->
         <!--<StatusBar DockPanel.Dock="Bottom" Background="#FFE8E8E8">
             <StatusBarItem>
                 <TextBlock x:Name="StatusText" Text="就绪"/>
@@ -97,42 +165,79 @@
             </StatusBarItem>
         </StatusBar>-->
 
-        <!-- 主内容区域 -->
+        <!--  主内容区域  -->
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="3*"/>
-                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="2*" />
             </Grid.ColumnDefinitions>
 
-            <!-- 左侧图像显示区域 -->
-            <Grid x:Name="container" RenderTransformOrigin="0.5,0.5" Grid.Column="0">
-                <local:CVImager x:Name="ImageDisplay" CurrentImage="{Binding ImageSrc}"  Margin="5"/>
+            <!--  左侧图像显示区域  -->
+            <Grid
+                x:Name="container"
+                Grid.Column="0"
+                RenderTransformOrigin="0.5,0.5">
+                <local:CVImager
+                    x:Name="ImageDisplay"
+                    Margin="5"
+                    CurrentImage="{Binding ImageSrc}" />
             </Grid>
-            <!-- 右侧数据网格区域 -->
-            <GridSplitter Grid.Column="0" Width="3" HorizontalAlignment="Right" 
-                         Background="Transparent" ShowsPreview="True"/>
+            <!--  右侧数据网格区域  -->
+            <GridSplitter
+                Grid.Column="0"
+                Width="3"
+                HorizontalAlignment="Right"
+                Background="Transparent"
+                ShowsPreview="True" />
 
             <DockPanel Grid.Column="1" Margin="0,5">
                 <!--<TextBlock DockPanel.Dock="Top" Text="图像列表:" FontWeight="Bold" Margin="0,0,0,5"/>-->
-                <!-- 文件操作按钮组 -->
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,5" Background="#FFF0F0F0" Height="40">
-                    <Button Content="🖼️文件" Click="LoadFile_Click" ToolTip="加载图像文件 (Ctrl+O)"/>
-                    <Button Content="📁文件夹" Click="LoadFolder_Click" ToolTip="加载文件夹中的所有图像"/>
-                    <Button Content="🔄重载" Click="ReloadImage_Click" ToolTip="重新加载当前图像 (F5)"/>
-                    <Button Content="❌清除" Click="ClearAll_Click" ToolTip="清除所有图像"/>
+                <!--  文件操作按钮组  -->
+                <StackPanel
+                    Height="40"
+                    Margin="0,0,0,5"
+                    Background="#FFF0F0F0"
+                    DockPanel.Dock="Top"
+                    Orientation="Horizontal">
+                    <Button
+                        Click="LoadFile_Click"
+                        Content="{DynamicResource File}"
+                        ToolTip="加载图像文件 (Ctrl+O)" />
+                    <Button
+                        Click="LoadFolder_Click"
+                        Content="{DynamicResource Folder}"
+                        ToolTip="加载文件夹中的所有图像" />
+                    <Button
+                        Click="ReloadImage_Click"
+                        Content="{DynamicResource Reload}"
+                        ToolTip="重新加载当前图像 (F5)" />
+                    <Button
+                        Click="ClearAll_Click"
+                        Content="{DynamicResource Clear}"
+                        ToolTip="清除所有图像" />
                 </StackPanel>
-                <DataGrid x:Name="ImageDataGrid" 
-                         ItemsSource="{Binding ImageResults}" 
-                         AutoGenerateColumns="False"
-                         SelectionChanged="ImageDataGrid_SelectionChanged"
-                         IsReadOnly="True"
-                         SelectionMode="Single">
+                <DataGrid
+                    x:Name="ImageDataGrid"
+                    AutoGenerateColumns="False"
+                    IsReadOnly="True"
+                    ItemsSource="{Binding ImageResults}"
+                    SelectionChanged="ImageDataGrid_SelectionChanged"
+                    SelectionMode="Single">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="序号" Binding="{Binding Id}" Width="40"/>
-                        <DataGridTextColumn Header="文件名" Binding="{Binding FileName}" Width="200"/>
-                        <DataGridTextColumn Header="路径" Binding="{Binding ImagePath}" Width="300"/>
-                        <DataGridTextColumn Header="大小(MB)" Binding="{Binding FileSizeMB, StringFormat={}{0:F2}}"/>
-                        <DataGridTextColumn Header="状态" Binding="{Binding Status}"/>
+                        <DataGridTextColumn
+                            Width="40"
+                            Binding="{Binding Id}"
+                            Header="{DynamicResource Image.GridHeader.Id}" />
+                        <DataGridTextColumn
+                            Width="200"
+                            Binding="{Binding FileName}"
+                            Header="{DynamicResource Image.GridHeader.FileName}" />
+                        <DataGridTextColumn
+                            Width="300"
+                            Binding="{Binding ImagePath}"
+                            Header="{DynamicResource Image.GridHeader.FilePath}" />
+                        <DataGridTextColumn Binding="{Binding FileSizeMB, StringFormat={}{0:F2}}" Header="{DynamicResource Image.GridHeader.FileSize}" />
+                        <DataGridTextColumn Binding="{Binding Status}" Header="{DynamicResource Image.GridHeader.Status}" />
                     </DataGrid.Columns>
                 </DataGrid>
             </DockPanel>
