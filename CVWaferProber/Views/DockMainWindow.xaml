@@ -1,17 +1,20 @@
-﻿<Window x:Class="CVWaferProber.Views.DockMainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:cvimg="clr-namespace:CVWPFCamImageCtrl;assembly=CVWPFCamImageCtrl"
-        xmlns:cvsp="clr-namespace:CVWPFSpectrometerCtrl;assembly=CVWPFSpectrometerCtrl"
-        xmlns:avalon="https://github.com/Dirkster99/AvalonDock"
-        xmlns:vm="clr-namespace:CVWaferProber.ViewModels"
-        xmlns:comp="clr-namespace:CVWaferProber.Components"
-        Title="晶圆探针台" Height="1000" Width="1200">
+﻿<Window
+    x:Class="CVWaferProber.Views.DockMainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalon="https://github.com/Dirkster99/AvalonDock"
+    xmlns:comp="clr-namespace:CVWaferProber.Components"
+    xmlns:cvimg="clr-namespace:CVWPFCamImageCtrl;assembly=CVWPFCamImageCtrl"
+    xmlns:cvsp="clr-namespace:CVWPFSpectrometerCtrl;assembly=CVWPFSpectrometerCtrl"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:CVWaferProber.ViewModels"
+    Title="晶圆探针台"
+    Width="1200"
+    Height="1000">
 
     <Window.DataContext>
-        <vm:MainViewModel/>
+        <vm:MainViewModel />
     </Window.DataContext>
     <Grid>
         <avalon:DockingManager x:Name="DockingManager">
@@ -20,64 +23,73 @@
             </avalon:DockingManager.Theme>
 
             <avalon:LayoutRoot>
-                <!-- 主布局面板 - 垂直方向分割 -->
+                <!--  主布局面板 - 垂直方向分割  -->
                 <avalon:LayoutPanel Orientation="Horizontal">
 
-                    <!-- 左半部分面板 -->
+                    <!--  左半部分面板  -->
                     <avalon:LayoutPanel Orientation="Vertical">
 
-                        <!-- 左上角面板 -->
+                        <!--  左上角面板  -->
                         <avalon:LayoutAnchorablePaneGroup DockWidth="300" Orientation="Vertical">
                             <avalon:LayoutAnchorablePane>
-                                <avalon:LayoutAnchorable Title="Mapping" 
-                                                         CanHide="True" CanClose="False"
-                                                         AutoHideWidth="300"
-                                                         AutoHideMinWidth="250">
-                                    <!-- 左上：Mapping控件 -->
-                                    <comp:MappingDataControl/>
+                                <avalon:LayoutAnchorable
+                                    Title="{DynamicResource Dock.Layout.Title.Mapping}"
+                                    AutoHideMinWidth="250"
+                                    AutoHideWidth="300"
+                                    CanClose="False"
+                                    CanHide="True">
+                                    <!--  左上：Mapping控件  -->
+                                    <comp:MappingDataControl />
                                 </avalon:LayoutAnchorable>
                             </avalon:LayoutAnchorablePane>
                         </avalon:LayoutAnchorablePaneGroup>
                     </avalon:LayoutPanel>
 
-                    <!-- 右半部分面板 -->
+                    <!--  右半部分面板  -->
                     <avalon:LayoutPanel Orientation="Vertical">
 
-                        <!-- 右上角面板 -->
+                        <!--  右上角面板  -->
                         <avalon:LayoutAnchorablePaneGroup DockWidth="300">
                             <avalon:LayoutAnchorablePane>
-                                <avalon:LayoutAnchorable Title="CameraImage" 
-                                                         CanHide="True" CanClose="False"
-                                                         AutoHideMinHeight="100">
-                                    <cvimg:CVCamImagerCtrl x:Name="MyImageControl" DataContext="{Binding CustomImageVM}"/>
+                                <avalon:LayoutAnchorable
+                                    Title="{DynamicResource Dock.Layout.Title.CameraImage}"
+                                    AutoHideMinHeight="100"
+                                    CanClose="False"
+                                    CanHide="True">
+                                    <cvimg:CVCamImagerCtrl x:Name="MyImageControl" DataContext="{Binding CustomImageVM}" />
                                 </avalon:LayoutAnchorable>
                             </avalon:LayoutAnchorablePane>
                         </avalon:LayoutAnchorablePaneGroup>
 
-                        <!-- 右下角面板 -->
+                        <!--  右下角面板  -->
                         <avalon:LayoutAnchorablePaneGroup>
                             <avalon:LayoutAnchorablePane>
-                                <avalon:LayoutAnchorable Title="{DynamicResource Dock.Layout.Title.Log}" 
-                                                         CanHide="True" CanClose="False"
-                                                         AutoHideMinHeight="150">
-                                    <TextBox x:Name="LogTextBox" 
-                                            IsReadOnly="True" 
-                                            VerticalScrollBarVisibility="Auto"
-                                            HorizontalScrollBarVisibility="Auto"
-                                            TextWrapping="NoWrap"
-                                            FontFamily="Consolas"
-                                            FontSize="12">
+                                <avalon:LayoutAnchorable
+                                    Title="{DynamicResource Dock.Layout.Title.Log}"
+                                    AutoHideMinHeight="150"
+                                    CanClose="False"
+                                    CanHide="True">
+                                    <TextBox
+                                        x:Name="LogTextBox"
+                                        FontFamily="Consolas"
+                                        FontSize="12"
+                                        HorizontalScrollBarVisibility="Auto"
+                                        IsReadOnly="True"
+                                        TextWrapping="NoWrap"
+                                        VerticalScrollBarVisibility="Auto">
                                         <TextBox.ContextMenu>
                                             <ContextMenu>
-                                                <MenuItem Header="{DynamicResource MenuLogClear}" Click="ClearLogMenuItem_Click"/>
+                                                <MenuItem Click="ClearLogMenuItem_Click" Header="{DynamicResource MenuLogClear}" />
                                             </ContextMenu>
                                         </TextBox.ContextMenu>
                                     </TextBox>
                                 </avalon:LayoutAnchorable>
 
-                                <avalon:LayoutAnchorable Title="{DynamicResource Dock.Layout.Title.SP}" 
-                                                         CanHide="True" CanClose="False">
-                                    <cvsp:CVSpectrumAnalyzer x:Name="spaly" DataContext="{Binding CustomIVLVM}"/>
+                                <avalon:LayoutAnchorable
+                                    Title="{DynamicResource Dock.Layout.Title.SP}"
+                                    CanClose="False"
+                                    CanHide="True">
+                                    <cvsp:CVSpectrumAnalyzer x:Name="spaly" DataContext="{Binding CustomIVLVM}" />
                                 </avalon:LayoutAnchorable>
 
                             </avalon:LayoutAnchorablePane>

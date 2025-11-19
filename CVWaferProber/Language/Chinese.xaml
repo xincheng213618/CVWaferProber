@@ -37,6 +37,9 @@
     <sys:String x:Key="Maping.GridHeader.Uniformity">均匀性</sys:String>
     <sys:String x:Key="Maping.GridHeader.TotalTime">总用时</sys:String>
 
+
+    <sys:String x:Key="Dock.Layout.Title.Mapping">映射</sys:String>
+    <sys:String x:Key="Dock.Layout.Title.CameraImage">相机图像</sys:String>
     <sys:String x:Key="Dock.Layout.Title.SP">光谱/IVL</sys:String>
     <sys:String x:Key="Dock.Layout.Title.Log">日志</sys:String>
 

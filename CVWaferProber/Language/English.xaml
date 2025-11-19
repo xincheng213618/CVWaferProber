@@ -36,6 +36,8 @@
     <sys:String x:Key="Maping.GridHeader.Uniformity">Uniformity</sys:String>
     <sys:String x:Key="Maping.GridHeader.TotalTime">TotalTime</sys:String>
 
+    <sys:String x:Key="Dock.Layout.Title.Mapping">Mapping</sys:String>
+    <sys:String x:Key="Dock.Layout.Title.CameraImage">CameraImage</sys:String>
     <sys:String x:Key="Dock.Layout.Title.SP">Spectral/IVL</sys:String>
     <sys:String x:Key="Dock.Layout.Title.Log">SysLog</sys:String>
 
