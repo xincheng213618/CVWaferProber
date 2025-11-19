@@ -26,17 +26,21 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private PlotModel _plotModel;
         private PlotModel _IVPlotModel;
         private PlotModel _ILPlotModel;
+        private PlotModel _VLPlotModel;
 
         private SpectrumMeasurement _selectedMeasurement;
         private ObservableCollection<SpectrumMeasurement> _measurements;
         private ObservableCollection<ILMeasurement> _ILMeasurements;
         private ObservableCollection<IVMeasurement> _IVMeasurements;
+        private ObservableCollection<VLMeasurement> _VLMeasurements;
         private ObservableCollection<IVLCameraMeasurement> _IVLCameraMeasurements;
+
         private float[] Wavelengths;
         //private double[] Intensities;
 
         private ILViewModel IL_viewModel;
         private IVViewModel IV_viewModel;
+        private VLViewModel VL_viewModel;
         private IVLCameraViewModel IVLCamera_viewModel;
 
         private SpectrumControl _spectralCtrl;
@@ -79,6 +83,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             get => _ILMeasurements;
             set => SetProperty(ref _ILMeasurements, value);
         }
+        public ObservableCollection<VLMeasurement> VLMeasurements
+        {
+            get => _VLMeasurements;
+            set => SetProperty(ref _VLMeasurements, value);
+        }
 
         public PlotModel IVPlotModel
         {
@@ -89,6 +98,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             get => _ILPlotModel;
             set => SetProperty(ref _ILPlotModel, value);
+        }
+        public PlotModel VLPlotModel
+        {
+            get => _VLPlotModel;
+            set => SetProperty(ref _VLPlotModel, value);
         }
         #region IVLCamera
         public IVLCameraMeasurement SelectedCameraMeasurement
@@ -150,6 +164,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             InitializePlotModel();
             InitializeIVPlotModel();
             InitializeILPlotModel();
+            InitializeVLPlotModel();
             InitializeIVLCameraModel();
             DeviceCode = "DEV.Spectrum.Default";
 
@@ -637,6 +652,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             IV_viewModel = viewModel;
             IVPlotModel = viewModel.PlotModel;
             IVMeasurements = viewModel.Measurements;
+
         }
 
         //电流/亮度
@@ -646,6 +662,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             IL_viewModel = viewModel;
             ILPlotModel = viewModel.PlotModel;
             ILMeasurements = viewModel.Measurements;
+        }
+        //电压/亮度
+        private void InitializeVLPlotModel()
+        {
+            VLViewModel viewModel = new VLViewModel();
+            VL_viewModel = viewModel;
+            VLPlotModel = viewModel.PlotModel;
+            VLMeasurements = viewModel.Measurements;
         }
         //光谱
         private void InitializePlotModel()
@@ -800,6 +824,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             Measurements.Clear();
             IL_viewModel.Clear();
             IV_viewModel.Clear();
+            VL_viewModel.Clear();
             IVLCamera_viewModel.Clear();
             IVLCameraImageSrc = null;
         }
@@ -849,6 +874,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             IL_viewModel.LoadData(results);
             IV_viewModel.LoadData(serialNumber);
+            VL_viewModel.LoadData(results);
             //
             foreach (var result in results)
             {

@@ -1,35 +1,44 @@
 ﻿using ColorVision.Core.Entities;
+using CVDB.Services.SMU;
 using CVWaferProber.Core.ViewModels;
 using CVWPFSpectrometerCtrl.Models;
+using OpenTK.Audio.OpenAL.Extensions.SOFT.DeviceClock;
 using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace CVWPFSpectrometerCtrl.ViewModels
 {
-    public class ILViewModel : ViewModelBase
+    public class VLViewModel: ViewModelBase
     {
         private PlotModel _plotModel;
-        private ObservableCollection<ILMeasurement> _measurements;
+        private ObservableCollection<VLMeasurement> _measurements;
 
-
-        public ObservableCollection<ILMeasurement> Measurements
+       
+        public ObservableCollection<VLMeasurement> Measurements
         {
             get => _measurements;
             set
             {
                 _measurements = value;
                 OnPropertyChanged(nameof(Measurements));
+                
             }
         }
+        //private string DeviceCode { get; set; }
 
-        public ILViewModel()
+        public VLViewModel()
         {
             InitializePlotModel();
-            Measurements = new ObservableCollection<ILMeasurement>();
+            Measurements = new ObservableCollection<VLMeasurement>();
+           // DeviceCode = "DEV.SMU.Default";
         }
-
         public PlotModel PlotModel
         {
             get => _plotModel;
@@ -41,20 +50,19 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
         private PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 6, DefaultMaxRange = 5000 };
         private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = 50, DefaultMax = 200, DefaultMaxRange = 20000 };
-
         private void InitializePlotModel()
         {
             _plotModel = new PlotModel
             {
-                Title = "IL曲线",
+                Title = "VL曲线",
                 TitleFontSize = 14
             };
 
-            // 设置X轴（I）
+            // 设置X轴（V）
             var xAxis = new LinearAxis
             {
                 Position = AxisPosition.Bottom,
-                Title = "电流/I",
+                Title = "电压/V",
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
                 Minimum = AxisX.DefaultMin,
@@ -81,54 +89,53 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         public void LoadData(List<VScgdMeasureResultSpectrometer> results)
         {
             Clear();
-            double[] I = new double[results.Count], L = new double[results.Count];
+            double[] V = new double[results.Count], L = new double[results.Count];
             for (int i = 0; i < results.Count; i++)
             {
                 var result = results[i];
-                if (result.IResult == null)
+                if (result.VResult == null)
                 {
-                    result.IResult = 0;
+                    result.VResult = 0;
                 }
                 if (result.FPh == null)
                 {
                     result.FPh = 0;
                 }
-                I[i] = (double)result.IResult;
+                V[i] = (double)result.VResult;
                 L[i] = (double)result.FPh;
-                Measurements.Add(new ILMeasurement(no++,result.CreateDate, I[i], L[i]));
+                Measurements.Add(new VLMeasurement(no++, result.CreateDate, V[i], L[i]));
             }
-            UpdateILData(I,L);
-        } 
-        public void LoadData(List<VScgdAlgorithmResultMaster> results, List<float> il_results)
+            UpdateILData(V, L);
+        }
+        public void LoadData(List<VScgdAlgorithmResultMaster> results, List<float> vl_results)
         {
             Clear();
-            double[] I = new double[results.Count], L = new double[results.Count];
+            double[] V = new double[results.Count], L = new double[results.Count];
             for (int i = 0; i < results.Count; i++)
             {
                 var result = results[i];
-                if (result.IResult == null)
+                if (result.VResult == null)
                 {
-                    result.IResult = 0;
+                    result.VResult = 0;
                 }
-                I[i] = (double)result.IResult;
-                L[i] = il_results[i];
-                Measurements.Add(new ILMeasurement(no++, result.CreateDate, I[i], L[i]));
+                V[i] = (double)result.VResult;
+                L[i] = vl_results[i];
+                Measurements.Add(new VLMeasurement(no++, result.CreateDate, V[i], L[i]));
             }
-            UpdateILData(I,L);
+            UpdateILData(V, L);
         }
-
-        public void UpdateILData(double[] I, double[] L)
+        private void UpdateILData(double[] V, double[] L)
         {
             var lineSeries = new LineSeries
             {
-                Title = "IL曲线",
+                Title = "VL曲线",
                 Color = OxyColors.Blue,
                 StrokeThickness = 1.5
             };
 
-            for (int i = 0; i < I.Length; i++)
+            for (int i = 0; i < V.Length; i++)
             {
-                lineSeries.Points.Add(new DataPoint(I[i], L[i]));
+                lineSeries.Points.Add(new DataPoint(V[i], L[i]));
             }
 
             PlotModel.Series.Clear();

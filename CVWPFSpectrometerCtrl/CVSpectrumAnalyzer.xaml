@@ -242,6 +242,58 @@
                     </DataGrid>
                 </Grid>
             </TabItem>
+            <!--  VL特性Tab  -->
+            <TabItem Header="VL">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="8*" />
+                        <RowDefinition Height="2*" />
+                    </Grid.RowDefinitions>
+
+                    <!--  IL图表区域  -->
+                    <oxy:PlotView
+                        Grid.Row="0"
+                        Margin="5"
+                        Model="{Binding VLPlotModel}" />
+
+                    <!--  IL DataGrid区域  -->
+                    <DataGrid
+                        Grid.Row="1"
+                        Margin="5"
+                        AutoGenerateColumns="False"
+                        CanUserAddRows="False"
+                        CanUserDeleteRows="False"
+                        CanUserReorderColumns="False"
+                        CanUserResizeRows="False"
+                        CanUserSortColumns="True"
+                        GridLinesVisibility="All"
+                        IsReadOnly="True"
+                        ItemsSource="{Binding VLMeasurements}"
+                        RowHeight="25"
+                        SelectionMode="Single"
+                        SelectionUnit="FullRow">
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn
+                                Width="50"
+                                Binding="{Binding No}"
+                                Header="{DynamicResource GridHeader.No}" />
+                            <DataGridTextColumn
+                                Width="120"
+                                Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}"
+                                Header="{DynamicResource Sp.Time}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding Current, StringFormat='F4'}"
+                                Header="{DynamicResource Sp.Voltage}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding Luminance, StringFormat='F4'}"
+                                Header="{DynamicResource Sp.Luminance}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
             <!--  IVLCamera特性Tab  -->
             <TabItem Header="{DynamicResource IVLCamera}">
                 <Grid>
