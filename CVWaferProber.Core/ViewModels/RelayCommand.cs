@@ -6,9 +6,15 @@ namespace CVWaferProber.Core.ViewModels
     {
         private readonly Action<object?> _execute;
         private readonly Func<object?, bool>? _canExecute;
+        private Action<object?> value;
 
         public RelayCommand(ICommand? openMappingFileCommand)
         {
+        }
+
+        public RelayCommand(Action<object?> value)
+        {
+            this.value = value;
         }
 
         public RelayCommand(Action<object?>? execute, Func<object?, bool>? canExecute = null)

@@ -31,7 +31,7 @@
                 Width="80"
                 Margin="5"
                 Command="{Binding ExportCommand}"
-                Content="{DynamicResource Export Data}"
+                Content="{DynamicResource Export CSV}"
                 IsEnabled="False" />
         </StackPanel>
 
@@ -254,6 +254,7 @@
                     <oxy:PlotView
                         Grid.Row="0"
                         Margin="5"
+                        
                         Model="{Binding VLPlotModel}" />
 
                     <!--  IL DataGrid区域  -->
@@ -284,7 +285,7 @@
                                 Header="{DynamicResource Sp.Time}" />
                             <DataGridTextColumn
                                 Width="80"
-                                Binding="{Binding Current, StringFormat='F4'}"
+                                Binding="{Binding Voltage, StringFormat='F4'}"
                                 Header="{DynamicResource Sp.Voltage}" />
                             <DataGridTextColumn
                                 Width="80"

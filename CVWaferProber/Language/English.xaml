@@ -19,6 +19,7 @@
     <sys:String x:Key="ChkColorStatus">Enable Color Status</sys:String>
     <sys:String x:Key="IsIVLCamera">Enable IVL Camera</sys:String>
     <sys:String x:Key="Auto SN">Auto SN</sys:String>
+    <sys:String x:Key="BtnSearch">Search</sys:String>
     <sys:String x:Key="DataGridHeaderName">Name</sys:String>
     <sys:String x:Key="DataGridHeaderEmail">Email</sys:String>
 
@@ -61,7 +62,7 @@
 
     <sys:String x:Key="IVLCamera">IVLCamera</sys:String>
     <sys:String x:Key="Image">Image</sys:String>
-    <sys:String x:Key="Export Data">Export Data</sys:String>
+    <sys:String x:Key="Export CSV">Export CSV</sys:String>
 
     <!--  相机图像相关  -->
     <sys:String x:Key="Zoom in">🔍Zoom in</sys:String>

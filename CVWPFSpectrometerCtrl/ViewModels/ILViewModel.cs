@@ -39,10 +39,10 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged(nameof(PlotModel));
             }
         }
-        private PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 6, DefaultMaxRange = 5000 };
-        private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = 50, DefaultMax = 200, DefaultMaxRange = 20000 };
+        private PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = 50, DefaultMax = 200, DefaultMaxRange = 20000 };
+        private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 6, DefaultMaxRange = 5000 };
 
-        private void InitializePlotModel()
+    private void InitializePlotModel()
         {
             _plotModel = new PlotModel
             {
@@ -122,8 +122,15 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var lineSeries = new LineSeries
             {
                 Title = "IL曲线",
-                Color = OxyColors.Blue,
-                StrokeThickness = 1.5
+                Color = OxyColors.Red,
+                StrokeThickness = 1.5,
+                MarkerType = MarkerType.Circle,  // 标记类型
+                MarkerSize = 4,                  // 标记大小
+                MarkerFill = OxyColors.Red,      // 标记填充颜色
+                MarkerStroke = OxyColors.Red,  // 标记边框颜色
+                MarkerStrokeThickness = 1.5,     // 标记边框厚度
+                LineStyle = LineStyle.Solid,
+
             };
 
             for (int i = 0; i < I.Length; i++)

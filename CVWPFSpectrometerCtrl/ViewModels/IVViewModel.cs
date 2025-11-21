@@ -4,8 +4,10 @@ using CVWPFSpectrometerCtrl.Models;
 using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
+using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics.Metrics;
+using System.Windows;
 
 namespace CVWPFSpectrometerCtrl.ViewModels
 {
@@ -13,6 +15,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
     {
         private PlotModel _plotModel;
         private ObservableCollection<IVMeasurement> _measurements;
+        private Random _random;
 
         public ObservableCollection<IVMeasurement> Measurements
         {
@@ -30,6 +33,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             InitializeIVPlotModel();
             Measurements = new ObservableCollection<IVMeasurement>();
             DeviceCode = "DEV.SMU.Default";
+
         }
 
         public PlotModel PlotModel
@@ -54,7 +58,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var xAxis = new LinearAxis
             {
                 Position = AxisPosition.Bottom,
-                Title = "电压/V",
+                Title = "电流/I",
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
                 Minimum = 0,
@@ -66,7 +70,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var yAxis = new LinearAxis
             {
                 Position = AxisPosition.Left,
-                Title = "电流/I",
+                Title = "电压/V",
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
                 Minimum = 0,
@@ -77,6 +81,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             _plotModel.Axes.Add(xAxis);
             _plotModel.Axes.Add(yAxis);
         }
+      
         int no = 1;
         public void LoadData(string serialNumber)
         {
@@ -105,10 +110,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
             ResetAxisToDefault(isSourceV);
             UpdateIVData(isSourceV);
+
         }
         // 默认轴范围
         private PlotAxesCfg AxisV = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 6, DefaultMaxRange = 10  };
-        private PlotAxesCfg AxisI = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 6, DefaultMaxRange = 2000  };
+        private PlotAxesCfg AxisI = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 100, DefaultMaxRange = 2000  };
         private void ResetAxisToDefault(bool isSourceV)
         {
             var xAxis = PlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Bottom) as LinearAxis;
@@ -156,8 +162,15 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var lineSeries = new LineSeries
             {
                 Title = "IV曲线",
-                Color = OxyColors.Blue,
-                StrokeThickness = 1.5
+                Color = OxyColors.Red,
+                StrokeThickness = 1.5,
+                MarkerType = MarkerType.Circle,  // 标记类型
+                MarkerSize = 4,                  // 标记大小
+                MarkerFill = OxyColors.Red,      // 标记填充颜色
+                MarkerStroke = OxyColors.Red,  // 标记边框颜色
+                MarkerStrokeThickness = 1.5,     // 标记边框厚度
+                LineStyle = LineStyle.Solid,
+                //TrackerFormatString = "{1:0.00}V, {2:0.00}A",
             };
 
             for (int i = 0; i < Measurements.Count; i++)
@@ -171,10 +184,35 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     lineSeries.Points.Add(new DataPoint(Measurements[i].Current, Measurements[i].Voltage));
                 }
             }
+           
+
+            // 保持最近的50个数据点
+            if (lineSeries.Points.Count > 50)
+            {
+                lineSeries.Points.RemoveAt(0);
+            }
+            var timer = new System.Windows.Threading.DispatcherTimer();
+            timer.Interval = TimeSpan.FromMilliseconds(500);
+            timer.Tick += (sender, e) =>
+            {
+                UpdateIVData(isSourceV);
+            };
+            timer.Start();
+            // 自动调整轴范围
 
             PlotModel.Series.Clear();
             PlotModel.Series.Add(lineSeries);
             PlotModel.InvalidatePlot(true);
+        }
+        
+
+       
+
+        private void btnResetZoom_Click(object sender, RoutedEventArgs e)
+        {
+            // 重置所有轴的缩放
+            _plotModel.ResetAllAxes();
+            _plotModel.InvalidatePlot(true);
         }
 
         public void Clear()

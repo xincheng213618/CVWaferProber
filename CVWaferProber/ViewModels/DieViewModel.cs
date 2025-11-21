@@ -13,7 +13,7 @@ namespace CVWaferProber.ViewModels
         public int? ScreenY => (int?)chipViewModel?.Position.Y;
         public int? MapX => chipViewModel?.Column;
         public int? MapY => chipViewModel?.Row;
-        public string? SerialNumber {  get; set; }
+        public string? SerialNumber {  get; set; }= "20251105T162447.5851141";
         public bool IsIVLCameraEnabled {  get; set; }
         public bool IsChinese {  get; set; }
 
@@ -24,7 +24,8 @@ namespace CVWaferProber.ViewModels
             this.IsChinese = GetCurrentLanguage() == "Chinese";
         }
 
-        public ChipStatus? Status => chipViewModel?.Status;
+        //public ChipStatus? Status => chipViewModel?.Status;
+        public ChipStatus? Status => ChipStatus.IVL_COMPLETED;
         public string? DisplayStatus => Status.HasValue ? ChipStatusTool.GetStatusDisplay(Status.Value, IsChinese) : "Unknown";
         public DateTime? EndTestTime { get; set; }
         public DateTime? StartTestTime { get; set; }
@@ -97,5 +98,25 @@ namespace CVWaferProber.ViewModels
             OnPropertyChanged(nameof(TotalTime));
             OnPropertyChanged(nameof(DataValue));
         }
+        //private void BtnAssignToColumn_Click(object sender, RoutedEventArgs e)
+        //{
+        //    // 1. 验证输入非空
+        //    var assignValue = (string)Application.Current.FindResource(BtnSearch).Text.Trim();
+        //    if (string.IsNullOrWhiteSpace(assignValue))
+        //    {
+        //        MessageBox.Show("请输入要赋给整列的值！");
+        //        return;
+        //    }
+
+        //    // 2. 遍历所有行，赋值给目标列的绑定属性（Department）
+        //    foreach (var emp in _employeeList)
+        //    {
+        //        emp.Department = assignValue; // 赋值后自动刷新UI
+        //    }
+
+        //    // 3. 反馈结果
+        //    MessageBox.Show($"已成功将「{assignValue}」赋给所有 {_employeeList.Count} 行的「部门」列！");
+        //    txtColumnValue.Clear();
+        //}
     }
 }

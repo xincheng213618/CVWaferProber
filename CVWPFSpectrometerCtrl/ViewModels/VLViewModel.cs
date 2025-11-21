@@ -12,6 +12,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace CVWPFSpectrometerCtrl.ViewModels
 {
@@ -36,6 +37,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         public VLViewModel()
         {
             InitializePlotModel();
+            
             Measurements = new ObservableCollection<VLMeasurement>();
            // DeviceCode = "DEV.SMU.Default";
         }
@@ -49,12 +51,13 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
         }
         private PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 6, DefaultMaxRange = 5000 };
-        private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = 50, DefaultMax = 200, DefaultMaxRange = 20000 };
+        private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 10, DefaultMaxRange = 20000 };
         private void InitializePlotModel()
         {
             _plotModel = new PlotModel
             {
                 Title = "VL曲线",
+                //Title = (string)Application.Current.FindResource(""),
                 TitleFontSize = 14
             };
 
@@ -69,7 +72,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 Maximum = AxisX.DefaultMax,
                 MaximumRange = AxisX.DefaultMaxRange,
             };
-
+            AxisCfg(xAxis, AxisX);
             // 设置Y轴（L）
             var yAxis = new LinearAxis
             {
@@ -81,9 +84,18 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 Maximum = AxisY.DefaultMax,
                 MaximumRange = AxisY.DefaultMaxRange,
             };
+            AxisCfg(yAxis, AxisY);
 
             _plotModel.Axes.Add(xAxis);
             _plotModel.Axes.Add(yAxis);
+        }
+        private void AxisCfg(LinearAxis axis, PlotAxesCfg axisCfg)
+        {
+            axis.Minimum = axisCfg.DefaultMin;
+            axis.Maximum = axisCfg.DefaultMax;
+            axis.MaximumRange = axisCfg.DefaultMaxRange;
+            axis.ExtraGridlines = null; // 清除特殊网格线
+
         }
         int no = 1;
         public void LoadData(List<VScgdMeasureResultSpectrometer> results)
@@ -105,7 +117,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 L[i] = (double)result.FPh;
                 Measurements.Add(new VLMeasurement(no++, result.CreateDate, V[i], L[i]));
             }
-            UpdateILData(V, L);
+            UpdateVLData(V, L);
+            
         }
         public void LoadData(List<VScgdAlgorithmResultMaster> results, List<float> vl_results)
         {
@@ -122,15 +135,22 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 L[i] = vl_results[i];
                 Measurements.Add(new VLMeasurement(no++, result.CreateDate, V[i], L[i]));
             }
-            UpdateILData(V, L);
+            UpdateVLData(V, L);
         }
-        private void UpdateILData(double[] V, double[] L)
+        private void UpdateVLData(double[] V, double[] L)
         {
             var lineSeries = new LineSeries
             {
                 Title = "VL曲线",
-                Color = OxyColors.Blue,
-                StrokeThickness = 1.5
+                Color = OxyColors.Red,
+                StrokeThickness = 1.5,
+                MarkerType = MarkerType.Circle,  // 标记类型
+                MarkerSize = 4,                  // 标记大小
+                MarkerFill = OxyColors.Red,      // 标记填充颜色
+                MarkerStroke = OxyColors.Red,  // 标记边框颜色
+                MarkerStrokeThickness = 1.5,     // 标记边框厚度
+                LineStyle = LineStyle.Solid,
+              
             };
 
             for (int i = 0; i < V.Length; i++)
@@ -138,8 +158,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 lineSeries.Points.Add(new DataPoint(V[i], L[i]));
             }
 
-            PlotModel.Series.Clear();
-            PlotModel.Series.Add(lineSeries);
+            PlotModel.Series.Clear();// 将数据点加入折线
+            PlotModel.Series.Add(lineSeries); // 将折线加入绘图模型
             PlotModel.InvalidatePlot(true);
         }
 

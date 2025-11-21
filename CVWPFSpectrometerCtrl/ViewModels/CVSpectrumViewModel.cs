@@ -653,6 +653,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             IVPlotModel = viewModel.PlotModel;
             IVMeasurements = viewModel.Measurements;
 
+
         }
 
         //电流/亮度
@@ -668,8 +669,37 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             VLViewModel viewModel = new VLViewModel();
             VL_viewModel = viewModel;
-            VLPlotModel = viewModel.PlotModel;
+            //VLPlotModel = viewModel.PlotModel;
             VLMeasurements = viewModel.Measurements;
+            //var vlResults = new List<VScgdMeasureResultSpectrometer>
+            //{
+            //    new VScgdMeasureResultSpectrometer
+            //    {
+            //        CreateDate = DateTime.Now.AddSeconds(-10),
+            //        VResult = (float?)1.0m, // 电压1.0V
+            //        FPh = (float?)200m      // 亮度200cd/m²
+            //    },
+            //    new VScgdMeasureResultSpectrometer
+            //    {
+            //        CreateDate = DateTime.Now.AddSeconds(-8),
+            //        VResult = (float?)1.5m,
+            //        FPh = (float?)450m
+            //    },
+            //    new VScgdMeasureResultSpectrometer
+            //    {
+            //        CreateDate = DateTime.Now.AddSeconds(-6),
+            //        VResult =(float?) 2.0m,
+            //        FPh =(float?) 700m
+            //    },
+            //    new VScgdMeasureResultSpectrometer
+            //    {
+            //        CreateDate = DateTime.Now.AddSeconds(-4),
+            //        VResult = null, // 模拟空值（LoadData中会转为0）
+            //        FPh = (float?)950m
+            //    }
+            //};
+            //viewModel.LoadData(vlResults);
+            VLPlotModel = viewModel.PlotModel;
         }
         //光谱
         private void InitializePlotModel()
@@ -864,6 +894,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
             IL_viewModel.LoadData(lv_results, il_results);
             IV_viewModel.LoadData(serialNumber);
+            //VL_viewModel.LoadData(lv_results, il_results);
             IVLCamera_viewModel.LoadData(lv_results, il_results);
         }
 
