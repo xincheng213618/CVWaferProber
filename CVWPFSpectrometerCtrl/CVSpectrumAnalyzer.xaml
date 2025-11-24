@@ -31,8 +31,9 @@
                 Width="80"
                 Margin="5"
                 Command="{Binding ExportCommand}"
+                CommandParameter="{Binding SelectedTabIndex}"
                 Content="{DynamicResource Export CSV}"
-                IsEnabled="False" />
+                IsEnabled="True" />
         </StackPanel>
 
         <!--  Tab区域  -->
@@ -43,6 +44,11 @@
             <!--  光谱分析Tab  -->
             <TabItem Header="{DynamicResource Sp.Spectral}">
                 <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="35*" />
+                        <ColumnDefinition Width="218*" />
+                        <ColumnDefinition Width="253*" />
+                    </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="8*" />
                         <RowDefinition Height="2*" />
@@ -51,14 +57,16 @@
                     <!--  图表区域  -->
                     <oxy:PlotView
                         Grid.Row="0"
-                        Margin="5"
+                        Grid.ColumnSpan="3"
+                        Margin="5,5,5,5"
                         Model="{Binding PlotModel}" />
 
                     <!--  DataGrid区域  -->
                     <DataGrid
                         x:Name="measurementsGrid"
                         Grid.Row="1"
-                        Margin="5"
+                        Grid.ColumnSpan="3"
+                        Margin="5,5,5,5"
                         AutoGenerateColumns="False"
                         CanUserAddRows="False"
                         CanUserDeleteRows="False"
@@ -200,9 +208,67 @@
 
                     <!--  IL图表区域  -->
                     <oxy:PlotView
+                        x:Name="plotView"
                         Grid.Row="0"
                         Margin="5"
+                        Background="White"
+                        Cursor="Cross"
                         Model="{Binding ILPlotModel}" />
+
+                    <!--  当前数据点信息栏  -->
+                    <!--
+                    <Border
+                        Grid.Row="1"
+                        Margin="0,5"
+                        Padding="12"
+                        Background="#E8F4FD"
+                        BorderBrush="#BBDEFB"
+                        BorderThickness="1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock
+                                Grid.Column="0"
+                                Margin="0,0,10,0"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                FontWeight="Bold"
+                                Foreground="#1976D2"
+                                Text="📊 当前数据点: " />
+
+                            <TextBlock
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                FontWeight="SemiBold"
+                                Foreground="#1976D2"
+                                Text="{Binding StatusText}"
+                                TextWrapping="Wrap" />
+
+                            <StackPanel
+                                Grid.Column="2"
+                                HorizontalAlignment="Right"
+                                Orientation="Horizontal">
+                                <TextBlock
+                                    Margin="0,0,5,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="11"
+                                    FontStyle="Italic"
+                                    Foreground="#666666"
+                                    Text="💡 提示: " />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontSize="11"
+                                    FontStyle="Italic"
+                                    Foreground="#666666"
+                                    Text="鼠标在图表上移动查看数据点详细信息" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>-->
 
                     <!--  IL DataGrid区域  -->
                     <DataGrid
@@ -245,6 +311,10 @@
             <!--  VL特性Tab  -->
             <TabItem Header="VL">
                 <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="67*" />
+                        <ColumnDefinition Width="275*" />
+                    </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="8*" />
                         <RowDefinition Height="2*" />
@@ -253,14 +323,15 @@
                     <!--  IL图表区域  -->
                     <oxy:PlotView
                         Grid.Row="0"
-                        Margin="5"
-                        
+                        Grid.ColumnSpan="2"
+                        Margin="5,5,5,5"
                         Model="{Binding VLPlotModel}" />
 
                     <!--  IL DataGrid区域  -->
                     <DataGrid
                         Grid.Row="1"
-                        Margin="5"
+                        Grid.ColumnSpan="2"
+                        Margin="5,5,5,5"
                         AutoGenerateColumns="False"
                         CanUserAddRows="False"
                         CanUserDeleteRows="False"

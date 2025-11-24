@@ -55,7 +55,7 @@
     <!--  测量参数  -->
     <sys:String x:Key="Sp.MeasurementBatch">测量批次</sys:String>
     <sys:String x:Key="Sp.Voltage">电压/V</sys:String>
-    <sys:String x:Key="Sp.Current">电流/A</sys:String>
+    <sys:String x:Key="Sp.Current">电流/I</sys:String>
     <sys:String x:Key="Sp.Luminance">亮度 (cd/m²)</sys:String>
     <sys:String x:Key="Sp.Time">时间</sys:String>
     <sys:String x:Key="ColorCoordinateX">色坐标x</sys:String>

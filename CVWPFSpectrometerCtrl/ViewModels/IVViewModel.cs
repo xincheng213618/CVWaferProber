@@ -7,6 +7,8 @@ using OxyPlot.Series;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics.Metrics;
+using System.IO;
+using System.Text;
 using System.Windows;
 
 namespace CVWPFSpectrometerCtrl.ViewModels
@@ -33,7 +35,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             InitializeIVPlotModel();
             Measurements = new ObservableCollection<IVMeasurement>();
             DeviceCode = "DEV.SMU.Default";
-
+            //ExportData();
         }
 
         public PlotModel PlotModel
@@ -205,9 +207,6 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             PlotModel.InvalidatePlot(true);
         }
         
-
-       
-
         private void btnResetZoom_Click(object sender, RoutedEventArgs e)
         {
             // 重置所有轴的缩放

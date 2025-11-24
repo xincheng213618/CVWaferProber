@@ -4,33 +4,31 @@ namespace CVWaferProber.Core.ViewModels
 {
     public class RelayCommand : ICommand
     {
-        private readonly Action<object?> _execute;
-        private readonly Func<object?, bool>? _canExecute;
-        private Action<object?> value;
+        private readonly Action<object> execute;
+        private readonly Predicate<object> canExecute;
 
-        public RelayCommand(ICommand? openMappingFileCommand)
+        //Func<object,bool> =>Predicate<object> ss
+        public RelayCommand(Action<object> execute)
         {
+            this.execute = execute ?? throw new ArgumentNullException(nameof(execute));
+            canExecute = a => true;
+        }
+        public RelayCommand(Action<object> execute, Predicate<object> canExecute)
+        {
+            this.execute = execute ?? throw new ArgumentNullException(nameof(execute));
+            this.canExecute = canExecute;
         }
 
-        public RelayCommand(Action<object?> value)
-        {
-            this.value = value;
-        }
-
-        public RelayCommand(Action<object?>? execute, Func<object?, bool>? canExecute = null)
-        {
-            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            _canExecute = canExecute;
-        }
+        public bool CanExecute(object? parameter) => canExecute is null || canExecute(parameter);
 
         public event EventHandler? CanExecuteChanged
         {
-            add => CommandManager.RequerySuggested += value;
-            remove => CommandManager.RequerySuggested -= value;
+            add { CommandManager.RequerySuggested += value; }
+            remove { CommandManager.RequerySuggested -= value; }
         }
+        public void Execute(object? parameter) => execute(parameter);
 
-        public bool CanExecute(object? parameter) => _canExecute == null || _canExecute(parameter);
-        public void Execute(object? parameter) => _execute(parameter);
+        public void RaiseExecute(object parameter) => execute(parameter);
     }
 
     // RelayCommand.cs

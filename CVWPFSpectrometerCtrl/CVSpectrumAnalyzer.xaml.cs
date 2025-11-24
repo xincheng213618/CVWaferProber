@@ -1,6 +1,11 @@
 ﻿using CVWPFSpectrometerCtrl.ViewModels;
 using CVWPFSpectrumControl.Models;
+using OxyPlot.Wpf;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Media;
+
 
 namespace CVWPFSpectrometerCtrl
 {
@@ -9,10 +14,12 @@ namespace CVWPFSpectrometerCtrl
     /// </summary>
     public partial class CVSpectrumAnalyzer : UserControl
     {
+       
         private SpectralData _spectralData;
         public CVSpectrumAnalyzer()
         {
             InitializeComponent();
+          
             _spectralData = new SpectralData();
             //_spectralData.GenerateSampleData(550, 50);
             //SpectralDisplay.SpectralData = _spectralData;
@@ -26,6 +33,8 @@ namespace CVWPFSpectrometerCtrl
                     //viewModel.SetSpectrumCtrl(SpectralDisplay);
                 }
             };
+           
         }
+       
     }
 }
