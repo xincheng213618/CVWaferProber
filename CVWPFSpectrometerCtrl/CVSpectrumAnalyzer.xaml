@@ -41,30 +41,101 @@
             Grid.Row="1"
             Margin="5"
             SelectedIndex="{Binding SelectedTabIndex}">
+            <TabItem Header="{DynamicResource Sp.Overview}">
+                <Grid Margin="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!--  总览-光谱图表  -->
+                    <oxy:PlotView
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Margin="5"
+                        Model="{Binding OverviewSpectralPlotModel}" />
+
+                    <!--  总览-IV图表  -->
+                    <oxy:PlotView
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Margin="5"
+                        Model="{Binding OverviewIVPlotModel}" />
+
+                    <!--  总览-IL图表  -->
+                    <oxy:PlotView
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Margin="5"
+                        Model="{Binding OverviewILPlotModel}" />
+
+                    <!--  总览-VL图表  -->
+                    <oxy:PlotView
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Margin="5"
+                        Model="{Binding OverviewVLPlotModel}" />
+                </Grid>
+            </TabItem>
             <!--  光谱分析Tab  -->
             <TabItem Header="{DynamicResource Sp.Spectral}">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="35*" />
+                        <ColumnDefinition Width="218*" />
                         <ColumnDefinition Width="218*" />
                         <ColumnDefinition Width="253*" />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
                         <RowDefinition Height="8*" />
                         <RowDefinition Height="2*" />
                     </Grid.RowDefinitions>
-
+                    <!--  顶部：颜色选择区域  -->
+                    <!--  光谱子Tab的颜色选择控件  -->
+                    <StackPanel
+                        Grid.Row="0"
+                        Margin="2"
+                        Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center" Text="线条颜色：" />
+                        <ComboBox
+                            Width="100"
+                            Height="30"
+                            SelectedValue="{Binding SpectralLineColor, Mode=TwoWay}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <!--  显示颜色块  -->
+                                        <Rectangle
+                                            Width="20"
+                                            Height="20"
+                                            Fill="{Binding}" />
+                                        <!--  显示颜色名称  -->
+                                        <TextBlock Margin="5,0" Text="{Binding Color.Name}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                            <!--  预设颜色选项  -->
+                            <SolidColorBrush Color="Blue" />
+                            <SolidColorBrush Color="Red" />
+                            <SolidColorBrush Color="Green" />
+                            <SolidColorBrush Color="Yellow" />
+                            <SolidColorBrush Color="Purple" />
+                        </ComboBox>
+                    </StackPanel>
                     <!--  图表区域  -->
                     <oxy:PlotView
-                        Grid.Row="0"
+                        Grid.Row="1"
                         Grid.ColumnSpan="3"
                         Margin="5,5,5,5"
                         Model="{Binding PlotModel}" />
-
                     <!--  DataGrid区域  -->
                     <DataGrid
                         x:Name="measurementsGrid"
-                        Grid.Row="1"
+                        Grid.Row="2"
                         Grid.ColumnSpan="3"
                         Margin="5,5,5,5"
                         AutoGenerateColumns="False"
@@ -84,7 +155,7 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn
                                 Width="80"
-                                Binding="{Binding MeasurementId}"
+                                Binding="{Binding Meas_Id}"
                                 Header="{DynamicResource Sp.MeasurementBatch}" />
                             <DataGridTextColumn
                                 Width="120"
@@ -92,11 +163,11 @@
                                 Header="{DynamicResource Sp.Time}" />
                             <DataGridTextColumn
                                 Width="80"
-                                Binding="{Binding V, StringFormat='F4'}"
+                                Binding="{Binding Voltage, StringFormat='F4'}"
                                 Header="{DynamicResource Sp.Voltage}" />
                             <DataGridTextColumn
                                 Width="80"
-                                Binding="{Binding I, StringFormat='F4'}"
+                                Binding="{Binding Current, StringFormat='F4'}"
                                 Header="{DynamicResource Sp.Current}" />
                             <DataGridTextColumn
                                 Width="80"

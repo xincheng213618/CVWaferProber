@@ -15,10 +15,13 @@ using OxyPlot;
 using OxyPlot.Annotations;
 using OxyPlot.Axes;
 using OxyPlot.Series;
+using OxyPlot.Wpf;
+using ScottPlot.Colormaps;
 using ScottPlot.WPF;
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics.Metrics;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -26,6 +29,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using static FreeSql.Internal.GlobalFilter;
 using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace CVWPFSpectrometerCtrl.ViewModels
@@ -37,12 +41,20 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private PlotModel _ILPlotModel;
         private PlotModel _VLPlotModel;
 
+        // ViewModel中新增：总览图的4个独立PlotModel
+        public PlotModel OverviewSpectralPlotModel { get; private set; } = new PlotModel();
+        public PlotModel OverviewIVPlotModel { get; private set; } = new PlotModel();
+        public PlotModel OverviewILPlotModel { get; private set; } = new PlotModel();
+        public PlotModel OverviewVLPlotModel { get; private set; } = new PlotModel();
+
         private SpectrumMeasurement _selectedMeasurement;
         private ObservableCollection<SpectrumMeasurement> _measurements;
         private ObservableCollection<ILMeasurement> _ILMeasurements;
         private ObservableCollection<IVMeasurement> _IVMeasurements;
         private ObservableCollection<VLMeasurement> _VLMeasurements;
+        //private ObservableCollection<IVLMeasurement> _IVLMeasurements;
         private ObservableCollection<IVLCameraMeasurement> _IVLCameraMeasurements;
+        private ObservableCollection<SpectralData> _SpectralData;
 
         private float[] Wavelengths;
         //private double[] Intensities;
@@ -66,6 +78,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             get => _plotModel;
             set => SetProperty(ref _plotModel, value);
         }
+
         public SpectrumMeasurement SelectedMeasurement
         {
             get => _selectedMeasurement;
@@ -82,6 +95,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             get => _measurements;
             set => SetProperty(ref _measurements, value);
         }
+        
         public ObservableCollection<IVMeasurement> IVMeasurements
         {
             get => _IVMeasurements;
@@ -97,7 +111,16 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             get => _VLMeasurements;
             set => SetProperty(ref _VLMeasurements, value);
         }
-
+       /* public ObservableCollection<IVLMeasurement> IVLMeasurements
+        {
+            get => _IVLMeasurements;
+            set => SetProperty(ref _IVLMeasurements, value);
+        }*/
+        public ObservableCollection<SpectralData> SpectralData
+        {
+            get => _SpectralData;
+            set => SetProperty(ref _SpectralData, value);
+        }
         public PlotModel IVPlotModel
         {
             get => _IVPlotModel;
@@ -177,13 +200,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             InitializeILPlotModel();
             InitializeVLPlotModel();
             InitializeIVLCameraModel();
+           
             DeviceCode = "DEV.Spectrum.Default";
-            //ExportCommand = new RelayCommand(ExecuteExportCSV);
-            ExportCommand = new RelayCommand((s) => 
+            #region 输出CSV文件
+            ExportCommand = new RelayCommand((s) =>
             {
                 try
                 {
-                    string currentTab = s as string ?? GetCurrentTabName();
+                    string currentTab = GetCurrentTabName();
                     var saveFileDialog = new SaveFileDialog
                     {
                         Filter = "CSV Files|*.csv",
@@ -201,26 +225,19 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                             // 根据不同的Tab索引生成不同的数据格式
                             switch (SelectedTabIndex)
                             {
-                                case 1: // IV Tab
-                                        //csv.AppendLine("Current (nm),Voltage,Series");
-                                        // 直接导出ViewModel中的数据集合
-                                    ExportToCsv(IVMeasurements, saveFileDialog.FileName);
-                                    
+                                case 2: // IV Tab
+                                    ExportToCsv(IVMeasurements, saveFileDialog.FileName, 1);
+
                                     break;
-                                case 2: // IL Tab
-                                        //csv.AppendLine("Luminance (nm),Current,Series");
-                                        // 直接导出ViewModel中的数据集合
-                                    ExportToCsv(ILMeasurements, saveFileDialog.FileName);
+                                case 3: // IL Tab
+                                    ExportToCsv(ILMeasurements, saveFileDialog.FileName, 2);
                                     break;
-                                case 3: // VL Tab
-                                        //csv.AppendLine("Luminance (nm),Current,Series");
-                                        // 直接导出ViewModel中的数据集合
-                                    ExportToCsv(VLMeasurements, saveFileDialog.FileName);
+                                case 4: // VL Tab 
+                                    ExportToCsv(VLMeasurements, saveFileDialog.FileName, 0);
                                     break;
                                 default:
-                                    // 默认使用原始格式
-                                    //csv.AppendLine("Wavelength (nm),Intensity,Series");
-                                    ExportToCsv(Measurements, saveFileDialog.FileName);
+                                    // 调用导出方法（传入路径、测量数据、波长数组）
+                                    ExportToCsv(saveFileDialog.FileName, Measurements, Wavelengths);
                                     break;
                             }
                         }
@@ -238,6 +255,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     MessageBox.Show($"错误: {ex.Message}");
                 }
             });
+            #endregion
 
             // 初始化颜色映射（可见光谱：紫->蓝->绿->黄->红）
             ScottPlot.Color[] visibleSpectrumColors = {
@@ -255,9 +273,197 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             InitializeSampleData();
 
             InitializePlot();
+            // 新增：初始化总览图的PlotModel
+            // 初始化总览图（关键步骤）
+            InitializeOverviewPlotModels();
+            //// 2. 克隆子Tab配置到总览图（关键步骤）
+            //OverviewSpectralPlotModel = ClonePlotModelForOverview(PlotModel, "光谱");
+            //OverviewIVPlotModel = ClonePlotModelForOverview(IVPlotModel, "IV");
+            //OverviewILPlotModel = ClonePlotModelForOverview(ILPlotModel, "IL");
+            //OverviewVLPlotModel = ClonePlotModelForOverview(VLPlotModel, "VL");
+
+            //// 3. 触发PropertyChanged，通知UI更新
+            //OnPropertyChanged(nameof(OverviewSpectralPlotModel));
+            //OnPropertyChanged(nameof(OverviewIVPlotModel));
+            //OnPropertyChanged(nameof(OverviewILPlotModel));
+            //OnPropertyChanged(nameof(OverviewVLPlotModel));
+        }
+        // 初始化总览图的PlotModel（克隆子Tab配置并绑定数据）
+        private void InitializeOverviewPlotModels()
+        {
+            // 1. 克隆子Tab的图表配置（轴、样式）
+            OverviewSpectralPlotModel = ClonePlotModel(PlotModel, "光谱"); // 克隆光谱子Tab配置
+            OverviewIVPlotModel = ClonePlotModel(IVPlotModel, "IV");       // 克隆IV子Tab配置
+            OverviewILPlotModel = ClonePlotModel(ILPlotModel, "IL");       // 克隆IL子Tab配置
+            OverviewVLPlotModel = ClonePlotModel(VLPlotModel, "VL");       // 克隆VL子Tab配置
+
+            // 2. 为总览图添加数据系列（绑定子Tab数据源）
+            InitializeOverviewSeries();
+
+            // 3. 通知UI更新
+            OnPropertyChanged(nameof(OverviewSpectralPlotModel));
+            OnPropertyChanged(nameof(OverviewIVPlotModel));
+            OnPropertyChanged(nameof(OverviewILPlotModel));
+            OnPropertyChanged(nameof(OverviewVLPlotModel));
+        }
+        private PlotModel ClonePlotModel(PlotModel sourceModel, string title)
+        {
+            var targetModel = new PlotModel
+            {
+                Title = title,
+                Padding = new OxyThickness(5), // 手动控制边距
+                PlotAreaBorderThickness = new OxyThickness(1)
+            };
+
+            // 克隆轴配置（适配低版本OxyPlot）
+            foreach (var axis in sourceModel.Axes)
+            {
+                if (axis is LinearAxis linearAxis)
+                {
+                    var clonedAxis = new LinearAxis
+                    {
+                        Position = linearAxis.Position,
+                        Title = linearAxis.Title,
+                        // 不手动设置Min/Max，让轴自动计算范围（低版本默认行为）
+                        Minimum = double.NaN,
+                        Maximum = double.NaN,
+                        FontSize = 10,
+                        MajorGridlineStyle = linearAxis.MajorGridlineStyle,
+                        MinorGridlineStyle = linearAxis.MinorGridlineStyle,
+                        IsZoomEnabled = false, // 总览图禁用手动缩放
+                        IsPanEnabled = false
+                    };
+                    targetModel.Axes.Add(clonedAxis);
+                }
+            }
+            return targetModel;
+        }
+        // 辅助方法：强制刷新轴范围，让数据占满图表
+        private void RefreshAxisRange(PlotModel plotModel)
+        {
+            foreach (var axis in plotModel.Axes)
+            {
+                if (axis is LinearAxis linearAxis)
+                {
+                    // 重置为自动范围
+                    linearAxis.Minimum = double.NaN;
+                    linearAxis.Maximum = double.NaN;
+                }
+            }
+
+            // 先让PlotModel计算一次自动范围
+            plotModel.InvalidatePlot(true);
+
+            // （可选）添加5%边距，避免数据贴轴
+            foreach (var axis in plotModel.Axes)
+            {
+                if (axis is LinearAxis linearAxis)
+                {
+                    if (!double.IsNaN(linearAxis.ActualMinimum) && !double.IsNaN(linearAxis.ActualMaximum))
+                    {
+                        double range = linearAxis.ActualMaximum - linearAxis.ActualMinimum;
+                        double margin = range * 0.05; // 5%边距
+                        linearAxis.Minimum = linearAxis.ActualMinimum - margin;
+                        linearAxis.Maximum = linearAxis.ActualMaximum + margin;
+                    }
+                }
+            }
+
+            // 再次刷新，应用边距
+            plotModel.InvalidatePlot(true);
+        }
+        // 初始化总览图的数据系列（绑定子Tab数据源）
+        private void InitializeOverviewSeries()
+        {
+            // 1. 清空总览图所有Series
+            OverviewSpectralPlotModel.Series.Clear();
+            OverviewIVPlotModel.Series.Clear();
+            OverviewILPlotModel.Series.Clear();
+            OverviewVLPlotModel.Series.Clear();
+
+            // 2. 绑定光谱数据
+            if (Measurements.Any() && Measurements.First().Wavelengths != null && Measurements.First().Intensities != null)
+            {
+                var spectralSeries = new LineSeries
+                {
+                    ItemsSource = GetSpectralDataPoints(),
+                    Color = OxyColors.Blue,
+                    StrokeThickness = 1.5,
+                };
+                OverviewSpectralPlotModel.Series.Add(spectralSeries);
+                // 强制刷新轴范围（关键）
+                RefreshAxisRange(OverviewSpectralPlotModel);
+            }
+
+            // 3. 绑定IV数据（修正轴顺序：电流X，电压Y）
+            if (IVMeasurements.Any())
+            {
+                var ivSeries = new LineSeries
+                {
+                    ItemsSource = IVMeasurements.Select(m => new DataPoint(m.Current, m.Voltage)),
+                    Color = OxyColors.Red,
+                    StrokeThickness = 1.5,
+                    MarkerType = MarkerType.Circle,
+                    MarkerSize = 2,
+                    MarkerFill = OxyColors.Red,
+                };
+                OverviewIVPlotModel.Series.Add(ivSeries);
+                RefreshAxisRange(OverviewIVPlotModel);
+            }
+
+            // 4. 绑定IL数据
+            if (ILMeasurements.Any())
+            {
+                var ilSeries = new LineSeries
+                {
+                    ItemsSource = ILMeasurements.Select(m => new DataPoint(m.Current, m.Luminance)),
+                    Color = OxyColors.Green,
+                    StrokeThickness = 1.5,
+                    MarkerType = MarkerType.Circle,
+                    MarkerSize = 2,
+                    MarkerFill = OxyColors.Green
+                };
+                OverviewILPlotModel.Series.Add(ilSeries);
+                RefreshAxisRange(OverviewILPlotModel);
+            }
+
+            // 5. 绑定VL数据
+            if (VLMeasurements.Any())
+            {
+                var vlSeries = new LineSeries
+                {
+                    ItemsSource = VLMeasurements.Select(m => new DataPoint(m.Voltage, m.Luminance)),
+                    Color = OxyColors.Purple,
+                    StrokeThickness = 1.5,
+                    MarkerType = MarkerType.Circle,
+                    MarkerSize = 2,
+                    MarkerFill = OxyColors.Purple
+                };
+                OverviewVLPlotModel.Series.Add(vlSeries);
+                RefreshAxisRange(OverviewVLPlotModel);
+            }
+
+            // 6. 强制刷新图表
+            OverviewSpectralPlotModel.InvalidatePlot(true);
+            OverviewIVPlotModel.InvalidatePlot(true);
+            OverviewILPlotModel.InvalidatePlot(true);
+            OverviewVLPlotModel.InvalidatePlot(true);
         }
 
-        private void ExportToCsv<T>(IEnumerable<T> data, string filePath)
+        // 辅助方法：将光谱Measurements转换为图表需要的DataPoint（波长-强度）
+        private IEnumerable<DataPoint> GetSpectralDataPoints()
+        {
+            if (Measurements.Any() && Measurements.First().Wavelengths != null && Measurements.First().Intensities != null)
+            {
+                var firstMeas = Measurements.First();
+                for (int i = 0; i < firstMeas.Wavelengths.Length; i++)
+                {
+                    yield return new DataPoint(firstMeas.Wavelengths[i], firstMeas.Intensities[i]);
+                }
+            }
+        }
+        #region IV/IL/VL
+        private void ExportToCsv<T>(IEnumerable<T> data, string filePath, int startIndex)
         {
             try
             {
@@ -266,24 +472,70 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     MessageBox.Show("没有数据可导出");
                     return;
                 }
+                if (string.IsNullOrWhiteSpace(filePath))
+                    throw new ArgumentException("保存路径不能为空", nameof(filePath));
 
                 var csv = new StringBuilder();
                 var properties = typeof(T).GetProperties();
+               
+                var headerMap = new Dictionary<string, string>();
 
-                // 表头
+                //IV
+                var headerMap1 = new Dictionary<string, string>
+                {
+                    { "No", "Index" },
+                    { "Timestamp", "Time" },
+                    { "Current", "Current(mA)" },
+                    { "Voltage", "Voltage/V" }
+
+                };
+                //IL
+                var headerMap2 = new Dictionary<string, string>
+                {
+
+                    { "No", "Index" },
+                    { "Timestamp", "Time" },
+                    { "Current", "Current(mA)" },
+                    { "Luminance", "Lv(cd/m²)" },
+                };
+                //VL
+                var headerMap3 = new Dictionary<string, string>
+                {
+
+                    { "No", "Index" },
+                    { "Timestamp", "Time" },
+                    { "Voltage", "Voltage/V" },
+                    { "Luminance", "Lv(cd/m²)" }
+                };
+                switch (startIndex)
+                {
+                    case 1:
+                        headerMap = headerMap1;
+                        break;
+                    case 2:
+                        headerMap = headerMap2;
+                        break;
+                    default:
+                        headerMap = headerMap3;
+                        break;
+                }
+
                 var headers = properties.Select(p =>
                 {
-                    var displayName = p.GetCustomAttribute<System.ComponentModel.DisplayNameAttribute>()?.DisplayName;
-                    return displayName ?? p.Name;
+                    // 字典中存在则用映射值，否则用原字段名
+                    return headerMap.TryGetValue(p.Name, out var chineseHeader)
+                        ? chineseHeader
+                        : p.Name;
+                    // 可自定义表头（如需要中文表头，这里可扩展）
                 });
                 csv.AppendLine(string.Join(",", headers));
-
                 // 数据
                 foreach (var item in data)
                 {
                     var values = properties.Select(p =>
                     {
                         var value = p.GetValue(item)?.ToString() ?? "";
+                        string formattedValue = FormatValue(value);
                         if (NeedsEscaping(value))
                         {
                             value = $"\"{value.Replace("\"", "\"\"")}\"";
@@ -294,18 +546,200 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 }
 
                 File.WriteAllText(filePath, csv.ToString(), Encoding.UTF8);
-                MessageBox.Show($"成功导出 {data.Count()} 行数据");
+               // MessageBox.Show($"成功导出 {data.Count()} 行数据");
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"导出失败: {ex.Message}");
             }
         }
+        #endregion
+
+        #region 光谱
+        // 导出CSV的方法（参数：保存路径、Measurements数据列表、波长数组）
+        private void ExportToCsv(string fileName, ObservableCollection<SpectrumMeasurement> measurements, float[]? wavelengths, float fPlambda = 1.0f)
+        {
+            if (measurements == null || !measurements.Any() || wavelengths == null || wavelengths.Length == 0)
+            {
+                MessageBox.Show("无有效数据可导出！", "提示");
+                return;
+            }
+
+            const int Step = 10;
+            const int MinWave = 380;
+            const int MaxWave = 780;
+            //const int OriginalTotalPoints = (MaxWave - MinWave) * 10 + 1; // 4001个原始点（380.0~780.0nm，步长0.1）
+
+            //// 校验wavelengths数组长度是否符合目标代码要求（避免数据来源不一致）
+            //if (wavelengths.Length != OriginalTotalPoints)
+            //{
+            //    MessageBox.Show($"wavelengths数组长度需为{OriginalTotalPoints}（380.0~780.0nm，步长0.1）！", "错误");
+            //    return;
+            //}
+
+            try
+            {
+                // 1. 固定表头（与目标代码数据项对齐）
+                var fixedHeaders = new List<string>
+                {
+                    "Time","Meas_Id", "Voltage/V", "Current/mA", "Lv(cd/m²)", "IP",
+                    "BlueLight", "cx", "cy", "u'", "v'", "CCT(K)",
+                    "Dominant Wavelength(nm)", "Saturation(%)", "Peak Wavelength(nm)", "FWHM"
+                };
+
+                // 2. 波长表头：完全对齐目标代码（380~780nm，隔10取1整数波长）
+                var waveHeaders = new List<string>();
+                var selectedIndexes = new List<int>(); // 存储目标代码对应的原始索引
+
+                // 用目标代码的循环逻辑生成表头和索引（确保完全一致）
+                for (int i = 0; i <= (MaxWave - MinWave) * 10; i += Step)
+                {
+                    // 目标代码的波长计算逻辑：i/10 + 380（整数波长）
+                    double targetWave = i / 10.0 + MinWave;
+                    // 从wavelengths数组中匹配对应波长（避免数组索引错位）
+                    int originalIndex = Array.FindIndex(wavelengths, w => Math.Abs(w - targetWave) < 0.001);
+
+                    if (originalIndex != -1)
+                    {
+                        waveHeaders.Add($"{targetWave:F0}"); // 整数波长格式（380nm）
+                        selectedIndexes.Add(originalIndex);
+                    }
+                }
+
+                if (waveHeaders.Count == 0)
+                {
+                    MessageBox.Show("未找到≤780nm的有效波长点！", "错误");
+                    return;
+                }
+
+                // 3. 完整表头 = 固定表头 + 波长表头（可选择相对强度或绝对强度，这里默认相对强度）
+                var allHeaders = fixedHeaders.Concat(waveHeaders);
+
+                // 4. 构建CSV内容
+                var csv = new System.Text.StringBuilder();
+                csv.AppendLine(string.Join(",", allHeaders));
+
+                // 3. 遍历测量数据：用索引+1作为Meas_Id（核心修改）
+                for (int rowIndex = 0; rowIndex < measurements.Count; rowIndex++)
+                {
+                    var item = measurements[rowIndex];
+                    // 动态生成Meas_Id：从1开始递增（rowIndex是0-based，+1后为1-based）
+                    int measId = rowIndex + 1;
+
+                    // 4. 固定字段值：第一个值为动态生成的Meas_Id
+                    var fixedValues = new List<string>
+                    {
+                        item.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                        measId.ToString(), // 替换原固定值36，改为1、2、3...
+                        item.Voltage.ToString("F6"),
+                        item.Current.ToString(), // A→mA
+                        item.Luminance.ToString(),
+                        EscapeCsvValue(item.IP ?? ""),
+                        item.Blue.ToString(),
+                        item.CIE_x.ToString(),
+                        item.CIE_y.ToString(),
+                        item.CIE_u.ToString(),
+                        item.CIE_v.ToString(),
+                        item.CCT.ToString(),
+                        item.PeakWavelength.ToString(),
+                        //$"{Math.Round(item.fPur * 100, 2)}", // 饱和度转百分比（对齐目标代码显示）
+                        item.fPur.ToString(),
+                        item.PeakIntensity.ToString("F2"),
+                        item.FHW.ToString("F2")
+                     };
+
+                    // 5. 强度值处理（与之前逻辑一致）
+                    var waveValues = new List<string>();
+                    if (item.Intensities != null && item.Intensities.Length == wavelengths.Length)
+                    {
+                        // 遍历目标代码筛选后的索引，取对应强度值
+                        foreach (int idx in selectedIndexes)
+                        {
+                            float intensity = item.Intensities[idx];
+                            // 目标代码逻辑：负强度转为0
+                            intensity = intensity > 0 ? intensity : 0;
+                            // 可选：导出相对强度（SpectralData.RelativeSpectrum）或绝对强度（SpectralData.AbsoluteSpectrum）
+                            // 相对强度：直接用处理后的intensity；绝对强度：intensity * fPlambda
+                            double targetIntensity = intensity * item.fPlambda; // 相对强度（要绝对强度则改为 intensity * fPlambda）
+                                                                                // 格式化（与目标代码数据精度一致）
+                            string value = targetIntensity < 0.0001f ? targetIntensity.ToString() : targetIntensity.ToString();
+                            waveValues.Add(EscapeCsvValue(value));
+                        }
+                    }
+                    else
+                    {
+                        waveValues = Enumerable.Repeat("0.000000", waveHeaders.Count)
+                                              .Select(v => EscapeCsvValue(v))
+                                              .ToList();
+                    }
+
+                    // 6. 拼接并写入行
+                    var allValues = fixedValues.Concat(waveValues);
+                    csv.AppendLine(string.Join(",", allValues));
+                }
+
+                File.WriteAllText(fileName, csv.ToString(), Encoding.UTF8);
+               // MessageBox.Show($"CSV导出成功！\n路径：{fileName}", "成功");
+            
+                // 6. 写入文件
+                //File.WriteAllText(fileName, csv.ToString(), Encoding.UTF8);
+               // MessageBox.Show($"CSV导出成功！\n路径：{fileName}\n筛选后波长点：{waveHeaders.Count}（与目标代码一致）", "成功");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"导出失败：{ex.Message}", "错误");
+            }
+        }
+        #endregion
+
+        #region CSV值转义辅助方法
+        private static string EscapeCsvValue(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return "";
+            if (value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r'))
+            {
+                return $"\"{value.Replace("\"", "\"\"")}\"";
+            }
+            return value;
+        }
+        private string FormatValue(object  value)
+        {
+            if (value == null) return "";
+
+            switch (value)
+            {
+                case double d:
+                    return d.ToString("F2");
+                case float f:
+                    return f.ToString("F2");
+                case decimal m:
+                    return m.ToString("F2");
+                case int i:
+                    return i.ToString();
+                case string s:
+                    return s;
+                case DateTime dt:
+                    return dt.ToString("yyyy-MM-dd HH:mm:ss");
+                default:
+                    return value.ToString();
+            }
+        }
+        private string GetCurrentTabName()
+        {
+            return SelectedTabIndex switch
+            {
+                1 => "光谱",
+                2 => "IV",
+                3 => "IL",
+                4 => "VL",
+                _ => "数据"
+            };
+        }
         private bool NeedsEscaping(string value)
         {
             return value.Contains(",") || value.Contains("\"") || value.Contains("\n") || value.Contains("\r");
         }
-
+        #endregion
         private void InitializeSampleData()
         {
             // 创建初始光谱数据（380nm - 780nm）
@@ -761,170 +1195,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             IVLCamera_viewModel.PropertyChanged += OnIVLCameraPropertyChanged;
         }
      
-        //private void ExecuteExport(object parameter)//
-        //{
-        //    // 获取当前选中的Tab类型
-        //    string currentTab = GetCurrentTabName();
-        //   // string modeText = _isILvMode ? "ILv" : "VLv";
-
-        //    SaveFileDialog saveFileDialog = new SaveFileDialog
-        //    {
-        //        Filter = "CSV Files|*.csv",
-        //        Title = $"Save {currentTab} Data to CSV",
-        //        FileName = $"{currentTab}_Data_{DateTime.Now:yyyyMMdd_HHmmss}.csv"
-        //        //FileName = $"{modeText}_{currentTab}_Data_{DateTime.Now:yyyyMMdd_HHmmss}.csv"
-        //    };
-          
-        //    if (saveFileDialog.ShowDialog() == true)
-        //    {
-        //        try
-        //        {
-        //            var csv = new StringBuilder();
-                    
-        //            // 根据不同的Tab索引生成不同的数据格式
-        //            switch (SelectedTabIndex)
-        //            {
-        //                case 1: // IV Tab
-        //                    csv.AppendLine("Current (nm),Voltage,Series");
-        //                    if (IVMeasurements.Count == 0)
-        //                    {
-        //                        MessageBox.Show("No data to export.");
-        //                    }
-        //                    foreach (var measurement in IVMeasurements)
-        //                    {
-        //                        // 关键：明确系列名的来源（不能用 ToString()，需取 Measurement 的具体属性）
-        //                        // 示例1：用测量编号作为系列名（No 是 int，转成字符串）
-        //                        string seriesName = measurement.No.ToString();
-        //                        // 示例2：用时间戳作为系列名（格式化为字符串，避免特殊字符）
-        //                        // string seriesName = measurement.Timestamp.ToString("yyyyMMddHHmmss");
-
-        //                        // 安全访问 _spectrumData：用 TryGetValue 避免 Key 不存在报错
-                                
-        //                        if (_spectrumData.TryGetValue(seriesName, out var spectrumPoints) && spectrumPoints != null)
-        //                        {
-        //                            // 简化循环：用 foreach 遍历光谱点，更简洁安全
-        //                            foreach (var point in spectrumPoints)
-        //                            {
-        //                                // 格式化输出：波长（2位小数）、强度（4位小数）、系列名
-        //                                csv.AppendLine($"{point.IResult:F2},{point.VResult:F4},{seriesName}");
-        //                            }
-        //                        }
-        //                        else
-        //                        {
-        //                            // 可选：输出日志，方便调试（无对应光谱数据时）
-        //                            Console.WriteLine($"警告：未找到系列名 {seriesName} 对应的光谱数据");
-        //                        }
-        //                    }
-        //                    break;
-
-        //                //case 1: // IV Tab
-        //                //    csv.AppendLine("Series,Index,Voltage (V),Current (mA)");
-        //                //    foreach (var item in PoiSeriesList.SelectedItems)
-        //                //    {
-        //                //        string seriesName = item.ToString();
-        //                //        if (_groupedData.ContainsKey(seriesName))
-        //                //        {
-        //                //            var dataPoints = _groupedData[seriesName];
-        //                //            for (int i = 0; i < dataPoints.Count; i++)
-        //                //            {
-        //                //                csv.AppendLine($"{seriesName},{i + 1},{dataPoints[i].Voltage:F4},{dataPoints[i].Current:F4}");
-        //                //            }
-        //                //        }
-        //                //    }
-        //                //    break;
-
-        //                //case 2: // IL Tab
-        //                //    csv.AppendLine("Series,Index,Current (mA),Luminance (cd/m²)");
-        //                //    foreach (var item in PoiSeriesList.SelectedItems)
-        //                //    {
-        //                //        string seriesName = item.ToString();
-        //                //        if (_groupedData.ContainsKey(seriesName))
-        //                //        {
-        //                //            var dataPoints = _groupedData[seriesName];
-        //                //            for (int i = 0; i < dataPoints.Count; i++)
-        //                //            {
-        //                //                csv.AppendLine($"{seriesName},{i + 1},{dataPoints[i].Current:F4},{dataPoints[i].Luminance:F2}");
-        //                //            }
-        //                //        }
-        //                //    }
-        //                //    break;
-
-        //                //case 3: // VL Tab
-        //                //    csv.AppendLine("Series,Index,Voltage (V),Luminance (cd/m²)");
-        //                //    foreach (var item in PoiSeriesList.SelectedItems)
-        //                //    {
-        //                //        string seriesName = item.ToString();
-        //                //        if (_groupedData.ContainsKey(seriesName))
-        //                //        {
-        //                //            var dataPoints = _groupedData[seriesName];
-        //                //            for (int i = 0; i < dataPoints.Count; i++)
-        //                //            {
-        //                //                csv.AppendLine($"{seriesName},{i + 1},{dataPoints[i].Voltage:F4},{dataPoints[i].Luminance:F2}");
-        //                //            }
-        //                //        }
-        //                //    }
-        //                //    break;
-
-        //                default:
-        //                    // 默认使用原始格式
-        //                    csv.AppendLine("Wavelength (nm),Intensity,Series");
-        //                    if (Measurements.Count == 0)
-        //                    {
-        //                        MessageBox.Show("No data to export.");
-        //                    }
-                            
-        //                    foreach (var measurement in Measurements)
-        //                    {
-        //                        // 关键：明确系列名的来源（不能用 ToString()，需取 Measurement 的具体属性）
-        //                        // 示例1：用测量编号作为系列名（No 是 int，转成字符串）
-        //                        string seriesName = measurement.MeasurementId.ToString();
-        //                        // 示例2：用时间戳作为系列名（格式化为字符串，避免特殊字符）
-        //                        // string seriesName = measurement.Timestamp.ToString("yyyyMMddHHmmss");
-
-        //                        // 安全访问 _spectrumData：用 TryGetValue 避免 Key 不存在报错
-        //                        if (_spectrumData.TryGetValue(seriesName, out var spectrumPoints) && spectrumPoints != null)
-        //                        {
-        //                            // 简化循环：用 foreach 遍历光谱点，更简洁安全
-        //                            foreach (var point in spectrumPoints)
-        //                            {
-        //                                // 格式化输出：波长（2位小数）、强度（4位小数）、系列名
-        //                                csv.AppendLine($"{point.FHW:F2},{point.FIntTime:F4},{seriesName}");
-        //                            }
-        //                        }
-        //                        else
-        //                        {
-        //                            // 可选：输出日志，方便调试（无对应光谱数据时）
-        //                            Console.WriteLine($"警告：未找到系列名 {seriesName} 对应的光谱数据");
-        //                        }
-        //                    }
-        //                    break;
-        //            }
-
-        //            File.WriteAllText(saveFileDialog.FileName, csv.ToString(), Encoding.UTF8);
-        //            MessageBox.Show($"{currentTab} data saved to:\n{saveFileDialog.FileName}", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            log.Error("Failed to save CSV file", ex);
-        //            MessageBox.Show($"Failed to save CSV file:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        //        }
-        //    }
-        //}
-
-        // 根据SelectedIndex获取Tab名称
+        
 
         
-        private string GetCurrentTabName()
-        {
-            return SelectedTabIndex switch
-            {
-                0 => "光谱",
-                1 => "IV",
-                2 => "IL",
-                3 => "VL",
-                _ => "数据"
-            };
-        }
         private void OnIVLCameraPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(IVLCameraViewModel.ImageSrc))
@@ -933,152 +1206,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
         }
         
-        //private void ExecuteExportCSV(object parameter)
-        //{
-        //    string currentTab = GetCurrentTabName();
-        //    var saveFileDialog = new SaveFileDialog
-        //    {
-        //        Filter = "CSV Files|*.csv",
-        //        Title = $"Save {currentTab} Data to CSV",
-        //        FileName = $"{currentTab}_Data_{DateTime.Now:yyyyMMdd_HHmmss}.csv"
-        //    };
-
-        //    if (saveFileDialog.ShowDialog() == true)
-        //    {
-
-        //        try
-        //        {
-        //            //var csv = new StringBuilder();
-
-        //            // 根据不同的Tab索引生成不同的数据格式
-        //            switch (SelectedTabIndex)
-        //            {
-        //                case 1: // IV Tab
-        //                    //csv.AppendLine("Current (nm),Voltage,Series");
-        //                    // 直接导出ViewModel中的数据集合
-        //                    ExportToCsv(IVMeasurements, saveFileDialog.FileName);
-
-        //                    break;
-        //                case 2: // IL Tab
-        //                    //csv.AppendLine("Luminance (nm),Current,Series");
-        //                    // 直接导出ViewModel中的数据集合
-        //                    ExportToCsv(ILMeasurements, saveFileDialog.FileName);
-        //                    break;
-        //                case 3: // VL Tab
-        //                    //csv.AppendLine("Luminance (nm),Current,Series");
-        //                    // 直接导出ViewModel中的数据集合
-        //                    ExportToCsv(VLMeasurements, saveFileDialog.FileName);
-        //                    break;
-        //                default:
-        //                    // 默认使用原始格式
-        //                    //csv.AppendLine("Wavelength (nm),Intensity,Series");
-        //                    ExportToCsv(Measurements, saveFileDialog.FileName);
-        //                    break;
-        //            }
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            log.Error("Failed to save CSV file", ex);
-        //            MessageBox.Show($"Failed to save CSV file:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        //        }
-        //    }
-        //}
-        //public static void ExportToCsv(DataGrid dataGrid, string filePath)//object dataCollection, string fileName
-        //{
-        //    try
-        //    {
-        //        // 方法1：通过数据源导出
-        //        if (dataGrid.ItemsSource != null)
-        //        {
-        //            ExportItemsSource(dataGrid.ItemsSource, filePath);
-        //        }
-        //        // 方法2：直接遍历DataGrid
-        //        else
-        //        {
-        //            ExportDataGridDirectly(dataGrid, filePath);
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        throw new Exception($"导出失败: {ex.Message}", ex);
-        //    }
-        //}
-
-        //private static void ExportItemsSource(IEnumerable itemsSource, string filePath)
-        //{
-        //    var items = itemsSource.Cast<object>().ToList();
-        //    if (items.Count == 0) return;
-
-        //    var csv = new StringBuilder();
-        //    var properties = items.First().GetType().GetProperties();
-
-        //    // 表头
-        //    var headers = properties.Select(p => p.Name);
-        //    csv.AppendLine(string.Join(",", headers));
-
-        //    // 数据
-        //    foreach (var item in items)
-        //    {
-        //        var values = properties.Select(p => EscapeCsvValue(p.GetValue(item)?.ToString()));
-        //        csv.AppendLine(string.Join(",", values));
-        //    }
-
-        //    File.WriteAllText(filePath, csv.ToString(), Encoding.UTF8);
-        //}
-
-        //private static void ExportDataGridDirectly(DataGrid dataGrid, string filePath)
-        //{
-        //    var csv = new StringBuilder();
-
-        //    // 表头
-        //    var headers = dataGrid.Columns
-        //        .Where(col => col.Visibility == Visibility.Visible)
-        //        .Select(col => col.Header?.ToString() ?? "Column");
-        //    csv.AppendLine(string.Join(",", headers));
-
-        //    // 数据
-        //    foreach (var item in dataGrid.Items)
-        //    {
-        //        var values = dataGrid.Columns
-        //            .Where(col => col.Visibility == Visibility.Visible)
-        //            .Select(col =>
-        //            {
-        //                var content = col.GetCellContent(item);
-        //                return EscapeCsvValue(GetContentText(content));
-        //            });
-        //        csv.AppendLine(string.Join(",", values));
-        //    }
-
-        //    File.WriteAllText(filePath, csv.ToString(), Encoding.UTF8);
-        //}
-
-        //private static string GetContentText(FrameworkElement element)
-        //{
-        //    return element switch
-        //    {
-        //        TextBlock textBlock => textBlock.Text,
-        //        TextBox textBox => textBox.Text,
-        //        CheckBox checkBox => checkBox.IsChecked?.ToString() ?? "False",
-        //        ComboBox comboBox => comboBox.SelectedItem?.ToString() ?? "",
-        //        _ => element?.ToString() ?? ""
-        //    };
-        //}
-
-        //private static string EscapeCsvValue(string value)
-        //{
-        //    if (string.IsNullOrEmpty(value)) return "";
-
-        //    if (value.Contains(",") || value.Contains("\"") || value.Contains("\n") || value.Contains("\r"))
-        //    {
-        //        return $"\"{value.Replace("\"", "\"\"")}\"";
-        //    }
-        //    return value;
-        //}
-        //private void ExportToCsv(object dataCollection, string fileName)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
+       
         //电压/电流
         private void InitializeIVPlotModel()
         {
@@ -1102,36 +1230,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             VLViewModel viewModel = new VLViewModel();
             VL_viewModel = viewModel;
-            //VLPlotModel = viewModel.PlotModel;
             VLMeasurements = viewModel.Measurements;
-            //var vlResults = new List<VScgdMeasureResultSpectrometer>
-            //{
-            //    new VScgdMeasureResultSpectrometer
-            //    {
-            //        CreateDate = DateTime.Now.AddSeconds(-10),
-            //        VResult = (float?)1.0m, // 电压1.0V
-            //        FPh = (float?)200m      // 亮度200cd/m²
-            //    },
-            //    new VScgdMeasureResultSpectrometer
-            //    {
-            //        CreateDate = DateTime.Now.AddSeconds(-8),
-            //        VResult = (float?)1.5m,
-            //        FPh = (float?)450m
-            //    },
-            //    new VScgdMeasureResultSpectrometer
-            //    {
-            //        CreateDate = DateTime.Now.AddSeconds(-6),
-            //        VResult =(float?) 2.0m,
-            //        FPh =(float?) 700m
-            //    },
-            //    new VScgdMeasureResultSpectrometer
-            //    {
-            //        CreateDate = DateTime.Now.AddSeconds(-4),
-            //        VResult = null, // 模拟空值（LoadData中会转为0）
-            //        FPh = (float?)950m
-            //    }
-            //};
-            //viewModel.LoadData(vlResults);
             VLPlotModel = viewModel.PlotModel;
         }
         //光谱
@@ -1169,7 +1268,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             Wavelengths = new float[10000];
             for (int i = 0; i < 10000; i++)
             {
-                Wavelengths[i] = 380 + i/10.0f;
+                Wavelengths[i] = 380 + i/10.0f; 
             }
         }
         private void ResetPlotView()
@@ -1259,7 +1358,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             var lineSeries = new LineSeries
             {
-                Title = $"测量 {SelectedMeasurement.MeasurementId}",
+                Title = $"测量 {SelectedMeasurement.Meas_Id}",
                 Color = OxyColors.Blue,
                 StrokeThickness = 1.5
             };
@@ -1329,8 +1428,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             IV_viewModel.LoadData(serialNumber);
             VL_viewModel.LoadData(lv_results, il_results);
             IVLCamera_viewModel.LoadData(lv_results, il_results);
+            InitializeOverviewSeries();
         }
-
+        private static string ArrayToString(float[] array)
+        {
+            if (array == null || array.Length == 0)
+                return ""; // 空数组返回空字符串
+            return string.Join(",", array); // 用逗号拼接元素
+        }
         public void LoadSpectrumData(string serialNumber)
         {
             var results = SpectrumResultService.LoadResultByBatchCode(DeviceCode, serialNumber);
@@ -1340,31 +1445,75 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             IV_viewModel.LoadData(serialNumber);
             VL_viewModel.LoadData(results);
             //
+            int n = 1;
             foreach (var result in results)
             {
+                //double sum1 = 0, sum2 = 0;
+                //for (int i = 35; i <= 75; i++)
+                //    sum1 += result.FPL[i * 10];
+                //for (int i = 20; i <= 120; i++)
+                //    sum2 += result.FPL[i * 10];
+
+                
                 var measurement = new SpectrumMeasurement
                 {
                     Timestamp = result.CreateDate,
-                    MeasurementId = result.BatchCode,
-                    PeakWavelength = (float)result.FLd,
-                    PeakIntensity = (float)result.FLp,
-                    V = (float)result.VResult,
-                    I = (float)result.IResult,
-                    IP = string.Format("{0:F2}%",result.FIp),
-                    Luminance = (float)result.FPh,
-                    CIE_u = (float)result.Fu,
-                    CIE_v = (float)result.Fv,
+                    Meas_Id = result.BatchCode,
+                    Voltage = (float)result.VResult,
+                    Current = (float)result.IResult,
+                    Luminance = (float)result.FPh / 1,
+                    // Luminance = (float)result.FPh,
+                    IP = Math.Round((decimal)(result.FIp / 65535 * 100), 2).ToString() + "%",
+                    // IP = ,
+                    Blue = (float)result.FBR ,
+                    //Blue = (float)Math.Round(sum1 / sum2 * 100 , 2),
+                   
                     CIE_x = (float)result.Fx,
                     CIE_y = (float)result.Fy,
+                    CIE_u = (float)result.Fu,
+                    CIE_v = (float)result.Fv,
                     CCT = (float)result.FCCT,
-
+                    PeakWavelength = (float)result.FLd,
+                    fPur= (float)result.FPur,
+                    //fPuPercent = $"{Math.Round((decimal)(result.FPur * 100), 2)}%",
+                    PeakIntensity = (float)result.FLp,
+                    FHW= (float)result.FHW,
                     Intensities = JsonConvert.DeserializeObject<float[]>(result.FPL),
                     Wavelengths = Wavelengths,
+                    fPlambda= (float)result.FPlambda
+                    
                 };
-
+                double sum1 = 0, sum2 = 0;
+                for (int i = 35; i <= 75; i++)
+                    sum1 += measurement.Intensities[i * 10];
+                for (int i = 20; i <= 120; i++)
+                    sum2 += measurement.Intensities[i * 10];
+                measurement.Blue = (float)Math.Round(sum1 / sum2 * 100, 2);
                 Measurements.Add(measurement);
-            }
+                n++;
+                //var spectralData = new CVWPFSpectrumControl.Models.SpectralData
+                //{
+                //    // 把 SpectrumMeasurement 的属性值，逐个赋值给 SpectralData 的对应属性
+                //    CreateTime = measurement.Timestamp, // 假设 measurement 有 MeasureTime 属性
+                //    V = measurement.Voltage,             // 假设 measurement 有 Voltage 属性
+                //    I = measurement.Current,             // 假设 measurement 有 Current 属性
+                //    Lv = measurement.Brightness,         // 假设 measurement 有 Brightness 属性
+                //    IP = measurement.IPValue,            // 假设 measurement 有 IPValue 属性
+                //    Blue = measurement.BlueLightValue,   // 假设 measurement 有 BlueLightValue 属性
+                //    fx = measurement.CxCoordinate,       // 假设 measurement 有 CxCoordinate 属性
+                //    fy = measurement.CyCoordinate,       // 假设 measurement 有 CyCoordinate 属性
+                //                                         // ... 其他属性同理，根据实际业务含义一一对应
+                //    DataPoints = measurement.SpectrumDataPoints
+                //     .Select(p => new DataPoint
+                //     {
+                //         AbsoluteSpectrum = p.SpectrumValue // 光谱数据点的映射
+                //     })
+                //     .ToList()};
 
+                //// 现在可以安全添加到集合中
+                //SpectralData.Add(spectralData);
+            }
+            
             if (Measurements.Any())
             {
                 SelectedMeasurement = Measurements.First();
@@ -1374,7 +1523,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     _spectralCtrl.InvalidateVisual();
                 }
             }
-
+            // 关键：子Tab数据加载完成后，重新初始化总览图Series
+            InitializeOverviewSeries();
         }
 
         public void ClearResult()

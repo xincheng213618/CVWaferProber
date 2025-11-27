@@ -198,7 +198,30 @@
                 VerticalAlignment="Center"
                 Text="Col:" />
             <TextBox IsEnabled="False" Text="{Binding Columns}" />
+            <Separator />
+            <TextBlock
+                Margin="5,0"
+                VerticalAlignment="Center"
+                Text="Temperature:" />
+            <TextBox IsEnabled="False" Text="{Binding Temperatures}" />
 
+            <TextBlock
+                Margin="2,0"
+                VerticalAlignment="Center"
+                Text="Probe Pressure:" />
+            <TextBox IsEnabled="False" Text="{Binding Pressure}" />
+
+            <TextBlock
+                Margin="5,0"
+                VerticalAlignment="Center"
+                Text="Probe Card SN:" />
+            <TextBox IsEnabled="False" Text="{Binding SN}" />
+
+            <TextBlock
+                Margin="2,0"
+                VerticalAlignment="Center"
+                Text="TD Count:" />
+            <TextBox IsEnabled="False" Text="{Binding TDCount}" />
             <!--
             <TextBlock Text="间距:" VerticalAlignment="Center" Margin="5,0"/>
             <TextBlock Text="水平:" VerticalAlignment="Center" Margin="2,0"/>
@@ -213,7 +236,7 @@
             <TextBox Text="{Binding StartY}" ToolTip="起始Y坐标"/>
             -->
 
-            <Separator />
+
 
 
             <!-- 筛选控制

@@ -1,19 +1,17 @@
 ﻿using CVWaferProber.Core.ViewModels;
+using CVWPFSpectrumControl.Models;
 
 namespace CVWPFSpectrometerCtrl.ViewModels
 {
     public class SpectrumMeasurement : ViewModelBase
     {
         private DateTime _timestamp;
-        private string _measurementId;
-        /// <summary>
-        /// 主波长
-        /// </summary>
-        private float _peakWavelength;
-        /// <summary>
-        /// 峰值波长
-        /// </summary>
-        private float _peakIntensity;
+        private int _no;
+        
+       
+        private string _Meas_Id;
+        private float _v;
+        private float _i;
         /// <summary>
         /// 亮度
         /// </summary>
@@ -22,15 +20,28 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         /// IP
         /// </summary>
         private string _IP;
+        private float _Blue;
         private float _cie_x;
         private float _cie_y;
         private float _cie_u;
         private float _cie_v;
         private float _CCT;
+        /// <summary>
+        /// 主波长
+        /// </summary>
+        private float _peakWavelength;
+        private float _fPur;
+        private float _fPlambda;
+       
+        /// <summary>
+        /// 峰值波长
+        /// </summary>
+        private float _peakIntensity;
+        
+        
         private int _dataPoints;
-        private float _v;
-        private float _i;
 
+        private float _fHW;
         public DateTime Timestamp
         {
             get => _timestamp;
@@ -40,37 +51,34 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged(nameof(Timestamp));
             }
         }
-
-        public string MeasurementId
+     
+        public string Meas_Id
         {
-            get => _measurementId;
+            get => _Meas_Id;
             set
             {
-                _measurementId = value;
-                OnPropertyChanged(nameof(MeasurementId));
+                _Meas_Id = value;
+                OnPropertyChanged(nameof(_Meas_Id));
             }
         }
 
-        public float PeakWavelength
+        
+        public float Voltage
         {
-            get => _peakWavelength;
+            get => _v;
             set
             {
-                _peakWavelength = value;
-                OnPropertyChanged(nameof(PeakWavelength));
+                SetProperty(ref _v, value);
             }
         }
-
-        public float PeakIntensity
+        public float Current
         {
-            get => _peakIntensity;
+            get => _i;
             set
             {
-                _peakIntensity = value;
-                OnPropertyChanged(nameof(PeakIntensity));
+                SetProperty(ref _i, value);
             }
         }
-
         public float Luminance
         {
             get => _luminance;
@@ -80,6 +88,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged(nameof(Luminance));
             }
         }
+        
         public string IP
         {
             get => _IP;
@@ -89,14 +98,31 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged(nameof(IP));
             }
         }
-
-        public int DataPoints
+        public float Blue
         {
-            get => _dataPoints;
+            get => _Blue;
             set
             {
-                _dataPoints = value;
-                OnPropertyChanged(nameof(DataPoints));
+                _Blue = value;
+                OnPropertyChanged(nameof(Blue));
+            }
+        }
+        public float CIE_x
+        {
+            get => _cie_x;
+            set
+            {
+                _cie_x = value;
+                OnPropertyChanged(nameof(CIE_x));
+            }
+        }
+        public float CIE_y
+        {
+            get => _cie_y;
+            set
+            {
+                _cie_y = value;
+                OnPropertyChanged(nameof(CIE_y));
             }
         }
         public float CIE_u
@@ -107,7 +133,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 _cie_u = value;
                 OnPropertyChanged(nameof(CIE_u));
             }
-        } 
+        }
         public float CIE_v
         {
             get => _cie_v;
@@ -116,25 +142,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 _cie_v = value;
                 OnPropertyChanged(nameof(CIE_v));
             }
-        }  
-        public float CIE_x
-        {
-            get => _cie_x;
-            set
-            {
-                _cie_x = value;
-                OnPropertyChanged(nameof(CIE_x));
-            }
-        } 
-        public float CIE_y
-        {
-            get => _cie_y;
-            set
-            {
-                _cie_y = value;
-                OnPropertyChanged(nameof(CIE_y));
-            }
-        } 
+        }
         public float CCT
         {
             get => _CCT;
@@ -143,25 +151,69 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 SetProperty(ref _CCT, value);
             }
         }
-        public float V
+        public float PeakWavelength
         {
-            get => _v;
+            get => _peakWavelength;
             set
             {
-               SetProperty(ref _v, value);
+                _peakWavelength = value;
+                OnPropertyChanged(nameof(PeakWavelength));
             }
         }
-        public float I
+        public float fPur
         {
-            get => _i;
+            get => _fPur;
             set
             {
-               SetProperty(ref _i, value);
+                SetProperty(ref _fPur, value);
+            }
+        }
+       
+        public float PeakIntensity
+        {
+            get => _peakIntensity;
+            set
+            {
+                _peakIntensity = value;
+                OnPropertyChanged(nameof(PeakIntensity));
+            }
+        }
+        public float fPlambda
+        {
+            get => _fPlambda;
+            set
+            {
+                _fPlambda = value;
+                OnPropertyChanged(nameof(fPlambda));
+            }
+        }
+        public float FHW
+        {
+            get => _fHW;
+            set
+            {
+                _fHW = value;
+                OnPropertyChanged(nameof(FHW));
+            }
+        }
+      
+       
+        public int DataPoints
+        {
+            get => _dataPoints;
+            set
+            {
+                _dataPoints = value;
+                OnPropertyChanged(nameof(DataPoints));
             }
         }
 
+       
+                
         // 原始光谱数据（不显示在DataGrid中）
         public float[] Wavelengths { get; set; }
         public float[] Intensities { get; set; }
+        public float RelativeSpectrum { get; set; }
+        public float AbsoluteSpectrum { get; internal set; }
     }
 }

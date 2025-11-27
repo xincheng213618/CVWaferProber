@@ -16,12 +16,12 @@ using System.Windows;
 
 namespace CVWPFSpectrometerCtrl.ViewModels
 {
-    public class VLViewModel: ViewModelBase
+    public class VLViewModel : ViewModelBase
     {
         private PlotModel _plotModel;
         private ObservableCollection<VLMeasurement> _measurements;
 
-       
+
         public ObservableCollection<VLMeasurement> Measurements
         {
             get => _measurements;
@@ -29,7 +29,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             {
                 _measurements = value;
                 OnPropertyChanged(nameof(Measurements));
-                
+
             }
         }
         //private string DeviceCode { get; set; }
@@ -37,9 +37,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         public VLViewModel()
         {
             InitializePlotModel();
-            
+
             Measurements = new ObservableCollection<VLMeasurement>();
-           // DeviceCode = "DEV.SMU.Default";
+            // DeviceCode = "DEV.SMU.Default";
         }
         public PlotModel PlotModel
         {
@@ -52,6 +52,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
         private PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 6, DefaultMaxRange = 5000 };
         private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 10, DefaultMaxRange = 20000 };
+
         private void InitializePlotModel()
         {
             _plotModel = new PlotModel
@@ -71,6 +72,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 Minimum = AxisX.DefaultMin,
                 Maximum = AxisX.DefaultMax,
                 MaximumRange = AxisX.DefaultMaxRange,
+                //IsZoomEnabled = false, // 禁用缩放（避免用户手动改变范围，如需保留可设为true）
+                IsPanEnabled = false
             };
             AxisCfg(xAxis, AxisX);
             // 设置Y轴（L）
@@ -83,6 +86,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 Minimum = AxisY.DefaultMin,
                 Maximum = AxisY.DefaultMax,
                 MaximumRange = AxisY.DefaultMaxRange,
+                //IsZoomEnabled = false, // 禁用缩放（避免用户手动改变范围，如需保留可设为true）
+                IsPanEnabled = false
             };
             AxisCfg(yAxis, AxisY);
 
@@ -118,7 +123,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 Measurements.Add(new VLMeasurement(no++, result.CreateDate, V[i], L[i]));
             }
             UpdateVLData(V, L);
-            
+
         }
         public void LoadData(List<VScgdAlgorithmResultMaster> results, List<float> vl_results)
         {
@@ -139,35 +144,97 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
         private void UpdateVLData(double[] V, double[] L)
         {
+            // 1. 数据校验：避免空数组或长度不匹配
+            if (V == null || L == null || V.Length == 0 || L.Length == 0 || V.Length != L.Length)
+            {
+                PlotModel.Series.Clear();
+                PlotModel.InvalidatePlot(true);
+                return;
+            }
+
+            // 2. 计算X轴（电压）和Y轴（亮度）的最大值（核心）
+            double maxVoltage = V.Max() * 1.01;// 电压最大值
+            double minVoltage = Math.Max(0, V.Min() * 0.99);// 电压最小值
+            double maxLuminance = L.Max() * 1.01;// 亮度最大值
+            double minLuminance = Math.Max(0, L.Min() * 0.99);// 亮度最小值
+
+            // 3. 获取初始化时创建的X轴和Y轴（通过标题匹配，确保准确性）
+            var xAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Title == "电压/V");
+            var yAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Title == "亮度/L");
+          
+            if (xAxis != null && yAxis != null)
+            {
+                // 4. 更新X轴范围：从0到电压最大值（如需从数据最小值开始，改为 V.Min()）
+                xAxis.Minimum = minVoltage; 
+                xAxis.Maximum = maxVoltage;
+                xAxis.Minimum = minVoltage;
+                xAxis.Maximum = maxVoltage;
+
+                // 5. 更新Y轴范围：从0到亮度最大值（如需从数据最小值开始，改为 L.Min()）
+                yAxis.Minimum = minLuminance;
+                yAxis.Maximum = maxLuminance;
+                yAxis.Minimum = minLuminance;
+                yAxis.Maximum = maxLuminance;
+            }
+
+            // 6. 保留原有折线图配置
             var lineSeries = new LineSeries
             {
                 Title = "VL曲线",
-                Color = OxyColors.Red,
+                Color = OxyColors.Purple,
                 StrokeThickness = 1.5,
-                MarkerType = MarkerType.Circle,  // 标记类型
-                MarkerSize = 4,                  // 标记大小
-                MarkerFill = OxyColors.Red,      // 标记填充颜色
-                MarkerStroke = OxyColors.Red,  // 标记边框颜色
-                MarkerStrokeThickness = 1.5,     // 标记边框厚度
+                MarkerType = MarkerType.Circle,
+                MarkerSize = 4,
+                MarkerFill = OxyColors.Purple,
+                MarkerStroke = OxyColors.Purple,
+                MarkerStrokeThickness = 1.5,
                 LineStyle = LineStyle.Solid,
-              
             };
 
+            // 7. 添加数据点（X=电压，Y=亮度，与原逻辑一致）
             for (int i = 0; i < V.Length; i++)
             {
                 lineSeries.Points.Add(new DataPoint(V[i], L[i]));
             }
 
-            PlotModel.Series.Clear();// 将数据点加入折线
-            PlotModel.Series.Add(lineSeries); // 将折线加入绘图模型
-            PlotModel.InvalidatePlot(true);
+            // 8. 更新图表（保留原有逻辑）
+            PlotModel.Series.Clear();
+            PlotModel.Series.Add(lineSeries);
+            PlotModel.InvalidatePlot(true); // 强制刷新图表，应用新轴范围
         }
 
+        /* public void Clear()
+         {
+             no = 1;
+             PlotModel.Series.Clear();
+             Measurements.Clear();
+         }*/
+
+        // 优化Clear方法：重置轴范围到默认值（可选，根据需求决定是否保留）
         public void Clear()
         {
             no = 1;
             PlotModel.Series.Clear();
             Measurements.Clear();
+
+            // 重置轴范围到初始默认值
+            var xAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Title == "电压/V");
+            var yAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Title == "亮度/L");
+            
+            if (xAxis != null && yAxis != null)
+            {
+                xAxis.Minimum = AxisX.DefaultMin;
+                xAxis.Maximum = AxisX.DefaultMax;
+                xAxis.AbsoluteMinimum = AxisX.DefaultMin;
+                xAxis.AbsoluteMaximum = AxisX.DefaultMaxRange;
+
+                yAxis.Minimum = AxisY.DefaultMin;
+                yAxis.Maximum = AxisY.DefaultMax;
+                yAxis.AbsoluteMinimum = AxisY.DefaultMin;
+                yAxis.AbsoluteMaximum = AxisY.DefaultMaxRange;
+            }
+
+            PlotModel.InvalidatePlot(true);
         }
     }
 }

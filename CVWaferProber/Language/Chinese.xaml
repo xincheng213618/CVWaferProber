@@ -46,6 +46,7 @@
 
 
     <!--  光谱曲线相关  -->
+    <sys:String x:Key="Sp.Overview">总览图</sys:String>
     <sys:String x:Key="Sp.Spectral">光谱</sys:String>
     <sys:String x:Key="Sp.SpectralCurve">光谱曲线</sys:String>
     <sys:String x:Key="Sp.Wavelength">波长 (nm)</sys:String>
