@@ -85,14 +85,14 @@
             <TabItem Header="{DynamicResource Sp.Spectral}">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="218*" />
+                        <ColumnDefinition Width="400*" />
                         <ColumnDefinition Width="218*" />
                         <ColumnDefinition Width="253*" />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="8*" />
-                        <RowDefinition Height="2*" />
+                        <RowDefinition Height="1*" />
+                        <RowDefinition Height="7.5*" />
+                        <RowDefinition Height="2.5*" />
                     </Grid.RowDefinitions>
                     <!--  顶部：颜色选择区域  -->
                     <!--  光谱子Tab的颜色选择控件  -->
@@ -102,8 +102,9 @@
                         Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center" Text="线条颜色：" />
                         <ComboBox
-                            Width="100"
-                            Height="30"
+                            Width="80"
+                            Height="20"
+                            Margin="2"
                             SelectedValue="{Binding SpectralLineColor, Mode=TwoWay}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
@@ -125,19 +126,33 @@
                             <SolidColorBrush Color="Yellow" />
                             <SolidColorBrush Color="Purple" />
                         </ComboBox>
+                        <CheckBox
+                            x:Name="chkShowAll"
+                            Margin="5"
+                            VerticalAlignment="Center"
+                            Content="显示所有数据"
+                            IsChecked="{Binding IsShowAllData, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <CheckBox
+                            x:Name="chkShowDetails"
+                            Margin="5"
+                            VerticalAlignment="Center"
+                            Command="{Binding ShowDetails}"
+                            Content="光谱数据详情" />
                     </StackPanel>
                     <!--  图表区域  -->
                     <oxy:PlotView
                         Grid.Row="1"
                         Grid.ColumnSpan="3"
-                        Margin="5,5,5,5"
+                        Margin="5,0,5,0"
                         Model="{Binding PlotModel}" />
+
+                    <!--  底部：数据表格  -->
                     <!--  DataGrid区域  -->
                     <DataGrid
                         x:Name="measurementsGrid"
                         Grid.Row="2"
                         Grid.ColumnSpan="3"
-                        Margin="5,5,5,5"
+                        Margin="5,2,5,2"
                         AutoGenerateColumns="False"
                         CanUserAddRows="False"
                         CanUserDeleteRows="False"
@@ -157,6 +172,10 @@
                                 Width="80"
                                 Binding="{Binding Meas_Id}"
                                 Header="{DynamicResource Sp.MeasurementBatch}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding No}"
+                                Header="{DynamicResource GridHeader.No}" />
                             <DataGridTextColumn
                                 Width="120"
                                 Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}"

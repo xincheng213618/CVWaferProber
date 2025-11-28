@@ -46,7 +46,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged(nameof(PlotModel));
             }
         }
-        private PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = 50, DefaultMax = 200, DefaultMaxRange = 20000 };
+        private PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 200, DefaultMaxRange = 20000 };
         private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 6, DefaultMaxRange = 5000 };
       
         private void InitializePlotModel()
@@ -171,14 +171,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 // 4. 更新X轴（电流）范围：锁定范围，防止自动扩展
                 xAxis.Minimum = minCurrent;
                 xAxis.Maximum = maxCurrent;
-                xAxis.AbsoluteMinimum = minCurrent; // 锁定最小范围
-                xAxis.AbsoluteMaximum = maxCurrent; // 锁定最大范围（关键：避免OxyPlot自动加边距）
+                xAxis.Minimum = minCurrent; // 锁定最小范围
+                xAxis.Maximum = maxCurrent; // 锁定最大范围（关键：避免OxyPlot自动加边距）
 
                 // 5. 更新Y轴（亮度）范围：锁定范围
                 yAxis.Minimum = minLuminance;
                 yAxis.Maximum = maxLuminance;
-                yAxis.AbsoluteMinimum = minLuminance;
-                yAxis.AbsoluteMaximum = maxLuminance;
+                yAxis.Minimum = minLuminance;
+                yAxis.Maximum = maxLuminance;
 
                
             }

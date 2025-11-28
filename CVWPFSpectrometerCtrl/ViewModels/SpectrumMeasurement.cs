@@ -7,8 +7,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
     {
         private DateTime _timestamp;
         private int _no;
-        
-       
+        public SpectrumMeasurement(int no)
+        {
+            _no = no;
+        }
+
         private string _Meas_Id;
         private float _v;
         private float _i;
@@ -42,6 +45,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private int _dataPoints;
 
         private float _fHW;
+        public int No
+        {
+            get => _no;
+            set
+            {
+                SetProperty(ref _no, value);
+            }
+        }
         public DateTime Timestamp
         {
             get => _timestamp;
@@ -51,7 +62,6 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged(nameof(Timestamp));
             }
         }
-     
         public string Meas_Id
         {
             get => _Meas_Id;
@@ -61,8 +71,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged(nameof(_Meas_Id));
             }
         }
-
-        
+       
         public float Voltage
         {
             get => _v;

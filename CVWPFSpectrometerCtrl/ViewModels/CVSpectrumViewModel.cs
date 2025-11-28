@@ -67,7 +67,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private SpectrumControl _spectralCtrl;
 
         private WpfPlot _plotControl;
-
+        //存储所有光谱曲线（Key=测量No，Value=曲线系列），用于快速切换高亮
+        private Dictionary<int, LineSeries> _spectralSeriesCache = new Dictionary<int, LineSeries>();
         public WpfPlot PlotControl
         {
             get => _plotControl;
@@ -79,14 +80,37 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             set => SetProperty(ref _plotModel, value);
         }
 
+        private bool _isShowAllData;
+        public bool IsShowAllData
+        {
+            get => _isShowAllData;
+            set
+            {
+                _isShowAllData = value;
+                OnPropertyChanged();
+                // 勾选状态变化时，更新图表
+                UpdateChartByShowAllState();
+            }
+        }
         public SpectrumMeasurement SelectedMeasurement
         {
             get => _selectedMeasurement;
             set
             {
-                _selectedMeasurement = value;
-                OnPropertyChanged(nameof(SelectedMeasurement));
-                ResetAndUpdateChart();
+                if (SetProperty(ref _selectedMeasurement, value))
+                {
+                    OnPropertyChanged(nameof(SelectedMeasurement));
+                    if (IsShowAllData)
+                    {
+                        // 显示所有数据时，切换选中曲线高亮（不重新绘制，性能更优）
+                        UpdateSelectedCurveHighlight();
+                    }
+                    else
+                    {
+                        // 未勾选时，显示单条选中数据（原有逻辑）
+                        ResetAndUpdateChart();
+                    }
+                }
             }
         }
 
@@ -111,11 +135,121 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             get => _VLMeasurements;
             set => SetProperty(ref _VLMeasurements, value);
         }
-       /* public ObservableCollection<IVLMeasurement> IVLMeasurements
+        
+        
+
+        private void UpdateChartByShowAllState()
         {
-            get => _IVLMeasurements;
-            set => SetProperty(ref _IVLMeasurements, value);
-        }*/
+            ResetPlotView(); // 重置图表
+
+            if (IsShowAllData)
+            {
+                // 绘制所有数据
+                DrawAllMeasurementsInChart();
+            }
+            else
+            {
+                // 绘制选中的单条数据（原逻辑）
+                if (SelectedMeasurement != null)
+                {
+                    UpdateChartFromSelectedMeasurement();
+                }
+                else
+                {
+                    ShowEmptyChartMessage();
+                }
+            }
+        }
+
+        private void DrawAllMeasurementsInChart()
+        {
+            if (!Measurements.Any())
+            {
+                ShowEmptyChartMessage();
+                return;
+            }
+
+            // 清空缓存和原有曲线
+            _spectralSeriesCache.Clear();
+            PlotModel.Series.Clear();
+
+            // 带透明度的未选中颜色（Alpha=115≈45%透明度，适配低版本OxyPlot）
+            var unselectedColors = new[]
+            {
+                OxyColor.FromAColor(115, OxyColors.Blue),
+                OxyColor.FromAColor(115, OxyColors.Green),
+                OxyColor.FromAColor(115, OxyColors.Purple),
+                OxyColor.FromAColor(115, OxyColors.Orange),
+                OxyColor.FromAColor(115, OxyColors.Teal),
+                OxyColor.FromAColor(115, OxyColors.Magenta),
+                OxyColor.FromAColor(115, OxyColors.Gold),
+                OxyColor.FromAColor(115, OxyColors.Cyan),
+                OxyColor.FromAColor(115, OxyColors.Lime),
+                OxyColor.FromAColor(115, OxyColors.Indigo),
+                OxyColor.FromAColor(115, OxyColors.Pink),
+                OxyColor.FromAColor(115, OxyColors.Olive),
+                OxyColor.FromAColor(115, OxyColors.SkyBlue)
+            };
+            int colorIndex = 0;
+
+            foreach (var measurement in Measurements)
+            {
+                // 用测量No作为缓存Key（唯一标识）
+                int measNo = measurement.No;
+                // 图例标注：显示「测量No + 时间戳」
+                string seriesTitle = $"No:{measNo} | {measurement.Timestamp:yyyy-MM-dd HH:mm}";
+                // 判断是否为当前选中项
+                bool isSelected = SelectedMeasurement != null && measNo == SelectedMeasurement.No;
+
+                var lineSeries = new LineSeries
+                {
+                    Title = seriesTitle,
+                    // 选中：红色；未选中：循环半透明颜色
+                    Color = isSelected ? OxyColors.Red : unselectedColors[colorIndex % unselectedColors.Length],
+                    // 选中：加粗（2.0px）；未选中：细线条（1.2px）
+                    StrokeThickness = isSelected ? 2.0 : 1.2,
+                    // 选中：显示圆形标记点；未选中：无标记点
+                    //MarkerType = isSelected ? MarkerType.Circle : MarkerType.None,
+                   // MarkerSize = 3,
+                    //MarkerFill = OxyColors.Red,
+                   // MarkerStroke = OxyColors.White, // 标记点白色边框，更醒目
+                   // MarkerStrokeThickness = 0.5,
+                    IsVisible = true,
+                    TrackerFormatString = "波长: {X:.0}nm | 强度: {Y:.4f}" // 鼠标悬浮提示
+                };
+
+                // 填充数据点（过滤异常值）
+                for (int i = 0; i < measurement.Wavelengths.Length; i++)
+                {
+                    if (!float.IsNaN(measurement.Intensities[i]) && !float.IsInfinity(measurement.Intensities[i]))
+                    {
+                        lineSeries.Points.Add(new DataPoint(
+                            measurement.Wavelengths[i],
+                            measurement.Intensities[i]));
+                    }
+                }
+
+                // 缓存曲线
+                _spectralSeriesCache.Add(measNo, lineSeries);
+                // 添加到图表（未选中曲线先添加，选中曲线后续移到顶层）
+                PlotModel.Series.Add(lineSeries);
+
+                // 未选中曲线才递增颜色索引（避免颜色重复）
+                if (!isSelected)
+                    colorIndex++;
+            }
+
+            // 选中曲线移到顶层（确保不被遮挡）
+            if (SelectedMeasurement != null && _spectralSeriesCache.ContainsKey(SelectedMeasurement.No))
+            {
+                BringSeriesToFront(SelectedMeasurement.No);
+            }
+
+            // 自动调整轴范围（适配所有数据）
+            //AutoAdjustAxisRange();
+            PlotModel.InvalidatePlot(true); // 刷新图表
+        }
+
         public ObservableCollection<SpectralData> SpectralData
         {
             get => _SpectralData;
@@ -265,28 +399,17 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             ScottPlot.Color.FromHex("#FFFF00"), // 黄色
             ScottPlot.Color.FromHex("#FF0000"),// 红色
             };
-            //VisibleSpectrumColormap = ScottPlot.Colormap.FromColors(visibleSpectrumColors);
+            
             VisibleSpectrumColormap = new ScottPlot.Colormaps.Custom(visibleSpectrumColors);
 
             // 初始化数据
-            //SpectraCollection = new ObservableCollection<SpectraData>();
             InitializeSampleData();
 
             InitializePlot();
             // 新增：初始化总览图的PlotModel
             // 初始化总览图（关键步骤）
             InitializeOverviewPlotModels();
-            //// 2. 克隆子Tab配置到总览图（关键步骤）
-            //OverviewSpectralPlotModel = ClonePlotModelForOverview(PlotModel, "光谱");
-            //OverviewIVPlotModel = ClonePlotModelForOverview(IVPlotModel, "IV");
-            //OverviewILPlotModel = ClonePlotModelForOverview(ILPlotModel, "IL");
-            //OverviewVLPlotModel = ClonePlotModelForOverview(VLPlotModel, "VL");
-
-            //// 3. 触发PropertyChanged，通知UI更新
-            //OnPropertyChanged(nameof(OverviewSpectralPlotModel));
-            //OnPropertyChanged(nameof(OverviewIVPlotModel));
-            //OnPropertyChanged(nameof(OverviewILPlotModel));
-            //OnPropertyChanged(nameof(OverviewVLPlotModel));
+            
         }
         // 初始化总览图的PlotModel（克隆子Tab配置并绑定数据）
         private void InitializeOverviewPlotModels()
@@ -393,6 +516,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OverviewSpectralPlotModel.Series.Add(spectralSeries);
                 // 强制刷新轴范围（关键）
                 RefreshAxisRange(OverviewSpectralPlotModel);
+
             }
 
             // 3. 绑定IV数据（修正轴顺序：电流X，电压Y）
@@ -436,7 +560,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     Color = OxyColors.Purple,
                     StrokeThickness = 1.5,
                     MarkerType = MarkerType.Circle,
-                    MarkerSize = 2,
+                    //MarkerSize = 2,
                     MarkerFill = OxyColors.Purple
                 };
                 OverviewVLPlotModel.Series.Add(vlSeries);
@@ -1448,14 +1572,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             int n = 1;
             foreach (var result in results)
             {
-                //double sum1 = 0, sum2 = 0;
-                //for (int i = 35; i <= 75; i++)
-                //    sum1 += result.FPL[i * 10];
-                //for (int i = 20; i <= 120; i++)
-                //    sum2 += result.FPL[i * 10];
-
-                
-                var measurement = new SpectrumMeasurement
+                 
+                var measurement = new SpectrumMeasurement(n++)
                 {
                     Timestamp = result.CreateDate,
                     Meas_Id = result.BatchCode,
@@ -1490,28 +1608,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     sum2 += measurement.Intensities[i * 10];
                 measurement.Blue = (float)Math.Round(sum1 / sum2 * 100, 2);
                 Measurements.Add(measurement);
-                n++;
-                //var spectralData = new CVWPFSpectrumControl.Models.SpectralData
-                //{
-                //    // 把 SpectrumMeasurement 的属性值，逐个赋值给 SpectralData 的对应属性
-                //    CreateTime = measurement.Timestamp, // 假设 measurement 有 MeasureTime 属性
-                //    V = measurement.Voltage,             // 假设 measurement 有 Voltage 属性
-                //    I = measurement.Current,             // 假设 measurement 有 Current 属性
-                //    Lv = measurement.Brightness,         // 假设 measurement 有 Brightness 属性
-                //    IP = measurement.IPValue,            // 假设 measurement 有 IPValue 属性
-                //    Blue = measurement.BlueLightValue,   // 假设 measurement 有 BlueLightValue 属性
-                //    fx = measurement.CxCoordinate,       // 假设 measurement 有 CxCoordinate 属性
-                //    fy = measurement.CyCoordinate,       // 假设 measurement 有 CyCoordinate 属性
-                //                                         // ... 其他属性同理，根据实际业务含义一一对应
-                //    DataPoints = measurement.SpectrumDataPoints
-                //     .Select(p => new DataPoint
-                //     {
-                //         AbsoluteSpectrum = p.SpectrumValue // 光谱数据点的映射
-                //     })
-                //     .ToList()};
-
-                //// 现在可以安全添加到集合中
-                //SpectralData.Add(spectralData);
+                
+                
             }
             
             if (Measurements.Any())
@@ -1523,10 +1621,118 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     _spectralCtrl.InvalidateVisual();
                 }
             }
-            // 关键：子Tab数据加载完成后，重新初始化总览图Series
+            // 数据加载后，根据“显示所有”状态更新图表
+            UpdateChartByShowAllState();
+            // 子Tab数据加载完成后，重新初始化总览图Series
             InitializeOverviewSeries();
+
+        }
+        #region 新增：高亮相关辅助方法
+        // 切换选中曲线高亮样式
+        private void UpdateSelectedCurveHighlight()
+        {
+            if (_spectralSeriesCache.Count == 0 || !Measurements.Any())
+                return;
+
+            // 1. 重置所有曲线为未选中样式
+            foreach (var (measNo, series) in _spectralSeriesCache)
+            {
+                // 找到对应的测量数据，获取颜色索引
+                var measurement = Measurements.FirstOrDefault(m => m.No == measNo);
+                if (measurement == null)
+                    continue;
+
+                int colorIndex = Measurements.IndexOf(measurement);
+                // 未选中颜色（循环使用）
+                var unselectedColors = new[]
+                {
+                    OxyColor.FromAColor(115, OxyColors.Blue),
+                    OxyColor.FromAColor(115, OxyColors.Green),
+                    OxyColor.FromAColor(115, OxyColors.Purple),
+                    OxyColor.FromAColor(115, OxyColors.Orange),
+                    OxyColor.FromAColor(115, OxyColors.Teal),
+                    OxyColor.FromAColor(115, OxyColors.Magenta),
+                    OxyColor.FromAColor(115, OxyColors.Gold),
+                    OxyColor.FromAColor(115, OxyColors.Cyan)
+                };
+
+                // 未选中样式
+                series.Color = unselectedColors[colorIndex % unselectedColors.Length];
+                series.StrokeThickness = 1.2;
+                series.MarkerType = MarkerType.None;
+                series.Title = $"No:{measNo} | {measurement.Timestamp:yyyy-MM-dd HH:mm}";
+            }
+
+            // 2. 高亮当前选中曲线
+            if (SelectedMeasurement != null && _spectralSeriesCache.ContainsKey(SelectedMeasurement.No))
+            {
+                var selectedSeries = _spectralSeriesCache[SelectedMeasurement.No];
+                // 选中样式
+                selectedSeries.Color = OxyColors.Red;
+                selectedSeries.StrokeThickness = 2.0;
+              
+                selectedSeries.Title = $"No:{SelectedMeasurement.No} | {SelectedMeasurement.Timestamp:yyyy-MM-dd HH:mm}（选中）";
+
+                // 移到顶层
+                BringSeriesToFront(SelectedMeasurement.No);
+            }
+
+            PlotModel.InvalidatePlot(true); // 实时刷新图表
         }
 
+        // 将指定曲线移到顶层（后添加的曲线在OxyPlot中优先级更高）
+        private void BringSeriesToFront(int measNo)
+        {
+            if (!_spectralSeriesCache.ContainsKey(measNo))
+                return;
+
+            var series = _spectralSeriesCache[measNo];
+            // 先移除，再重新添加（触发顶层显示）
+            PlotModel.Series.Remove(series);
+            PlotModel.Series.Add(series);
+        }
+
+        // 自动调整轴范围（适配所有数据，避免数据贴边）
+     /*/   private void AutoAdjustAxisRange()
+        {
+            if (!PlotModel.Series.Any())
+                return;
+
+            // 收集所有有效数据点的X/Y值
+            var allX = new List<double>();
+            var allY = new List<double>();
+
+            foreach (var series in PlotModel.Series.OfType<LineSeries>())
+            {
+                allX.AddRange(series.Points.Select(p => p.X));
+                allY.AddRange(series.Points.Select(p => p.Y));
+            }
+
+            if (!allX.Any() || !allY.Any())
+                return;
+
+            // 获取X轴（波长）和Y轴（强度）
+            var xAxis = PlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Bottom) as LinearAxis;
+            var yAxis = PlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Left) as LinearAxis;
+
+            if (xAxis != null)
+            {
+                double xMin = allX.Min();
+                double xMax = allX.Max();
+                double xMargin = (xMax - xMin) * 0.05; // X轴5%边距
+                xAxis.Minimum = xMin - xMargin;
+                xAxis.Maximum = xMax + xMargin;
+            }
+
+            if (yAxis != null)
+            {
+                double yMin = Math.Max(0, allY.Min() * 0.9); // Y轴最低为0，10%边距
+                double yMax = allY.Max() * 1.1; // Y轴10%边距
+                yAxis.Minimum = yMin;
+                yAxis.Maximum = yMax;
+            }
+        }*/
+        #endregion
         public void ClearResult()
         {
             Clear();

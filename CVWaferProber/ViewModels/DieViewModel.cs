@@ -13,7 +13,7 @@ namespace CVWaferProber.ViewModels
         public int? ScreenY => (int?)chipViewModel?.Position.Y;
         public int? MapX => chipViewModel?.Column;
         public int? MapY => chipViewModel?.Row;
-        public string? SerialNumber {  get; set; }= "20251105T162447.5851141";
+        public string? SerialNumber {  get; set; }
         public bool IsIVLCameraEnabled {  get; set; }
         public bool IsChinese {  get; set; }
 
