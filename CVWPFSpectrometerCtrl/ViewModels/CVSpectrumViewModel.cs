@@ -110,6 +110,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         // 未勾选时，显示单条选中数据（原有逻辑）
                         ResetAndUpdateChart();
                     }
+                    // 新增：同步右侧DataGrid数据
+                    if (IsShowSpectralDetail && value != null)
+                    {
+                        UpdateSpectralGridData(value);
+                    }
                 }
             }
         }
@@ -335,6 +340,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 Wavelengths[i] = 380 + i / 10.0f;
             }
             Measurements = new ObservableCollection<SpectrumMeasurement>();
+            SpectralGridItems = new ObservableCollection<SpectralGridItem>(); // 初始化右侧DataGrid数据源
             InitializePlotModel();
             InitializeIVPlotModel();
             InitializeILPlotModel();
@@ -1801,5 +1807,79 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             this._spectralCtrl = spectralCtrl;
         }
+        // 新增：控制右侧DataGrid显示/隐藏的勾选状态
+        private bool _isShowSpectralDetail;
+        public bool IsShowSpectralDetail
+        {
+            get => _isShowSpectralDetail;
+            set
+            {
+                _isShowSpectralDetail = value;
+                OnPropertyChanged();
+                // 勾选状态变化时，更新右侧DataGrid数据
+                if (value && SelectedMeasurement != null)
+                {
+                    UpdateSpectralGridData(SelectedMeasurement);
+                }
+                else
+                {
+                    SpectralGridItems?.Clear();
+                }
+            }
+        }
+
+        private void UpdateSpectralGridData(SpectrumMeasurement measurement)
+        {
+            if (measurement == null || measurement.Wavelengths == null || measurement.Intensities == null)
+            {
+                SpectralGridItems?.Clear();
+                return;
+            }
+
+            var gridItems = new ObservableCollection<SpectralGridItem>();
+            int totalPoints = measurement.Wavelengths.Length;
+
+            // 遍历波长数组，每10个点取1个（步长=10）
+            for (int i = 0; i < totalPoints; i += 10)
+            {
+                // 波长值强制转换为整数（380.0→380，381.0→381）
+                int wavelengthInt = (int)measurement.Wavelengths[i];
+
+                // 只保留380~780nm范围内的有效数据
+                if (wavelengthInt < 380 || wavelengthInt > 780)
+                    continue;
+
+                // 相对光谱：负强度转为0，保留4位小数
+                float relative = measurement.Intensities[i] > 0 ? (float)Math.Round(measurement.Intensities[i], 4) : 0f;
+                // 绝对光谱：相对强度 × fPlambda，保留4位小数
+                float absolute = (float)Math.Round(relative * measurement.fPlambda, 4);
+
+                gridItems.Add(new SpectralGridItem
+                {
+                    Wavelength = wavelengthInt,
+                    RelativeSpectrum = relative,
+                    AbsoluteSpectrum = absolute
+                });
+            }
+
+            SpectralGridItems = gridItems;
+        }
+
+        // 新增：右侧DataGrid的数据源
+        private ObservableCollection<SpectralGridItem> _spectralGridItems;
+        public ObservableCollection<SpectralGridItem> SpectralGridItems
+        {
+            get => _spectralGridItems;
+            set => SetProperty(ref _spectralGridItems, value);
+        }
+
+        // 新增：光谱详情数据模型（对应右侧DataGrid列）
+        public class SpectralGridItem
+        {
+            public double Wavelength { get; set; } // 波长(nm)
+            public float RelativeSpectrum { get; set; } // 相对光谱
+            public float AbsoluteSpectrum { get; set; } // 绝对光谱
+        }
+
     }
 }

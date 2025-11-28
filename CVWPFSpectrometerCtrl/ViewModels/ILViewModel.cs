@@ -156,11 +156,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             double maxCurrent = I.Max() * 1.01;  
             double minCurrent = Math.Max(0, I.Min() * 0.99); 
             double maxLuminance = L.Max() * 1.01; 
-            double minLuminance = Math.Max(0, L.Min() * 0.99); 
+            double minLuminance = Math.Max(0, L.Min() * 0.99);
 
             // 3. 修复轴匹配：用完整标题（含单位）匹配，或用Position匹配（更稳定）
-            var xAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Title == "电流/I (mA)");
-            var yAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Title == "亮度/L (cd/m²)");
+            var xAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Bottom);
+            var yAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Left);
 
             // 备选方案：用轴位置匹配（避免标题修改导致失效）
             if (xAxis == null) xAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Bottom);
@@ -217,8 +217,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             Measurements.Clear();
 
             // 重置轴范围到初始默认值（如需保留上次范围，可删除此部分）
-            var xAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Title == "电流/I");
-            var yAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Title == "亮度/L");
+            var xAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Bottom);
+            var yAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Left);
             //var xAxis = PlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Bottom) as LinearAxis;
             //var yAxis = PlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Left) as LinearAxis;
             if (xAxis != null && yAxis != null)

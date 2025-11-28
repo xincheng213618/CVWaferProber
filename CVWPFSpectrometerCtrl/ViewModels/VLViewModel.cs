@@ -162,9 +162,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             double minLuminance = Math.Max(0, L.Min() * 0.99);// 亮度最小值
 
             // 3. 获取初始化时创建的X轴和Y轴（通过标题匹配，确保准确性）
-            var xAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Title == "电压/V");
-            var yAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Title == "亮度/L");
-          
+            var xAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Bottom);
+            var yAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Left);
+
             if (xAxis != null && yAxis != null)
             {
                 // 4. 更新X轴范围：从0到电压最大值（如需从数据最小值开始，改为 V.Min()）
@@ -221,9 +221,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             Measurements.Clear();
 
             // 重置轴范围到初始默认值
-            var xAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Title == "电压/V");
-            var yAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Title == "亮度/L");
-            
+            var xAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Bottom);
+            var yAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Left);
+
             if (xAxis != null && yAxis != null)
             {
                 xAxis.Minimum = AxisX.DefaultMin;

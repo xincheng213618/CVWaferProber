@@ -65,6 +65,12 @@
                         <avalon:LayoutAnchorablePaneGroup>
                             <avalon:LayoutAnchorablePane>
                                 <avalon:LayoutAnchorable
+                                    Title="{DynamicResource Dock.Layout.Title.SP}"
+                                    CanClose="False"
+                                    CanHide="True">
+                                    <cvsp:CVSpectrumAnalyzer x:Name="spaly" DataContext="{Binding CustomIVLVM}" />
+                                </avalon:LayoutAnchorable>
+                                <avalon:LayoutAnchorable
                                     Title="{DynamicResource Dock.Layout.Title.Log}"
                                     AutoHideMinHeight="150"
                                     CanClose="False"
@@ -85,12 +91,7 @@
                                     </TextBox>
                                 </avalon:LayoutAnchorable>
 
-                                <avalon:LayoutAnchorable
-                                    Title="{DynamicResource Dock.Layout.Title.SP}"
-                                    CanClose="False"
-                                    CanHide="True">
-                                    <cvsp:CVSpectrumAnalyzer x:Name="spaly" DataContext="{Binding CustomIVLVM}" />
-                                </avalon:LayoutAnchorable>
+
 
                             </avalon:LayoutAnchorablePane>
                         </avalon:LayoutAnchorablePaneGroup>

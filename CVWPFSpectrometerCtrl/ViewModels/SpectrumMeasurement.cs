@@ -223,6 +223,6 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         public float[] Wavelengths { get; set; }
         public float[] Intensities { get; set; }
         public float RelativeSpectrum { get; set; }
-        public float AbsoluteSpectrum { get; internal set; }
+        public float AbsoluteSpectrum { get;  set; }
     }
 }

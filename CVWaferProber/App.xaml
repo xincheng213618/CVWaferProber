@@ -1,13 +1,14 @@
-﻿<Application x:Class="CVWaferProber.App"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:CVWaferProber"
-             StartupUri="Views/DockMainWindow.xaml">
+﻿<Application
+    x:Class="CVWaferProber.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:CVWaferProber"
+    StartupUri="Views/DockMainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Language/Chinese.xaml"/>
-                 <!--<ResourceDictionary Source="Language/English.xaml"/>--> 
+                <ResourceDictionary Source="Language/Chinese.xaml" />
+                <!--<ResourceDictionary Source="Language/English.xaml"/>-->
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
