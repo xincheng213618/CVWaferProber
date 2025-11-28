@@ -328,6 +328,12 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
         public CVSpectrumViewModel()
         {
+            // 新增：提前初始化波长数组
+            Wavelengths = new float[10000];
+            for (int i = 0; i < 10000; i++)
+            {
+                Wavelengths[i] = 380 + i / 10.0f;
+            }
             Measurements = new ObservableCollection<SpectrumMeasurement>();
             InitializePlotModel();
             InitializeIVPlotModel();
@@ -399,14 +405,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             ScottPlot.Color.FromHex("#FFFF00"), // 黄色
             ScottPlot.Color.FromHex("#FF0000"),// 红色
             };
-            
+
             VisibleSpectrumColormap = new ScottPlot.Colormaps.Custom(visibleSpectrumColors);
 
             // 初始化数据
             InitializeSampleData();
 
             InitializePlot();
-            // 新增：初始化总览图的PlotModel
+            
             // 初始化总览图（关键步骤）
             InitializeOverviewPlotModels();
             
@@ -505,19 +511,67 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             OverviewVLPlotModel.Series.Clear();
 
             // 2. 绑定光谱数据
-            if (Measurements.Any() && Measurements.First().Wavelengths != null && Measurements.First().Intensities != null)
+            // 2. 绑定光谱数据（核心修改：初始化就显示所有数据）
+            // 2. 绑定光谱数据（核心：多颜色+统一样式，无高亮）
+            if (Measurements.Any())
             {
-                var spectralSeries = new LineSeries
+                // 预设多组不透明颜色（无Alpha通道，颜色鲜明且不重复）
+                var curveColors = new[]
                 {
-                    ItemsSource = GetSpectralDataPoints(),
-                    Color = OxyColors.Blue,
-                    StrokeThickness = 1.5,
+                    OxyColors.Red, OxyColors.Green, OxyColors.Purple, OxyColors.Orange,
+                    OxyColors.Teal, OxyColors.Magenta, OxyColors.Gold, OxyColors.Cyan,
+                    OxyColors.Lime, OxyColors.Indigo, OxyColors.Olive, OxyColors.Pink,
+                    OxyColors.Brown, OxyColors.DarkBlue, OxyColors.Blue
                 };
-                OverviewSpectralPlotModel.Series.Add(spectralSeries);
-                // 强制刷新轴范围（关键）
+                const double strokeThickness = 1; // 所有曲线统一粗细（无加粗）
+                int colorIndex = 0;
+
+                foreach (var measurement in Measurements)
+                {
+                    int measNo = measurement.No;
+                    string seriesTitle = $"No:{measNo} | {measurement.Timestamp:yyyy-MM-dd HH:mm}";
+
+                    var lineSeries = new LineSeries
+                    {
+                        Title = seriesTitle,
+                        Color = curveColors[colorIndex % curveColors.Length], // 循环使用颜色
+                        StrokeThickness = strokeThickness, // 统一粗细
+                        IsVisible = true,
+                        TrackerFormatString = "波长: {X:.0}nm | 强度: {Y:.4f}"
+                    };
+
+                    // 填充数据点（过滤异常值）
+                    for (int i = 0; i < measurement.Wavelengths.Length; i++)
+                    {
+                        if (!float.IsNaN(measurement.Intensities[i]) && !float.IsInfinity(measurement.Intensities[i]))
+                        {
+                            lineSeries.Points.Add(new DataPoint(
+                                measurement.Wavelengths[i],
+                                measurement.Intensities[i]));
+                        }
+                    }
+
+                    OverviewSpectralPlotModel.Series.Add(lineSeries);
+                    colorIndex++; // 每条曲线递增颜色索引（确保颜色不同）
+                }
+
                 RefreshAxisRange(OverviewSpectralPlotModel);
 
+                // 选中曲线移到顶层
+                if (SelectedMeasurement != null)
+                {
+                    var selectedSeries = OverviewSpectralPlotModel.Series.OfType<LineSeries>()
+                        .FirstOrDefault(s => s.Title.Contains($"No:{SelectedMeasurement.No}"));
+                    if (selectedSeries != null)
+                    {
+                        OverviewSpectralPlotModel.Series.Remove(selectedSeries);
+                        OverviewSpectralPlotModel.Series.Add(selectedSeries);
+                    }
+                }
+
+                RefreshAxisRange(OverviewSpectralPlotModel);
             }
+
 
             // 3. 绑定IV数据（修正轴顺序：电流X，电压Y）
             if (IVMeasurements.Any())

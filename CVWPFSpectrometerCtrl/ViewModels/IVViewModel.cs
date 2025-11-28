@@ -60,7 +60,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var xAxis = new LinearAxis
             {
                 Position = AxisPosition.Bottom,
-                Title = "电流/I",
+                Title = "电流/I（mA）",
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
                 Minimum = 0,
@@ -72,7 +72,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var yAxis = new LinearAxis
             {
                 Position = AxisPosition.Left,
-                Title = "电压/V",
+                Title = "电压/V（V）",
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
                 Minimum = 0,

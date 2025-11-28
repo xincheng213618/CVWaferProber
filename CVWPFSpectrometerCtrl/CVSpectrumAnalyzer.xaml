@@ -170,12 +170,13 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn
                                 Width="80"
-                                Binding="{Binding Meas_Id}"
-                                Header="{DynamicResource Sp.MeasurementBatch}" />
-                            <DataGridTextColumn
-                                Width="80"
                                 Binding="{Binding No}"
                                 Header="{DynamicResource GridHeader.No}" />
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding Meas_Id}"
+                                Header="{DynamicResource Sp.MeasurementBatch}" />
+
                             <DataGridTextColumn
                                 Width="120"
                                 Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}"

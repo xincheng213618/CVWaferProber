@@ -66,7 +66,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var xAxis = new LinearAxis
             {
                 Position = AxisPosition.Bottom,
-                Title = "电压/V",
+                //Title = "电压/V（V）",
+                Title = (string)Application.Current.FindResource("Sp.Voltage"),
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
                 Minimum = AxisX.DefaultMin,
@@ -80,7 +81,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var yAxis = new LinearAxis
             {
                 Position = AxisPosition.Left,
-                Title = "亮度/L",
+                //Title = "亮度/L (cd/m²)",
+                Title = (string)Application.Current.FindResource("Sp.Luminance"),
+                
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
                 Minimum = AxisY.DefaultMin,
