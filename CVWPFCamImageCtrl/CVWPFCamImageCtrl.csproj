@@ -22,7 +22,7 @@
 
   <ItemGroup>
     <Reference Include="CV.DBEntities">
-      <HintPath>D:\Services\CVWindowsService\CommonDll\CV.DBEntities.dll</HintPath>
+      <HintPath>..\DLL\CV.DBEntities.dll</HintPath>
     </Reference>
     <Reference Include="CVCommCore">
       <HintPath>..\DLL\CVCommCore.dll</HintPath>
