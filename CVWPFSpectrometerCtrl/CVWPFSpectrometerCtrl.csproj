@@ -12,7 +12,6 @@
     <PackageReference Include="OpenCvSharp4.WpfExtensions" Version="4.9.0.20240103" />
     <PackageReference Include="OxyPlot.Wpf" Version="2.2.0" />
     <PackageReference Include="ScottPlot.WPF" Version="5.0.56" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,6 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="CV.DBEntities">
+      <HintPath>..\DLL\CV.DBEntities.dll</HintPath>
+    </Reference>
     <Reference Include="CVCommCore">
       <HintPath>..\DLL\CVCommCore.dll</HintPath>
     </Reference>
