@@ -20,7 +20,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(ILViewModel));
         private PlotModel _plotModel;
         private ObservableCollection<ILMeasurement> _measurements;
-      
+        private LineSeries _dataSeries;
         public ObservableCollection<ILMeasurement> Measurements
         {
             get => _measurements;
