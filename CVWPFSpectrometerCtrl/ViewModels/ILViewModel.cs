@@ -17,6 +17,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 {
     public class ILViewModel : ViewModelBase
     {
+        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(ILViewModel));
         private PlotModel _plotModel;
         private ObservableCollection<ILMeasurement> _measurements;
         private LineSeries _dataSeries;
@@ -46,8 +47,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged(nameof(PlotModel));
             }
         }
-        private PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 200, DefaultMaxRange = 20000 };
-        private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 6, DefaultMaxRange = 5000 };
+        private PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = 0, DefaultMaxRange = 200000000000000000 };
+        private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = 0, DefaultMaxRange = 6000000000000000 };
       
         private void InitializePlotModel()
         {
@@ -157,14 +158,15 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             double minCurrent = Math.Max(0, I.Min() * 0.99); 
             double maxLuminance = L.Max() * 1.01; 
             double minLuminance = Math.Max(0, L.Min() * 0.99);
+            
 
             // 3. 修复轴匹配：用完整标题（含单位）匹配，或用Position匹配（更稳定）
             var xAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Bottom);
             var yAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Left);
 
             // 备选方案：用轴位置匹配（避免标题修改导致失效）
-            if (xAxis == null) xAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Bottom);
-            if (yAxis == null) yAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Left);
+            //if (xAxis == null) xAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Bottom);
+            //if (yAxis == null) yAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Left);
 
             if (xAxis != null && yAxis != null)
             {
@@ -208,6 +210,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             PlotModel.Series.Clear();
             PlotModel.Series.Add(lineSeries);
             PlotModel.InvalidatePlot(true); // 强制刷新，应用新轴范围
+            logger.Info($"maxCurrent:{maxCurrent};minCurrent:{minCurrent}" );
         }
 
         public void Clear()

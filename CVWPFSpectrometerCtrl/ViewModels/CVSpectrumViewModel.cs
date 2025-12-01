@@ -490,7 +490,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             // 先让PlotModel计算一次自动范围
             plotModel.InvalidatePlot(true);
 
-            // （可选）添加5%边距，避免数据贴轴
+            // 添加5%边距，避免数据贴轴
             foreach (var axis in plotModel.Axes)
             {
                 if (axis is LinearAxis linearAxis)
@@ -518,8 +518,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             OverviewVLPlotModel.Series.Clear();
 
             // 2. 绑定光谱数据
-            // 2. 绑定光谱数据（核心修改：初始化就显示所有数据）
-            // 2. 绑定光谱数据（核心：多颜色+统一样式，无高亮）
+            
             if (Measurements.Any())
             {
                 // 预设多组不透明颜色（无Alpha通道，颜色鲜明且不重复）

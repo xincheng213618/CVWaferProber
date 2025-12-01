@@ -9,11 +9,14 @@
     xmlns:oxy="http://oxyplot.org/wpf"
     xmlns:sp="clr-namespace:CVWPFSpectrumControl;assembly=CVWPFSpectrumControl"
     xmlns:wpf="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
+    
     mc:Ignorable="d">
     <UserControl.DataContext>
         <local:CVSpectrumViewModel />
     </UserControl.DataContext>
-
+    <!--<UserControl.Resources>
+        <boo
+    </UserControl.Resources>-->
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />

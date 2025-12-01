@@ -50,8 +50,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged(nameof(PlotModel));
             }
         }
-        private PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 6, DefaultMaxRange = 5000 };
-        private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 10, DefaultMaxRange = 20000 };
+        private PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 6, DefaultMaxRange = 5000000000000000000};
+        private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 10, DefaultMaxRange = 2000000000000000000 };
 
         private void InitializePlotModel()
         {

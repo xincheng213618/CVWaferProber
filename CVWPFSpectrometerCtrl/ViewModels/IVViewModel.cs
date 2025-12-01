@@ -115,8 +115,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
         }
         // 默认轴范围
-        private PlotAxesCfg AxisV = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 6, DefaultMaxRange = 10  };
-        private PlotAxesCfg AxisI = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 100, DefaultMaxRange = 2000  };
+        private PlotAxesCfg AxisV = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 6, DefaultMaxRange = 10000000000000000};
+        private PlotAxesCfg AxisI = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 100, DefaultMaxRange = 200000000000000000 };
         private void ResetAxisToDefault(bool isSourceV)
         {
             var xAxis = PlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Bottom) as LinearAxis;
