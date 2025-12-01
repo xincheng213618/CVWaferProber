@@ -452,7 +452,7 @@ namespace CVWaferProber.ViewModels
 
         private void StartTestingIVL1(DieViewModel dieViewModel)
         {
-            ivlService.StartTestingIVL(Timestamp, dieViewModel, _selectedWPFlow);
+            ivlService.StartTestingIVL(Timestamp, dieViewModel, _selectedWPFlow!);
         }
         private void StartTestingIVL(DieViewModel dieViewModel)
         {
@@ -471,7 +471,7 @@ namespace CVWaferProber.ViewModels
         {
             try
             {
-                Task<RespDataBaseFlowResultDTO> resp = AsyncRunIVLFlow(fname, dieViewModel.SerialNumber);
+                Task<RespDataBaseFlowResultDTO> resp = AsyncRunIVLFlow(fname, dieViewModel.SerialNumber!);
                 await resp;
                 if (resp.Result.IsSuccess)
                 {

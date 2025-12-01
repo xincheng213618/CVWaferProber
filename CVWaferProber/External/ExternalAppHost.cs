@@ -177,10 +177,10 @@ namespace CVWaferProber.External
             catch (Exception ex)
             {
                 //AddLog($"查找窗口时出错: {ex.Message}");
-                //MessageBox.Show($"查找窗口时出错: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+               MessageBox.Show($"查找窗口时出错: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private WindowInfo mainWin = null;
+        private WindowInfo mainWin = null!;
         private bool EnumWindowsdelegate(IntPtr hWnd, IntPtr lParam)
         {
             string searchText = "ColorVision";
@@ -349,8 +349,8 @@ namespace CVWaferProber.External
     public class WindowInfo
     {
         public IntPtr Handle { get; set; }
-        public string Title { get; set; }
-        public string ClassName { get; set; }
+        public string ?Title { get; set; }
+        public string ?ClassName { get; set; }
         public uint ProcessId { get; set; }
     }
     #endregion

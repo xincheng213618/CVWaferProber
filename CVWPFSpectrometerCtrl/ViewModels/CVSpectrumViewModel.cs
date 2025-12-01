@@ -40,7 +40,10 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private PlotModel _IVPlotModel;
         private PlotModel _ILPlotModel;
         private PlotModel _VLPlotModel;
-
+        public void NotifyPropertyChanged(string propertyName)
+        {
+            OnPropertyChanged(propertyName);
+        }
         // ViewModel中新增：总览图的4个独立PlotModel
         public PlotModel OverviewSpectralPlotModel { get; private set; } = new PlotModel();
         public PlotModel OverviewIVPlotModel { get; private set; } = new PlotModel();
@@ -1572,7 +1575,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             IV_viewModel.Clear();
             VL_viewModel.Clear();
             IVLCamera_viewModel.Clear();
-            IVLCameraImageSrc = null;
+            IVLCameraImageSrc = null!;
         }
         public void LoadData(string serialNumber, bool isIVLCameraEnabled)
         {
@@ -1618,11 +1621,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             SpectralGridItems?.Clear();
 
             // 清空选中状态
-            SelectedMeasurement = null;
-            SelectedCameraMeasurement = null;
+            SelectedMeasurement = null!;
+            SelectedCameraMeasurement = null!;
 
             // 清空IVLCamera图像
-            IVLCameraImageSrc = null;
+            IVLCameraImageSrc = null!;
 
             // 清空ScottPlot控件
             if (PlotControl != null)
@@ -1665,7 +1668,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         DetailResult_CommFile_V2 detailResult_Comm = JsonConvert.DeserializeObject<DetailResult_CommFile_V2>(details[0].Result);
                         if (File.Exists(detailResult_Comm.ResultFileName))
                         {
-                            PoiAnalysis<PoiAnalysis_Avg_Result_Data> poiAnalysis = JsonConvert.DeserializeObject<PoiAnalysis<PoiAnalysis_Avg_Result_Data>>(File.ReadAllText(detailResult_Comm.ResultFileName));
+                            PoiAnalysis<PoiAnalysis_Avg_Result_Data> poiAnalysis = JsonConvert.DeserializeObject<PoiAnalysis<PoiAnalysis_Avg_Result_Data>>(File.ReadAllText(detailResult_Comm.ResultFileName))!;
                             il_results.Add((float)poiAnalysis.result.average_lum);
                         }
                     }
@@ -1705,28 +1708,28 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 {
                     Timestamp = result.CreateDate,
                     Meas_Id = result.BatchCode,
-                    Voltage = (float)result.VResult,
-                    Current = (float)result.IResult,
-                    Luminance = (float)result.FPh / 1,
+                    Voltage = (float)result.VResult!,
+                    Current = (float)result.IResult!,
+                    Luminance = (float)result.FPh! / 1,
                     // Luminance = (float)result.FPh,
-                    IP = Math.Round((decimal)(result.FIp / 65535 * 100), 2).ToString() + "%",
+                    IP = Math.Round((decimal)(result.FIp / 65535 * 100)!, 2).ToString() + "%",
                     // IP = ,
-                    Blue = (float)result.FBR ,
+                    Blue = (float)result.FBR! ,
                     //Blue = (float)Math.Round(sum1 / sum2 * 100 , 2),
                    
-                    CIE_x = (float)result.Fx,
-                    CIE_y = (float)result.Fy,
-                    CIE_u = (float)result.Fu,
-                    CIE_v = (float)result.Fv,
-                    CCT = (float)result.FCCT,
-                    PeakWavelength = (float)result.FLd,
-                    fPur= (float)result.FPur,
+                    CIE_x = (float)result.Fx!,
+                    CIE_y = (float)result.Fy!,
+                    CIE_u = (float)result.Fu!,
+                    CIE_v = (float)result.Fv!,
+                    CCT = (float)result.FCCT!,
+                    PeakWavelength = (float)result.FLd!,
+                    fPur= (float)result.FPur!,
                     //fPuPercent = $"{Math.Round((decimal)(result.FPur * 100), 2)}%",
-                    PeakIntensity = (float)result.FLp,
-                    FHW= (float)result.FHW,
-                    Intensities = JsonConvert.DeserializeObject<float[]>(result.FPL),
+                    PeakIntensity = (float)result.FLp!,
+                    FHW= (float)result.FHW!,
+                    Intensities = JsonConvert.DeserializeObject<float[]>(result.FPL)!,
                     Wavelengths = Wavelengths,
-                    fPlambda= (float)result.FPlambda
+                    fPlambda= (float)result.FPlambda!
                     
                 };
                 double sum1 = 0, sum2 = 0;

@@ -100,13 +100,13 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 };
                 if(isSourceV)
                 {
-                    measurement.Voltage = (double)result.SrcValue;
-                    measurement.Current = (double)result.IResult;
+                    measurement.Voltage = (double)result.SrcValue!;
+                    measurement.Current = (double)result.IResult!;
                 }
                 else
                 {
-                    measurement.Voltage = (double)result.VResult;
-                    measurement.Current = (double)result.SrcValue;
+                    measurement.Voltage = (double)result.VResult!;
+                    measurement.Current = (double)result.SrcValue!;
                 }
                 Measurements.Add(measurement);
             }
