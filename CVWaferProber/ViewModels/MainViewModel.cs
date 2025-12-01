@@ -128,6 +128,7 @@ namespace CVWaferProber.ViewModels
         private DataGrid? _dataGrid; // 引用DataGrid
         private DispatcherTimer? _simAutoTestTimer;
         private RCRestService rcModel;
+        private IVLService ivlService;
         //private AlgResultModel algResultModel;
         /// <summary>
         /// false 外部控件关联触发
@@ -200,6 +201,15 @@ namespace CVWaferProber.ViewModels
             LoadBuzWPFlows();
 
             InitMQTT();
+
+            ivlService = new IVLService(CustomIVLVM, rcModel);
+            ivlService.ProberId = ProberId;
+            ivlService.TestingCompleted += IvlService_TestingCompleted;
+        }
+
+        private void IvlService_TestingCompleted(object? sender, EventArgs e)
+        {
+            EndTesting();
         }
 
         private void OpenVEyeWindow(object? obj)
@@ -440,6 +450,10 @@ namespace CVWaferProber.ViewModels
             NextTestingDie();
         }
 
+        private void StartTestingIVL1(DieViewModel dieViewModel)
+        {
+            ivlService.StartTestingIVL(Timestamp, dieViewModel, _selectedWPFlow);
+        }
         private void StartTestingIVL(DieViewModel dieViewModel)
         {
             string sn = BuildFlowSN(dieViewModel);
@@ -554,7 +568,7 @@ namespace CVWaferProber.ViewModels
                     }
                     else
                     {
-                        StartTestingIVL(die);
+                        StartTestingIVL1(die);
                     }
                 }
                 else
