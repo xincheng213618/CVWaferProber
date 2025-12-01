@@ -710,7 +710,7 @@ namespace CVWaferProber.ViewModels
 
             if (openFileDialog.ShowDialog() == true)
             {
-                MappingCsvFilePath = System.IO.Path.GetFileName(openFileDialog.FileName);
+                MappingCsvFilePath = openFileDialog.FileName;
                 LoadMappingFileFromCsv();
             }
         }
