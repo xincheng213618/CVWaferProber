@@ -16,6 +16,7 @@ using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
 using Microsoft.Win32;
 using Newtonsoft.Json;
+using ScottPlot.Plottables;
 using System.Collections.ObjectModel;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
@@ -129,6 +130,7 @@ namespace CVWaferProber.ViewModels
         private DispatcherTimer? _simAutoTestTimer;
         private RCRestService rcModel;
         private IVLService ivlService;
+        private AOIService aoiService;
         //private AlgResultModel algResultModel;
         /// <summary>
         /// false 外部控件关联触发
@@ -204,10 +206,13 @@ namespace CVWaferProber.ViewModels
 
             ivlService = new IVLService(CustomIVLVM, rcModel);
             ivlService.ProberId = ProberId;
-            ivlService.TestingCompleted += IvlService_TestingCompleted;
+            ivlService.TestingCompleted += OnTestingCompleted;
+
+            aoiService = new AOIService(CustomImageVM, rcModel);
+            aoiService.TestingCompleted += OnTestingCompleted;
         }
 
-        private void IvlService_TestingCompleted(object? sender, EventArgs e)
+        private void OnTestingCompleted(object? sender, EventArgs e)
         {
             EndTesting();
         }
@@ -369,16 +374,16 @@ namespace CVWaferProber.ViewModels
                 }
             }
         }
-        private void IVLResultDisplay(DieViewModel dieViewModel)
-        {
-            CustomIVLVM?.ClearResult();
-            CustomIVLVM?.LoadData(dieViewModel.SerialNumber, dieViewModel.IsIVLCameraEnabled);
-        }
+        //private void IVLResultDisplay(DieViewModel dieViewModel)
+        //{
+        //    CustomIVLVM?.ClearResult();
+        //    CustomIVLVM?.LoadData(dieViewModel.SerialNumber, dieViewModel.IsIVLCameraEnabled);
+        //}
         private void DieResultDisplay(DieViewModel dieViewModel)
         {
             if (dieViewModel.Status == ChipStatus.IVL_TESTING || dieViewModel.Status == ChipStatus.IVL_COMPLETED)
             {
-                IVLResultDisplay(dieViewModel);
+                ivlService.IVLResultDisplay(dieViewModel);
             }
             else
             {
@@ -426,7 +431,8 @@ namespace CVWaferProber.ViewModels
                 CurTestDieIdx = TestResults.IndexOf(itemToSelect);
 
                 ScrollToItem(itemToSelect);
-                Task task = DoAsyncStartTestingDie(itemToSelect, false);
+                aoiService.StartTestingAOI(Timestamp, itemToSelect, _selectedWPFlow, false);
+                //Task task = DoAsyncStartTestingDie(itemToSelect, false);
                 //StartTestingDie(itemToSelect);
             }
             else
@@ -449,11 +455,12 @@ namespace CVWaferProber.ViewModels
 
             NextTestingDie();
         }
-
+        /*
         private void StartTestingIVL1(DieViewModel dieViewModel)
         {
             ivlService.StartTestingIVL(Timestamp, dieViewModel, _selectedWPFlow);
         }
+
         private void StartTestingIVL(DieViewModel dieViewModel)
         {
             string sn = BuildFlowSN(dieViewModel);
@@ -511,6 +518,7 @@ namespace CVWaferProber.ViewModels
             // 异步轮询结果，避免阻塞UI线程
            return await PollFlowResultWithRxAsync(sn, cancellationToken);
         }
+        //////////////////////*/
         private async Task<RespDataBaseFlowResultDTO> PollFlowResultWithRxAsync(string sn, CancellationToken cancellationToken)
         {
            return await Observable.Interval(TimeSpan.FromSeconds(1))
@@ -564,11 +572,12 @@ namespace CVWaferProber.ViewModels
 
                     if (SelectedWPFlow.FlowType == CVWaferProberFlowType.AOI)
                     {
-                        Task task = DoAsyncStartTestingDie(die);
+                        //Task task = DoAsyncStartTestingDie(die);
+                        aoiService.StartTestingAOI(Timestamp, die, _selectedWPFlow);
                     }
                     else
                     {
-                        StartTestingIVL1(die);
+                        ivlService.StartTestingIVL(Timestamp, die, _selectedWPFlow);
                     }
                 }
                 else
