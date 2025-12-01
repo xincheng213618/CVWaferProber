@@ -111,7 +111,7 @@ namespace CVWaferProber.Services
                  .ToTask(cancellationToken);
         }
 
-        private void IVLResultDisplay(DieViewModel dieViewModel)
+        public void IVLResultDisplay(DieViewModel dieViewModel)
         {
             CustomIVLVM.ClearResult();
             CustomIVLVM.LoadData(dieViewModel.SerialNumber, dieViewModel.IsIVLCameraEnabled);

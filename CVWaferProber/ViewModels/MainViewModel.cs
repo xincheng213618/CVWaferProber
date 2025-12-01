@@ -369,16 +369,16 @@ namespace CVWaferProber.ViewModels
                 }
             }
         }
-        private void IVLResultDisplay(DieViewModel dieViewModel)
-        {
-            CustomIVLVM?.ClearResult();
-            CustomIVLVM?.LoadData(dieViewModel.SerialNumber, dieViewModel.IsIVLCameraEnabled);
-        }
+        //private void IVLResultDisplay(DieViewModel dieViewModel)
+        //{
+        //    CustomIVLVM?.ClearResult();
+        //    CustomIVLVM?.LoadData(dieViewModel.SerialNumber, dieViewModel.IsIVLCameraEnabled);
+        //}
         private void DieResultDisplay(DieViewModel dieViewModel)
         {
             if (dieViewModel.Status == ChipStatus.IVL_TESTING || dieViewModel.Status == ChipStatus.IVL_COMPLETED)
             {
-                IVLResultDisplay(dieViewModel);
+                ivlService.IVLResultDisplay(dieViewModel);
             }
             else
             {
@@ -454,6 +454,7 @@ namespace CVWaferProber.ViewModels
         {
             ivlService.StartTestingIVL(Timestamp, dieViewModel, _selectedWPFlow);
         }
+        /*
         private void StartTestingIVL(DieViewModel dieViewModel)
         {
             string sn = BuildFlowSN(dieViewModel);
@@ -511,6 +512,7 @@ namespace CVWaferProber.ViewModels
             // 异步轮询结果，避免阻塞UI线程
            return await PollFlowResultWithRxAsync(sn, cancellationToken);
         }
+        //////////////////////*/
         private async Task<RespDataBaseFlowResultDTO> PollFlowResultWithRxAsync(string sn, CancellationToken cancellationToken)
         {
            return await Observable.Interval(TimeSpan.FromSeconds(1))
