@@ -115,6 +115,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     {
                         UpdateSpectralGridData(value);
                     }
+                    
                 }
             }
         }
@@ -1824,6 +1825,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 else
                 {
                     SpectralGridItems?.Clear();
+                    
                 }
             }
         }
