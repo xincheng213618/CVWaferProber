@@ -43,9 +43,10 @@ namespace CVWaferProber.Services
             return ChipStatus.FAILED;
         }
 
-        protected override void FlowResultDisplay(DieViewModel dieViewModel)
+        protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
         {
             IVLResultDisplay(dieViewModel);
+            return ChipStatus.IVL_COMPLETED;
         }
     }
 }

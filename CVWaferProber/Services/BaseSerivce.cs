@@ -32,8 +32,8 @@ namespace CVWaferProber.Services
                 await resp;
                 if (resp.Result.IsSuccess)
                 {
-                    FlowResultDisplay(dieViewModel);
-                    dieViewModel.ChangeStatus(ChipStatus.OK, true);
+                    ChipStatus status = FlowResultDisplay(dieViewModel);
+                    dieViewModel.ChangeStatus(status, true);
                 }
                 else
                 {
@@ -60,7 +60,7 @@ namespace CVWaferProber.Services
         }
 
         protected abstract ChipStatus GetResultStatus(string serialNumber);
-        protected abstract void FlowResultDisplay(DieViewModel dieViewModel);
+        protected abstract ChipStatus FlowResultDisplay(DieViewModel dieViewModel);
 
         protected async Task<RespDataBaseFlowResultDTO> AsyncRunFlow(string fname, string sn)
         {

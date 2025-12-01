@@ -24,9 +24,10 @@ namespace CVWaferProber.Services
             return GetDieResultStatus(serialNumber);
         }
 
-        protected override void FlowResultDisplay(DieViewModel dieViewModel)
+        protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
         {
             AOIResultDisplay(dieViewModel);
+            return ChipStatus.OK;
         }
         public void StartTestingAOI(string timestamp, DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
         {
