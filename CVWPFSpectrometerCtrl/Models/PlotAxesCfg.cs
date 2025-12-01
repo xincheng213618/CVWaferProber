@@ -11,6 +11,7 @@ namespace CVWPFSpectrometerCtrl.Models
         Spectrum,
         IV,
         IL,
+        VL,
         IVLCamera
     }
     public struct PlotAxesCfg

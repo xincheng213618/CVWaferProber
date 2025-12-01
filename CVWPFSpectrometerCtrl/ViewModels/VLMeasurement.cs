@@ -1,24 +1,29 @@
-﻿using CVWaferProber.Core.ViewModels;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using CVWaferProber.Core.ViewModels;
 
 namespace CVWPFSpectrometerCtrl.ViewModels
 {
-    public class ILMeasurement : ViewModelBase
+    public class VLMeasurement: ViewModelBase
     {
         private int _no;
         private DateTime _timestamp;
+        private double _v;
         private double _l;
-        private double _i;
 
-        public ILMeasurement(int no)
+        
+        public VLMeasurement(int no)
         {
             _no = no;
         }
-
-        public ILMeasurement(int no, DateTime timestamp, double i, double l) : this(no)
+        public VLMeasurement(int no, DateTime timestamp, double v, double l) : this(no)
         {
             _timestamp = timestamp;
             _l = l;
-            _i = i;
+            _v = v;
         }
         public int No
         {
@@ -37,13 +42,13 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged(nameof(Timestamp));
             }
         }
-        public double Current
+        public double Voltage
         {
-            get => _i;
+            get => _v;
             set
             {
-                _i = value;
-                OnPropertyChanged(nameof(Current));
+                _v = value;
+                OnPropertyChanged(nameof(Voltage));
             }
         }
         public double Luminance
@@ -55,7 +60,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged(nameof(Luminance));
             }
         }
+        
       
-       
     }
 }

@@ -17,22 +17,12 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             _no = no;
         }
-        public double Voltage
+        public int No
         {
-            get => _v;
+            get => _no;
             set
             {
-                _v = value;
-                OnPropertyChanged(nameof(Voltage));
-            }
-        }
-        public double Current
-        {
-            get => _i;
-            set
-            {
-                _i = value;
-                OnPropertyChanged(nameof(Current));
+                SetProperty(ref _no, value);
             }
         }
         public DateTime Timestamp
@@ -44,13 +34,26 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged(nameof(Timestamp));
             }
         }
-        public int No
+        public double Current
         {
-            get => _no;
+            get => _i;
             set
             {
-                SetProperty(ref _no, value);
+                _i = value;
+                OnPropertyChanged(nameof(Current));
             }
         }
+        public double Voltage
+        {
+            get => _v;
+            set
+            {
+                _v = value;
+                OnPropertyChanged(nameof(Voltage));
+            }
+        }
+        
+      
+        
     }
 }

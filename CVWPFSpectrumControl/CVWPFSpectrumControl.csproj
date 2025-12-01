@@ -8,4 +8,17 @@
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CVWaferProber.Core\CVWaferProber.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="CV.DBEntities">
+      <HintPath>D:\Services\CVWindowsService\CommonDll\CV.DBEntities.dll</HintPath>
+    </Reference>
+    <Reference Include="CVCommCore">
+      <HintPath>..\DLL\CVCommCore.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

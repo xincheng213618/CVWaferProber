@@ -11,6 +11,7 @@
     <sys:String x:Key="BtnStartManTest">手动测试</sys:String>
     <sys:String x:Key="BtnRefreshStatus">刷新结果列表状态</sys:String>
     <sys:String x:Key="BtnFlowLoad">流程加载</sys:String>
+    <sys:String x:Key="BtnSearch">查找</sys:String>
     <sys:String x:Key="BtnReRegist">登录</sys:String>
     <sys:String x:Key="BtnIVLTest">IVL测试</sys:String>
     <sys:String x:Key="BtnOpenVEyeWindow">VEye软件</sys:String>
@@ -45,14 +46,20 @@
 
 
     <!--  光谱曲线相关  -->
+    <sys:String x:Key="Sp.Overview">总览图</sys:String>
     <sys:String x:Key="Sp.Spectral">光谱</sys:String>
     <sys:String x:Key="Sp.SpectralCurve">光谱曲线</sys:String>
     <sys:String x:Key="Sp.Wavelength">波长 (nm)</sys:String>
+    <sys:String x:Key="Sp.RelativeSpectrum">相对光谱</sys:String>
+    <sys:String x:Key="Sp.AbsoluteSpectrum">绝对光谱</sys:String>
+    <!--  IL曲线相关  -->
+
+    <!--  VL曲线相关  -->
     <!--  测量参数  -->
     <sys:String x:Key="Sp.MeasurementBatch">测量批次</sys:String>
-    <sys:String x:Key="Sp.Voltage">电压/V</sys:String>
-    <sys:String x:Key="Sp.Current">电流/A</sys:String>
-    <sys:String x:Key="Sp.Luminance">亮度 (cd/m²)</sys:String>
+    <sys:String x:Key="Sp.Voltage">电压/V(V)</sys:String>
+    <sys:String x:Key="Sp.Current">电流/I(mA)</sys:String>
+    <sys:String x:Key="Sp.Luminance">亮度/L (cd/m²)</sys:String>
     <sys:String x:Key="Sp.Time">时间</sys:String>
     <sys:String x:Key="ColorCoordinateX">色坐标x</sys:String>
     <sys:String x:Key="ColorCoordinateY">色坐标y</sys:String>
@@ -64,7 +71,7 @@
 
     <sys:String x:Key="IVLCamera">相机IVL</sys:String>
     <sys:String x:Key="Image">图像</sys:String>
-    <sys:String x:Key="Export Data">导出数据</sys:String>
+    <sys:String x:Key="Export CSV">导出CSV</sys:String>
 
     <!--  相机图像相关  -->
     <sys:String x:Key="Zoom in">🔍放大</sys:String>

@@ -7,7 +7,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CVWaferProber.Components"
     xmlns:map="clr-namespace:ChipMapping.Views;assembly=ChipMapping"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodels="clr-namespace:CVWaferProber.ViewModels">
 
     <UserControl.Resources>
         <cv:StatusToColorConverter x:Key="StatusColorConverter" />
@@ -190,12 +191,20 @@
                                                     Margin="5,0"
                                                     IsEnabled="{Binding IsNotProcessing}"
                                                     IsReadOnly="{Binding IsAutoSN}"
-                                                    Text="{Binding Timestamp}" />
-                                                <CheckBox
+                                                    Text="{Binding SerialNumber}" 
+                                                     />
+                                                <!--<CheckBox
+                                                Text="{Binding Timestamp}"
                                                     x:Name="ChkIsAutoSN"
                                                     Content="{DynamicResource Auto SN}"
                                                     IsChecked="{Binding IsAutoSN}"
-                                                    IsEnabled="{Binding IsNotProcessing}" />
+                                                    IsEnabled="{Binding IsNotProcessing}" RenderTransformOrigin="0.572,0.675" />-->
+                                                <Button
+                                                    Width="110"
+                                                    Margin="0,0,10,0"
+                                                    BorderThickness="0"
+                                                    Command="{Binding SearchCommand}"
+                                                    Content="{DynamicResource BtnSearch}" />
                                             </StackPanel>
                                         </StackPanel>
                                         <DockPanel Height="30" Margin="5,5">
@@ -331,7 +340,7 @@
                                         Header="{DynamicResource Maping.GridHeader.ScreenY}" />
                                     <DataGridTextColumn
                                         Width="250"
-                                        Binding="{Binding SerialNumber}"
+                                        Binding="{Binding SerialNumber, Mode=TwoWay}"
                                         Header="{DynamicResource Maping.GridHeader.SerialNumber}" />
                                     <DataGridTextColumn
                                         Width="180"

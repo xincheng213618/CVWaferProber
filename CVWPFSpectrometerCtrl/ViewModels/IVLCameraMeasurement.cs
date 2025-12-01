@@ -29,9 +29,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             get => _timestamp;
             set
             {
-               SetProperty(ref _timestamp, value);
+                SetProperty(ref _timestamp, value);
             }
-        } 
+        }
         public string ImageFile
         {
             get => _filename;
@@ -72,5 +72,6 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 SetProperty(ref _luminance, value);
             }
         }
+        
     }
 }

@@ -13,6 +13,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private double[] _intensities;
         private string _name;
 
+        public string Name
+        {
+            get => _name;
+            set => SetProperty(ref _name, value);
+        }
         public double[] Wavelengths
         {
             get => _wavelengths;
@@ -25,11 +30,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             set => SetProperty(ref _intensities, value);
         }
 
-        public string Name
-        {
-            get => _name;
-            set => SetProperty(ref _name, value);
-        }
+       
 
         public SpectraDataViewModel(double[] wavelengths, double[] intensities, string name = "")
         {
