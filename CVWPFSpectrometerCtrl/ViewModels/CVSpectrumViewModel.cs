@@ -17,6 +17,7 @@ using OxyPlot.Axes;
 using OxyPlot.Series;
 using OxyPlot.Wpf;
 using ScottPlot.Colormaps;
+using ScottPlot.Panels;
 using ScottPlot.WPF;
 using System.Collections;
 using System.Collections.ObjectModel;
@@ -430,8 +431,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         // 初始化总览图的PlotModel（克隆子Tab配置并绑定数据）
         private void InitializeOverviewPlotModels()
         {
+            string Title = (string)Application.Current.FindResource("Sp.Spectral");
             // 1. 克隆子Tab的图表配置（轴、样式）
-            OverviewSpectralPlotModel = ClonePlotModel(PlotModel, "光谱"); // 克隆光谱子Tab配置
+            OverviewSpectralPlotModel = ClonePlotModel(PlotModel, Title); // 克隆光谱子Tab配置
             OverviewIVPlotModel = ClonePlotModel(IVPlotModel, "IV");       // 克隆IV子Tab配置
             OverviewILPlotModel = ClonePlotModel(ILPlotModel, "IL");       // 克隆IL子Tab配置
             OverviewVLPlotModel = ClonePlotModel(VLPlotModel, "VL");       // 克隆VL子Tab配置
@@ -1493,7 +1495,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             var lineSeries = new LineSeries
             {
-                Title = "光谱数据",
+                Title = (string)Application.Current.FindResource("Sp.Spectral"),
                 Color = OxyColors.Blue,
                 StrokeThickness = 1.5
             };

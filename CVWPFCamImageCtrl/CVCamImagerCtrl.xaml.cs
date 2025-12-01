@@ -251,6 +251,7 @@ namespace CVWPFCamImageCtrl
         // 增强的图像加载方法
         private async void LoadSelectedImage(ImageItem imageItem, bool isReload = false)
         {
+           
             if (imageItem == null) return;
 
             _currentImageIndex = ImageDataGrid.SelectedIndex;

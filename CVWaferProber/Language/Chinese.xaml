@@ -52,9 +52,19 @@
     <sys:String x:Key="Sp.Wavelength">波长 (nm)</sys:String>
     <sys:String x:Key="Sp.RelativeSpectrum">相对光谱</sys:String>
     <sys:String x:Key="Sp.AbsoluteSpectrum">绝对光谱</sys:String>
+    <sys:String x:Key="Sp.ShowAllData">显示所有数据</sys:String>
+    <sys:String x:Key="Sp.ShowSpectralDetail">光谱数据详情</sys:String>
+    <!--  IV曲线相关  -->
+    <sys:String x:Key="Sp.IV Curve">IV曲线</sys:String>
+
     <!--  IL曲线相关  -->
+    <sys:String x:Key="Sp.IL Curve">IL曲线</sys:String>
 
     <!--  VL曲线相关  -->
+    <sys:String x:Key="Sp.VL Curve">VL曲线</sys:String>
+    <!--  Camera曲线相关  -->
+    <sys:String x:Key="Sp.Camera Curve">相机曲线</sys:String>
+
     <!--  测量参数  -->
     <sys:String x:Key="Sp.MeasurementBatch">测量批次</sys:String>
     <sys:String x:Key="Sp.Voltage">电压/V(V)</sys:String>

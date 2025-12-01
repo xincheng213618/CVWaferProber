@@ -108,6 +108,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         int no = 1;
         public void LoadData(List<VScgdMeasureResultSpectrometer> results)
         {
+
             Clear();
             double[] V = new double[results.Count], L = new double[results.Count];
             for (int i = 0; i < results.Count; i++)
