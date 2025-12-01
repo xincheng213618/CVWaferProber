@@ -26,8 +26,10 @@ namespace CVWaferProber.Services
         }
         protected async Task RunFlowAsync(WPFlowViewModel _selectedWPFlow, DieViewModel dieViewModel, bool isEnd = true)
         {
+            CancellationTokenSource cts = new CancellationTokenSource();
             try
             {
+
                 Task<RespDataBaseFlowResultDTO> resp = AsyncRunFlow(_selectedWPFlow.Name, dieViewModel.SerialNumber);
                 await resp;
                 if (resp.Result.IsSuccess)
@@ -55,6 +57,7 @@ namespace CVWaferProber.Services
             }
             finally
             {
+                cts.Cancel();
                 if (isEnd) EndTesting();
             }
         }

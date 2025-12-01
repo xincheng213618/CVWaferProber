@@ -40,7 +40,10 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private PlotModel _IVPlotModel;
         private PlotModel _ILPlotModel;
         private PlotModel _VLPlotModel;
-
+        public void NotifyPropertyChanged(string propertyName)
+        {
+            OnPropertyChanged(propertyName);
+        }
         // ViewModel中新增：总览图的4个独立PlotModel
         public PlotModel OverviewSpectralPlotModel { get; private set; } = new PlotModel();
         public PlotModel OverviewIVPlotModel { get; private set; } = new PlotModel();
