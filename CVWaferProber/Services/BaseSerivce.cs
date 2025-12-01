@@ -95,7 +95,7 @@ namespace CVWaferProber.Services
             if (string.IsNullOrEmpty(ProberId)) return string.Format("{1}[{3},{4}]", ProberId, timestamp, Snowflake.Instance.NextSeqId(), dieViewModel.MapY, dieViewModel.MapX);
             else return string.Format("{0}_{1}[{3},{4}]", ProberId, timestamp, Snowflake.Instance.NextSeqId(), dieViewModel.MapY, dieViewModel.MapX);
         }
-        protected void EndTesting()
+        protected virtual void EndTesting()
         {
             TestingCompleted?.Invoke(this, EventArgs.Empty);
         }
