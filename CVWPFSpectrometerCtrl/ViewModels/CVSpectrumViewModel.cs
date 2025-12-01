@@ -1576,13 +1576,76 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
         public void LoadData(string serialNumber, bool isIVLCameraEnabled)
         {
+            if (string.IsNullOrWhiteSpace(serialNumber))
+            {
+                ClearAllDisplays(); // 清空所有图像和数据
+                return;
+            }
             Clear();
             if (isIVLCameraEnabled) LoadCameraData(serialNumber); 
             else LoadSpectrumData(serialNumber);
         }
 
+        private void ClearAllDisplays()
+        {
+            // 清空图表
+            PlotModel.Series.Clear();
+            PlotModel.Annotations.Clear();
+            ResetAxisToDefault();
+            PlotModel.InvalidatePlot(true);
+
+            // 清空总览图
+            OverviewSpectralPlotModel.Series.Clear();
+            OverviewSpectralPlotModel.Annotations.Clear();
+            OverviewIVPlotModel.Series.Clear();
+            OverviewIVPlotModel.Annotations.Clear();
+            OverviewILPlotModel.Series.Clear();
+            OverviewILPlotModel.Annotations.Clear();
+            OverviewVLPlotModel.Series.Clear();
+            OverviewVLPlotModel.Annotations.Clear();
+            // 刷新总览图
+            OverviewSpectralPlotModel.InvalidatePlot(true);
+            OverviewIVPlotModel.InvalidatePlot(true);
+            OverviewILPlotModel.InvalidatePlot(true);
+            OverviewVLPlotModel.InvalidatePlot(true);
+
+            // 清空所有数据集合
+            Measurements.Clear();
+            ILMeasurements.Clear();
+            IVMeasurements.Clear();
+            VLMeasurements.Clear();
+            IVLCameraMeasurements.Clear();
+            SpectralGridItems?.Clear();
+
+            // 清空选中状态
+            SelectedMeasurement = null;
+            SelectedCameraMeasurement = null;
+
+            // 清空IVLCamera图像
+            IVLCameraImageSrc = null;
+
+            // 清空ScottPlot控件
+            if (PlotControl != null)
+            {
+                PlotControl.Plot.Clear();
+                PlotControl.Refresh();
+            }
+
+            // 清空SpectrumControl
+            if (_spectralCtrl != null)
+            {
+                _spectralCtrl.SpectralData.SetData(new float[0], new float[0]);
+                _spectralCtrl.InvalidateVisual();
+            }
+        }
+
         private void LoadCameraData(string serialNumber)
         {
+            if (string.IsNullOrWhiteSpace(serialNumber))
+            {
+                ClearAllDisplays();
+                return;
+            }
             var results = AlgResultService.LoadAlgResultByBatchCode(serialNumber);
             if (results == null || results.Count == 0) return;
             List<VScgdAlgorithmResultMaster> lv_results = new List<VScgdAlgorithmResultMaster>();
@@ -1622,6 +1685,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
         public void LoadSpectrumData(string serialNumber)
         {
+            if (string.IsNullOrWhiteSpace(serialNumber))
+            {
+                ClearAllDisplays();
+                return;
+            }
             var results = SpectrumResultService.LoadResultByBatchCode(DeviceCode, serialNumber);
             if (results == null || results.Count == 0) return;
 
@@ -1831,6 +1899,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
         private void UpdateSpectralGridData(SpectrumMeasurement measurement)
         {
+            if (string.IsNullOrWhiteSpace(measurement?.Meas_Id) || measurement == null)
+            {
+                SpectralGridItems?.Clear();
+                return;
+            }
             if (measurement == null || measurement.Wavelengths == null || measurement.Intensities == null)
             {
                 SpectralGridItems?.Clear();

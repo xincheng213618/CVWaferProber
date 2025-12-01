@@ -109,7 +109,7 @@
                         Grid.ColumnSpan="2"
                         Margin="2"
                         Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center" Text="线条颜色：" />
+                        <TextBlock VerticalAlignment="Center" Text="{DynamicResource Sp.LineColor }" />
                         <ComboBox
                             Width="80"
                             Height="20"
