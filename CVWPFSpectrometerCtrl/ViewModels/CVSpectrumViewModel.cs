@@ -1577,6 +1577,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         public void LoadData(string serialNumber, bool isIVLCameraEnabled)
         {
             Clear();
+            if (string.IsNullOrEmpty(serialNumber)) return;
             if (isIVLCameraEnabled) LoadCameraData(serialNumber); 
             else LoadSpectrumData(serialNumber);
         }

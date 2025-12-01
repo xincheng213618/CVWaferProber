@@ -24,8 +24,8 @@ namespace CVWaferProber.ViewModels
             this.IsChinese = GetCurrentLanguage() == "Chinese";
         }
 
-        //public ChipStatus? Status => chipViewModel?.Status;
-        public ChipStatus? Status => ChipStatus.IVL_COMPLETED;
+        public ChipStatus? Status => chipViewModel?.Status;
+        //public ChipStatus? Status => ChipStatus.IVL_COMPLETED;
         public string? DisplayStatus => Status.HasValue ? ChipStatusTool.GetStatusDisplay(Status.Value, IsChinese) : "Unknown";
         public DateTime? EndTestTime { get; set; }
         public DateTime? StartTestTime { get; set; }
