@@ -139,13 +139,13 @@
                             x:Name="chkShowAll"
                             Margin="5"
                             VerticalAlignment="Center"
-                            Content="显示所有数据"
+                            Content="{DynamicResource Sp.ShowAllData}"
                             IsChecked="{Binding IsShowAllData, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         <CheckBox
                             x:Name="chkShowDetails"
                             Margin="5"
                             VerticalAlignment="Center"
-                            Content="光谱数据详情"
+                            Content="{DynamicResource Sp.ShowSpectralDetail}"
                             IsChecked="{Binding IsShowSpectralDetail, Mode=TwoWay}" />
                     </StackPanel>
                     <!--  图表区域  -->

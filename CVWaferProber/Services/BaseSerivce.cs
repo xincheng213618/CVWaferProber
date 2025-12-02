@@ -26,8 +26,10 @@ namespace CVWaferProber.Services
         }
         protected async Task RunFlowAsync(WPFlowViewModel _selectedWPFlow, DieViewModel dieViewModel, bool isEnd = true)
         {
+            CancellationTokenSource cts = new CancellationTokenSource();
             try
             {
+
                 Task<RespDataBaseFlowResultDTO> resp = AsyncRunFlow(_selectedWPFlow.Name, dieViewModel.SerialNumber);
                 await resp;
                 if (resp.Result.IsSuccess)
@@ -55,6 +57,7 @@ namespace CVWaferProber.Services
             }
             finally
             {
+                cts.Cancel();
                 if (isEnd) EndTesting();
             }
         }
@@ -92,7 +95,7 @@ namespace CVWaferProber.Services
             if (string.IsNullOrEmpty(ProberId)) return string.Format("{1}[{3},{4}]", ProberId, timestamp, Snowflake.Instance.NextSeqId(), dieViewModel.MapY, dieViewModel.MapX);
             else return string.Format("{0}_{1}[{3},{4}]", ProberId, timestamp, Snowflake.Instance.NextSeqId(), dieViewModel.MapY, dieViewModel.MapX);
         }
-        protected void EndTesting()
+        protected virtual void EndTesting()
         {
             TestingCompleted?.Invoke(this, EventArgs.Empty);
         }

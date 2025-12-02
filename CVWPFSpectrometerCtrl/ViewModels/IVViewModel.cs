@@ -56,11 +56,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 TitleFontSize = 14
             };
 
-            // 设置X轴（V）
+            // 设置X轴（I）
             var xAxis = new LinearAxis
             {
                 Position = AxisPosition.Bottom,
-                Title = "电流/I（mA）",
+                Title = (string)Application.Current.FindResource("Sp.Current"),
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
                 Minimum = 0,
@@ -68,11 +68,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 MaximumRange = 10,
             };
 
-            // 设置Y轴（I）
+            // 设置Y轴（V）
             var yAxis = new LinearAxis
             {
                 Position = AxisPosition.Left,
-                Title = "电压/V（V）",
+                Title = (string)Application.Current.FindResource("Sp.Voltage"),
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
                 Minimum = 0,
@@ -87,6 +87,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         int no = 1;
         public void LoadData(string serialNumber)
         {
+
             Clear();
             var results = SMUResultService.LoadResultByBatchCode(DeviceCode, serialNumber);
             if (results == null || results.Count == 0) return;

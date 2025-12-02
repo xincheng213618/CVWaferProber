@@ -44,13 +44,18 @@
 
     <!--  光谱曲线相关  -->
     <sys:String x:Key="Sp.Spectral">Spectral</sys:String>
+    <sys:String x:Key="Sp.Overview">Overview</sys:String>
     <sys:String x:Key="Sp.SpectralCurve">Spectral Curve</sys:String>
     <sys:String x:Key="Sp.Wavelength">Wavelength (nm)</sys:String>
+    <sys:String x:Key="Sp.RelativeSpectrum">RelativeSpectrum</sys:String>
+    <sys:String x:Key="Sp.AbsoluteSpectrum">AbsoluteSpectrum</sys:String>
+    <sys:String x:Key="Sp.ShowAllData">ShowAllData</sys:String>
+    <sys:String x:Key="Sp.ShowSpectralDetail">ShowSpectralDetail</sys:String>
     <!--  测量参数  -->
     <sys:String x:Key="Sp.MeasurementBatch">Measurement Batch</sys:String>
-    <sys:String x:Key="Sp.Voltage">Voltage/V</sys:String>
-    <sys:String x:Key="Sp.Current">Current/A</sys:String>
-    <sys:String x:Key="Sp.Luminance">Luminance (cd/m²)</sys:String>
+    <sys:String x:Key="Sp.Voltage">Voltage/V(V)</sys:String>
+    <sys:String x:Key="Sp.Current">Current/A(mA)</sys:String>
+    <sys:String x:Key="Sp.Luminance">Luminance/L (cd/m²)</sys:String>
     <sys:String x:Key="Sp.Time">Time</sys:String>
     <sys:String x:Key="ColorCoordinateX">CIE x</sys:String>
     <sys:String x:Key="ColorCoordinateY">CIE y</sys:String>
@@ -59,6 +64,17 @@
     <sys:String x:Key="ColorTemperature">ColorTemperature(K)</sys:String>
     <sys:String x:Key="DominantWavelength">DominantWavelength</sys:String>
     <sys:String x:Key="PeakWavelength">PeakWavelength</sys:String>
+
+    <!--  IV曲线相关  -->
+    <sys:String x:Key="Sp.IV Curve">IV Curve</sys:String>
+
+    <!--  IL曲线相关  -->
+    <sys:String x:Key="Sp.IL Curve">IL Curve</sys:String>
+
+    <!--  VL曲线相关  -->
+    <sys:String x:Key="Sp.VL Curve">VL Curve</sys:String>
+    <!--  Camera曲线相关  -->
+    <sys:String x:Key="Sp.Camera Curve">Camera Curve</sys:String>
 
     <sys:String x:Key="IVLCamera">IVLCamera</sys:String>
     <sys:String x:Key="Image">Image</sys:String>

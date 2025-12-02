@@ -65,7 +65,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var xAxis = new LinearAxis
             {
                 Position = AxisPosition.Bottom,
-                Title = "电流/I (mA)",
+                Title = (string)Application.Current.FindResource("Sp.Current"),
                 TitleFontSize = 12,
                 TitleFontWeight = OxyPlot.FontWeights.Normal,
                 MajorGridlineStyle = OxyPlot.LineStyle.Solid,
@@ -83,7 +83,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var yAxis = new LinearAxis
             {
                 Position = AxisPosition.Left,
-                Title = "亮度/L (cd/m²)",
+                Title = (string)Application.Current.FindResource("Sp.Luminance"),
                 TitleFontSize = 12,
                 TitleFontWeight = OxyPlot.FontWeights.Normal,
                 MajorGridlineStyle = OxyPlot.LineStyle.Solid,
