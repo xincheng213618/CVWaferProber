@@ -1,5 +1,6 @@
 ﻿using ChipMapping.Models;
 using ChipMapping.ViewModels;
+using ColorVision.Core.Entities;
 using CVDB.Services.Buz;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
@@ -217,6 +218,11 @@ namespace CVWaferProber.ViewModels
                 var assemFile = Path.GetDirectoryName(GetExecutablePath());
                 string assemMysqlCfg = Path.Combine(assemFile, "cfg", "MySql.config");
                 File.Copy(mysqlCfg, assemMysqlCfg, true);
+                if (logger.IsDebugEnabled) logger.DebugFormat("Copy RC Service MySql.config => {0}->{1}", mysqlCfg, assemMysqlCfg);
+            }
+            else
+            {
+                if (logger.IsDebugEnabled) logger.DebugFormat("RC Service is empty or not exist => {0}", rcExeFile);
             }
         }
         public static string GetExecutablePath()
@@ -275,8 +281,7 @@ namespace CVWaferProber.ViewModels
         private void LoadBuzWPFlows()
         {
             rcModel.RcRegist();
-
-            var flows = WaferProberService.LoadFlows();
+            List<TScgdBuzProductDetail> flows = WaferProberDBService.LoadFlows();
             WPFlows.Clear();
             if (flows != null && flows.Count > 0)
             {
