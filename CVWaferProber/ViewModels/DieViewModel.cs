@@ -32,6 +32,20 @@ namespace CVWaferProber.ViewModels
             get => _isIVLEnabled;
             set { _isIVLEnabled = value; OnPropertyChanged(); }
         }
+        private bool _isEQEEnabled;
+        public bool IsEQEEnabled
+        {
+            get => _isEQEEnabled;
+            set { _isEQEEnabled = value; OnPropertyChanged(); }
+        }
+
+        // 新增IVL复选框绑定属性
+        private bool _isVAMEnabled;
+        public bool IsVAMEnabled
+        {
+            get => _isVAMEnabled;
+            set { _isVAMEnabled = value; OnPropertyChanged(); }
+        }
         public DieViewModel(ChipViewModel die)
         {
             this.chipViewModel = die;

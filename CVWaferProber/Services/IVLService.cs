@@ -46,7 +46,7 @@ namespace CVWaferProber.Services
             //System.Timers.Timer timer = new System.Timers.Timer(1000);
             Task task = RunFlowAsync(_selectedWPFlow, dieViewModel);
             // 初始化并启动定时器（1秒调用一次IVLResultDisplay）
-            System.Timers.Timer refreshTimer = new System.Timers.Timer(300)
+            System.Timers.Timer refreshTimer = new System.Timers.Timer(350)
             {
                 AutoReset = true, // 自动重复触发（循环调用）
                 Enabled = true    // 启动定时器

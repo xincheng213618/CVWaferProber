@@ -342,9 +342,34 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
+                        <!--  1.  EQE（Checkbox列）  -->
+                        <DataGridTemplateColumn Width="*" Header="EQE">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        IsChecked="{Binding IsEQEEnabled, Mode=TwoWay}"
+                                        IsHitTestVisible="True" />
+                                    <!--  允许点击  -->
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <!--  2. VAM（Checkbox列）  -->
+                        <DataGridTemplateColumn Width="*" Header="VAM">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        IsChecked="{Binding IsVAMEnabled, Mode=TwoWay}"
+                                        IsHitTestVisible="True" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                         <DataGridTextColumn
                             Width="200"
-                            Binding="{Binding SerialNumber}"
+                            Binding="{Binding SerialNumvber}"
                             Header="序列号" />
                         <DataGridTextColumn
                             Width="180"
