@@ -1,11 +1,7 @@
 ﻿using ChipMapping.Models;
 using ChipMapping.ViewModels;
-using CVCommCore;
-using CVDB.Services.Algorithm;
 using CVDB.Services.Buz;
-using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
-using CVWaferProber.Core.Restful.DTO;
 using CVWaferProber.Core.ViewModels;
 using CVWaferProber.MQTT;
 using CVWaferProber.Services;
@@ -15,11 +11,9 @@ using CVWaferProber.WinMsg;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
 using Microsoft.Win32;
-using Newtonsoft.Json;
-using ScottPlot.Plottables;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -163,7 +157,7 @@ namespace CVWaferProber.ViewModels
         }
 
         private CVMQTTWPClient mqtt;
-        private int _overTimefRestapi = 30; //S
+        //private int _overTimefRestapi = 30; //S
         public MainViewModel()
         {
             Instance = this;
@@ -191,6 +185,8 @@ namespace CVWaferProber.ViewModels
             ClearMappingCommand = new RelayCommand(_ => ClearMapping());
             FlowLoadCommand = new RelayCommand(_ => LoadBuzWPFlows());
             RCRegCommand = new RelayCommand(_ => RCReg());
+
+            InitMysqlCfg();
             //
             ProberId = "CVProber01";
             MappingCsvFilePath = "E:\\work\\cv\\New版\\晶圆台\\CVWaferProber\\ChipMapping\\ScanData_sc.csv";
@@ -212,6 +208,21 @@ namespace CVWaferProber.ViewModels
             aoiService.TestingCompleted += OnTestingCompleted;
         }
 
+        private void InitMysqlCfg()
+        {
+            var rcExeFile = ServiceHelper.GetServiceExecutablePath("RegistrationCenterService");
+            if (!string.IsNullOrEmpty(rcExeFile) && File.Exists(rcExeFile))
+            {
+                string mysqlCfg = Path.Combine(Path.GetDirectoryName(rcExeFile), "cfg", "MySql.config");
+                var assemFile = Path.GetDirectoryName(GetExecutablePath());
+                string assemMysqlCfg = Path.Combine(assemFile, "cfg", "MySql.config");
+                File.Copy(mysqlCfg, assemMysqlCfg, true);
+            }
+        }
+        public static string GetExecutablePath()
+        {
+            return System.Reflection.Assembly.GetExecutingAssembly().Location;
+        }
         private void OnTestingCompleted(object? sender, EventArgs e)
         {
             EndTesting();
@@ -404,7 +415,8 @@ namespace CVWaferProber.ViewModels
                 var itemToSelect = TestResults[CurTestDieIdx];
                 ScrollToItem(itemToSelect);
 
-                StartTestingDie(itemToSelect);
+                aoiService.StartTestingAOI(Timestamp, itemToSelect, _selectedWPFlow, false);
+                //StartTestingDie(itemToSelect);
             }
             else if (sel.Status.HasValue && sel.MapX.HasValue && sel.MapY.HasValue)
             {
@@ -412,13 +424,13 @@ namespace CVWaferProber.ViewModels
             }
         }
 
-        private void StartTestingDie(DieViewModel dieViewModel)
-        {
-            string sn = BuildFlowSN(dieViewModel);
-            dieViewModel.SerialNumber = sn;
-            dieViewModel.ChangeStatus(ChipStatus.TESTING);
-            Task.Factory.StartNew(() => rcModel.RcRunFlowByName(_selectedWPFlow.Name, sn));
-        }
+        //private void StartTestingDie(DieViewModel dieViewModel)
+        //{
+        //    string sn = BuildFlowSN(dieViewModel);
+        //    dieViewModel.SerialNumber = sn;
+        //    dieViewModel.ChangeStatus(ChipStatus.TESTING);
+        //    Task.Factory.StartNew(() => rcModel.RcRunFlowByName(_selectedWPFlow.Name, sn));
+        //}
         private void StartTestingDie(int row, int col)
         {
             if (CurTestDieIdx>=0)
@@ -518,7 +530,6 @@ namespace CVWaferProber.ViewModels
             // 异步轮询结果，避免阻塞UI线程
            return await PollFlowResultWithRxAsync(sn, cancellationToken);
         }
-        //////////////////////*/
         private async Task<RespDataBaseFlowResultDTO> PollFlowResultWithRxAsync(string sn, CancellationToken cancellationToken)
         {
            return await Observable.Interval(TimeSpan.FromSeconds(1))
@@ -537,6 +548,8 @@ namespace CVWaferProber.ViewModels
             if (string.IsNullOrEmpty(ProberId)) return string.Format("{1}[{3},{4}]", ProberId, Timestamp, Snowflake.Instance.NextSeqId(), dieViewModel.MapY, dieViewModel.MapX);
             else return string.Format("{0}_{1}[{3},{4}]", ProberId, Timestamp, Snowflake.Instance.NextSeqId(), dieViewModel.MapY, dieViewModel.MapX);
         }
+        //////////////////////*/
+
         private bool IsLocalSim = false;
         private void StartAutoFlow()
         {
@@ -549,7 +562,8 @@ namespace CVWaferProber.ViewModels
 
                 if (IsLocalSim)
                 {
-                    StartTestingDie(TestResults[CurTestDieIdx]);
+                    aoiService.StartTestingAOI(Timestamp, TestResults[CurTestDieIdx], _selectedWPFlow, false);
+                    //StartTestingDie(TestResults[CurTestDieIdx]);
                     //获取结果
                     _simAutoTestTimer?.Start();
                 }
@@ -595,6 +609,7 @@ namespace CVWaferProber.ViewModels
             CustomMappingVM.DisabledInput = IsProcessing = false;
             EnableBtn(true);
         }
+        /*
         private async Task DoAsyncStartTestingDie(DieViewModel die,bool isEnd = true)
         {
             try
@@ -664,6 +679,7 @@ namespace CVWaferProber.ViewModels
             //获取结果
             return await PollFlowResultWithRxAsync(die.SerialNumber, cancellationToken);
         }
+        ///*/
         private void ManTestingReady(DieViewModel die)
         {
             die.chipViewModel.SetStatus(ChipStatus.WAITING);
