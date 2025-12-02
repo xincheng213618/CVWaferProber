@@ -89,10 +89,7 @@
                 </Grid>
             </TabItem>
             <!--  光谱分析Tab  -->
-            <TabItem
-                Width="36"
-                HorizontalAlignment="Left"
-                Header="{DynamicResource Sp.Spectral}">
+            <TabItem HorizontalAlignment="Left" Header="{DynamicResource Sp.Spectral}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="400*" />
