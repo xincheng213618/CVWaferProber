@@ -17,6 +17,21 @@ namespace CVWaferProber.ViewModels
         public bool IsIVLCameraEnabled {  get; set; }
         public bool IsChinese {  get; set; }
 
+        // 新增AOI复选框绑定属性
+        private bool _isAOIEnabled;
+        public bool IsAOIEnabled
+        {
+            get => _isAOIEnabled;
+            set { _isAOIEnabled = value; OnPropertyChanged(); }
+        }
+
+        // 新增IVL复选框绑定属性
+        private bool _isIVLEnabled;
+        public bool IsIVLEnabled
+        {
+            get => _isIVLEnabled;
+            set { _isIVLEnabled = value; OnPropertyChanged(); }
+        }
         public DieViewModel(ChipViewModel die)
         {
             this.chipViewModel = die;

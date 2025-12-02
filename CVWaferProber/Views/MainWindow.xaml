@@ -301,8 +301,9 @@
                     IsReadOnly="True"
                     ItemsSource="{Binding TestResults}"
                     SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+                    SelectionChanged="TestResultDataGrid_SelectionChanged"
                     SelectionMode="Single"
-                    SelectionUnit="FullRow" SelectionChanged="TestResultDataGrid_SelectionChanged">
+                    SelectionUnit="FullRow">
                     <DataGrid.Columns>
                         <DataGridTextColumn
                             Width="50"
@@ -316,14 +317,31 @@
                             Width="60"
                             Binding="{Binding MapX}"
                             Header="MapXCol" />
-                        <DataGridTextColumn
-                            Width="60"
-                            Binding="{Binding ScreenX}"
-                            Header="屏幕X坐标" />
-                        <DataGridTextColumn
-                            Width="60"
-                            Binding="{Binding ScreenY}"
-                            Header="屏幕Y坐标" />
+                        <!--  1.  AOI（Checkbox列）  -->
+                        <DataGridTemplateColumn Width="*" Header="AOI">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        IsChecked="{Binding IsAOIEnabled, Mode=TwoWay}"
+                                        IsHitTestVisible="True" />
+                                    <!--  允许点击  -->
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <!--  2. IVL（Checkbox列）  -->
+                        <DataGridTemplateColumn Width="*" Header="IVL">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        IsChecked="{Binding IsIVLEnabled, Mode=TwoWay}"
+                                        IsHitTestVisible="True" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                         <DataGridTextColumn
                             Width="200"
                             Binding="{Binding SerialNumber}"
@@ -337,7 +355,7 @@
                             Binding="{Binding EndTestTime}"
                             Header="结束时间" />
                         <DataGridTextColumn
-                            Width="*"
+                            Width="100"
                             Binding="{Binding DisplayStatus}"
                             Header="测试状态" />
                         <DataGridTextColumn

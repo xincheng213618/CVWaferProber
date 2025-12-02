@@ -191,8 +191,7 @@
                                                     Margin="5,0"
                                                     IsEnabled="{Binding IsNotProcessing}"
                                                     IsReadOnly="{Binding IsAutoSN}"
-                                                    Text="{Binding SerialNumber}" 
-                                                     />
+                                                    Text="{Binding SerialNumber}" />
                                                 <!--<CheckBox
                                                 Text="{Binding Timestamp}"
                                                     x:Name="ChkIsAutoSN"
@@ -330,14 +329,31 @@
                                         Width="60"
                                         Binding="{Binding MapX}"
                                         Header="{DynamicResource Maping.GridHeader.Col}" />
-                                    <DataGridTextColumn
-                                        Width="60"
-                                        Binding="{Binding ScreenX}"
-                                        Header="{DynamicResource Maping.GridHeader.ScreenX}" />
-                                    <DataGridTextColumn
-                                        Width="60"
-                                        Binding="{Binding ScreenY}"
-                                        Header="{DynamicResource Maping.GridHeader.ScreenY}" />
+                                    <!--  1.  AOI（Checkbox列）  -->
+                                    <DataGridTemplateColumn Width="*" Header="AOI">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    IsChecked="{Binding IsAOIEnabled, Mode=TwoWay}"
+                                                    IsHitTestVisible="True" />
+                                                <!--  允许点击  -->
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <!--  2. IVL（Checkbox列）  -->
+                                    <DataGridTemplateColumn Width="*" Header="IVL">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    IsChecked="{Binding IsIVLEnabled, Mode=TwoWay}"
+                                                    IsHitTestVisible="True" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
                                     <DataGridTextColumn
                                         Width="250"
                                         Binding="{Binding SerialNumber, Mode=TwoWay}"
