@@ -41,6 +41,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private PlotModel _IVPlotModel;
         private PlotModel _ILPlotModel;
         private PlotModel _VLPlotModel;
+      
+
         public void NotifyPropertyChanged(string propertyName)
         {
             OnPropertyChanged(propertyName);
@@ -60,7 +62,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private ObservableCollection<IVLCameraMeasurement> _IVLCameraMeasurements;
         private ObservableCollection<SpectralData> _SpectralData;
 
-        private float[] Wavelengths;
+        public float[] Wavelengths;
         //private double[] Intensities;
         public ICommand ExportCommand { get;}
         private ILViewModel IL_viewModel;
@@ -514,7 +516,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             plotModel.InvalidatePlot(true);
         }
         // 初始化总览图的数据系列（绑定子Tab数据源）
-        private void InitializeOverviewSeries()
+        public void InitializeOverviewSeries()
         {
             // 1. 清空总览图所有Series
             OverviewSpectralPlotModel.Series.Clear();
