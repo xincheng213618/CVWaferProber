@@ -5,6 +5,8 @@ using CVWaferProber.ViewModels;
 using CVWPFSpectrometerCtrl.ViewModels;
 using Newtonsoft.Json;
 using System.Reactive.Linq;
+using System.Windows;
+using System.Windows.Threading;
 
 namespace CVWaferProber.Services
 {
@@ -92,7 +94,7 @@ namespace CVWaferProber.Services
         public IVLService(CVSpectrumViewModel customIVLVM, RCRestService rcService) : base(rcService)
         {
             this.CustomIVLVM = customIVLVM;
-            _uiSyncContext = SynchronizationContext.Current; // 捕获UI线程
+            _uiSyncContext = SynchronizationContext.Current ?? new DispatcherSynchronizationContext(Application.Current.Dispatcher);
             _allMeasureData = new List<VScgdMeasureResultSpectrometer>();
         }
 
@@ -148,59 +150,45 @@ namespace CVWaferProber.Services
         {
             try
             {
-                // 1. 首次执行时加载所有测量数据（从数据库查询）
                 if (_allMeasureData.Count == 0)
                 {
-                    _allMeasureData = SpectrumResultService.LoadResultByBatchCode(
-                        CustomIVLVM.DeviceCode, // 从ViewModel获取设备编码
-                        _currentSN
-                    ).OrderBy(m => m.CreateDate) // 按测量时间排序（确保顺序正确）
-                     .ToList();
-
-                    // 若没有数据，停止定时器
-                    if (_allMeasureData.Count == 0)
+                    // 数据库查询放后台线程，避免阻塞UI
+                    Task.Run(() =>
                     {
-                        logger.Warn($"SN[{_currentSN}]无测量数据");
-                        StopPointTimer();
-                        return;
-                    }
-
-                    logger.Debug($"SN[{_currentSN}]共加载{_allMeasureData.Count}个测量点");
-                }
-
-                // 2. 检查是否已显示完所有点
-                if (_currentPointIndex >= _allMeasureData.Count)
-                {
-                    logger.Debug($"已显示全部{_allMeasureData.Count}个点");
-                    StopPointTimer();
+                        var data = SpectrumResultService.LoadResultByBatchCode(CustomIVLVM.DeviceCode, _currentSN)
+                            .OrderBy(m => m.CreateDate)
+                            .ToList();
+                        // 切换回UI线程更新缓存
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            _allMeasureData = data;
+                            logger.Debug($"SN[{_currentSN}]共加载{_allMeasureData.Count}个测量点");
+                        });
+                    });
                     return;
                 }
 
-                // 3. 获取当前要显示的点
-                var currentData = _allMeasureData[_currentPointIndex];
-
-                // 4. 转换为ViewModel需要的SpectrumMeasurement对象
-                var spectrumPoint = ConvertToSpectrumMeasurement(currentData, _currentPointIndex + 1);
-
-                // 5. 添加到ViewModel（自动触发图表刷新）
-                CustomIVLVM.Measurements.Add(spectrumPoint);
-
-                // 6. 同步更新IV/IL/VL数据（适配多图表）
-                SyncIVILVLData(currentData, _currentPointIndex + 1);
-
-                // 7. 首次显示时设置选中项，触发图表初始化
-                if (_currentPointIndex == 0)
+                // 确保所有ViewModel数据更新在UI线程
+                Application.Current.Dispatcher.Invoke(() =>
                 {
-                    CustomIVLVM.SelectedMeasurement = spectrumPoint;
-                }
+                    if (_currentPointIndex >= _allMeasureData.Count)
+                    {
+                        StopPointTimer();
+                        return;
+                    }
+                    var currentData = _allMeasureData[_currentPointIndex];
+                    var spectrumPoint = ConvertToSpectrumMeasurement(currentData, _currentPointIndex + 1);
+                    CustomIVLVM.Measurements.Add(spectrumPoint);
+                    SyncIVILVLData(currentData, _currentPointIndex + 1);
 
-                // 8. 触发总览图刷新（同步逐点显示）
-                CustomIVLVM.InitializeOverviewSeries();
-
-                logger.Debug($"显示第{_currentPointIndex + 1}个点：波长范围{currentData.FLd:F0}nm，强度{currentData.FLp:F2}");
-
-                // 9. 索引自增，准备下一个点
-                _currentPointIndex++;
+                    if (_currentPointIndex == 0)
+                    {
+                        CustomIVLVM.SelectedMeasurement = spectrumPoint;
+                    }
+                    CustomIVLVM.InitializeOverviewSeries();
+                    _currentPointIndex++;
+                    CustomIVLVM.RefreshAllPlots();
+                });
             }
             catch (Exception ex)
             {
@@ -214,8 +202,9 @@ namespace CVWaferProber.Services
         private SpectrumMeasurement ConvertToSpectrumMeasurement(VScgdMeasureResultSpectrometer dbData, int no)
         {
             // 从数据库数据反序列化强度数组（与ViewModel.LoadSpectrumData逻辑一致）
-            float[] intensities = JsonConvert.DeserializeObject<float[]>(dbData.FPL);
-
+            //float[] intensities = JsonConvert.DeserializeObject<float[]>(dbData.FPL);
+            float[] intensities = JsonConvert.DeserializeObject<float[]>(dbData.FPL) ?? Array.Empty<float>();
+            var wavelengths = CustomIVLVM.Wavelengths ?? Enumerable.Range(380, 401).Select(i => (float)i).ToArray();
             return new SpectrumMeasurement(no)
             {
                 Timestamp = dbData.CreateDate,
@@ -235,7 +224,7 @@ namespace CVWaferProber.Services
                 PeakIntensity = (float)dbData.FLp,
                 FHW = (float)dbData.FHW,
                 Intensities = intensities,
-                Wavelengths = CustomIVLVM.Wavelengths, // 复用ViewModel的波长数组
+                Wavelengths = wavelengths, // 复用ViewModel的波长数组
                 fPlambda = (float)dbData.FPlambda
             };
         }

@@ -35,6 +35,22 @@ namespace CVWPFSpectrometerCtrl
             };
            
         }
-       
+        private void PlotView_Loaded(object sender, RoutedEventArgs e)
+        {
+            var plotView = sender as OxyPlot.Wpf.PlotView;
+            var vm = DataContext as CVSpectrumViewModel;
+            if (plotView != null && vm != null)
+            {
+                // 监听ViewModel的刷新指令
+                vm.PropertyChanged += (s, args) =>
+                {
+                    if (args.PropertyName == nameof(vm.PlotModel))
+                    {
+                        plotView.Model?.InvalidatePlot(true);
+                    }
+                };
+            }
+        }
+
     }
 }

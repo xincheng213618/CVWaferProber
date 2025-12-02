@@ -9,7 +9,6 @@
     xmlns:oxy="http://oxyplot.org/wpf"
     xmlns:sp="clr-namespace:CVWPFSpectrumControl;assembly=CVWPFSpectrumControl"
     xmlns:wpf="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
-    
     mc:Ignorable="d">
     <UserControl.DataContext>
         <local:CVSpectrumViewModel />
@@ -61,6 +60,7 @@
                         Grid.Row="0"
                         Grid.Column="0"
                         Margin="5"
+                        Loaded="PlotView_Loaded"
                         Model="{Binding OverviewSpectralPlotModel}" />
 
                     <!--  总览-IV图表  -->
@@ -68,6 +68,7 @@
                         Grid.Row="0"
                         Grid.Column="1"
                         Margin="5"
+                        Loaded="PlotView_Loaded"
                         Model="{Binding OverviewIVPlotModel}" />
 
                     <!--  总览-IL图表  -->
@@ -75,6 +76,7 @@
                         Grid.Row="1"
                         Grid.Column="0"
                         Margin="5"
+                        Loaded="PlotView_Loaded"
                         Model="{Binding OverviewILPlotModel}" />
 
                     <!--  总览-VL图表  -->
@@ -82,6 +84,7 @@
                         Grid.Row="1"
                         Grid.Column="1"
                         Margin="5"
+                        Loaded="PlotView_Loaded"
                         Model="{Binding OverviewVLPlotModel}" />
                 </Grid>
             </TabItem>
@@ -109,7 +112,7 @@
                         Grid.ColumnSpan="2"
                         Margin="2"
                         Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center" Text="{DynamicResource Sp.LineColor }" />
+                        <TextBlock VerticalAlignment="Center" Text="{DynamicResource Sp.LineColor}" />
                         <ComboBox
                             Width="80"
                             Height="20"
@@ -153,6 +156,7 @@
                         Grid.Row="1"
                         Grid.ColumnSpan="3"
                         Margin="5,0,5,0"
+                        Loaded="PlotView_Loaded"
                         Model="{Binding PlotModel}" />
 
                     <!--  底部：数据表格  -->
@@ -286,6 +290,7 @@
                     <oxy:PlotView
                         Grid.Row="0"
                         Margin="5"
+                        Loaded="PlotView_Loaded"
                         Model="{Binding IVPlotModel}" />
 
                     <!--  IV DataGrid区域  -->
@@ -342,6 +347,7 @@
                         Margin="5"
                         Background="White"
                         Cursor="Cross"
+                        Loaded="PlotView_Loaded"
                         Model="{Binding ILPlotModel}" />
 
                     <!--  当前数据点信息栏  -->
@@ -454,6 +460,7 @@
                         Grid.Row="0"
                         Grid.ColumnSpan="2"
                         Margin="5,5,5,5"
+                        Loaded="PlotView_Loaded"
                         Model="{Binding VLPlotModel}" />
 
                     <!--  IL DataGrid区域  -->
