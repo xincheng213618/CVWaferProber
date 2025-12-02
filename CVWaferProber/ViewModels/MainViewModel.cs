@@ -397,6 +397,11 @@ namespace CVWaferProber.ViewModels
         //}
         private void DieResultDisplay(DieViewModel dieViewModel)
         {
+            if (string.IsNullOrEmpty(dieViewModel.SerialNumber))
+            {
+                CustomIVLVM.ClearResult();
+                CustomImageVM?.ClearImageResult();
+            }
             if (dieViewModel.Status == ChipStatus.IVL_TESTING || dieViewModel.Status == ChipStatus.IVL_COMPLETED)
             {
                 ivlService.IVLResultDisplay(dieViewModel);

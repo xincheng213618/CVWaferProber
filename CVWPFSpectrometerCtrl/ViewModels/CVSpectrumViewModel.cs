@@ -1871,7 +1871,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         #endregion
         public void ClearResult()
         {
-            Clear();
+            ClearAllDisplays();
         }
 
         public void UpdateImage()
