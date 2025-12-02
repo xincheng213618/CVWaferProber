@@ -261,6 +261,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             //AutoAdjustAxisRange();
             PlotModel.InvalidatePlot(true); // 刷新图表
         }
+       
         // 在CVSpectrumViewModel类中添加
         public void RefreshAllPlots()
         {
@@ -1636,6 +1637,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             VLMeasurements.Clear();
             IVLCameraMeasurements.Clear();
             SpectralGridItems?.Clear();
+            PlotModel.Series.Clear();
+
+            //彻底清空viewModel的数据
+            IL_viewModel.Clear();
+            IV_viewModel.Clear();
+            VL_viewModel.Clear();
+            IVLCamera_viewModel.Clear();
+            IVLCameraImageSrc = null;
 
             // 清空选中状态
             SelectedMeasurement = null;

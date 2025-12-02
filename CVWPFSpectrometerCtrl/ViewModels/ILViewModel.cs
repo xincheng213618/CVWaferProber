@@ -218,7 +218,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             no = 1;
             PlotModel.Series.Clear();
             Measurements.Clear();
-
+           
             // 重置轴范围到初始默认值（如需保留上次范围，可删除此部分）
             var xAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Bottom);
             var yAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Left);
