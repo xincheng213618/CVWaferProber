@@ -37,7 +37,7 @@ namespace CVWPFSpectrometerCtrl
         }
         private void PlotView_Loaded(object sender, RoutedEventArgs e)
         {
-            var plotView = sender as OxyPlot.Wpf.PlotView;
+            var plotView = sender as PlotView;
             var vm = DataContext as CVSpectrumViewModel;
             if (plotView != null && vm != null)
             {

@@ -261,7 +261,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             //AutoAdjustAxisRange();
             PlotModel.InvalidatePlot(true); // 刷新图表
         }
-        // 在CVSpectrumViewModel类中添加
+       
         public void RefreshAllPlots()
         {
             // 刷新主光谱图
@@ -271,6 +271,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             OverviewIVPlotModel?.InvalidatePlot(true);
             OverviewILPlotModel?.InvalidatePlot(true);
             OverviewVLPlotModel?.InvalidatePlot(true);
+            // 显式触发属性变更，确保UI感知到PlotModel的更新
+            OnPropertyChanged( nameof(PlotModel));
+            OnPropertyChanged(nameof(OverviewSpectralPlotModel));
             // 刷新ScottPlot控件
             PlotControl?.Refresh();
         }
