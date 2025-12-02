@@ -608,7 +608,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     Color = OxyColors.Red,
                     StrokeThickness = 1.5,
                     MarkerType = MarkerType.Circle,
-                    MarkerSize = 2,
+                    //MarkerSize = 2,
                     MarkerFill = OxyColors.Red,
                 };
                 OverviewIVPlotModel.Series.Add(ivSeries);
@@ -624,7 +624,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     Color = OxyColors.Green,
                     StrokeThickness = 1.5,
                     MarkerType = MarkerType.Circle,
-                    MarkerSize = 2,
+                    //MarkerSize = 2,
                     MarkerFill = OxyColors.Green
                 };
                 OverviewILPlotModel.Series.Add(ilSeries);
