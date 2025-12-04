@@ -13,12 +13,15 @@ using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
 using Microsoft.Win32;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.IO;
 using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
+using static FreeSql.Internal.GlobalFilter;
 
 
 namespace CVWaferProber.ViewModels
@@ -225,7 +228,7 @@ namespace CVWaferProber.ViewModels
             // 初始化数据源（实际项目中是从文件/接口加载）
             TestResults = new ObservableCollection<DieViewModel>();
 
-
+            TestResults.CollectionChanged += AOIItems_CollectionChanged;
             // 绑定命令到方法
             SelectAllAOICommand = new RelayCommand(ExecuteSelectAllAOI);
             InvertSelectAOICommand = new RelayCommand(ExecuteInvertSelectAOI);
@@ -273,8 +276,107 @@ namespace CVWaferProber.ViewModels
 
             aoiService = new AOIService(CustomImageVM, rcModel);
             aoiService.TestingCompleted += OnTestingCompleted;
+
+            SubscribeItems_AOI(TestResults);
         }
         // ========== AOI列逻辑 ==========
+        #region AOI 全选/部分选中
+        private bool? _selectAllAOI = false;
+        public bool? SelectAllAOI
+        {
+            get => _selectAllAOI;
+            set
+            {
+                if (_selectAllAOI != value)
+                {
+                    _selectAllAOI = value;
+                    OnPropertyChanged(nameof(SelectAllAOI));
+
+                    if (value.HasValue)
+                    {
+                        // 避免循环更新
+                        _isUpdatingFromHeader_AOI = true;
+                        try
+                        {
+                            // 更新所有项目的选中状态
+                            foreach (var item in TestResults)
+                            {
+                                item.IsAOIEnabled = value.Value;
+                            }
+                        }
+                        finally
+                        {
+                            _isUpdatingFromHeader_AOI = false;
+                        }
+                    }
+                }
+            }
+        }
+        private bool _isUpdatingFromHeader_AOI;
+        private void AOIItems_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+            {
+                SubscribeItems_AOI(e.NewItems.Cast<DieViewModel>());
+            }
+
+            if (e.OldItems != null)
+            {
+                UnsubscribeItems_AOI(e.OldItems.Cast<DieViewModel>());
+            }
+
+            UpdateSelectAllAOIState();
+        }
+
+        private void SubscribeItems_AOI(IEnumerable<DieViewModel> items)
+        {
+            foreach (var item in items)
+            {
+                item.PropertyChanged += AOI_Item_PropertyChanged;
+            }
+        }
+
+        private void UnsubscribeItems_AOI(IEnumerable<DieViewModel> items)
+        {
+            foreach (var item in items)
+            {
+                item.PropertyChanged -= AOI_Item_PropertyChanged;
+            }
+        }
+
+        private void AOI_Item_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(DieViewModel.IsAOIEnabled) && !_isUpdatingFromHeader_AOI)
+            {
+                UpdateSelectAllAOIState();
+            }
+        }
+
+        private void UpdateSelectAllAOIState()
+        {
+            if (TestResults == null || TestResults.Count == 0)
+            {
+                SelectAllAOI = false;
+                return;
+            }
+
+            int selectedCount = TestResults.Count(item => item.IsAOIEnabled);
+            int totalCount = TestResults.Count;
+
+            if (selectedCount == 0)
+            {
+                SelectAllAOI = false;
+            }
+            else if (selectedCount == totalCount)
+            {
+                SelectAllAOI = true;
+            }
+            else
+            {
+                SelectAllAOI = null; // 部分选中状态
+            }
+        }
+        #endregion AOI 全选/部分选中
         private void ExecuteSelectAllAOI(object obj)
         {
             // 遍历所有行，将IsAOIEnabled设为True（全选）

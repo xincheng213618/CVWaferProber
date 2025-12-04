@@ -374,25 +374,31 @@
                                     <DataGridTemplateColumn >
                                         <DataGridTemplateColumn.HeaderTemplate>
                                             <DataTemplate>
-                                                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                                <StackPanel HorizontalAlignment="Center" Orientation="Vertical">
                                                     <TextBlock
                                                         Margin="0,0,8,0"
                                                         VerticalAlignment="Center"
                                                         FontSize="12"
                                                         FontWeight="Bold"
                                                         Text="AOI" />
+                                                    <StackPanel  Orientation="Horizontal">
                                                     <!--  全选按钮  -->
-                                                    <Button
+                                                        <CheckBox x:Name="selectAllCheckBox" 
+                                  IsChecked="{Binding DataContext.SelectAllAOI, 
+                                          RelativeSource={RelativeSource AncestorType=DataGrid}}"                              
+                                  VerticalAlignment="Center"/>
+                                                        <!--<Button
                                                         Command="{Binding SelectAllAOICommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                         Content="{DynamicResource Maping.GridHeader.SelectAll}"
                                                         Style="{StaticResource HeaderActionButtonStyle}"
-                                                        ToolTip="{DynamicResource Maping.GridHeader.SelectAll}" />
+                                                        ToolTip="{DynamicResource Maping.GridHeader.SelectAll}" />-->
                                                     <!--  反选按钮  -->
                                                     <Button
                                                         Command="{Binding InvertSelectAOICommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                         Content="{DynamicResource Maping.GridHeader.ReverseSelection}"
                                                         Style="{StaticResource HeaderActionButtonStyle}"
                                                         ToolTip="{DynamicResource Maping.GridHeader.ReverseSelection}" />
+                                                </StackPanel>
                                                 </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.HeaderTemplate>
@@ -401,7 +407,7 @@
                                                 <CheckBox
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
-                                                    IsChecked="{Binding IsAOIEnabled, Mode=TwoWay}"
+                                                    IsChecked="{Binding IsAOIEnabled, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
                                                     IsHitTestVisible="True"
                                                     Style="{StaticResource CellCheckBoxStyle}" />
                                             </DataTemplate>
