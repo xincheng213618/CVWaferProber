@@ -2,7 +2,9 @@
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
+using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Input;
 
 namespace CVWaferProber.ViewModels
 {
@@ -51,6 +53,7 @@ namespace CVWaferProber.ViewModels
             this.chipViewModel = die;
             this.IsIVLCameraEnabled = false;
             this.IsChinese = GetCurrentLanguage() == "Chinese";
+           
         }
 
         public ChipStatus? Status => chipViewModel?.Status;
@@ -147,5 +150,6 @@ namespace CVWaferProber.ViewModels
         //    MessageBox.Show($"已成功将「{assignValue}」赋给所有 {_employeeList.Count} 行的「部门」列！");
         //    txtColumnValue.Clear();
         //}
+       
     }
 }

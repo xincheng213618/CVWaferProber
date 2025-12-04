@@ -20,6 +20,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 
+
 namespace CVWaferProber.ViewModels
 {
     public class MainViewModel : ViewModelBase
@@ -62,6 +63,8 @@ namespace CVWaferProber.ViewModels
         public ICommand LoadMappingFileCommand { get; }
         public ICommand ClearMappingCommand { get; }
         public ICommand FlowLoadCommand { get; }
+        public ICommand ExitCommand { get; }
+        public ICommand ResetLayoutCommand { get; }
         public ICommand StartAutoTestCommand { get; }
         public ICommand StopAutoTestCommand { get; }
         public ICommand StartManTestCommand { get; }
@@ -73,6 +76,10 @@ namespace CVWaferProber.ViewModels
         public ICommand ResetStatusCommand { get; }
         public ICommand RCRegCommand { get; }
         public ICommand OpenVEyeWindowCommand { get; }
+
+        // ========== 1. AOI列的全选/反选命令 ==========
+        public ICommand SelectAllAOICommand { get; }
+        public ICommand InvertSelectAOICommand { get; }
         public ObservableCollection<DieViewModel> TestResults { get; } = new ObservableCollection<DieViewModel>();
         public RangeEnabledObservableCollection<FlowViewModel> FlowItems { get; } = new RangeEnabledObservableCollection<FlowViewModel>();
         public ObservableCollection<WPFlowViewModel> WPFlows { get; } = new ObservableCollection<WPFlowViewModel>();
@@ -117,6 +124,34 @@ namespace CVWaferProber.ViewModels
             {
                 SetProperty(ref _isAutoSN, value);
             }
+        }
+        // 1. 面板显示状态属性（右上角相机面板默认隐藏）
+        private bool _isMappingPanelVisible = true;
+        public bool IsMappingPanelVisible
+        {
+            get => _isMappingPanelVisible;
+            set { _isMappingPanelVisible = value; OnPropertyChanged(); }
+        }
+
+        private bool _isCameraPanelVisible = false; // 初始隐藏
+        public bool IsCameraPanelVisible
+        {
+            get => _isCameraPanelVisible;
+            set { _isCameraPanelVisible = value; OnPropertyChanged(); }
+        }
+
+        private bool _isSPPanelVisible = true;
+        public bool IsSPPanelVisible
+        {
+            get => _isSPPanelVisible;
+            set { _isSPPanelVisible = value; OnPropertyChanged(); }
+        }
+
+        private bool _isLogPanelVisible = true;
+        public bool IsLogPanelVisible
+        {
+            get => _isLogPanelVisible;
+            set { _isLogPanelVisible = value; OnPropertyChanged(); }
         }
 
         private readonly Random _random = new Random();
@@ -187,6 +222,37 @@ namespace CVWaferProber.ViewModels
             FlowLoadCommand = new RelayCommand(_ => LoadBuzWPFlows());
             RCRegCommand = new RelayCommand(_ => RCReg());
 
+            // 初始化数据源（实际项目中是从文件/接口加载）
+            TestResults = new ObservableCollection<DieViewModel>();
+
+
+            // 绑定命令到方法
+            SelectAllAOICommand = new RelayCommand(ExecuteSelectAllAOI);
+            InvertSelectAOICommand = new RelayCommand(ExecuteInvertSelectAOI);
+            // 绑定退出命令：执行 Application.Shutdown() 关闭整个程序
+            ExitCommand = new CVImgRelayCommand(() =>
+            {
+                //添加退出确认提示（用户点击“是”才退出）
+                var result = MessageBox.Show(
+                    "是否确定退出程序？",
+                    "退出提示",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    Application.Current.Shutdown(); // 关闭应用程序
+                }
+            });
+            // 绑定重置布局命令（使用你的CVImgRelayCommand）
+            ResetLayoutCommand = new CVImgRelayCommand(() =>
+            {
+                // 恢复所有面板为默认显示（true）
+                IsMappingPanelVisible = true;
+                IsCameraPanelVisible = true;
+                IsSPPanelVisible = true;
+              //  IsLogPanelVisible = true;
+            });
             InitMysqlCfg();
             //
             ProberId = "CVProber01";
@@ -208,7 +274,24 @@ namespace CVWaferProber.ViewModels
             aoiService = new AOIService(CustomImageVM, rcModel);
             aoiService.TestingCompleted += OnTestingCompleted;
         }
+        // ========== AOI列逻辑 ==========
+        private void ExecuteSelectAllAOI(object obj)
+        {
+            // 遍历所有行，将IsAOIEnabled设为True（全选）
+            foreach (var item in TestResults)
+            {
+                item.IsAOIEnabled = true;
+            }
+        }
 
+        private void ExecuteInvertSelectAOI(object obj)
+        {
+            // 遍历所有行，将IsAOIEnabled取反（反选）
+            foreach (var item in TestResults)
+            {
+                item.IsAOIEnabled = !item.IsAOIEnabled;
+            }
+        }
         private void InitMysqlCfg()
         {
             var rcExeFile = ServiceHelper.GetServiceExecutablePath("RegistrationCenterService");

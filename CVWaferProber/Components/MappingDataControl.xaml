@@ -8,11 +8,51 @@
     xmlns:local="clr-namespace:CVWaferProber.Components"
     xmlns:map="clr-namespace:ChipMapping.Views;assembly=ChipMapping"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="clr-namespace:CVWaferProber.ViewModels">
-
+    xmlns:viewmodels="clr-namespace:CVWaferProber.ViewModels" >
+   
     <UserControl.Resources>
         <cv:StatusToColorConverter x:Key="StatusColorConverter" />
         <ccv:NotBooleanConverter x:Key="NotBooleanConverter" />
+        <!--  新增：表头Checkbox样式（统一外观）  -->
+        <Style x:Key="HeaderCheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Margin" Value="1,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+        </Style>
+        <!--  表头按钮样式（统一外观，适配紧凑布局）  -->
+        <Style x:Key="HeaderActionButtonStyle" TargetType="Button">
+            <Setter Property="Margin" Value="1,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="20" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Background" Value="#FFE0E0E0" />
+            <Setter Property="BorderBrush" Value="#FFCCCCCC" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FF0078D7" />
+                    <Setter Property="Foreground" Value="White" />
+                    <Setter Property="BorderBrush" Value="#FF005FB8" />
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#FF005FB8" />
+                    <Setter Property="BorderBrush" Value="#FF00479E" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <!--  单元格复选框样式（保持原有）  -->
+        <Style x:Key="CellCheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Margin" Value="1,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+        </Style>
     </UserControl.Resources>
 
     <Border
@@ -137,7 +177,6 @@
                                                 Text="{Binding MappingCsvFilePath}"
                                                 TextTrimming="CharacterEllipsis" />
                                         </DockPanel>
-
                                     </DockPanel>
                                 </Border>
 
@@ -311,96 +350,194 @@
                             <DataGrid
                                 x:Name="TestResultDataGrid"
                                 AutoGenerateColumns="False"
-                                IsReadOnly="True"
+                                HorizontalScrollBarVisibility="Auto"
+                                IsReadOnly="False"
                                 ItemsSource="{Binding TestResults}"
                                 SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
                                 SelectionMode="Single"
-                                SelectionUnit="FullRow">
+                                SelectionUnit="FullRow"
+                                VerticalScrollBarVisibility="Auto">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn
-                                        Width="50"
+                                        
                                         Binding="{Binding Id}"
                                         Header="{DynamicResource GridHeader.No}" />
                                     <DataGridTextColumn
-                                        Width="60"
+                                       
                                         Binding="{Binding MapY}"
                                         Header="{DynamicResource Maping.GridHeader.Row}" />
                                     <DataGridTextColumn
-                                        Width="60"
+                                        
                                         Binding="{Binding MapX}"
                                         Header="{DynamicResource Maping.GridHeader.Col}" />
-                                    <!--  1.  AOI（Checkbox列）  -->
-                                    <DataGridTemplateColumn Width="*" Header="AOI">
+                                    <!--  1. AOI列（全选/反选改为按钮）  -->
+                                    <DataGridTemplateColumn >
+                                        <DataGridTemplateColumn.HeaderTemplate>
+                                            <DataTemplate>
+                                                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                                    <TextBlock
+                                                        Margin="0,0,8,0"
+                                                        VerticalAlignment="Center"
+                                                        FontSize="12"
+                                                        FontWeight="Bold"
+                                                        Text="AOI" />
+                                                    <!--  全选按钮  -->
+                                                    <Button
+                                                        Command="{Binding SelectAllAOICommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        Content="{DynamicResource Maping.GridHeader.SelectAll}"
+                                                        Style="{StaticResource HeaderActionButtonStyle}"
+                                                        ToolTip="{DynamicResource Maping.GridHeader.SelectAll}" />
+                                                    <!--  反选按钮  -->
+                                                    <Button
+                                                        Command="{Binding InvertSelectAOICommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        Content="{DynamicResource Maping.GridHeader.ReverseSelection}"
+                                                        Style="{StaticResource HeaderActionButtonStyle}"
+                                                        ToolTip="{DynamicResource Maping.GridHeader.ReverseSelection}" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.HeaderTemplate>
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <CheckBox
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
                                                     IsChecked="{Binding IsAOIEnabled, Mode=TwoWay}"
-                                                    IsHitTestVisible="True" />
-                                                <!--  允许点击  -->
+                                                    IsHitTestVisible="True"
+                                                    Style="{StaticResource CellCheckBoxStyle}" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <!--  2. IVL（Checkbox列）  -->
-                                    <DataGridTemplateColumn Width="*" Header="IVL">
+
+                                    <!--  2. IVL列（全选/反选改为按钮）  -->
+                                    <DataGridTemplateColumn >
+                                        <DataGridTemplateColumn.HeaderTemplate>
+                                            <DataTemplate>
+                                                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                                    <TextBlock
+                                                        Margin="0,0,8,0"
+                                                        VerticalAlignment="Center"
+                                                        FontSize="12"
+                                                        FontWeight="Bold"
+                                                        Text="IVL" />
+                                                    <Button
+                                                        Command="{Binding SelectAllIVLCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        Content="{DynamicResource Maping.GridHeader.SelectAll}"
+                                                        Style="{StaticResource HeaderActionButtonStyle}"
+                                                        ToolTip="{DynamicResource Maping.GridHeader.SelectAll}" />
+                                                    <Button
+                                                        Command="{Binding InvertSelectIVLCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        Content="{DynamicResource Maping.GridHeader.ReverseSelection}"
+                                                        Style="{StaticResource HeaderActionButtonStyle}"
+                                                        ToolTip="{DynamicResource Maping.GridHeader.ReverseSelection}" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.HeaderTemplate>
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <CheckBox
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
                                                     IsChecked="{Binding IsIVLEnabled, Mode=TwoWay}"
-                                                    IsHitTestVisible="True" />
+                                                    IsHitTestVisible="True"
+                                                    Style="{StaticResource CellCheckBoxStyle}" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <!--  1.  EQE（Checkbox列）  -->
-                                    <DataGridTemplateColumn Width="*" Header="EQE">
+
+                                    <!--  3. EQE列（全选/反选改为按钮）  -->
+                                    <DataGridTemplateColumn >
+                                        <DataGridTemplateColumn.HeaderTemplate>
+                                            <DataTemplate>
+                                                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                                    <TextBlock
+                                                        Margin="0,0,8,0"
+                                                        VerticalAlignment="Center"
+                                                        FontSize="12"
+                                                        FontWeight="Bold"
+                                                        Text="EQE" />
+                                                    <Button
+                                                        Command="{Binding SelectAllEQECommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        Content="{DynamicResource Maping.GridHeader.SelectAll}"
+                                                        Style="{StaticResource HeaderActionButtonStyle}"
+                                                        ToolTip="{DynamicResource Maping.GridHeader.SelectAll}" />
+                                                    <Button
+                                                        Command="{Binding InvertSelectEQECommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        Content="{DynamicResource Maping.GridHeader.ReverseSelection}"
+                                                        Style="{StaticResource HeaderActionButtonStyle}"
+                                                        ToolTip="{DynamicResource Maping.GridHeader.ReverseSelection}" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.HeaderTemplate>
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <CheckBox
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
                                                     IsChecked="{Binding IsEQEEnabled, Mode=TwoWay}"
-                                                    IsHitTestVisible="True" />
-                                                <!--  允许点击  -->
+                                                    IsHitTestVisible="True"
+                                                    Style="{StaticResource CellCheckBoxStyle}" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <!--  2. VAM（Checkbox列）  -->
-                                    <DataGridTemplateColumn Width="*" Header="VAM">
+
+                                    <!--  4. VAM列（全选/反选改为按钮）  -->
+                                    <DataGridTemplateColumn >
+                                        <DataGridTemplateColumn.HeaderTemplate>
+                                            <DataTemplate>
+                                                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                                    <TextBlock
+                                                        Margin="0,0,8,0"
+                                                        VerticalAlignment="Center"
+                                                        FontSize="12"
+                                                        FontWeight="Bold"
+                                                        Text="VAM" />
+                                                    <Button
+                                                        Command="{Binding SelectAllVAMCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        Content="{DynamicResource Maping.GridHeader.SelectAll}"
+                                                        Style="{StaticResource HeaderActionButtonStyle}"
+                                                        ToolTip="{DynamicResource Maping.GridHeader.SelectAll}" />
+                                                    <Button
+                                                        Command="{Binding InvertSelectVAMCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        Content="{DynamicResource Maping.GridHeader.ReverseSelection}"
+                                                        Style="{StaticResource HeaderActionButtonStyle}"
+                                                        ToolTip="{DynamicResource Maping.GridHeader.ReverseSelection}" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.HeaderTemplate>
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <CheckBox
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
                                                     IsChecked="{Binding IsVAMEnabled, Mode=TwoWay}"
-                                                    IsHitTestVisible="True" />
+                                                    IsHitTestVisible="True"
+                                                    Style="{StaticResource CellCheckBoxStyle}" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridTextColumn
-                                        Width="250"
+                                        
                                         Binding="{Binding SerialNumber, Mode=TwoWay}"
                                         Header="{DynamicResource Maping.GridHeader.SerialNumber}" />
                                     <DataGridTextColumn
-                                        Width="180"
-                                        Binding="{Binding StartTestTime}"
-                                        Header="{DynamicResource Maping.GridHeader.StartTestTime}" />
-                                    <DataGridTextColumn
-                                        Width="180"
-                                        Binding="{Binding EndTestTime}"
-                                        Header="{DynamicResource Maping.GridHeader.EndTestTime}" />
-                                    <DataGridTextColumn
-                                        Width="*"
+                                      
                                         Binding="{Binding DisplayStatus}"
                                         Header="{DynamicResource Maping.GridHeader.TestStatus}" />
                                     <DataGridTextColumn
-                                        Width="100"
+                                       
                                         Binding="{Binding DataValue}"
                                         Header="{DynamicResource Maping.GridHeader.Uniformity}" />
                                     <DataGridTextColumn
-                                        Width="180"
+                                       
+                                        Binding="{Binding StartTestTime}"
+                                        Header="{DynamicResource Maping.GridHeader.StartTestTime}" />
+                                    <DataGridTextColumn
+                                      
+                                        Binding="{Binding EndTestTime}"
+                                        Header="{DynamicResource Maping.GridHeader.EndTestTime}" />
+
+                                    <DataGridTextColumn
+                                       
                                         Binding="{Binding TotalTime}"
                                         Header="{DynamicResource Maping.GridHeader.TotalTime}" />
                                 </DataGrid.Columns>
@@ -412,6 +549,7 @@
                                 </DataGrid.RowStyle>
                             </DataGrid>
                         </Border>
+
                     </Grid>
                 </Border>
             </Grid>

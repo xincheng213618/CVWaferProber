@@ -30,6 +30,8 @@
     <sys:String x:Key="Maping.GridHeader.Col">Col</sys:String>
     <sys:String x:Key="Maping.GridHeader.ScreenX">ScreenX</sys:String>
     <sys:String x:Key="Maping.GridHeader.ScreenY">ScreenY</sys:String>
+    <sys:String x:Key="Maping.GridHeader.SelectAll">SelectAll</sys:String>
+    <sys:String x:Key="Maping.GridHeader.ReverseSelection">ReverseSelection</sys:String>
     <sys:String x:Key="Maping.GridHeader.SerialNumber">SerialNumber</sys:String>
     <sys:String x:Key="Maping.GridHeader.StartTestTime">StartTestTime</sys:String>
     <sys:String x:Key="Maping.GridHeader.EndTestTime">EndTestTime</sys:String>
@@ -42,6 +44,8 @@
     <sys:String x:Key="Dock.Layout.Title.SP">Spectral/IVL</sys:String>
     <sys:String x:Key="Dock.Layout.Title.Log">SysLog</sys:String>
 
+    <sys:String x:Key="Chart.LineColor">LineColor:</sys:String>
+    <sys:String x:Key="Chart.Reset">Reset</sys:String>
     <!--  光谱曲线相关  -->
     <sys:String x:Key="Sp.Spectral">Spectral</sys:String>
     <sys:String x:Key="Sp.Overview">Overview</sys:String>
@@ -108,4 +112,16 @@
     <sys:String x:Key="Image.GridHeader.FilePath">FilePath</sys:String>
     <sys:String x:Key="Image.GridHeader.FileSize">FileSize</sys:String>
     <sys:String x:Key="Image.GridHeader.Status">Status</sys:String>
+
+    <!--  菜单相关  -->
+    <sys:String x:Key="Menu.View">View(V)</sys:String>
+    <sys:String x:Key="Menu.MappingPanelVisible">MappingPanelVisible</sys:String>
+    <sys:String x:Key="Menu.CameraPanelVisible">CameraPanelVisible</sys:String>
+    <sys:String x:Key="Menu.SPPanelVisible">SPPanelVisible</sys:String>
+    <sys:String x:Key="Menu.LogPanelVisible">LogPanelVisible</sys:String>
+    <sys:String x:Key="Menu.ResetLayout">ResetLayout</sys:String>
+    <sys:String x:Key="Menu.Help">Help(H)</sys:String>
+    <sys:String x:Key="Menu.UserManual">User Manual</sys:String>
+    <sys:String x:Key="Menu.About">About</sys:String>
+    <sys:String x:Key="Menu.Exit">Exit(Alt+F4)</sys:String>
 </ResourceDictionary>

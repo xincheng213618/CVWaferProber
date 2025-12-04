@@ -29,6 +29,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using static FreeSql.Internal.GlobalFilter;
 using static Org.BouncyCastle.Math.EC.ECCurve;
@@ -125,7 +126,151 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 }
             }
         }
+        private SolidColorBrush _spectralLineColor = new SolidColorBrush(Colors.Blue);
 
+        public SolidColorBrush SpectralLineColor
+        {
+            get => _spectralLineColor;
+            set
+            {
+                if (_spectralLineColor != value)
+                {
+                    _spectralLineColor = value;
+                    OnPropertyChanged(nameof(SpectralLineColor));
+                    UpdateChartLineColor(); // 更新图表颜色
+                }
+            }
+        }
+        private SolidColorBrush _ivLineColor = new SolidColorBrush(Colors.Blue);
+        public SolidColorBrush IVLineColor
+        {
+            get => _ivLineColor;
+            set
+            {
+                if (_ivLineColor != value)
+                {
+                    _ivLineColor = value;
+                    OnPropertyChanged(nameof(IVLineColor));
+                    UpdateIVChartLineColor();
+                }
+            }
+        }
+        private void UpdateIVChartLineColor()
+        {
+            if (IVPlotModel?.Series != null && IVLineColor != null)
+            {
+                // 解决颜色转换错误：使用OxyColor.FromArgb转换
+                OxyColor oxyColor = OxyColor.FromArgb(
+                    IVLineColor.Color.A,
+                    IVLineColor.Color.R,
+                    IVLineColor.Color.G,
+                    IVLineColor.Color.B);
+
+                foreach (var lineSeries in IVPlotModel.Series.OfType<LineSeries>())
+                {
+                    lineSeries.Color = oxyColor;
+                    // 确保IV图表的数据点颜色也与线条一致
+                    lineSeries.MarkerFill = oxyColor;
+                    lineSeries.MarkerStroke = oxyColor;
+                }
+                IVPlotModel.InvalidatePlot(true);
+            }
+        }
+        private SolidColorBrush _ilLineColor = new SolidColorBrush(Colors.Blue);
+        public SolidColorBrush ILLineColor
+        {
+            get => _ilLineColor;
+            set
+            {
+                if (_ilLineColor != value)
+                {
+                    _ilLineColor = value;
+                    OnPropertyChanged(nameof(ILLineColor));
+                    UpdateILChartLineColor();
+                }
+            }
+        }
+        private void UpdateILChartLineColor()
+        {
+            if (ILPlotModel?.Series != null && ILLineColor != null)
+            {
+                // 解决颜色转换错误：使用OxyColor.FromArgb转换
+                OxyColor oxyColor = OxyColor.FromArgb(
+                    ILLineColor.Color.A,
+                    ILLineColor.Color.R,
+                    ILLineColor.Color.G,
+                    ILLineColor.Color.B);
+
+                foreach (var lineSeries in ILPlotModel.Series.OfType<LineSeries>())
+                {
+                    lineSeries.Color = oxyColor;
+                    // 确保IV图表的数据点颜色也与线条一致
+                    lineSeries.MarkerFill = oxyColor;
+                    lineSeries.MarkerStroke = oxyColor;
+                }
+                ILPlotModel.InvalidatePlot(true);
+            }
+        }
+        private SolidColorBrush _vlLineColor = new SolidColorBrush(Colors.Blue);
+        public SolidColorBrush VLLineColor
+        {
+            get => _vlLineColor;
+            set
+            {
+                if (_vlLineColor != value)
+                {
+                    _vlLineColor = value;
+                    OnPropertyChanged(nameof(VLLineColor));
+                    UpdateVLChartLineColor();
+                }
+            }
+        }
+        private void UpdateVLChartLineColor()
+        {
+            if (VLPlotModel?.Series != null && VLLineColor != null)
+            {
+                // 解决颜色转换错误：使用OxyColor.FromArgb转换
+                OxyColor oxyColor = OxyColor.FromArgb(
+                    VLLineColor.Color.A,
+                    VLLineColor.Color.R,
+                    VLLineColor.Color.G,
+                    VLLineColor.Color.B);
+
+                foreach (var lineSeries in VLPlotModel.Series.OfType<LineSeries>())
+                {
+                    lineSeries.Color = oxyColor;
+                    // 确保IV图表的数据点颜色也与线条一致
+                    lineSeries.MarkerFill = oxyColor;
+                    lineSeries.MarkerStroke = oxyColor;
+                }
+                VLPlotModel.InvalidatePlot(true);
+            }
+        }
+        private void UpdateChartLineColor()
+        {
+            // 更新所有相关图表的线条颜色
+            UpdateSeriesColor(PlotModel);
+            //UpdateSeriesColor(OverviewSpectralPlotModel);
+            // 其他图表...
+        }
+        private void UpdateSeriesColor(PlotModel plotModel)
+        {
+            if (plotModel?.Series != null)
+            {
+                // 将WPF颜色转换为OxyPlot颜色
+                OxyColor oxyColor = OxyColor.FromArgb(
+                    SpectralLineColor.Color.A,
+                    SpectralLineColor.Color.R,
+                    SpectralLineColor.Color.G,
+                    SpectralLineColor.Color.B);
+
+                foreach (var lineSeries in plotModel.Series.OfType<LineSeries>())
+                {
+                    lineSeries.Color = oxyColor;  // 使用转换后的颜色
+                }
+                plotModel.InvalidatePlot(true);
+            }
+        }
         public ObservableCollection<SpectrumMeasurement> Measurements
         {
             get => _measurements;
@@ -218,8 +363,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     Title = seriesTitle,
                     // 选中：红色；未选中：循环半透明颜色
                     Color = isSelected ? OxyColors.Red : unselectedColors[colorIndex % unselectedColors.Length],
-                    // 选中：加粗（2.0px）；未选中：细线条（1.2px）
-                    StrokeThickness = isSelected ? 2.0 : 1.2,
+                    // 选中：加粗（2.0px）；未选中：细线条（1.5px）
+                    StrokeThickness = isSelected ? 2.0 : 1.5,
                     // 选中：显示圆形标记点；未选中：无标记点
                     //MarkerType = isSelected ? MarkerType.Circle : MarkerType.None,
                    // MarkerSize = 3,
