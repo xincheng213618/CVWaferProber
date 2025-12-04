@@ -81,8 +81,14 @@ namespace CVWaferProber.ViewModels
         public ICommand OpenVEyeWindowCommand { get; }
 
         // ========== 1. AOI列的全选/反选命令 ==========
-        public ICommand SelectAllAOICommand { get; }
+        //public ICommand SelectAllAOICommand { get; }
+        //public ICommand SelectAllIVLCommand { get; }
+        //public ICommand SelectAllEQECommand { get; }
+        //public ICommand SelectAllVAMCommand { get; }
         public ICommand InvertSelectAOICommand { get; }
+        public ICommand InvertSelectIVLCommand { get; }
+        public ICommand InvertSelectEQECommand { get; }
+        public ICommand InvertSelectVAMCommand { get; }
         public ObservableCollection<DieViewModel> TestResults { get; } = new ObservableCollection<DieViewModel>();
         public RangeEnabledObservableCollection<FlowViewModel> FlowItems { get; } = new RangeEnabledObservableCollection<FlowViewModel>();
         public ObservableCollection<WPFlowViewModel> WPFlows { get; } = new ObservableCollection<WPFlowViewModel>();
@@ -229,9 +235,20 @@ namespace CVWaferProber.ViewModels
             TestResults = new ObservableCollection<DieViewModel>();
 
             TestResults.CollectionChanged += AOIItems_CollectionChanged;
+            TestResults.CollectionChanged += IVLItems_CollectionChanged;
+            TestResults.CollectionChanged += EQEItems_CollectionChanged;
+            TestResults.CollectionChanged += VAMItems_CollectionChanged;
+            
             // 绑定命令到方法
-            SelectAllAOICommand = new RelayCommand(ExecuteSelectAllAOI);
+            //SelectAllAOICommand = new RelayCommand(ExecuteSelectAllAOI);
+            //SelectAllIVLCommand = new RelayCommand(ExecuteSelectAllIVL);
+            //SelectAllEQECommand = new RelayCommand(ExecuteSelectAllEQE);
+            //SelectAllVAMCommand = new RelayCommand(ExecuteSelectAllVAM);
             InvertSelectAOICommand = new RelayCommand(ExecuteInvertSelectAOI);
+            InvertSelectIVLCommand = new RelayCommand(ExecuteInvertSelectIVL);
+            InvertSelectEQECommand = new RelayCommand(ExecuteInvertSelectEQE);
+            InvertSelectVAMCommand = new RelayCommand(ExecuteInvertSelectVAM);
+           
             // 绑定退出命令：执行 Application.Shutdown() 关闭整个程序
             ExitCommand = new CVImgRelayCommand(() =>
             {
@@ -278,6 +295,11 @@ namespace CVWaferProber.ViewModels
             aoiService.TestingCompleted += OnTestingCompleted;
 
             SubscribeItems_AOI(TestResults);
+            SubscribeItems_IVL(TestResults);
+            SubscribeItems_EQE(TestResults);
+            SubscribeItems_VAM(TestResults);
+
+
         }
         // ========== AOI列逻辑 ==========
         #region AOI 全选/部分选中
@@ -377,23 +399,341 @@ namespace CVWaferProber.ViewModels
             }
         }
         #endregion AOI 全选/部分选中
-        private void ExecuteSelectAllAOI(object obj)
-        {
-            // 遍历所有行，将IsAOIEnabled设为True（全选）
-            foreach (var item in TestResults)
-            {
-                item.IsAOIEnabled = true;
-            }
-        }
-
+        #region AOI 反选
         private void ExecuteInvertSelectAOI(object obj)
         {
-            // 遍历所有行，将IsAOIEnabled取反（反选）
+            // 遍历所有行，将IsAOIEnabled设为True（全选）
             foreach (var item in TestResults)
             {
                 item.IsAOIEnabled = !item.IsAOIEnabled;
             }
         }
+        #endregion AOI 反选
+        // ========== IVL列逻辑 ==========
+        #region IVL 全选/部分选中
+        private bool? _selectAllIVL = false;
+        public bool? SelectAllIVL
+        {
+            get => _selectAllIVL;
+            set
+            {
+                if (_selectAllIVL != value)
+                {
+                    _selectAllIVL = value;
+                    OnPropertyChanged(nameof(SelectAllIVL));
+
+                    if (value.HasValue)
+                    {
+                        // 避免循环更新
+                        _isUpdatingFromHeader_IVL = true;
+                        try
+                        {
+                            // 更新所有项目的选中状态
+                            foreach (var item in TestResults)
+                            {
+                                item.IsIVLEnabled = value.Value;
+                            }
+                        }
+                        finally
+                        {
+                            _isUpdatingFromHeader_IVL = false;
+                        }
+                    }
+                }
+            }
+        }
+        private bool _isUpdatingFromHeader_IVL;
+        private void IVLItems_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+            {
+                SubscribeItems_IVL(e.NewItems.Cast<DieViewModel>());
+            }
+
+            if (e.OldItems != null)
+            {
+                UnsubscribeItems_IVL(e.OldItems.Cast<DieViewModel>());
+            }
+
+            UpdateSelectAllIVLState();
+        }
+
+        private void SubscribeItems_IVL(IEnumerable<DieViewModel> items)
+        {
+            foreach (var item in items)
+            {
+                item.PropertyChanged += IVL_Item_PropertyChanged;
+            }
+        }
+
+        private void UnsubscribeItems_IVL(IEnumerable<DieViewModel> items)
+        {
+            foreach (var item in items)
+            {
+                item.PropertyChanged -= IVL_Item_PropertyChanged;
+            }
+        }
+
+        private void IVL_Item_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(DieViewModel.IsIVLEnabled) && !_isUpdatingFromHeader_IVL)
+            {
+                UpdateSelectAllIVLState();
+            }
+        }
+
+        private void UpdateSelectAllIVLState()
+        {
+            if (TestResults == null || TestResults.Count == 0)
+            {
+                SelectAllIVL = false;
+                return;
+            }
+
+            int selectedCount = TestResults.Count(item => item.IsIVLEnabled);
+            int totalCount = TestResults.Count;
+
+            if (selectedCount == 0)
+            {
+                SelectAllIVL = false;
+            }
+            else if (selectedCount == totalCount)
+            {
+                SelectAllIVL = true;
+            }
+            else
+            {
+                SelectAllIVL = null; // 部分选中状态
+            }
+        }
+        #endregion AOI 全选/部分选中
+        #region IVL 反选
+        private void ExecuteInvertSelectIVL(object obj)
+        {
+            // 遍历所有行，将IsAOIEnabled设为True（全选）
+            foreach (var item in TestResults)
+            {
+                item.IsIVLEnabled = !item.IsIVLEnabled;
+            }
+        }
+        #endregion IVL 反选
+        // ========== EQE列逻辑 ==========
+        #region EQE 全选/部分选中
+        private bool? _selectAllEQE = false;
+        public bool? SelectAllEQE
+        {
+            get => _selectAllEQE;
+            set
+            {
+                if (_selectAllEQE != value)
+                {
+                    _selectAllEQE = value;
+                    OnPropertyChanged(nameof(SelectAllEQE));
+
+                    if (value.HasValue)
+                    {
+                        // 避免循环更新
+                        _isUpdatingFromHeader_EQE = true;
+                        try
+                        {
+                            // 更新所有项目的选中状态
+                            foreach (var item in TestResults)
+                            {
+                                item.IsEQEEnabled = value.Value;
+                            }
+                        }
+                        finally
+                        {
+                            _isUpdatingFromHeader_EQE = false;
+                        }
+                    }
+                }
+            }
+        }
+        private bool _isUpdatingFromHeader_EQE;
+        private void EQEItems_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+            {
+                SubscribeItems_EQE(e.NewItems.Cast<DieViewModel>());
+            }
+
+            if (e.OldItems != null)
+            {
+                UnsubscribeItems_EQE(e.OldItems.Cast<DieViewModel>());
+            }
+
+            UpdateSelectAllEQEState();
+        }
+
+        private void SubscribeItems_EQE(IEnumerable<DieViewModel> items)
+        {
+            foreach (var item in items)
+            {
+                item.PropertyChanged += EQE_Item_PropertyChanged;
+            }
+        }
+
+        private void UnsubscribeItems_EQE(IEnumerable<DieViewModel> items)
+        {
+            foreach (var item in items)
+            {
+                item.PropertyChanged -= EQE_Item_PropertyChanged;
+            }
+        }
+
+        private void EQE_Item_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(DieViewModel.IsAOIEnabled) && !_isUpdatingFromHeader_EQE)
+            {
+                UpdateSelectAllEQEState();
+            }
+        }
+
+        private void UpdateSelectAllEQEState()
+        {
+            if (TestResults == null || TestResults.Count == 0)
+            {
+                SelectAllEQE = false;
+                return;
+            }
+
+            int selectedCount = TestResults.Count(item => item.IsEQEEnabled);
+            int totalCount = TestResults.Count;
+
+            if (selectedCount == 0)
+            {
+                SelectAllEQE = false;
+            }
+            else if (selectedCount == totalCount)
+            {
+                SelectAllEQE = true;
+            }
+            else
+            {
+                SelectAllEQE = null; // 部分选中状态
+            }
+        }
+        #endregion EQE 全选/部分选中
+        #region EQE 反选
+        private void ExecuteInvertSelectEQE(object obj)
+        {
+            // 遍历所有行，将IsAOIEnabled设为True（全选）
+            foreach (var item in TestResults)
+            {
+                item.IsEQEEnabled = !item.IsEQEEnabled;
+            }
+        }
+        #endregion EQE 反选
+        // ========== VAM列逻辑 ==========
+        #region AOI 全选/部分选中
+        private bool? _selectAllVAM = false;
+        public bool? SelectAllVAM
+        {
+            get => _selectAllVAM;
+            set
+            {
+                if (_selectAllVAM != value)
+                {
+                    _selectAllVAM = value;
+                    OnPropertyChanged(nameof(SelectAllVAM));
+
+                    if (value.HasValue)
+                    {
+                        // 避免循环更新
+                        _isUpdatingFromHeader_VAM = true;
+                        try
+                        {
+                            // 更新所有项目的选中状态
+                            foreach (var item in TestResults)
+                            {
+                                item.IsVAMEnabled = value.Value;
+                            }
+                        }
+                        finally
+                        {
+                            _isUpdatingFromHeader_VAM = false;
+                        }
+                    }
+                }
+            }
+        }
+        private bool _isUpdatingFromHeader_VAM;
+        private void VAMItems_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+            {
+                SubscribeItems_VAM(e.NewItems.Cast<DieViewModel>());
+            }
+
+            if (e.OldItems != null)
+            {
+                UnsubscribeItems_VAM(e.OldItems.Cast<DieViewModel>());
+            }
+
+            UpdateSelectAllVAMState();
+        }
+
+        private void SubscribeItems_VAM(IEnumerable<DieViewModel> items)
+        {
+            foreach (var item in items)
+            {
+                item.PropertyChanged += VAM_Item_PropertyChanged;
+            }
+        }
+
+        private void UnsubscribeItems_VAM(IEnumerable<DieViewModel> items)
+        {
+            foreach (var item in items)
+            {
+                item.PropertyChanged -= VAM_Item_PropertyChanged;
+            }
+        }
+
+        private void VAM_Item_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(DieViewModel.IsVAMEnabled) && !_isUpdatingFromHeader_VAM)
+            {
+                UpdateSelectAllVAMState();
+            }
+        }
+
+        private void UpdateSelectAllVAMState()
+        {
+            if (TestResults == null || TestResults.Count == 0)
+            {
+                SelectAllVAM = false;
+                return;
+            }
+
+            int selectedCount = TestResults.Count(item => item.IsVAMEnabled);
+            int totalCount = TestResults.Count;
+
+            if (selectedCount == 0)
+            {
+                SelectAllVAM = false;
+            }
+            else if (selectedCount == totalCount)
+            {
+                SelectAllVAM = true;
+            }
+            else
+            {
+                SelectAllVAM = null; // 部分选中状态
+            }
+        }
+        #endregion VAM 全选/部分选中
+        #region VAM 反选
+        private void ExecuteInvertSelectVAM(object obj)
+        {
+            // 遍历所有行，将IsAOIEnabled设为True（全选）
+            foreach (var item in TestResults)
+            {
+                item.IsVAMEnabled = !item.IsVAMEnabled;
+            }
+        }
+        #endregion VAM 反选
+        
         private void InitMysqlCfg()
         {
             var rcExeFile = ServiceHelper.GetServiceExecutablePath("RegistrationCenterService");
