@@ -42,7 +42,10 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private PlotModel _IVPlotModel;
         private PlotModel _ILPlotModel;
         private PlotModel _VLPlotModel;
-      
+
+        // 总览图光谱X轴固定范围（350~800nm）
+        private readonly double _overviewSpectralXMin = 360;
+        private readonly double _overviewSpectralXMax = 800;
 
         public void NotifyPropertyChanged(string propertyName)
         {
@@ -634,7 +637,29 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         IsZoomEnabled = false, // 总览图禁用手动缩放
                         IsPanEnabled = false
                     };
-                    targetModel.Axes.Add(clonedAxis);
+                    // ========== 关键修改：总览光谱图强制锁定X轴650~800nm ==========
+            if (title == (string)Application.Current.FindResource("Sp.Spectral") || title == "光谱")
+            {
+                if (clonedAxis.Position == AxisPosition.Bottom) // X轴（波长）
+                {
+                    clonedAxis.Minimum = _overviewSpectralXMin; // 固定650
+                    clonedAxis.Maximum = _overviewSpectralXMax; // 固定800
+                    clonedAxis.AbsoluteMinimum = _overviewSpectralXMin; // 禁止自动缩小
+                    clonedAxis.AbsoluteMaximum = _overviewSpectralXMax; // 禁止自动扩大
+                }
+                else // Y轴（强度）保留自动适配
+                {
+                    clonedAxis.Minimum = double.NaN;
+                    clonedAxis.Maximum = double.NaN;
+                }
+            }
+            else // 其他总览图（IV/IL/VL）保留原有逻辑
+            {
+                clonedAxis.Minimum = double.NaN;
+                clonedAxis.Maximum = double.NaN;
+            }
+
+            targetModel.Axes.Add(clonedAxis);
                 }
             }
             return targetModel;
