@@ -514,8 +514,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             InitializeILPlotModel();
             InitializeVLPlotModel();
             InitializeIVLCameraModel();
-           
-            DeviceCode = "DEV.Spectrum.Default";
+            BtnResetStatus = new RelayCommand(IVResetStatus);
+             DeviceCode = "DEV.Spectrum.Default";
             #region 输出CSV文件
             ExportCommand = new RelayCommand((s) =>
             {
@@ -591,6 +591,12 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             InitializeOverviewPlotModels();
             
         }
+
+        private void IVResetStatus(object obj)
+        {
+            //OverviewIVPlotModel?.InvalidatePlot(true);
+        }
+
         // 初始化总览图的PlotModel（克隆子Tab配置并绑定数据）
         private void InitializeOverviewPlotModels()
         {
@@ -2154,5 +2160,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             public float AbsoluteSpectrum { get; set; } // 绝对光谱
         }
 
+        public ICommand BtnResetStatus { get; }
+       
     }
 }

@@ -424,6 +424,14 @@
                             <SolidColorBrush Color="WhiteSmoke" />
                             <SolidColorBrush Color="White" />
                         </ComboBox>
+                        <Button
+                            x:Name="HongZhi"
+                            Width="60"
+                            Height="20"
+                            Margin="2"
+                            HorizontalAlignment="Left"
+                            Content="{DynamicResource BtnResetStatus}"
+                            Command="{Binding BtnResetStatus}"/>
                     </StackPanel>
                     <!--  IV图表区域  -->
                     <oxy:PlotView
@@ -632,7 +640,7 @@
                         <TextBlock VerticalAlignment="Center" Text="{DynamicResource Chart.LineColor}" />
                         <ComboBox
                             Width="80"
-                            Height="20" 
+                            Height="20"
                             Margin="2"
                             SelectedValue="{Binding ILLineColor, Mode=TwoWay}">
                             <ComboBox.ItemTemplate>

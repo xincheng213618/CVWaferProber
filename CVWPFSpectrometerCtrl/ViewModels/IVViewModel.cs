@@ -273,7 +273,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             PlotModel.InvalidatePlot(true); // 强制刷新，应用新轴范围
         }
         
-        private void btnResetZoom_Click(object sender, RoutedEventArgs e)
+        public void btnResetZoom()
         {
             // 重置所有轴的缩放
             

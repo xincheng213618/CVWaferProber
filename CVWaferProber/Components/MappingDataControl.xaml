@@ -13,45 +13,125 @@
     <UserControl.Resources>
         <cv:StatusToColorConverter x:Key="StatusColorConverter" />
         <ccv:NotBooleanConverter x:Key="NotBooleanConverter" />
-        <!--  新增：表头Checkbox样式（统一外观）  -->
+        <!--  全局配色/圆角常量  -->
+        <SolidColorBrush x:Key="PrimaryColor" Color="#FF0078D7" />
+        <SolidColorBrush x:Key="PrimaryDarkColor" Color="#FF005FB8" />
+        <SolidColorBrush x:Key="PrimaryLightColor" Color="#FFE1EFFF" />
+        <SolidColorBrush x:Key="BorderGrayColor" Color="#FFCCCCCC" />
+        <CornerRadius x:Key="DefaultCornerRadius">2</CornerRadius>
+        <!--  表头Checkbox样式（自定义外观）  -->
         <Style x:Key="HeaderCheckBoxStyle" TargetType="CheckBox">
             <Setter Property="Margin" Value="1,0" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="HorizontalAlignment" Value="Center" />
             <Setter Property="Width" Value="16" />
             <Setter Property="Height" Value="16" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Grid Width="{TemplateBinding Width}" Height="{TemplateBinding Height}">
+                            <!--  未选中边框  -->
+                            <Border
+                                x:Name="Border"
+                                Background="White"
+                                BorderBrush="{StaticResource BorderGrayColor}"
+                                BorderThickness="1"
+                                CornerRadius="{StaticResource DefaultCornerRadius}" />
+                            <!--  选中对勾  -->
+                            <Path
+                                x:Name="CheckMark"
+                                Data="M2,7 L6,11 L13,4"
+                                Stroke="{StaticResource PrimaryColor}"
+                                StrokeLineJoin="Round"
+                                StrokeStartLineCap="Round"
+                                StrokeThickness="2"
+                                Visibility="Collapsed" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="{StaticResource PrimaryLightColor}" />
+                                <Setter TargetName="CheckMark" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource PrimaryColor}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
-        <!--  表头按钮样式（统一外观，适配紧凑布局）  -->
+
+        <!--  表头反选按钮样式（增强视觉/交互）  -->
         <Style x:Key="HeaderActionButtonStyle" TargetType="Button">
             <Setter Property="Margin" Value="1,0" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="HorizontalAlignment" Value="Center" />
-            <Setter Property="Width" Value="14.5" />
-            <Setter Property="Height" Value="13" />
+            <Setter Property="Width" Value="18" />
+            <Setter Property="Height" Value="17" />
             <Setter Property="FontSize" Value="10" />
+            <Setter Property="Foreground" Value="{StaticResource PrimaryColor}" />
             <Setter Property="Background" Value="White" />
-            <Setter Property="BorderBrush" Value="DimGray" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderGrayColor}" />
             <Setter Property="BorderThickness" Value="1" />
+            <!--<Setter Property="CornerRadius" Value="{StaticResource DefaultCornerRadius}"/>-->
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Content" Value="🔄" />
+            <!--  反选图标  -->
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#FF0078D7" />
+                    <Setter Property="Background" Value="{StaticResource PrimaryColor}" />
                     <Setter Property="Foreground" Value="White" />
-                    <Setter Property="BorderBrush" Value="#FF005FB8" />
+                    <Setter Property="BorderBrush" Value="{StaticResource PrimaryDarkColor}" />
                 </Trigger>
                 <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="#FF005FB8" />
+                    <Setter Property="Background" Value="{StaticResource PrimaryDarkColor}" />
                     <Setter Property="BorderBrush" Value="#FF00479E" />
+                    <Setter Property="Padding" Value="1" />
+                    <!--  按压微位移  -->
                 </Trigger>
             </Style.Triggers>
         </Style>
-        <!--  单元格复选框样式（保持原有）  -->
+
+        <!--  单元格复选框样式（优化选中态）  -->
         <Style x:Key="CellCheckBoxStyle" TargetType="CheckBox">
             <Setter Property="Margin" Value="1,0" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="HorizontalAlignment" Value="Center" />
             <Setter Property="Width" Value="16" />
             <Setter Property="Height" Value="16" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Grid Width="{TemplateBinding Width}" Height="{TemplateBinding Height}">
+                            <Border
+                                x:Name="Border"
+                                Background="White"
+                                BorderBrush="{StaticResource BorderGrayColor}"
+                                BorderThickness="1"
+                                CornerRadius="{StaticResource DefaultCornerRadius}" />
+                            <Path
+                                x:Name="CheckMark"
+                                Data="M2,7 L6,11 L13,4"
+                                Stroke="White"
+                                StrokeLineJoin="Round"
+                                StrokeThickness="2"
+                                Visibility="Collapsed" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="{StaticResource PrimaryColor}" />
+                                <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource PrimaryColor}" />
+                                <Setter TargetName="CheckMark" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource PrimaryColor}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </UserControl.Resources>
 
@@ -377,7 +457,8 @@
                                                         <CheckBox
                                                             x:Name="selectAllCheckBox"
                                                             VerticalAlignment="Center"
-                                                            IsChecked="{Binding DataContext.SelectAllAOI, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                                            IsChecked="{Binding DataContext.SelectAllAOI, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            Style="{StaticResource HeaderCheckBoxStyle}" />
 
                                                         <!--  反选按钮  -->
                                                         <Button
@@ -416,7 +497,8 @@
                                                         <CheckBox
                                                             x:Name="selectAllCheckBox"
                                                             VerticalAlignment="Center"
-                                                            IsChecked="{Binding DataContext.SelectAllIVL, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                                            IsChecked="{Binding DataContext.SelectAllIVL, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            Style="{StaticResource HeaderCheckBoxStyle}" />
                                                         <Button
                                                             Command="{Binding DataContext.InvertSelectIVLCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                             Style="{StaticResource HeaderActionButtonStyle}"
@@ -454,7 +536,8 @@
                                                         <CheckBox
                                                             x:Name="selectAllCheckBox"
                                                             VerticalAlignment="Center"
-                                                            IsChecked="{Binding DataContext.SelectAllEQE, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                                            IsChecked="{Binding DataContext.SelectAllEQE, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            Style="{StaticResource HeaderCheckBoxStyle}" />
                                                         <Button
                                                             Command="{Binding DataContext.InvertSelectEQECommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                             Style="{StaticResource HeaderActionButtonStyle}"
@@ -491,7 +574,8 @@
                                                         <CheckBox
                                                             x:Name="selectAllCheckBox"
                                                             VerticalAlignment="Center"
-                                                            IsChecked="{Binding DataContext.SelectAllVAM, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                                            IsChecked="{Binding DataContext.SelectAllVAM, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            Style="{StaticResource HeaderCheckBoxStyle}" />
                                                         <Button
                                                             Command="{Binding DataContext.InvertSelectVAMCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                             Style="{StaticResource HeaderActionButtonStyle}"

@@ -240,10 +240,7 @@ namespace CVWaferProber.ViewModels
             TestResults.CollectionChanged += VAMItems_CollectionChanged;
             
             // 绑定命令到方法
-            //SelectAllAOICommand = new RelayCommand(ExecuteSelectAllAOI);
-            //SelectAllIVLCommand = new RelayCommand(ExecuteSelectAllIVL);
-            //SelectAllEQECommand = new RelayCommand(ExecuteSelectAllEQE);
-            //SelectAllVAMCommand = new RelayCommand(ExecuteSelectAllVAM);
+          
             InvertSelectAOICommand = new RelayCommand(ExecuteInvertSelectAOI);
             InvertSelectIVLCommand = new RelayCommand(ExecuteInvertSelectIVL);
             InvertSelectEQECommand = new RelayCommand(ExecuteInvertSelectEQE);
