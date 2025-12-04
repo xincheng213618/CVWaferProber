@@ -42,8 +42,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private PlotModel _IVPlotModel;
         private PlotModel _ILPlotModel;
         private PlotModel _VLPlotModel;
-        // 总览图光谱X轴固定范围（650~800nm）
-        private readonly double _overviewSpectralXMin = 650;
+
+        // 总览图光谱X轴固定范围（350~800nm）
+        private readonly double _overviewSpectralXMin = 360;
         private readonly double _overviewSpectralXMax = 800;
 
         public void NotifyPropertyChanged(string propertyName)
