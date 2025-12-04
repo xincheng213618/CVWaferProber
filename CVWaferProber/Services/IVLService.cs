@@ -1,12 +1,7 @@
-﻿using ColorVision.Core.Entities;
-using CVDB.Services.Spectrum;
-using CVWaferProber.Core.Models.Enums;
+﻿using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
 using CVWPFSpectrometerCtrl.ViewModels;
-using Newtonsoft.Json;
-using System.Reactive.Linq;
 using System.Windows;
-using System.Windows.Threading;
 
 namespace CVWaferProber.Services
 {
@@ -102,7 +97,7 @@ namespace CVWaferProber.Services
         /// <summary>
         /// 重写基类EndTesting（确保流程结束时停止定时器）
         /// </summary>
-        protected void EndTesting()
+        protected override void EndTesting()
         {
 
             base.EndTesting(); // 调用基类触发TestingCompleted事件
