@@ -129,7 +129,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 }
             }
         }
-        private SolidColorBrush _spectralLineColor = new SolidColorBrush(Colors.Blue);
+        private SolidColorBrush _spectralLineColor = new SolidColorBrush(Colors.Red);
 
         public SolidColorBrush SpectralLineColor
         {
@@ -381,7 +381,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 {
                     Title = seriesTitle,
                     // 选中：红色；未选中：循环半透明颜色
-                    Color = isSelected ? OxyColors.Red : unselectedColors[colorIndex % unselectedColors.Length],
+                    Color = isSelected ? measurement.RowLineColor : unselectedColors[colorIndex % unselectedColors.Length],
                     // 选中：加粗（2.0px）；未选中：细线条（1.5px）
                     StrokeThickness = isSelected ? 2.0 : 1.5,
                     // 选中：显示圆形标记点；未选中：无标记点

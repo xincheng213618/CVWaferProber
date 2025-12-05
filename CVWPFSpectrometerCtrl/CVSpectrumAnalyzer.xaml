@@ -300,7 +300,7 @@
                             </Style>
                         </DataGrid.RowStyle>
                     </DataGrid>
-                    <!--右侧：波段数据表格-->
+                    <!--  右侧：波段数据表格  -->
                     <DataGrid
                         x:Name="WavelengthGrid"
                         Grid.RowSpan="3"

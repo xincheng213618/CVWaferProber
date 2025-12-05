@@ -222,7 +222,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
 
        
-        private OxyColor _rowLineColor = OxyColors.Blue; // 默认蓝色
+        private OxyColor _rowLineColor = OxyColors.Red; // 默认红色
         /// <summary>
         /// 该行专属的线条颜色（勾选显示所有数据时生效）
         /// </summary>
