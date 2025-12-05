@@ -11,19 +11,17 @@ namespace CVWaferProber.Converters
 {
     public class BooleanToVisibilityConverter : IValueConverter
     {
-        // 布尔值转Visibility转换器（true→Visible，false→Collapsed）
-        
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return value is bool isVisible && isVisible
-                ? Visibility.Visible
-                : Visibility.Collapsed;
+            return (value is bool b && b) ? Visibility.Visible : Visibility.Collapsed;
         }
 
+        // 先注释反向转换，测试正向绑定是否生效
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return value is Visibility visibility && visibility == Visibility.Visible;
+            // return (value is Visibility v && v == Visibility.Visible);
+            throw new NotImplementedException();
         }
-       
+
     }
 }

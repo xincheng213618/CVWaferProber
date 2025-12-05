@@ -3,6 +3,7 @@ using CVWaferProber.ViewModels;
 using log4net;
 using log4net.Config;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace CVWaferProber.Views
 {
@@ -45,6 +46,50 @@ namespace CVWaferProber.Views
         private void ClearLogMenuItem_Click(object sender, RoutedEventArgs e)
         {
             LogTextBox.Clear();
+        }
+        // 窗口关闭时保存面板状态
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (DataContext is MainViewModel vm)
+            {
+                vm.SavePanelStates();
+            }
+        }
+        private void MenuMappingPanel_Click(object sender, RoutedEventArgs e)
+        {
+            var menuItem = sender as MenuItem;
+            menuItem.IsChecked = !menuItem.IsChecked;
+            PanelMapping.Visibility = menuItem.IsChecked ? Visibility.Visible : Visibility.Collapsed;
+
+            // 同步更新ViewModel属性（保持数据一致性）
+            if (DataContext is MainViewModel vm)
+            {
+                vm.IsMappingPanelVisible = menuItem.IsChecked;
+            }
+        }
+        private void MenuCameraPanel_Click(object sender, RoutedEventArgs e)
+        {
+            var menuItem = sender as MenuItem;
+            menuItem.IsChecked = !menuItem.IsChecked;
+            PanelCamera.Visibility = menuItem.IsChecked ? Visibility.Visible : Visibility.Collapsed;
+
+            // 同步更新ViewModel属性（保持数据一致性）
+            if (DataContext is MainViewModel vm)
+            {
+                vm.IsCameraPanelVisible = menuItem.IsChecked;
+            }
+        }
+        private void MenuSPPanel_Click(object sender, RoutedEventArgs e)
+        {
+            var menuItem = sender as MenuItem;
+            menuItem.IsChecked = !menuItem.IsChecked;
+            PanelSP.Visibility = menuItem.IsChecked ? Visibility.Visible : Visibility.Collapsed;
+
+            // 同步更新ViewModel属性（保持数据一致性）
+            if (DataContext is MainViewModel vm)
+            {
+                vm.IsSPPanelVisible = menuItem.IsChecked;
+            }
         }
     }
 }

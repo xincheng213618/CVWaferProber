@@ -1,7 +1,10 @@
-﻿using ChipMapping.Models;
+﻿using AvalonDock;
+using AvalonDock.Layout;
+using ChipMapping.Models;
 using ChipMapping.ViewModels;
 using ColorVision.Core.Entities;
 using CVDB.Services.Buz;
+using CVWaferProber.Components;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
 using CVWaferProber.MQTT;
@@ -67,7 +70,7 @@ namespace CVWaferProber.ViewModels
         public ICommand ClearMappingCommand { get; }
         public ICommand FlowLoadCommand { get; }
         public ICommand ExitCommand { get; }
-        public ICommand ResetLayoutCommand { get; }
+      
         public ICommand StartAutoTestCommand { get; }
         public ICommand StopAutoTestCommand { get; }
         public ICommand StartManTestCommand { get; }
@@ -79,6 +82,10 @@ namespace CVWaferProber.ViewModels
         public ICommand ResetStatusCommand { get; }
         public ICommand RCRegCommand { get; }
         public ICommand OpenVEyeWindowCommand { get; }
+        /// <summary>
+        /// 重置布局（恢复所有面板显示）
+        /// </summary>
+        public ICommand ResetLayoutCommand { get; }
 
         // ========== 1. AOI列的全选/反选命令 ==========
         //public ICommand SelectAllAOICommand { get; }
@@ -134,34 +141,67 @@ namespace CVWaferProber.ViewModels
                 SetProperty(ref _isAutoSN, value);
             }
         }
+        #region 面板显示状态属性
         // 1. 面板显示状态属性（右上角相机面板默认隐藏）
         private bool _isMappingPanelVisible = true;
+        /// <summary>
+        /// Mapping面板显示/隐藏（双向绑定菜单和面板）
+        /// </summary>
         public bool IsMappingPanelVisible
         {
             get => _isMappingPanelVisible;
-            set { _isMappingPanelVisible = value; OnPropertyChanged(); }
+            set
+            {
+                if (_isMappingPanelVisible != value)
+                {
+                    _isMappingPanelVisible = value;
+                    OnPropertyChanged(nameof(IsMappingPanelVisible));
+                }
+            }
         }
 
-        private bool _isCameraPanelVisible = false; // 初始隐藏
+        private bool _isCameraPanelVisible = true;
+        /// <summary>
+        /// Camera面板显示/隐藏
+        /// </summary>
         public bool IsCameraPanelVisible
         {
             get => _isCameraPanelVisible;
-            set { _isCameraPanelVisible = value; OnPropertyChanged(); }
+            set
+            {
+                if (_isCameraPanelVisible != value)
+                {
+                    _isCameraPanelVisible = value;
+                    OnPropertyChanged(nameof(IsCameraPanelVisible));
+                }
+            }
         }
 
         private bool _isSPPanelVisible = true;
+        /// <summary>
+        /// SP面板显示/隐藏
+        /// </summary>
         public bool IsSPPanelVisible
         {
             get => _isSPPanelVisible;
-            set { _isSPPanelVisible = value; OnPropertyChanged(); }
+            set
+            {
+                if (_isSPPanelVisible != value)
+                {
+                    _isSPPanelVisible = value;
+                    OnPropertyChanged(nameof(IsSPPanelVisible));
+                }
+            }
         }
 
-        private bool _isLogPanelVisible = true;
-        public bool IsLogPanelVisible
-        {
-            get => _isLogPanelVisible;
-            set { _isLogPanelVisible = value; OnPropertyChanged(); }
-        }
+
+
+        
+
+        #endregion
+
+
+
 
         private readonly Random _random = new Random();
 
@@ -217,6 +257,8 @@ namespace CVWaferProber.ViewModels
             CustomImageVM = new CVCamImagerViewModel();
             CustomIVLVM = new CVSpectrumViewModel();
             //
+            // 初始化重置布局命令
+            ResetLayoutCommand = new RelayCommand(ResetLayout);
             OpenVEyeWindowCommand = new RelayCommand(OpenVEyeWindow);
             RefreshStatusCommand = new RelayCommand(RefreshStatus);
             OpenMappingFileCommand = new RelayCommand(OpenMappingFile);
@@ -262,14 +304,7 @@ namespace CVWaferProber.ViewModels
                 }
             });
             // 绑定重置布局命令（使用你的CVImgRelayCommand）
-            ResetLayoutCommand = new CVImgRelayCommand(() =>
-            {
-                // 恢复所有面板为默认显示（true）
-                IsMappingPanelVisible = true;
-                IsCameraPanelVisible = true;
-                IsSPPanelVisible = true;
-              //  IsLogPanelVisible = true;
-            });
+           
             InitMysqlCfg();
             //
             ProberId = "CVProber01";
@@ -295,11 +330,51 @@ namespace CVWaferProber.ViewModels
             SubscribeItems_IVL(TestResults);
             SubscribeItems_EQE(TestResults);
             SubscribeItems_VAM(TestResults);
-
+            // 加载上次保存的面板状态（需先在Settings中配置）
+            IsMappingPanelVisible = Properties.Settings.Default.IsMappingPanelVisible;
+            IsCameraPanelVisible = Properties.Settings.Default.IsCameraPanelVisible;
+            IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
 
         }
+        // 保存面板状态（窗口关闭时调用）
+        public void SavePanelStates()
+        {
+            Properties.Settings.Default.IsMappingPanelVisible = IsMappingPanelVisible;
+            Properties.Settings.Default.IsCameraPanelVisible = IsCameraPanelVisible;
+            Properties.Settings.Default.IsSPPanelVisible = IsSPPanelVisible;
+            Properties.Settings.Default.Save();
+        }
+        // ViewModel中新增重新加载Mapping面板的方法
+        public void ReloadMappingPanel(DockingManager dockingManager)
+        {
+            // 重新创建Mapping面板并添加到AvalonDock布局
+            var layoutRoot = dockingManager.Layout;
+            var leftPaneGroup = layoutRoot.Descendents().OfType<LayoutAnchorablePaneGroup>()
+                .FirstOrDefault(g => g.DockWidth == new GridLength(300));
+
+            if (leftPaneGroup != null)
+            {
+                var mappingAnchorable = new LayoutAnchorable
+                {
+                    Title = "Mapping",
+                    Content = new MappingDataControl(),
+                    IsVisible = true
+                };
+                leftPaneGroup.Children.Add((ILayoutAnchorablePane)mappingAnchorable);
+            }
+        }
+        /// <summary>
+        /// 重置布局逻辑
+        /// </summary>
+        private void ResetLayout(object obj)
+        {
+            IsMappingPanelVisible = true;
+            IsCameraPanelVisible = true;
+            IsSPPanelVisible = true;
+        }
+        
         // ========== AOI列逻辑 ==========
-        #region AOI 全选/部分选中
+            #region AOI 全选/部分选中
         private bool? _selectAllAOI = false;
         public bool? SelectAllAOI
         {
