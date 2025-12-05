@@ -1121,9 +1121,17 @@ namespace CVWaferProber.ViewModels
                         //Task task = DoAsyncStartTestingDie(die);
                         aoiService.StartTestingAOI(Timestamp, die, _selectedWPFlow);
                     }
-                    else
+                    else if (SelectedWPFlow.FlowType == CVWaferProberFlowType.IVL_SP)
                     {
                         ivlService.StartTestingIVL(Timestamp, die, _selectedWPFlow);
+                    }
+                    else if (SelectedWPFlow.FlowType == CVWaferProberFlowType.EQE)
+                    {
+                        //eqeService.StartTestingEQE(Timestamp, die, _selectedWPFlow);
+                    }
+                    else
+                    {
+                        //vamService.StartTestingVAM(Timestamp, die, _selectedWPFlow);
                     }
                 }
                 else

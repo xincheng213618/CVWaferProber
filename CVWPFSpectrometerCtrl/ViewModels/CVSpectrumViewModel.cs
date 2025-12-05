@@ -140,7 +140,23 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 {
                     _spectralLineColor = value;
                     OnPropertyChanged(nameof(SpectralLineColor));
-                    UpdateChartLineColor(); // 更新图表颜色
+                    // 转换为OxyColor
+                    OxyColor newOxyColor = ConvertToOxyColor(value);
+
+                    // ===== 核心修改：根据IsShowAllData判断更新范围 =====
+                    if (IsShowAllData && SelectedMeasurement != null)
+                    {
+                        // 勾选显示所有数据：仅更新选中行的颜色
+                        SelectedMeasurement.RowLineColor = newOxyColor;
+                        // 实时刷新选中曲线的颜色
+                        UpdateSelectedCurveColor(newOxyColor);
+                    }
+                    else
+                    {
+                        // 未勾选：更新所有数据的颜色 + 刷新所有曲线
+                        UpdateAllMeasurementsLineColor(newOxyColor);
+                        UpdateChartLineColor();
+                    }
                 }
             }
         }
@@ -1931,8 +1947,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     FHW= (float)result.FHW,
                     Intensities = JsonConvert.DeserializeObject<float[]>(result.FPL),
                     Wavelengths = Wavelengths,
-                    fPlambda= (float)result.FPlambda
-                    
+                    fPlambda= (float)result.FPlambda,
+                    RowLineColor = ConvertToOxyColor(SpectralLineColor)
                 };
                 double sum1 = 0, sum2 = 0;
                 for (int i = 35; i <= 75; i++)
@@ -2001,7 +2017,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             {
                 var selectedSeries = _spectralSeriesCache[SelectedMeasurement.No];
                 // 选中样式
-                selectedSeries.Color = OxyColors.Red;
+                selectedSeries.Color = SelectedMeasurement.RowLineColor;
                 selectedSeries.StrokeThickness = 2.0;
               
                 selectedSeries.Title = $"No:{SelectedMeasurement.No} | {SelectedMeasurement.Timestamp:yyyy-MM-dd HH:mm}（选中）";
@@ -2159,7 +2175,54 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             public float RelativeSpectrum { get; set; } // 相对光谱
             public float AbsoluteSpectrum { get; set; } // 绝对光谱
         }
+        private OxyColor ConvertToOxyColor(SolidColorBrush brush)
+        {
+            if (brush == null) return OxyColors.Blue; // 默认蓝色
+            return OxyColor.FromArgb(
+                brush.Color.A,
+                brush.Color.R,
+                brush.Color.G,
+                brush.Color.B);
+        }
+        /// <summary>
+        /// 仅更新选中曲线的颜色（勾选显示所有数据时用）
+        /// </summary>
+        private void UpdateSelectedCurveColor(OxyColor newColor)
+        {
+            if (_spectralSeriesCache.Count == 0 || SelectedMeasurement == null) return;
 
+            // 从缓存中找到选中行的曲线
+            if (_spectralSeriesCache.TryGetValue(SelectedMeasurement.No, out LineSeries selectedSeries))
+            {
+                selectedSeries.Color = newColor;
+                selectedSeries.MarkerFill = newColor; // 标记点同步颜色
+                selectedSeries.MarkerStroke = newColor;
+                PlotModel.InvalidatePlot(true); // 实时刷新
+            }
+
+            // 同步更新总览图的选中曲线颜色
+            if (OverviewSpectralPlotModel.Series.Any())
+            {
+                var overviewSelectedSeries = OverviewSpectralPlotModel.Series.OfType<LineSeries>()
+                    .FirstOrDefault(s => s.Title.Contains($"No:{SelectedMeasurement.No}"));
+                if (overviewSelectedSeries != null)
+                {
+                    overviewSelectedSeries.Color = newColor;
+                    OverviewSpectralPlotModel.InvalidatePlot(true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 更新所有测量数据的行颜色（未勾选显示所有数据时用）
+        /// </summary>
+        private void UpdateAllMeasurementsLineColor(OxyColor newColor)
+        {
+            foreach (var measurement in Measurements)
+            {
+                measurement.RowLineColor = newColor;
+            }
+        }
         public ICommand BtnResetStatus { get; }
        
     }
