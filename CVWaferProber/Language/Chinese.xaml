@@ -31,6 +31,9 @@
     <sys:String x:Key="Maping.GridHeader.Col">列</sys:String>
     <sys:String x:Key="Maping.GridHeader.ScreenX">屏幕X</sys:String>
     <sys:String x:Key="Maping.GridHeader.ScreenY">屏幕Y</sys:String>
+    <sys:String x:Key="Maping.GridHeader.SelectAll">全选</sys:String>
+    <sys:String x:Key="Maping.GridHeader.ReverseSelection">反选</sys:String>
+
     <sys:String x:Key="Maping.GridHeader.SerialNumber">序列号</sys:String>
     <sys:String x:Key="Maping.GridHeader.StartTestTime">开始时间</sys:String>
     <sys:String x:Key="Maping.GridHeader.EndTestTime">结束时间</sys:String>
@@ -44,7 +47,9 @@
     <sys:String x:Key="Dock.Layout.Title.SP">光谱/IVL</sys:String>
     <sys:String x:Key="Dock.Layout.Title.Log">日志</sys:String>
 
+    <sys:String x:Key="Chart.LineColor">线条颜色:</sys:String>
 
+    <sys:String x:Key="Chart.Reset">重置</sys:String>
     <!--  光谱曲线相关  -->
     <sys:String x:Key="Sp.Overview">总览图</sys:String>
     <sys:String x:Key="Sp.Spectral">光谱</sys:String>
@@ -56,6 +61,7 @@
     <sys:String x:Key="Sp.ShowSpectralDetail">光谱数据详情</sys:String>
     <!--  IV曲线相关  -->
     <sys:String x:Key="Sp.IV Curve">IV曲线</sys:String>
+
 
     <!--  IL曲线相关  -->
     <sys:String x:Key="Sp.IL Curve">IL曲线</sys:String>
@@ -111,5 +117,25 @@
     <sys:String x:Key="Image.GridHeader.FilePath">路径</sys:String>
     <sys:String x:Key="Image.GridHeader.FileSize">大小（MB）</sys:String>
     <sys:String x:Key="Image.GridHeader.Status">状态</sys:String>
+
+    <!--  菜单相关  -->
+    <sys:String x:Key="Menu.View">视图(V)</sys:String>
+    <sys:String x:Key="Menu.MappingPanelVisible">显示Mapping面板</sys:String>
+    <sys:String x:Key="Menu.CameraPanelVisible">显示相机面板</sys:String>
+    <sys:String x:Key="Menu.SPPanelVisible">显示SP面板</sys:String>
+    <sys:String x:Key="Menu.LogPanelVisible">显示日志面板</sys:String>
+    <sys:String x:Key="Menu.ResetLayout">重置布局</sys:String>
+    <sys:String x:Key="Menu.Help">帮助(H)</sys:String>
+    <sys:String x:Key="Menu.UserManual">使用手册</sys:String>
+    <sys:String x:Key="Menu.About">关于软件</sys:String>
+    <sys:String x:Key="Menu.Exit">退出(Alt+F4)</sys:String>
+
+
+
+
+
+
+
+
 
 </ResourceDictionary>

@@ -2,7 +2,9 @@
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
+using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Input;
 
 namespace CVWaferProber.ViewModels
 {
@@ -17,11 +19,41 @@ namespace CVWaferProber.ViewModels
         public bool IsIVLCameraEnabled {  get; set; }
         public bool IsChinese {  get; set; }
 
+        // 新增AOI复选框绑定属性
+        private bool _isAOIEnabled;
+        public bool IsAOIEnabled
+        {
+            get => _isAOIEnabled;
+            set { _isAOIEnabled = value; OnPropertyChanged(); }
+        }
+
+        // 新增IVL复选框绑定属性
+        private bool _isIVLEnabled;
+        public bool IsIVLEnabled
+        {
+            get => _isIVLEnabled;
+            set { _isIVLEnabled = value; OnPropertyChanged(); }
+        }
+        private bool _isEQEEnabled;
+        public bool IsEQEEnabled
+        {
+            get => _isEQEEnabled;
+            set { _isEQEEnabled = value; OnPropertyChanged(); }
+        }
+
+        // 新增IVL复选框绑定属性
+        private bool _isVAMEnabled;
+        public bool IsVAMEnabled
+        {
+            get => _isVAMEnabled;
+            set { _isVAMEnabled = value; OnPropertyChanged(); }
+        }
         public DieViewModel(ChipViewModel die)
         {
             this.chipViewModel = die;
             this.IsIVLCameraEnabled = false;
             this.IsChinese = GetCurrentLanguage() == "Chinese";
+           
         }
 
         public ChipStatus? Status => chipViewModel?.Status;
@@ -118,5 +150,6 @@ namespace CVWaferProber.ViewModels
         //    MessageBox.Show($"已成功将「{assignValue}」赋给所有 {_employeeList.Count} 行的「部门」列！");
         //    txtColumnValue.Clear();
         //}
+       
     }
 }

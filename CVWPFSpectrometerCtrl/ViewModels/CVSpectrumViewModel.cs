@@ -29,6 +29,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using static FreeSql.Internal.GlobalFilter;
 using static Org.BouncyCastle.Math.EC.ECCurve;
@@ -41,7 +42,10 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private PlotModel _IVPlotModel;
         private PlotModel _ILPlotModel;
         private PlotModel _VLPlotModel;
-      
+
+        // 总览图光谱X轴固定范围（350~800nm）
+        private readonly double _overviewSpectralXMin = 360;
+        private readonly double _overviewSpectralXMax = 800;
 
         public void NotifyPropertyChanged(string propertyName)
         {
@@ -125,7 +129,151 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 }
             }
         }
+        private SolidColorBrush _spectralLineColor = new SolidColorBrush(Colors.Blue);
 
+        public SolidColorBrush SpectralLineColor
+        {
+            get => _spectralLineColor;
+            set
+            {
+                if (_spectralLineColor != value)
+                {
+                    _spectralLineColor = value;
+                    OnPropertyChanged(nameof(SpectralLineColor));
+                    UpdateChartLineColor(); // 更新图表颜色
+                }
+            }
+        }
+        private SolidColorBrush _ivLineColor = new SolidColorBrush(Colors.Blue);
+        public SolidColorBrush IVLineColor
+        {
+            get => _ivLineColor;
+            set
+            {
+                if (_ivLineColor != value)
+                {
+                    _ivLineColor = value;
+                    OnPropertyChanged(nameof(IVLineColor));
+                    UpdateIVChartLineColor();
+                }
+            }
+        }
+        private void UpdateIVChartLineColor()
+        {
+            if (IVPlotModel?.Series != null && IVLineColor != null)
+            {
+                // 解决颜色转换错误：使用OxyColor.FromArgb转换
+                OxyColor oxyColor = OxyColor.FromArgb(
+                    IVLineColor.Color.A,
+                    IVLineColor.Color.R,
+                    IVLineColor.Color.G,
+                    IVLineColor.Color.B);
+
+                foreach (var lineSeries in IVPlotModel.Series.OfType<LineSeries>())
+                {
+                    lineSeries.Color = oxyColor;
+                    // 确保IV图表的数据点颜色也与线条一致
+                    lineSeries.MarkerFill = oxyColor;
+                    lineSeries.MarkerStroke = oxyColor;
+                }
+                IVPlotModel.InvalidatePlot(true);
+            }
+        }
+        private SolidColorBrush _ilLineColor = new SolidColorBrush(Colors.Blue);
+        public SolidColorBrush ILLineColor
+        {
+            get => _ilLineColor;
+            set
+            {
+                if (_ilLineColor != value)
+                {
+                    _ilLineColor = value;
+                    OnPropertyChanged(nameof(ILLineColor));
+                    UpdateILChartLineColor();
+                }
+            }
+        }
+        private void UpdateILChartLineColor()
+        {
+            if (ILPlotModel?.Series != null && ILLineColor != null)
+            {
+                // 解决颜色转换错误：使用OxyColor.FromArgb转换
+                OxyColor oxyColor = OxyColor.FromArgb(
+                    ILLineColor.Color.A,
+                    ILLineColor.Color.R,
+                    ILLineColor.Color.G,
+                    ILLineColor.Color.B);
+
+                foreach (var lineSeries in ILPlotModel.Series.OfType<LineSeries>())
+                {
+                    lineSeries.Color = oxyColor;
+                    // 确保IV图表的数据点颜色也与线条一致
+                    lineSeries.MarkerFill = oxyColor;
+                    lineSeries.MarkerStroke = oxyColor;
+                }
+                ILPlotModel.InvalidatePlot(true);
+            }
+        }
+        private SolidColorBrush _vlLineColor = new SolidColorBrush(Colors.Blue);
+        public SolidColorBrush VLLineColor
+        {
+            get => _vlLineColor;
+            set
+            {
+                if (_vlLineColor != value)
+                {
+                    _vlLineColor = value;
+                    OnPropertyChanged(nameof(VLLineColor));
+                    UpdateVLChartLineColor();
+                }
+            }
+        }
+        private void UpdateVLChartLineColor()
+        {
+            if (VLPlotModel?.Series != null && VLLineColor != null)
+            {
+                // 解决颜色转换错误：使用OxyColor.FromArgb转换
+                OxyColor oxyColor = OxyColor.FromArgb(
+                    VLLineColor.Color.A,
+                    VLLineColor.Color.R,
+                    VLLineColor.Color.G,
+                    VLLineColor.Color.B);
+
+                foreach (var lineSeries in VLPlotModel.Series.OfType<LineSeries>())
+                {
+                    lineSeries.Color = oxyColor;
+                    // 确保IV图表的数据点颜色也与线条一致
+                    lineSeries.MarkerFill = oxyColor;
+                    lineSeries.MarkerStroke = oxyColor;
+                }
+                VLPlotModel.InvalidatePlot(true);
+            }
+        }
+        private void UpdateChartLineColor()
+        {
+            // 更新所有相关图表的线条颜色
+            UpdateSeriesColor(PlotModel);
+            //UpdateSeriesColor(OverviewSpectralPlotModel);
+            // 其他图表...
+        }
+        private void UpdateSeriesColor(PlotModel plotModel)
+        {
+            if (plotModel?.Series != null)
+            {
+                // 将WPF颜色转换为OxyPlot颜色
+                OxyColor oxyColor = OxyColor.FromArgb(
+                    SpectralLineColor.Color.A,
+                    SpectralLineColor.Color.R,
+                    SpectralLineColor.Color.G,
+                    SpectralLineColor.Color.B);
+
+                foreach (var lineSeries in plotModel.Series.OfType<LineSeries>())
+                {
+                    lineSeries.Color = oxyColor;  // 使用转换后的颜色
+                }
+                plotModel.InvalidatePlot(true);
+            }
+        }
         public ObservableCollection<SpectrumMeasurement> Measurements
         {
             get => _measurements;
@@ -218,8 +366,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     Title = seriesTitle,
                     // 选中：红色；未选中：循环半透明颜色
                     Color = isSelected ? OxyColors.Red : unselectedColors[colorIndex % unselectedColors.Length],
-                    // 选中：加粗（2.0px）；未选中：细线条（1.2px）
-                    StrokeThickness = isSelected ? 2.0 : 1.2,
+                    // 选中：加粗（2.0px）；未选中：细线条（1.5px）
+                    StrokeThickness = isSelected ? 2.0 : 1.5,
                     // 选中：显示圆形标记点；未选中：无标记点
                     //MarkerType = isSelected ? MarkerType.Circle : MarkerType.None,
                    // MarkerSize = 3,
@@ -262,6 +410,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             PlotModel.InvalidatePlot(true); // 刷新图表
         }
        
+        // 在CVSpectrumViewModel类中添加
         public void RefreshAllPlots()
         {
             // 刷新主光谱图
@@ -368,8 +517,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             InitializeILPlotModel();
             InitializeVLPlotModel();
             InitializeIVLCameraModel();
-           
-            DeviceCode = "DEV.Spectrum.Default";
+            BtnResetStatus = new RelayCommand(IVResetStatus);
+             DeviceCode = "DEV.Spectrum.Default";
             #region 输出CSV文件
             ExportCommand = new RelayCommand((s) =>
             {
@@ -445,6 +594,12 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             InitializeOverviewPlotModels();
             
         }
+
+        private void IVResetStatus(object obj)
+        {
+            //OverviewIVPlotModel?.InvalidatePlot(true);
+        }
+
         // 初始化总览图的PlotModel（克隆子Tab配置并绑定数据）
         private void InitializeOverviewPlotModels()
         {
@@ -491,7 +646,29 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         IsZoomEnabled = false, // 总览图禁用手动缩放
                         IsPanEnabled = false
                     };
-                    targetModel.Axes.Add(clonedAxis);
+                    // ========== 关键修改：总览光谱图强制锁定X轴650~800nm ==========
+            if (title == (string)Application.Current.FindResource("Sp.Spectral") || title == "光谱")
+            {
+                if (clonedAxis.Position == AxisPosition.Bottom) // X轴（波长）
+                {
+                    clonedAxis.Minimum = _overviewSpectralXMin; // 固定650
+                    clonedAxis.Maximum = _overviewSpectralXMax; // 固定800
+                    clonedAxis.AbsoluteMinimum = _overviewSpectralXMin; // 禁止自动缩小
+                    clonedAxis.AbsoluteMaximum = _overviewSpectralXMax; // 禁止自动扩大
+                }
+                else // Y轴（强度）保留自动适配
+                {
+                    clonedAxis.Minimum = double.NaN;
+                    clonedAxis.Maximum = double.NaN;
+                }
+            }
+            else // 其他总览图（IV/IL/VL）保留原有逻辑
+            {
+                clonedAxis.Minimum = double.NaN;
+                clonedAxis.Maximum = double.NaN;
+            }
+
+            targetModel.Axes.Add(clonedAxis);
                 }
             }
             return targetModel;
@@ -610,7 +787,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     Color = OxyColors.Red,
                     StrokeThickness = 1.5,
                     MarkerType = MarkerType.Circle,
-                    MarkerSize = 2,
+                    //MarkerSize = 2,
                     MarkerFill = OxyColors.Red,
                 };
                 OverviewIVPlotModel.Series.Add(ivSeries);
@@ -626,7 +803,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     Color = OxyColors.Green,
                     StrokeThickness = 1.5,
                     MarkerType = MarkerType.Circle,
-                    MarkerSize = 2,
+                    //MarkerSize = 2,
                     MarkerFill = OxyColors.Green
                 };
                 OverviewILPlotModel.Series.Add(ilSeries);
@@ -1639,6 +1816,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             VLMeasurements.Clear();
             IVLCameraMeasurements.Clear();
             SpectralGridItems?.Clear();
+            PlotModel.Series.Clear();
+
+            //彻底清空viewModel的数据
+            IL_viewModel.Clear();
+            IV_viewModel.Clear();
+            VL_viewModel.Clear();
+            IVLCamera_viewModel.Clear();
+            IVLCameraImageSrc = null;
 
             // 清空选中状态
             SelectedMeasurement = null;
@@ -1978,5 +2163,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             public float AbsoluteSpectrum { get; set; } // 绝对光谱
         }
 
+        public ICommand BtnResetStatus { get; }
+       
     }
 }

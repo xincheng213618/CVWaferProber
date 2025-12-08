@@ -4,102 +4,164 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalon="https://github.com/Dirkster99/AvalonDock"
     xmlns:comp="clr-namespace:CVWaferProber.Components"
+    xmlns:cv="clr-namespace:CVWaferProber.Converters"
     xmlns:cvimg="clr-namespace:CVWPFCamImageCtrl;assembly=CVWPFCamImageCtrl"
     xmlns:cvsp="clr-namespace:CVWPFSpectrometerCtrl;assembly=CVWPFSpectrometerCtrl"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:CVWaferProber.ViewModels"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:CVWaferProber.ViewModels"
     Title="晶圆探针台"
     Width="1200"
-    Height="1000">
+    Height="1000"
+    mc:Ignorable="d">
 
     <Window.DataContext>
         <vm:MainViewModel />
     </Window.DataContext>
+    <Window.Resources>
+        <cv:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </Window.Resources>
     <Grid>
-        <avalon:DockingManager x:Name="DockingManager">
+        <!--  第1行：顶部菜单栏  -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <!--  菜单高度自适应  -->
+            <RowDefinition Height="*" />
+            <!--  剩余空间给docking面板  -->
+        </Grid.RowDefinitions>
+
+        <!--  顶部菜单栏  -->
+        <Menu Background="#F0F0F0">
+            <!--  文件菜单  -->
+            <!--<MenuItem Header="文件(F)" InputGestureText="Alt+F">
+                <MenuItem Header="新建项目" Command="{Binding NewProjectCommand}" />
+                <MenuItem Header="打开项目" Command="{Binding OpenProjectCommand}" />
+                <Separator />
+            -->
+            <!--  分隔线  -->
+            <!--
+                <MenuItem Header="保存配置" Command="{Binding SaveConfigCommand}" />
+                <Separator />
+                <MenuItem Header="退出" Command="{Binding ExitCommand}" InputGestureText="Alt+F4" />
+            </MenuItem>
+
+            -->
+            <!--  操作菜单  -->
+            <!--
+            <MenuItem Header="操作(O)" InputGestureText="Alt+O">
+                <MenuItem Header="开始测试" Command="{Binding StartTestCommand}" />
+                <MenuItem Header="暂停测试" Command="{Binding PauseTestCommand}" />
+                <MenuItem Header="停止测试" Command="{Binding StopTestCommand}" />
+                <Separator />
+                <MenuItem Header="校准设备" Command="{Binding CalibrateDeviceCommand}" />
+            </MenuItem>-->
+
+            <!--  视图菜单（控制面板显示/隐藏）  -->
+            <MenuItem Header="{DynamicResource Menu.View}" InputGestureText="Alt+V">
+                <MenuItem Header="{DynamicResource Menu.MappingPanelVisible}" IsChecked="{Binding IsMappingPanelVisible}" />
+                <MenuItem Header="{DynamicResource Menu.CameraPanelVisible}" IsChecked="{Binding IsCameraPanelVisible}" />
+                <MenuItem Header="{DynamicResource Menu.SPPanelVisible}" IsChecked="{Binding IsSPPanelVisible}" />
+                <MenuItem Header="{DynamicResource Menu.LogPanelVisible}" IsChecked="{Binding IsLogPanelVisible}" />
+                <Separator />
+                <MenuItem Command="{Binding ResetLayoutCommand}" Header="{DynamicResource Menu.ResetLayout}" />
+            </MenuItem>
+
+            <!--  帮助菜单  -->
+            <MenuItem Header="{DynamicResource Menu.Help}" InputGestureText="Alt+H">
+                <MenuItem Command="{Binding OpenHelpCommand}" Header="{DynamicResource Menu.UserManual}" />
+                <MenuItem Command="{Binding OpenAboutCommand}" Header="{DynamicResource Menu.About}" />
+            </MenuItem>
+            <MenuItem
+                Command="{Binding ExitCommand}"
+                Header="{DynamicResource Menu.Exit}"
+                InputGestureText="Alt+F4" />
+        </Menu>
+        <avalon:DockingManager x:Name="DockingManager" Grid.Row="1">
             <avalon:DockingManager.Theme>
                 <avalon:GenericTheme />
             </avalon:DockingManager.Theme>
 
             <avalon:LayoutRoot>
-                <!--  主布局面板 - 垂直方向分割  -->
-                <avalon:LayoutPanel Orientation="Horizontal">
+                <avalon:LayoutPanel Orientation="Vertical">
 
-                    <!--  左半部分面板  -->
-                    <avalon:LayoutPanel Orientation="Vertical">
+                    <!--  主布局面板 - 垂直方向分割  -->
+                    <avalon:LayoutPanel Orientation="Horizontal">
 
-                        <!--  左上角面板  -->
-                        <avalon:LayoutAnchorablePaneGroup DockWidth="300" Orientation="Vertical">
-                            <avalon:LayoutAnchorablePane>
-                                <avalon:LayoutAnchorable
-                                    Title="{DynamicResource Dock.Layout.Title.Mapping}"
-                                    AutoHideMinWidth="250"
-                                    AutoHideWidth="300"
-                                    CanClose="False"
-                                    CanHide="True">
-                                    <!--  左上：Mapping控件  -->
-                                    <comp:MappingDataControl />
-                                </avalon:LayoutAnchorable>
-                            </avalon:LayoutAnchorablePane>
-                        </avalon:LayoutAnchorablePaneGroup>
+                        <!--  左半部分面板  -->
+                        <avalon:LayoutPanel Orientation="Vertical">
+
+                            <!--  左上角面板  -->
+                            <avalon:LayoutAnchorablePaneGroup DockWidth="300" Orientation="Vertical">
+                                <avalon:LayoutAnchorablePane>
+                                    <avalon:LayoutAnchorable
+                                        Title="{DynamicResource Dock.Layout.Title.Mapping}"
+                                        AutoHideMinWidth="250"
+                                        AutoHideWidth="300"
+                                        CanClose="False"
+                                        CanHide="True">
+                                        <!--  左上：Mapping控件  -->
+                                        <comp:MappingDataControl />
+                                    </avalon:LayoutAnchorable>
+                                </avalon:LayoutAnchorablePane>
+                            </avalon:LayoutAnchorablePaneGroup>
+                        </avalon:LayoutPanel>
+
+                        <!--  右半部分面板  -->
+                        <avalon:LayoutPanel Orientation="Vertical">
+
+                            <!--  右上角面板  -->
+                            <avalon:LayoutAnchorablePaneGroup DockWidth="300">
+                                <avalon:LayoutAnchorablePane>
+                                    <avalon:LayoutAnchorable
+                                        Title="{DynamicResource Dock.Layout.Title.CameraImage}"
+                                        AutoHideMinHeight="100"
+                                        CanClose="False"
+                                        CanHide="True">
+                                        <cvimg:CVCamImagerCtrl x:Name="MyImageControl" DataContext="{Binding CustomImageVM}" />
+                                    </avalon:LayoutAnchorable>
+                                </avalon:LayoutAnchorablePane>
+                            </avalon:LayoutAnchorablePaneGroup>
+
+                            <!--  右下角面板  -->
+                            <avalon:LayoutAnchorablePaneGroup>
+                                <avalon:LayoutAnchorablePane>
+                                    <avalon:LayoutAnchorable
+                                        Title="{DynamicResource Dock.Layout.Title.SP}"
+                                        CanClose="False"
+                                        CanHide="True">
+                                        <cvsp:CVSpectrumAnalyzer x:Name="spaly" DataContext="{Binding CustomIVLVM}" />
+                                    </avalon:LayoutAnchorable>
+                                    <avalon:LayoutAnchorable
+                                        Title="{DynamicResource Dock.Layout.Title.Log}"
+                                        AutoHideMinHeight="150"
+                                        CanClose="False"
+                                        CanHide="True">
+                                        <TextBox
+                                            x:Name="LogTextBox"
+                                            FontFamily="Consolas"
+                                            FontSize="12"
+                                            HorizontalScrollBarVisibility="Auto"
+                                            IsReadOnly="True"
+                                            TextWrapping="NoWrap"
+                                            VerticalScrollBarVisibility="Auto">
+                                            <TextBox.ContextMenu>
+                                                <ContextMenu>
+                                                    <MenuItem Click="ClearLogMenuItem_Click" Header="{DynamicResource MenuLogClear}" />
+                                                </ContextMenu>
+                                            </TextBox.ContextMenu>
+                                        </TextBox>
+                                    </avalon:LayoutAnchorable>
+
+
+
+                                </avalon:LayoutAnchorablePane>
+                            </avalon:LayoutAnchorablePaneGroup>
+
+                        </avalon:LayoutPanel>
+
                     </avalon:LayoutPanel>
-
-                    <!--  右半部分面板  -->
-                    <avalon:LayoutPanel Orientation="Vertical">
-
-                        <!--  右上角面板  -->
-                        <avalon:LayoutAnchorablePaneGroup DockWidth="300">
-                            <avalon:LayoutAnchorablePane>
-                                <avalon:LayoutAnchorable
-                                    Title="{DynamicResource Dock.Layout.Title.CameraImage}"
-                                    AutoHideMinHeight="100"
-                                    CanClose="False"
-                                    CanHide="True">
-                                    <cvimg:CVCamImagerCtrl x:Name="MyImageControl" DataContext="{Binding CustomImageVM}" />
-                                </avalon:LayoutAnchorable>
-                            </avalon:LayoutAnchorablePane>
-                        </avalon:LayoutAnchorablePaneGroup>
-
-                        <!--  右下角面板  -->
-                        <avalon:LayoutAnchorablePaneGroup>
-                            <avalon:LayoutAnchorablePane>
-                                <avalon:LayoutAnchorable
-                                    Title="{DynamicResource Dock.Layout.Title.SP}"
-                                    CanClose="False"
-                                    CanHide="True">
-                                    <cvsp:CVSpectrumAnalyzer x:Name="spaly" DataContext="{Binding CustomIVLVM}" />
-                                </avalon:LayoutAnchorable>
-                                <avalon:LayoutAnchorable
-                                    Title="{DynamicResource Dock.Layout.Title.Log}"
-                                    AutoHideMinHeight="150"
-                                    CanClose="False"
-                                    CanHide="True">
-                                    <TextBox
-                                        x:Name="LogTextBox"
-                                        FontFamily="Consolas"
-                                        FontSize="12"
-                                        HorizontalScrollBarVisibility="Auto"
-                                        IsReadOnly="True"
-                                        TextWrapping="NoWrap"
-                                        VerticalScrollBarVisibility="Auto">
-                                        <TextBox.ContextMenu>
-                                            <ContextMenu>
-                                                <MenuItem Click="ClearLogMenuItem_Click" Header="{DynamicResource MenuLogClear}" />
-                                            </ContextMenu>
-                                        </TextBox.ContextMenu>
-                                    </TextBox>
-                                </avalon:LayoutAnchorable>
-
-
-
-                            </avalon:LayoutAnchorablePane>
-                        </avalon:LayoutAnchorablePaneGroup>
-
-                    </avalon:LayoutPanel>
-
                 </avalon:LayoutPanel>
-
             </avalon:LayoutRoot>
         </avalon:DockingManager>
     </Grid>

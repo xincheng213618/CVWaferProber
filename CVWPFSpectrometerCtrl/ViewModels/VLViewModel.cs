@@ -171,14 +171,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 // 4. 更新X轴范围：从0到电压最大值（如需从数据最小值开始，改为 V.Min()）
                 xAxis.Minimum = minVoltage; 
                 xAxis.Maximum = maxVoltage;
-                xAxis.Minimum = minVoltage;
-                xAxis.Maximum = maxVoltage;
+                xAxis.AbsoluteMinimum = minVoltage;
+                xAxis.AbsoluteMaximum = maxVoltage;
 
                 // 5. 更新Y轴范围：从0到亮度最大值（如需从数据最小值开始，改为 L.Min()）
                 yAxis.Minimum = minLuminance;
                 yAxis.Maximum = maxLuminance;
-                yAxis.Minimum = minLuminance;
-                yAxis.Maximum = maxLuminance;
+                yAxis.AbsoluteMinimum = minLuminance;
+                yAxis.AbsoluteMaximum = maxLuminance;
             }
 
             // 6. 保留原有折线图配置

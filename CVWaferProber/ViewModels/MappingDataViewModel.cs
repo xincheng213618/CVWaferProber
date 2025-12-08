@@ -1,6 +1,7 @@
 ﻿using CVWaferProber.Core.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -14,6 +15,7 @@ namespace CVWaferProber.ViewModels
 {
     public class MappingDataViewModel : ViewModelBase
     {
+        
 
         private string timestamp;
         public string Timestamp
@@ -41,13 +43,17 @@ namespace CVWaferProber.ViewModels
         {
             SearchCommand = new RelayCommand(OnSearch);
 
+           
         }
 
+        
         private void OnSearch(object? obj)
         {
 
-
-
         }
+        
+        
+
+       
     }
 }
