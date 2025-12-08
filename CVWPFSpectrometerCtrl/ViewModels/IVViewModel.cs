@@ -52,7 +52,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             _plotModel = new PlotModel
             {
-                Title = "IV曲线",
+                Title = (string)Application.Current.FindResource("Sp.IV Curve"),
                 TitleFontSize = 14
             };
 
@@ -244,7 +244,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             // 5. 创建线形系列（保留原有样式）
             var lineSeries = new LineSeries
             {
-                Title = "IV曲线",
+                Title = (string)Application.Current.FindResource("Sp.IV Curve"),
                 Color = OxyColors.Red,
                 StrokeThickness = 1.5,
                 MarkerType = MarkerType.Circle,
@@ -253,6 +253,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 MarkerStroke = OxyColors.Red,
                 MarkerStrokeThickness = 1.5,
                 LineStyle = LineStyle.Solid,
+                CanTrackerInterpolatePoints = true,
+                //TrackerFormatString = "{0}\n {1}: {2:0.00}\n {3}: {4:0.00}"
             };
 
             // 6. 添加数据点（X=电流，Y=电压，两种模式下一致）
