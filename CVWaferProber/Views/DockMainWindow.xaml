@@ -14,7 +14,6 @@
     Title="晶圆探针台"
     Width="1200"
     Height="1000"
-    Closing="Window_Closing"
     mc:Ignorable="d">
 
     <Window.DataContext>
@@ -62,22 +61,31 @@
             <MenuItem Header="{DynamicResource Menu.View}" InputGestureText="Alt+V">
                 <MenuItem
                     x:Name="MenuMappingPanel"
-                    Click="MenuMappingPanel_Click"
                     Header="{DynamicResource Menu.MappingPanelVisible}"
-                    IsChecked="{Binding IsMappingPanelVisible, Mode=TwoWay}" />
+                    IsCheckable="True"
+                    IsChecked="{Binding ElementName=AnchorableMapping, Path=IsVisible, Mode=TwoWay}" />
                 <MenuItem
                     x:Name="MenuCameraPanel"
-                    Click="MenuCameraPanel_Click"
                     Header="{DynamicResource Menu.CameraPanelVisible}"
-                    IsChecked="{Binding IsCameraPanelVisible, Mode=TwoWay}" />
+                    IsCheckable="True"
+                    IsChecked="{Binding ElementName=AnchorableCamera, Path=IsVisible, Mode=TwoWay}" />
                 <MenuItem
                     x:Name="MenuSPPanel"
-                    Click="MenuSPPanel_Click"
                     Header="{DynamicResource Menu.SPPanelVisible}"
-                    IsChecked="{Binding IsSPPanelVisible, Mode=TwoWay}" />
-                <MenuItem Header="{DynamicResource Menu.LogPanelVisible}" IsChecked="{Binding IsLogPanelVisible, Mode=TwoWay}" />
+                    IsCheckable="True"
+                    IsChecked="{Binding ElementName=AnchorableSP, Path=IsVisible, Mode=TwoWay}" />
+                <MenuItem
+                    Command="{Binding OpenLogCommand}"
+                    Header="{DynamicResource Menu.LogPanelVisible}"
+                    IsCheckable="True"
+                    IsChecked="{Binding ElementName=AnchorableLog, Path=IsVisible, Mode=TwoWay}" />
+
+
                 <Separator />
-                <MenuItem Command="{Binding ResetLayoutCommand}" Header="{DynamicResource Menu.ResetLayout}" />
+                <MenuItem
+                    Command="{Binding ResetLayoutCommand}"
+                    Header="{DynamicResource Menu.ResetLayout}"
+                    IsCheckable="True" />
             </MenuItem>
 
             <!--  帮助菜单  -->
@@ -109,13 +117,14 @@
                             <avalon:LayoutAnchorablePaneGroup DockWidth="300" Orientation="Vertical">
                                 <avalon:LayoutAnchorablePane>
                                     <avalon:LayoutAnchorable
+                                        x:Name="AnchorableMapping"
                                         Title="{DynamicResource Dock.Layout.Title.Mapping}"
                                         AutoHideMinWidth="250"
                                         AutoHideWidth="300"
                                         CanClose="False"
                                         CanHide="True">
                                         <!--  新增Grid，绑定Grid的Visibility  -->
-                                        <DockPanel x:Name="PanelMapping" Visibility="{Binding IsMappingPanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <DockPanel x:Name="PanelMapping">
                                             <comp:MappingDataControl />
                                         </DockPanel>
                                     </avalon:LayoutAnchorable>
@@ -130,14 +139,12 @@
                             <avalon:LayoutAnchorablePaneGroup DockWidth="300">
                                 <avalon:LayoutAnchorablePane>
                                     <avalon:LayoutAnchorable
+                                        x:Name="AnchorableCamera"
                                         Title="{DynamicResource Dock.Layout.Title.CameraImage}"
                                         AutoHideMinHeight="100"
                                         CanClose="False"
                                         CanHide="True">
-                                        <DockPanel
-                                            x:Name="PanelCamera"
-                                            Grid.Row="0"
-                                            Visibility="{Binding IsCameraPanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <DockPanel x:Name="PanelCamera" Grid.Row="0">
                                             <cvimg:CVCamImagerCtrl x:Name="MyImageControl" DataContext="{Binding CustomImageVM}" />
                                         </DockPanel>
                                     </avalon:LayoutAnchorable>
@@ -148,17 +155,16 @@
                             <avalon:LayoutAnchorablePaneGroup>
                                 <avalon:LayoutAnchorablePane>
                                     <avalon:LayoutAnchorable
+                                        x:Name="AnchorableSP"
                                         Title="{DynamicResource Dock.Layout.Title.SP}"
                                         CanClose="False"
                                         CanHide="True">
-                                        <DockPanel
-                                            x:Name="PanelSP"
-                                            Grid.Row="1"
-                                            Visibility="{Binding IsSPPanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <DockPanel x:Name="PanelSP" Grid.Row="1">
                                             <cvsp:CVSpectrumAnalyzer x:Name="spaly" DataContext="{Binding CustomIVLVM}" />
                                         </DockPanel>
                                     </avalon:LayoutAnchorable>
                                     <avalon:LayoutAnchorable
+                                        x:Name="AnchorableLog"
                                         Title="{DynamicResource Dock.Layout.Title.Log}"
                                         AutoHideMinHeight="150"
                                         CanClose="False"

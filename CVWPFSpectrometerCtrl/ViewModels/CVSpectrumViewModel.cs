@@ -75,7 +75,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private IVLCameraViewModel IVLCamera_viewModel;
         
         private SpectrumControl _spectralCtrl;
-
+       
         private WpfPlot _plotControl;
         //存储所有光谱曲线（Key=测量No，Value=曲线系列），用于快速切换高亮
         private Dictionary<int, LineSeries> _spectralSeriesCache = new Dictionary<int, LineSeries>();
@@ -2232,6 +2232,12 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 measurement.RowLineColor = newColor;
             }
         }
+
+        public PlotModel CloneSpectrumPlot()
+        {
+            throw new NotImplementedException();
+        }
+
         public ICommand BtnResetStatus { get; }
        
     }

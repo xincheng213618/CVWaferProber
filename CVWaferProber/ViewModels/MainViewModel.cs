@@ -70,7 +70,14 @@ namespace CVWaferProber.ViewModels
         public ICommand ClearMappingCommand { get; }
         public ICommand FlowLoadCommand { get; }
         public ICommand ExitCommand { get; }
-      
+        // 打开帮助命令
+        public ICommand OpenHelpCommand { get; }
+
+        // 打开关于命令
+        public ICommand OpenAboutCommand { get; }
+        // 布局重置命令
+        public ICommand ResetLayoutCommand { get; }
+
         public ICommand StartAutoTestCommand { get; }
         public ICommand StopAutoTestCommand { get; }
         public ICommand StartManTestCommand { get; }
@@ -82,16 +89,10 @@ namespace CVWaferProber.ViewModels
         public ICommand ResetStatusCommand { get; }
         public ICommand RCRegCommand { get; }
         public ICommand OpenVEyeWindowCommand { get; }
-        /// <summary>
-        /// 重置布局（恢复所有面板显示）
-        /// </summary>
-        public ICommand ResetLayoutCommand { get; }
+       
 
         // ========== 1. AOI列的全选/反选命令 ==========
-        //public ICommand SelectAllAOICommand { get; }
-        //public ICommand SelectAllIVLCommand { get; }
-        //public ICommand SelectAllEQECommand { get; }
-        //public ICommand SelectAllVAMCommand { get; }
+      
         public ICommand InvertSelectAOICommand { get; }
         public ICommand InvertSelectIVLCommand { get; }
         public ICommand InvertSelectEQECommand { get; }
@@ -142,61 +143,77 @@ namespace CVWaferProber.ViewModels
             }
         }
         #region 面板显示状态属性
-        // 1. 面板显示状态属性（右上角相机面板默认隐藏）
-        private bool _isMappingPanelVisible = true;
+         // 1. 面板显示状态属性（右上角相机面板默认隐藏）
+         private bool _isMappingPanelVisible = true;
+         /// <summary>
+         /// Mapping面板显示/隐藏（双向绑定菜单和面板）
+         /// </summary>
+         public bool IsMappingPanelVisible
+         {
+             get => _isMappingPanelVisible;
+             set
+             {
+                 if (_isMappingPanelVisible != value)
+                 {
+                     _isMappingPanelVisible = value;
+                     OnPropertyChanged(nameof(IsMappingPanelVisible));
+                 }
+             }
+         }
+
+         private bool _isCameraPanelVisible = true;
+         /// <summary>
+         /// Camera面板显示/隐藏
+         /// </summary>
+         public bool IsCameraPanelVisible
+         {
+             get => _isCameraPanelVisible;
+             set
+             {
+                 if (_isCameraPanelVisible != value)
+                 {
+                     _isCameraPanelVisible = value;
+                     OnPropertyChanged(nameof(IsCameraPanelVisible));
+                 }
+             }
+         }
+
+         private bool _isSPPanelVisible = true;
+         /// <summary>
+         /// SP面板显示/隐藏
+         /// </summary>
+         public bool IsSPPanelVisible
+         {
+             get => _isSPPanelVisible;
+             set
+             {
+                 if (_isSPPanelVisible != value)
+                 {
+                     _isSPPanelVisible = value;
+                     OnPropertyChanged(nameof(IsSPPanelVisible));
+                 }
+             }
+         }
+
+        private bool _isLogPanelVisible = true;
         /// <summary>
-        /// Mapping面板显示/隐藏（双向绑定菜单和面板）
+        /// 日志面板显示/隐藏
         /// </summary>
-        public bool IsMappingPanelVisible
+        public bool IsLogPanelVisible
         {
-            get => _isMappingPanelVisible;
+            get => _isLogPanelVisible;
             set
             {
-                if (_isMappingPanelVisible != value)
+                if (_isLogPanelVisible != value)
                 {
-                    _isMappingPanelVisible = value;
-                    OnPropertyChanged(nameof(IsMappingPanelVisible));
+                    _isLogPanelVisible = value;
+                    OnPropertyChanged(nameof(IsLogPanelVisible));
                 }
             }
         }
 
-        private bool _isCameraPanelVisible = true;
-        /// <summary>
-        /// Camera面板显示/隐藏
-        /// </summary>
-        public bool IsCameraPanelVisible
-        {
-            get => _isCameraPanelVisible;
-            set
-            {
-                if (_isCameraPanelVisible != value)
-                {
-                    _isCameraPanelVisible = value;
-                    OnPropertyChanged(nameof(IsCameraPanelVisible));
-                }
-            }
-        }
-
-        private bool _isSPPanelVisible = true;
-        /// <summary>
-        /// SP面板显示/隐藏
-        /// </summary>
-        public bool IsSPPanelVisible
-        {
-            get => _isSPPanelVisible;
-            set
-            {
-                if (_isSPPanelVisible != value)
-                {
-                    _isSPPanelVisible = value;
-                    OnPropertyChanged(nameof(IsSPPanelVisible));
-                }
-            }
-        }
 
 
-
-        
 
         #endregion
 
@@ -258,7 +275,7 @@ namespace CVWaferProber.ViewModels
             CustomIVLVM = new CVSpectrumViewModel();
             //
             // 初始化重置布局命令
-            ResetLayoutCommand = new RelayCommand(ResetLayout);
+           
             OpenVEyeWindowCommand = new RelayCommand(OpenVEyeWindow);
             RefreshStatusCommand = new RelayCommand(RefreshStatus);
             OpenMappingFileCommand = new RelayCommand(OpenMappingFile);
@@ -272,22 +289,10 @@ namespace CVWaferProber.ViewModels
             ClearMappingCommand = new RelayCommand(_ => ClearMapping());
             FlowLoadCommand = new RelayCommand(_ => LoadBuzWPFlows());
             RCRegCommand = new RelayCommand(_ => RCReg());
-
-            // 初始化数据源（实际项目中是从文件/接口加载）
-            TestResults = new ObservableCollection<DieViewModel>();
-
-            TestResults.CollectionChanged += AOIItems_CollectionChanged;
-            TestResults.CollectionChanged += IVLItems_CollectionChanged;
-            TestResults.CollectionChanged += EQEItems_CollectionChanged;
-            TestResults.CollectionChanged += VAMItems_CollectionChanged;
-            
-            // 绑定命令到方法
-          
-            InvertSelectAOICommand = new RelayCommand(ExecuteInvertSelectAOI);
-            InvertSelectIVLCommand = new RelayCommand(ExecuteInvertSelectIVL);
-            InvertSelectEQECommand = new RelayCommand(ExecuteInvertSelectEQE);
-            InvertSelectVAMCommand = new RelayCommand(ExecuteInvertSelectVAM);
-           
+            // 初始化命令
+            ResetLayoutCommand = new RelayCommand(ExecuteResetLayout);
+            OpenHelpCommand = new RelayCommand(ExecuteOpenHelp);
+            OpenAboutCommand = new RelayCommand(ExecuteOpenAbout);
             // 绑定退出命令：执行 Application.Shutdown() 关闭整个程序
             ExitCommand = new CVImgRelayCommand(() =>
             {
@@ -304,6 +309,22 @@ namespace CVWaferProber.ViewModels
                 }
             });
             // 绑定重置布局命令（使用你的CVImgRelayCommand）
+            // 初始化数据源（实际项目中是从文件/接口加载）
+            TestResults = new ObservableCollection<DieViewModel>();
+
+            TestResults.CollectionChanged += AOIItems_CollectionChanged;
+            TestResults.CollectionChanged += IVLItems_CollectionChanged;
+            TestResults.CollectionChanged += EQEItems_CollectionChanged;
+            TestResults.CollectionChanged += VAMItems_CollectionChanged;
+            
+            // 绑定命令到方法
+          
+            InvertSelectAOICommand = new RelayCommand(ExecuteInvertSelectAOI);
+            InvertSelectIVLCommand = new RelayCommand(ExecuteInvertSelectIVL);
+            InvertSelectEQECommand = new RelayCommand(ExecuteInvertSelectEQE);
+            InvertSelectVAMCommand = new RelayCommand(ExecuteInvertSelectVAM);
+           
+           
            
             InitMysqlCfg();
             //
@@ -331,19 +352,58 @@ namespace CVWaferProber.ViewModels
             SubscribeItems_EQE(TestResults);
             SubscribeItems_VAM(TestResults);
             // 加载上次保存的面板状态（需先在Settings中配置）
-            IsMappingPanelVisible = Properties.Settings.Default.IsMappingPanelVisible;
-            IsCameraPanelVisible = Properties.Settings.Default.IsCameraPanelVisible;
-            IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
+            //IsMappingPanelVisible = Properties.Settings.Default.IsMappingPanelVisible;
+            //IsCameraPanelVisible = Properties.Settings.Default.IsCameraPanelVisible;
+            //IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
 
         }
-        // 保存面板状态（窗口关闭时调用）
-        public void SavePanelStates()
+
+       
+
+        /// <summary>
+        /// 重置布局请求事件（View需订阅此事件）
+        /// </summary>
+        public event EventHandler ResetLayoutRequested;
+        private void ExecuteResetLayout(object obj)
         {
-            Properties.Settings.Default.IsMappingPanelVisible = IsMappingPanelVisible;
-            Properties.Settings.Default.IsCameraPanelVisible = IsCameraPanelVisible;
-            Properties.Settings.Default.IsSPPanelVisible = IsSPPanelVisible;
-            Properties.Settings.Default.Save();
+            ResetLayoutRequested?.Invoke(this, EventArgs.Empty);
         }
+        /// <summary>
+        /// 打开帮助文档执行逻辑
+        /// </summary>
+        private void ExecuteOpenHelp(object obj)
+        {
+            // 示例：打开帮助PDF/网页
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    //FileName = "https://www.example.com/help", // 替换为实际帮助地址/文件路径
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"打开帮助失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        /// <summary>
+        /// 打开关于窗口执行逻辑
+        /// </summary>
+        private void ExecuteOpenAbout(object obj)
+        {
+            // 示例：弹出关于窗口（需定义AboutWindow）
+            //var aboutWindow = new AboutWindow(); // 需自行创建AboutWindow视图
+            //aboutWindow.ShowDialog();
+        }
+        // 保存面板状态（窗口关闭时调用）
+        //public void SavePanelStates()
+        //{
+        //    Properties.Settings.Default.IsMappingPanelVisible = IsMappingPanelVisible;
+        //    Properties.Settings.Default.IsCameraPanelVisible = IsCameraPanelVisible;
+        //    Properties.Settings.Default.IsSPPanelVisible = IsSPPanelVisible;
+        //    Properties.Settings.Default.Save();
+        //}
         // ViewModel中新增重新加载Mapping面板的方法
         public void ReloadMappingPanel(DockingManager dockingManager)
         {
@@ -366,12 +426,12 @@ namespace CVWaferProber.ViewModels
         /// <summary>
         /// 重置布局逻辑
         /// </summary>
-        private void ResetLayout(object obj)
-        {
-            IsMappingPanelVisible = true;
-            IsCameraPanelVisible = true;
-            IsSPPanelVisible = true;
-        }
+        //private void ResetLayout(object obj)
+        //{
+        //    IsMappingPanelVisible = true;
+        //    IsCameraPanelVisible = true;
+        //    IsSPPanelVisible = true;
+        //}
         
         // ========== AOI列逻辑 ==========
             #region AOI 全选/部分选中
