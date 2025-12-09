@@ -57,7 +57,7 @@
             <!--  缩放信息显示组  -->
             <StackPanel Margin="10,0" Orientation="Horizontal">
                 <!--  缩放滑块  -->
-                <TextBlock Text="{DynamicResource Zoom level:}" />
+                <TextBlock Text="{DynamicResource Zoom level}" />
                 <Slider
                     x:Name="ZoomSlider"
                     Width="120"
@@ -75,7 +75,7 @@
                 <TextBlock
                     FontWeight="Bold"
                     Foreground="#FF333333"
-                    Text="{DynamicResource Zoom:}" />
+                    Text="{DynamicResource Zoom}" />
                 <TextBlock
                     x:Name="ZoomPercentageText"
                     MinWidth="40"
@@ -93,7 +93,7 @@
                     <TextBlock
                         FontWeight="Bold"
                         Foreground="#FF333333"
-                        Text="{DynamicResource Image Dimensions:}" />
+                        Text="{DynamicResource Image Dimensions}" />
                     <TextBlock
                         x:Name="ImageDimensionsText"
                         MinWidth="100"
@@ -104,7 +104,7 @@
                         Foreground="#FFCCCCCC"
                         Text="|" />
 
-                    <TextBlock Text="{DynamicResource Display Dimensions:}" />
+                    <TextBlock Text="{DynamicResource Display Dimensions}" />
                     <TextBlock
                         x:Name="DisplayDimensionsText"
                         MinWidth="100"
@@ -115,7 +115,7 @@
                         Foreground="#FFCCCCCC"
                         Text="|" />
 
-                    <TextBlock Text="{DynamicResource Resolution:}" />
+                    <TextBlock Text="{DynamicResource Resolution}" />
                     <TextBlock
                         x:Name="ResolutionText"
                         MinWidth="60"
@@ -126,7 +126,7 @@
 
                 <!--  文件信息组  -->
                 <StackPanel Margin="10,0" Orientation="Horizontal">
-                    <TextBlock FontWeight="Bold" Text="{DynamicResource CurrentFile:}" />
+                    <TextBlock FontWeight="Bold" Text="{DynamicResource CurrentFile}" />
                     <TextBlock
                         x:Name="CurrentFileNameText"
                         MaxWidth="200"
@@ -138,13 +138,13 @@
                         Foreground="#FFCCCCCC"
                         Text="|" />
 
-                    <TextBlock Text="{DynamicResource FileSize:}" />
+                    <TextBlock Text="{DynamicResource FileSize}" />
                     <TextBlock
                         x:Name="FileSizeText"
                         MinWidth="60"
                         Text="0 MB" />
 
-                    <TextBlock Text="{DynamicResource Progress:}" />
+                    <TextBlock Text="{DynamicResource Progress}" />
                     <TextBlock
                         x:Name="LoadingProgressText"
                         MinWidth="40"

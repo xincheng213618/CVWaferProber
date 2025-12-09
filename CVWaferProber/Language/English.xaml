@@ -97,16 +97,16 @@
     <sys:String x:Key="Reload">🔄Reload</sys:String>
     <sys:String x:Key="Clear">❌Clear</sys:String>
 
-    <sys:String x:Key="Zoom level:">Zoom level:</sys:String>
-    <sys:String x:Key="Zoom:">Zoom:</sys:String>
-    <sys:String x:Key="Image Dimensions:">Image Dimensions:</sys:String>
+    <sys:String x:Key="Zoom level">Zoom level：</sys:String>
+    <sys:String x:Key="Zoom">Zoom：</sys:String>
+    <sys:String x:Key="Image Dimensions">Image Dimensions：</sys:String>
     <sys:String x:Key="0 × 0 pixels">0 × 0 pixels</sys:String>
-    <sys:String x:Key="Display Dimensions:">Display Dimensions:</sys:String>
-    <sys:String x:Key="Resolution:">Resolution:</sys:String>
-    <sys:String x:Key="CurrentFile:">CurrentFile:</sys:String>
+    <sys:String x:Key="Display Dimensions">Display Dimensions：</sys:String>
+    <sys:String x:Key="Resolution">Resolution：</sys:String>
+    <sys:String x:Key="CurrentFile">CurrentFile：</sys:String>
     <sys:String x:Key="Unselected">Unselected</sys:String>
-    <sys:String x:Key="FileSize:">FileSize:</sys:String>
-    <sys:String x:Key="Progress:">Progress:</sys:String>
+    <sys:String x:Key="FileSize">FileSize：</sys:String>
+    <sys:String x:Key="Progress">Progress：</sys:String>
 
     <sys:String x:Key="Image.GridHeader.Id">Id</sys:String>
     <sys:String x:Key="Image.GridHeader.FileName">FileName</sys:String>
