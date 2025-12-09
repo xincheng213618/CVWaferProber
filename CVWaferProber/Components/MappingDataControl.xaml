@@ -67,17 +67,63 @@
             <Setter Property="Margin" Value="1,0" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="HorizontalAlignment" Value="Center" />
-            <Setter Property="Width" Value="18" />
+            <Setter Property="Width" Value="17" />
             <Setter Property="Height" Value="17" />
             <Setter Property="FontSize" Value="10" />
             <Setter Property="Foreground" Value="{StaticResource PrimaryColor}" />
             <Setter Property="Background" Value="White" />
             <Setter Property="BorderBrush" Value="{StaticResource BorderGrayColor}" />
             <Setter Property="BorderThickness" Value="1" />
-            <!--<Setter Property="CornerRadius" Value="{StaticResource DefaultCornerRadius}"/>-->
+            <!--<Setter Property="CornerRadius" Value="{StaticResource DefaultCornerRadius}"/>StrokeEndLineCap="Square" StrokeStartLineCap="Square"-->
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Content" Value="🔄" />
-            <!--  反选图标  -->
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <!--  强制自定义模板，避免系统样式覆盖  -->
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="RootBorder"
+                            Width="{TemplateBinding Width}"
+                            Height="{TemplateBinding Height}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{StaticResource DefaultCornerRadius}">
+                            <!--  直接内嵌图标，取消Content绑定，强制显示  -->
+                            <Path
+                                Width="10"
+                                Height="10"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Data="M1,6 L4,3 M1,6 L4,9 M11,6 L8,3 M11,6 L8,9 M5,6 L7,6"
+                                Stretch="Uniform"
+                                Stroke="{Binding Path=Foreground, RelativeSource={RelativeSource TemplatedParent}}"
+                                StrokeEndLineCap="Square"
+                                StrokeLineJoin="Bevel"
+                                StrokeStartLineCap="Square"
+                                StrokeThickness="1.1" />
+                        </Border>
+                        <!--  强制触发器，优先级最高  -->
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource PrimaryColor}" />
+                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{StaticResource PrimaryDarkColor}" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource PrimaryDarkColor}" />
+                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="#FF00479E" />
+                                <Setter Property="Padding" Value="1" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <!--  强制默认前景色  -->
+            <Setter Property="Foreground" Value="{StaticResource PrimaryColor}" />
+        </Style>
+        <!--  反选图标  -->
+        <!--
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{StaticResource PrimaryColor}" />
@@ -88,10 +134,12 @@
                     <Setter Property="Background" Value="{StaticResource PrimaryDarkColor}" />
                     <Setter Property="BorderBrush" Value="#FF00479E" />
                     <Setter Property="Padding" Value="1" />
-                    <!--  按压微位移  -->
+        -->
+        <!--  按压微位移  -->
+        <!--
                 </Trigger>
             </Style.Triggers>
-        </Style>
+        </Style>-->
 
         <!--  单元格复选框样式（优化选中态）  -->
         <Style x:Key="CellCheckBoxStyle" TargetType="CheckBox">
@@ -271,7 +319,6 @@
                                             Height="30"
                                             Margin="5,5"
                                             Orientation="Horizontal">
-                                            <!-- <Button Content="{DynamicResource BtnReRegist}" Command="{Binding RCRegCommand}"  IsEnabled="{Binding IsNotProcessing}" Width="120" Margin="0,0,10,0"/>  -->
                                             <ComboBox
                                                 Width="250"
                                                 Height="30"
@@ -310,7 +357,7 @@
                                                     Margin="5,0"
                                                     IsEnabled="{Binding IsNotProcessing}"
                                                     IsReadOnly="{Binding IsAutoSN}"
-                                                    Text="{Binding SerialNumber}" />
+                                                    Text="{Binding SearchSN, UpdateSourceTrigger=PropertyChanged}" />
                                                 <!--<CheckBox
                                                 Text="{Binding Timestamp}"
                                                     x:Name="ChkIsAutoSN"
@@ -432,7 +479,7 @@
                                 AutoGenerateColumns="False"
                                 HorizontalScrollBarVisibility="Auto"
                                 IsReadOnly="False"
-                                ItemsSource="{Binding TestResults}"
+                                ItemsSource="{Binding FilteredTestResults}"
                                 SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
                                 SelectionMode="Single"
                                 SelectionUnit="FullRow"

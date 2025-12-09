@@ -40,6 +40,12 @@ namespace CVWaferProber.ViewModels
                 case "Flow.IVL.Camera":
                     FlowType = CVWaferProberFlowType.IVL_Camera;
                     break;
+                case "Flow.EQE":
+                    FlowType = CVWaferProberFlowType.EQE;
+                    break;
+                case "Flow.VAM":
+                    FlowType = CVWaferProberFlowType.VAM;
+                    break;
             }
         }
 
@@ -62,5 +68,7 @@ namespace CVWaferProber.ViewModels
         AOI,
         IVL_SP,
         IVL_Camera,
+        EQE,
+        VAM
     }
 }

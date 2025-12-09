@@ -55,6 +55,7 @@
     <sys:String x:Key="Sp.AbsoluteSpectrum">AbsoluteSpectrum</sys:String>
     <sys:String x:Key="Sp.ShowAllData">ShowAllData</sys:String>
     <sys:String x:Key="Sp.ShowSpectralDetail">ShowSpectralDetail</sys:String>
+    <sys:String x:Key="Sp.Measurement">Measurement</sys:String>
     <!--  测量参数  -->
     <sys:String x:Key="Sp.MeasurementBatch">Measurement Batch</sys:String>
     <sys:String x:Key="Sp.Voltage">Voltage/V(V)</sys:String>

@@ -49,13 +49,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
         private PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = 0, DefaultMaxRange = 200000000000000000 };
         private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = 0, DefaultMaxRange = 6000000000000000 };
-      
+        string I = (string)Application.Current.FindResource("Sp.Current");
+        string L = (string)Application.Current.FindResource("Sp.Luminance");
         private void InitializePlotModel()
         {
           
             _plotModel = new PlotModel
             {
-                Title = "IL曲线",
+                Title = (string)Application.Current.FindResource("Sp.IL Curve"),
                 TitleFontSize = 14,
                 TitleFontWeight = OxyPlot.FontWeights.Bold,
                
@@ -65,7 +66,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var xAxis = new LinearAxis
             {
                 Position = AxisPosition.Bottom,
-                Title = (string)Application.Current.FindResource("Sp.Current"),
+                Title = I,
                 TitleFontSize = 12,
                 TitleFontWeight = OxyPlot.FontWeights.Normal,
                 MajorGridlineStyle = OxyPlot.LineStyle.Solid,
@@ -83,7 +84,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var yAxis = new LinearAxis
             {
                 Position = AxisPosition.Left,
-                Title = (string)Application.Current.FindResource("Sp.Luminance"),
+                Title = L,
                 TitleFontSize = 12,
                 TitleFontWeight = OxyPlot.FontWeights.Normal,
                 MajorGridlineStyle = OxyPlot.LineStyle.Solid,
@@ -188,7 +189,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             // 6. 保留原有折线图配置
             var lineSeries = new LineSeries
             {
-                Title = "IL曲线",
+                Title = (string)Application.Current.FindResource("Sp.IL Curve"),
                 Color = OxyColors.Green,
                 StrokeThickness = 1.5,
                 MarkerType = MarkerType.Circle,
@@ -197,7 +198,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 MarkerStroke = OxyColors.Green,
                 MarkerStrokeThickness = 1.5,
                 LineStyle = OxyPlot.LineStyle.Solid,
-                CanTrackerInterpolatePoints = true
+                CanTrackerInterpolatePoints = true,
+               // TrackerFormatString = "{0}\n {1}: {2:0.00}\n {3}: {4:0.00}"
             };
 
             // 7. 添加数据点（X=电流，Y=亮度，与原逻辑一致）

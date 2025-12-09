@@ -75,7 +75,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private IVLCameraViewModel IVLCamera_viewModel;
         
         private SpectrumControl _spectralCtrl;
-
+       
         private WpfPlot _plotControl;
         //存储所有光谱曲线（Key=测量No，Value=曲线系列），用于快速切换高亮
         private Dictionary<int, LineSeries> _spectralSeriesCache = new Dictionary<int, LineSeries>();
@@ -129,7 +129,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 }
             }
         }
-        private SolidColorBrush _spectralLineColor = new SolidColorBrush(Colors.Blue);
+        private SolidColorBrush _spectralLineColor = new SolidColorBrush(Colors.Red);
 
         public SolidColorBrush SpectralLineColor
         {
@@ -140,7 +140,23 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 {
                     _spectralLineColor = value;
                     OnPropertyChanged(nameof(SpectralLineColor));
-                    UpdateChartLineColor(); // 更新图表颜色
+                    // 转换为OxyColor
+                    OxyColor newOxyColor = ConvertToOxyColor(value);
+
+                    // ===== 根据IsShowAllData判断更新范围 =====
+                    if (IsShowAllData && SelectedMeasurement != null)
+                    {
+                        // 勾选显示所有数据：仅更新选中行的颜色
+                        SelectedMeasurement.RowLineColor = newOxyColor;
+                        // 实时刷新选中曲线的颜色
+                        UpdateSelectedCurveColor(newOxyColor);
+                    }
+                    else
+                    {
+                        // 未勾选：更新所有数据的颜色 + 刷新所有曲线
+                        UpdateAllMeasurementsLineColor(newOxyColor);
+                        UpdateChartLineColor();
+                    }
                 }
             }
         }
@@ -320,7 +336,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 }
             }
         }
-
+        string Measurement1 = (string)Application.Current.FindResource("Sp.Measurement");
         private void DrawAllMeasurementsInChart()
         {
             if (!Measurements.Any())
@@ -351,21 +367,21 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OxyColor.FromAColor(115, OxyColors.SkyBlue)
             };
             int colorIndex = 0;
-
+            
             foreach (var measurement in Measurements)
             {
                 // 用测量No作为缓存Key（唯一标识）
                 int measNo = measurement.No;
-                // 图例标注：显示「测量No + 时间戳」
-                string seriesTitle = $"No:{measNo} | {measurement.Timestamp:yyyy-MM-dd HH:mm}";
+                // 显示「测量No + 时间戳」
+               // string seriesTitle = $"No:{measNo} | {measurement.Timestamp:yyyy-MM-dd HH:mm}";
                 // 判断是否为当前选中项
                 bool isSelected = SelectedMeasurement != null && measNo == SelectedMeasurement.No;
-
+               
                 var lineSeries = new LineSeries
                 {
-                    Title = seriesTitle,
+                    Title = $"{Measurement1} {SelectedMeasurement.Meas_Id}",
                     // 选中：红色；未选中：循环半透明颜色
-                    Color = isSelected ? OxyColors.Red : unselectedColors[colorIndex % unselectedColors.Length],
+                    Color = isSelected ? measurement.RowLineColor : unselectedColors[colorIndex % unselectedColors.Length],
                     // 选中：加粗（2.0px）；未选中：细线条（1.5px）
                     StrokeThickness = isSelected ? 2.0 : 1.5,
                     // 选中：显示圆形标记点；未选中：无标记点
@@ -375,7 +391,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                    // MarkerStroke = OxyColors.White, // 标记点白色边框，更醒目
                    // MarkerStrokeThickness = 0.5,
                     IsVisible = true,
-                    TrackerFormatString = "波长: {X:.0}nm | 强度: {Y:.4f}" // 鼠标悬浮提示
+                    //TrackerFormatString = "波长: {X:.00}nm | 光谱: {Y:0.00}" // 鼠标悬浮提示
                 };
 
                 // 填充数据点（过滤异常值）
@@ -645,8 +661,10 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         MinorGridlineStyle = linearAxis.MinorGridlineStyle,
                         IsZoomEnabled = false, // 总览图禁用手动缩放
                         IsPanEnabled = false
+                       
                     };
-                    // ========== 关键修改：总览光谱图强制锁定X轴650~800nm ==========
+                    // ========== 总览光谱图强制锁定X轴650~800nm ==========
+
             if (title == (string)Application.Current.FindResource("Sp.Spectral") || title == "光谱")
             {
                 if (clonedAxis.Position == AxisPosition.Bottom) // X轴（波长）
@@ -742,7 +760,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         Color = curveColors[colorIndex % curveColors.Length], // 循环使用颜色
                         StrokeThickness = strokeThickness, // 统一粗细
                         IsVisible = true,
-                        TrackerFormatString = "波长: {X:.0}nm | 强度: {Y:.4f}"
+                        CanTrackerInterpolatePoints = true,
+                        TrackerFormatString = "{0}\n {1}: {2:0.00}\n {3}: {4:0.00}"
                     };
 
                     // 填充数据点（过滤异常值）
@@ -789,6 +808,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     MarkerType = MarkerType.Circle,
                     //MarkerSize = 2,
                     MarkerFill = OxyColors.Red,
+                    CanTrackerInterpolatePoints = true,
+                    TrackerFormatString = "{0}\n {1}: {2:0.00}\n {3}: {4:0.00}"
                 };
                 OverviewIVPlotModel.Series.Add(ivSeries);
                 RefreshAxisRange(OverviewIVPlotModel);
@@ -804,7 +825,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     StrokeThickness = 1.5,
                     MarkerType = MarkerType.Circle,
                     //MarkerSize = 2,
-                    MarkerFill = OxyColors.Green
+                    MarkerFill = OxyColors.Green,
+                    CanTrackerInterpolatePoints = true,
+                    TrackerFormatString = "{0}\n {1}: {2:0.00}\n {3}: {4:0.00}"
                 };
                 OverviewILPlotModel.Series.Add(ilSeries);
                 RefreshAxisRange(OverviewILPlotModel);
@@ -820,7 +843,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     StrokeThickness = 1.5,
                     MarkerType = MarkerType.Circle,
                     //MarkerSize = 2,
-                    MarkerFill = OxyColors.Purple
+                    MarkerFill = OxyColors.Purple,
+                    CanTrackerInterpolatePoints = true,
+                    TrackerFormatString = "{0}\n {1}: {2:0.00}\n {3}: {4:0.00}"
                 };
                 OverviewVLPlotModel.Series.Add(vlSeries);
                 RefreshAxisRange(OverviewVLPlotModel);
@@ -1741,7 +1766,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             var lineSeries = new LineSeries
             {
-                Title = $"测量 {SelectedMeasurement.Meas_Id}",
+                Title = $"{Measurement1} {SelectedMeasurement.Meas_Id}",
                 Color = OxyColors.Blue,
                 StrokeThickness = 1.5
             };
@@ -1934,8 +1959,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     FHW= (float)result.FHW,
                     Intensities = JsonConvert.DeserializeObject<float[]>(result.FPL),
                     Wavelengths = Wavelengths,
-                    fPlambda= (float)result.FPlambda
-                    
+                    fPlambda= (float)result.FPlambda,
+                    RowLineColor = ConvertToOxyColor(SpectralLineColor)
                 };
                 double sum1 = 0, sum2 = 0;
                 for (int i = 35; i <= 75; i++)
@@ -2004,7 +2029,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             {
                 var selectedSeries = _spectralSeriesCache[SelectedMeasurement.No];
                 // 选中样式
-                selectedSeries.Color = OxyColors.Red;
+                selectedSeries.Color = SelectedMeasurement.RowLineColor;
                 selectedSeries.StrokeThickness = 2.0;
               
                 selectedSeries.Title = $"No:{SelectedMeasurement.No} | {SelectedMeasurement.Timestamp:yyyy-MM-dd HH:mm}（选中）";
@@ -2161,6 +2186,59 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             public double Wavelength { get; set; } // 波长(nm)
             public float RelativeSpectrum { get; set; } // 相对光谱
             public float AbsoluteSpectrum { get; set; } // 绝对光谱
+        }
+        private OxyColor ConvertToOxyColor(SolidColorBrush brush)
+        {
+            if (brush == null) return OxyColors.Blue; // 默认蓝色
+            return OxyColor.FromArgb(
+                brush.Color.A,
+                brush.Color.R,
+                brush.Color.G,
+                brush.Color.B);
+        }
+        /// <summary>
+        /// 仅更新选中曲线的颜色（勾选显示所有数据时用）
+        /// </summary>
+        private void UpdateSelectedCurveColor(OxyColor newColor)
+        {
+            if (_spectralSeriesCache.Count == 0 || SelectedMeasurement == null) return;
+
+            // 从缓存中找到选中行的曲线
+            if (_spectralSeriesCache.TryGetValue(SelectedMeasurement.No, out LineSeries selectedSeries))
+            {
+                selectedSeries.Color = newColor;
+                selectedSeries.MarkerFill = newColor; // 标记点同步颜色
+                selectedSeries.MarkerStroke = newColor;
+                PlotModel.InvalidatePlot(true); // 实时刷新
+            }
+
+            // 同步更新总览图的选中曲线颜色
+            if (OverviewSpectralPlotModel.Series.Any())
+            {
+                var overviewSelectedSeries = OverviewSpectralPlotModel.Series.OfType<LineSeries>()
+                    .FirstOrDefault(s => s.Title.Contains($"No:{SelectedMeasurement.No}"));
+                if (overviewSelectedSeries != null)
+                {
+                    overviewSelectedSeries.Color = newColor;
+                    OverviewSpectralPlotModel.InvalidatePlot(true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 更新所有测量数据的行颜色（未勾选显示所有数据时用）
+        /// </summary>
+        private void UpdateAllMeasurementsLineColor(OxyColor newColor)
+        {
+            foreach (var measurement in Measurements)
+            {
+                measurement.RowLineColor = newColor;
+            }
+        }
+
+        public PlotModel CloneSpectrumPlot()
+        {
+            throw new NotImplementedException();
         }
 
         public ICommand BtnResetStatus { get; }

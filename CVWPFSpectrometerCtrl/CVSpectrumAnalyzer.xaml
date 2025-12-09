@@ -209,11 +209,7 @@
                     <oxy:PlotView
                         Grid.Row="1"
                         Grid.ColumnSpan="3"
-
-                     
-                      
-
-                        Margin="5,0"
+                        Margin="5,0,5,0"
                         Loaded="PlotView_Loaded"
 
                         Model="{Binding PlotModel}" />
@@ -476,11 +472,7 @@
                     <!--  IV图表区域  -->
                     <oxy:PlotView
                         Grid.Row="1"
-<<<<<<< HEAD
                         Margin="5"
-                       
-=======
-                        Margin="5,0"
                         Loaded="PlotView_Loaded"
 >>>>>>> d861a17a4dad062716dc1f31306a358464b25c35
                         Model="{Binding IVPlotModel}" />
@@ -767,11 +759,7 @@
                     <oxy:PlotView
                         Grid.Row="1"
                         Grid.ColumnSpan="2"
-<<<<<<< HEAD
                         Margin="5,5,5,5"
-                        
-=======
-                        Margin="5,0"
                         Loaded="PlotView_Loaded"
 >>>>>>> d861a17a4dad062716dc1f31306a358464b25c35
                         Model="{Binding VLPlotModel}" />

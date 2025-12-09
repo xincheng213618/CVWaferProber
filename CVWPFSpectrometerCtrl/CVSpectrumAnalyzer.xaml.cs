@@ -35,6 +35,7 @@ namespace CVWPFSpectrometerCtrl
             };
            
         }
+       
         private void PlotView_Loaded(object sender, RoutedEventArgs e)
         {
             var plotView = sender as PlotView;

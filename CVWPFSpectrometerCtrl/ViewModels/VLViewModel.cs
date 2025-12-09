@@ -57,7 +57,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             _plotModel = new PlotModel
             {
-                Title = "VL曲线",
+                Title = (string)Application.Current.FindResource("Sp.VL Curve"),
                 //Title = (string)Application.Current.FindResource(""),
                 TitleFontSize = 14
             };
@@ -184,7 +184,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             // 6. 保留原有折线图配置
             var lineSeries = new LineSeries
             {
-                Title = "VL曲线",
+                Title = (string)Application.Current.FindResource("Sp.VL Curve"),
                 Color = OxyColors.Purple,
                 StrokeThickness = 1.5,
                 MarkerType = MarkerType.Circle,
@@ -193,6 +193,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 MarkerStroke = OxyColors.Purple,
                 MarkerStrokeThickness = 1.5,
                 LineStyle = LineStyle.Solid,
+                CanTrackerInterpolatePoints = true,
+               // TrackerFormatString = "{0}\n {1}: {2:0.00}\n {3}: {4:0.00}"
             };
 
             // 7. 添加数据点（X=电压，Y=亮度，与原逻辑一致）

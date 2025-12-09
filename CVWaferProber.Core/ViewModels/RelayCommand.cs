@@ -7,6 +7,8 @@ namespace CVWaferProber.Core.ViewModels
         private readonly Action<object> execute;
         private readonly Predicate<object> canExecute;
 
+        public Action ExecuteSearch { get; }
+
         //Func<object,bool> =>Predicate<object> ss
         public RelayCommand(Action<object> execute)
         {
@@ -17,6 +19,11 @@ namespace CVWaferProber.Core.ViewModels
         {
             this.execute = execute ?? throw new ArgumentNullException(nameof(execute));
             this.canExecute = canExecute;
+        }
+
+        public RelayCommand(Action executeSearch)
+        {
+            ExecuteSearch = executeSearch;
         }
 
         public bool CanExecute(object? parameter) => canExecute is null || canExecute(parameter);

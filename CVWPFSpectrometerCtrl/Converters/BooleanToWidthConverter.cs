@@ -7,21 +7,19 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 
-namespace CVWaferProber.Converters
+namespace CVWPFSpectrometerCtrl.Converters
 {
-    public class BooleanToVisibilityConverter : IValueConverter
+    public class BooleanToWidthConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return (value is bool b && b) ? Visibility.Visible : Visibility.Collapsed;
+            // 若IsChecked为True，返回100；否则返回0
+            return (value is bool isChecked && isChecked) ? 200.0 : 0.0;
         }
-
-        // 先注释反向转换，测试正向绑定是否生效
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            // return (value is Visibility v && v == Visibility.Visible);
-            throw new NotImplementedException();
+            // 无需反向转换，返回UnsetValue
+            return DependencyProperty.UnsetValue;
         }
-
     }
 }

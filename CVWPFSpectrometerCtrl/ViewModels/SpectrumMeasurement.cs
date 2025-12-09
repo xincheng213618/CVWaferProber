@@ -1,5 +1,8 @@
 ﻿using CVWaferProber.Core.ViewModels;
 using CVWPFSpectrumControl.Models;
+using OxyPlot;
+using System.Drawing;
+using System.Windows;
 
 namespace CVWPFSpectrometerCtrl.ViewModels
 {
@@ -217,8 +220,21 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
         }
 
+
        
-                
+        private OxyColor _rowLineColor = OxyColors.Red; // 默认红色
+        /// <summary>
+        /// 该行专属的线条颜色（勾选显示所有数据时生效）
+        /// </summary>
+        public OxyColor RowLineColor
+        {
+            get => _rowLineColor;
+            set
+            {
+                _rowLineColor = value;
+                OnPropertyChanged(nameof(RowLineColor));
+            }
+        }
         // 原始光谱数据（不显示在DataGrid中）
         public float[] Wavelengths { get; set; }
         public float[] Intensities { get; set; }
