@@ -75,8 +75,8 @@ namespace CVWaferProber.ViewModels
 
         // 打开关于命令
         public ICommand OpenAboutCommand { get; }
-        // 布局重置命令
-        public ICommand ResetLayoutCommand { get; }
+        //// 布局重置命令
+        //public ICommand ResetLayoutCommand { get; }
 
         public ICommand StartAutoTestCommand { get; }
         public ICommand StopAutoTestCommand { get; }
@@ -217,7 +217,28 @@ namespace CVWaferProber.ViewModels
 
         #endregion
 
+        #region SN查找功能
+        // SN查找输入属性
+        private string _searchSN;
+        public string SearchSN
+        {
+            get => _searchSN;
+            set => SetProperty(ref _searchSN, value);
+        }
 
+        // 筛选后的测试结果集合（绑定到DataGrid）
+        private ObservableCollection<DieViewModel> _filteredTestResults;
+        public ObservableCollection<DieViewModel> FilteredTestResults
+        {
+            get => _filteredTestResults;
+            set => SetProperty(ref _filteredTestResults, value);
+        }
+
+        // 查找命令
+        public ICommand SearchCommand { get; }
+
+     
+        #endregion
 
 
         private readonly Random _random = new Random();
@@ -267,7 +288,7 @@ namespace CVWaferProber.ViewModels
             _selectedFlow = null;
             _dataGrid = null;
             _isIVLCameraEnabled = false;
-            _isAutoSN = true;
+            _isAutoSN = false;
             rcModel = new RCRestService();
             //algResultModel = new AlgResultModel();
             CustomMappingVM = new ChipMappingControlViewModel();
@@ -275,6 +296,7 @@ namespace CVWaferProber.ViewModels
             CustomIVLVM = new CVSpectrumViewModel();
             //
             // 初始化重置布局命令
+            SearchCommand = new RelayCommand(ExecuteSearch);
            
             OpenVEyeWindowCommand = new RelayCommand(OpenVEyeWindow);
             RefreshStatusCommand = new RelayCommand(RefreshStatus);
@@ -289,8 +311,8 @@ namespace CVWaferProber.ViewModels
             ClearMappingCommand = new RelayCommand(_ => ClearMapping());
             FlowLoadCommand = new RelayCommand(_ => LoadBuzWPFlows());
             RCRegCommand = new RelayCommand(_ => RCReg());
-            // 初始化命令
-            ResetLayoutCommand = new RelayCommand(ExecuteResetLayout);
+            //// 初始化命令
+            //ResetLayoutCommand = new RelayCommand(ExecuteResetLayout);
             OpenHelpCommand = new RelayCommand(ExecuteOpenHelp);
             OpenAboutCommand = new RelayCommand(ExecuteOpenAbout);
             // 绑定退出命令：执行 Application.Shutdown() 关闭整个程序
@@ -323,9 +345,23 @@ namespace CVWaferProber.ViewModels
             InvertSelectIVLCommand = new RelayCommand(ExecuteInvertSelectIVL);
             InvertSelectEQECommand = new RelayCommand(ExecuteInvertSelectEQE);
             InvertSelectVAMCommand = new RelayCommand(ExecuteInvertSelectVAM);
-           
-           
-           
+            // 新增：初始化筛选集合为全部数据
+            FilteredTestResults = new ObservableCollection<DieViewModel>(TestResults);
+
+            // 新增：订阅TestResults集合变化，同步更新筛选结果
+            TestResults.CollectionChanged += (s, e) =>
+            {
+                if (string.IsNullOrWhiteSpace(SearchSN))
+                {
+                    FilteredTestResults = new ObservableCollection<DieViewModel>(TestResults);
+                }
+                else
+                {
+                    ExecuteSearch();
+                }
+            };
+
+
             InitMysqlCfg();
             //
             ProberId = "CVProber01";
@@ -357,17 +393,59 @@ namespace CVWaferProber.ViewModels
             //IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
 
         }
+        // SN索引字典
+        private Dictionary<string, List<DieViewModel>> _snIndex = new Dictionary<string, List<DieViewModel>>(StringComparer.OrdinalIgnoreCase);
 
-       
+        // 构建索引方法
+        private void BuildSNIndex()
+        {
+            _snIndex.Clear();
+            foreach (var die in TestResults)
+            {
+                if (string.IsNullOrEmpty(die.SerialNumber)) continue;
+                if (!_snIndex.ContainsKey(die.SerialNumber))
+                {
+                    _snIndex[die.SerialNumber] = new List<DieViewModel>();
+                }
+                _snIndex[die.SerialNumber].Add(die);
+            }
+        }
+        private void ExecuteSearch(object parameter = null)
+        {
+            if (string.IsNullOrWhiteSpace(SearchSN))
+            {
+                FilteredTestResults = new ObservableCollection<DieViewModel>(TestResults);
+            }
+            else
+            {
+                var searchKey = SearchSN.Trim();
+                if (_snIndex.TryGetValue(searchKey, out var results))
+                {
+                    FilteredTestResults = new ObservableCollection<DieViewModel>(results);
+                }
+                else
+                {
+                    // 模糊匹配时遍历（或扩展索引支持模糊匹配）
+                    var query = TestResults.Where(die =>
+                        !string.IsNullOrEmpty(die.SerialNumber) &&
+                        die.SerialNumber.Contains(searchKey, StringComparison.OrdinalIgnoreCase));
+                    FilteredTestResults = new ObservableCollection<DieViewModel>(query);
+                }
+            }
+        }
+
+        
+
+
 
         /// <summary>
         /// 重置布局请求事件（View需订阅此事件）
         /// </summary>
-        public event EventHandler ResetLayoutRequested;
-        private void ExecuteResetLayout(object obj)
-        {
-            ResetLayoutRequested?.Invoke(this, EventArgs.Empty);
-        }
+        //public event EventHandler ResetLayoutRequested;
+        //private void ExecuteResetLayout(object obj)
+        //{
+        //    ResetLayoutRequested?.Invoke(this, EventArgs.Empty);
+        //}
         /// <summary>
         /// 打开帮助文档执行逻辑
         /// </summary>
@@ -1460,6 +1538,16 @@ namespace CVWaferProber.ViewModels
                 {
                     TestResults.Add(item);
                 }
+            }
+            BuildSNIndex();//重建索引
+            // 同步筛选结果
+            if (string.IsNullOrWhiteSpace(SearchSN))
+            {
+                FilteredTestResults = new ObservableCollection<DieViewModel>(TestResults);
+            }
+            else
+            {
+                ExecuteSearch();
             }
         }
         // 设置DataGrid引用

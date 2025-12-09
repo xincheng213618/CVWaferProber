@@ -319,7 +319,6 @@
                                             Height="30"
                                             Margin="5,5"
                                             Orientation="Horizontal">
-                                            <!-- <Button Content="{DynamicResource BtnReRegist}" Command="{Binding RCRegCommand}"  IsEnabled="{Binding IsNotProcessing}" Width="120" Margin="0,0,10,0"/>  -->
                                             <ComboBox
                                                 Width="250"
                                                 Height="30"
@@ -358,7 +357,7 @@
                                                     Margin="5,0"
                                                     IsEnabled="{Binding IsNotProcessing}"
                                                     IsReadOnly="{Binding IsAutoSN}"
-                                                    Text="{Binding SerialNumber}" />
+                                                    Text="{Binding SearchSN, UpdateSourceTrigger=PropertyChanged}" />
                                                 <!--<CheckBox
                                                 Text="{Binding Timestamp}"
                                                     x:Name="ChkIsAutoSN"
@@ -480,7 +479,7 @@
                                 AutoGenerateColumns="False"
                                 HorizontalScrollBarVisibility="Auto"
                                 IsReadOnly="False"
-                                ItemsSource="{Binding TestResults}"
+                                ItemsSource="{Binding FilteredTestResults}"
                                 SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
                                 SelectionMode="Single"
                                 SelectionUnit="FullRow"

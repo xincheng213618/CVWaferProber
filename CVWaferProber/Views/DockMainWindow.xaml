@@ -21,6 +21,10 @@
     </Window.DataContext>
     <Window.Resources>
         <cv:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <cv:BooleanToGridLengthConverter
+            x:Key="BooleanToGridLengthConverter"
+            FalseValue="0"
+            TrueValue="300" />
     </Window.Resources>
     <Grid>
         <!--  第1行：顶部菜单栏  -->
@@ -82,10 +86,7 @@
 
 
                 <Separator />
-                <MenuItem
-                    Command="{Binding ResetLayoutCommand}"
-                    Header="{DynamicResource Menu.ResetLayout}"
-                    IsCheckable="True" />
+
             </MenuItem>
 
             <!--  帮助菜单  -->
@@ -105,6 +106,7 @@
             </avalon:DockingManager.Theme>
 
             <avalon:LayoutRoot>
+
                 <avalon:LayoutPanel Orientation="Vertical">
 
                     <!--  主布局面板 - 垂直方向分割  -->
@@ -114,16 +116,19 @@
                         <avalon:LayoutPanel Orientation="Vertical">
 
                             <!--  左上角面板  -->
-                            <avalon:LayoutAnchorablePaneGroup DockWidth="300" Orientation="Vertical">
+                            <avalon:LayoutAnchorablePaneGroup
+                                x:Name="LeftPaneGroup"
+                                DockWidth="300"
+                                Orientation="Vertical">
                                 <avalon:LayoutAnchorablePane>
                                     <avalon:LayoutAnchorable
                                         x:Name="AnchorableMapping"
                                         Title="{DynamicResource Dock.Layout.Title.Mapping}"
-                                        AutoHideMinWidth="250"
+                                        AutoHideMinWidth="20"
                                         AutoHideWidth="300"
                                         CanClose="False"
                                         CanHide="True">
-                                        <!--  新增Grid，绑定Grid的Visibility  -->
+                                        <!--  绑定Grid的Visibility  -->
                                         <DockPanel x:Name="PanelMapping">
                                             <comp:MappingDataControl />
                                         </DockPanel>
@@ -133,10 +138,13 @@
                         </avalon:LayoutPanel>
 
                         <!--  右半部分面板  -->
-                        <avalon:LayoutPanel Orientation="Vertical">
+                        <avalon:LayoutPanel
+                            x:Name="RightPaneGroup"
+                            DockWidth="300"
+                            Orientation="Vertical">
 
                             <!--  右上角面板  -->
-                            <avalon:LayoutAnchorablePaneGroup DockWidth="300">
+                            <avalon:LayoutAnchorablePaneGroup>
                                 <avalon:LayoutAnchorablePane>
                                     <avalon:LayoutAnchorable
                                         x:Name="AnchorableCamera"
