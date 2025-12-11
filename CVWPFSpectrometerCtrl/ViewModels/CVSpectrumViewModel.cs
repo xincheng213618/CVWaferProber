@@ -42,7 +42,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private PlotModel _IVPlotModel;
         private PlotModel _ILPlotModel;
         private PlotModel _VLPlotModel;
-
+        // 新增：EQE光谱曲线图
+        private PlotModel _eqePlotModel;
         // 总览图光谱X轴固定范围（350~800nm）
         private readonly double _overviewSpectralXMin = 360;
         private readonly double _overviewSpectralXMax = 800;
@@ -77,6 +78,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private SpectrumControl _spectralCtrl;
        
         private WpfPlot _plotControl;
+        // 新增：EQE曲线缓存
+        private Dictionary<int, LineSeries> _eqeSeriesCache = new Dictionary<int, LineSeries>();
         //存储所有光谱曲线（Key=测量No，Value=曲线系列），用于快速切换高亮
         private Dictionary<int, LineSeries> _spectralSeriesCache = new Dictionary<int, LineSeries>();
         public WpfPlot PlotControl
@@ -89,7 +92,241 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             get => _plotModel;
             set => SetProperty(ref _plotModel, value);
         }
+        // 新增：EQE曲线图属性
+        public PlotModel EQEPlotModel
+        {
+            get => _eqePlotModel;
+            set => SetProperty(ref _eqePlotModel, value);
+        }
+        // 新增：EQE曲线颜色配置
+        private SolidColorBrush _eqeLineColor = new SolidColorBrush(Colors.Green);
+        public SolidColorBrush EQELineColor
+        {
+            get => _eqeLineColor;
+            set
+            {
+                if (_eqeLineColor != value)
+                {
+                    _eqeLineColor = value;
+                    OnPropertyChanged(nameof(EQELineColor));
 
+                    // 转换为OxyColor
+                    OxyColor newOxyColor = ConvertToOxyColor(value);
+
+                    // ===== 根据IsShowAllData判断更新范围（和SpectralLineColor逻辑对齐）=====
+                    if (IsShowAllData && SelectedMeasurement != null)
+                    {
+                        // 勾选显示所有数据：仅更新选中行的EQE曲线颜色
+                        UpdateSelectedEQECurveColor(newOxyColor);
+                    }
+                    else
+                    {
+                        // 未勾选：更新所有EQE数据的颜色 + 刷新所有曲线
+                        UpdateAllEQEMeasurementsLineColor(newOxyColor);
+                        UpdateEQEChartLineColor();
+                    }
+                }
+            }
+        }
+        // 新增：仅更新选中EQE曲线的颜色（勾选显示所有数据时用）
+        private void UpdateSelectedEQECurveColor(OxyColor newColor)
+        {
+            if (_eqeSeriesCache.Count == 0 || SelectedMeasurement == null) return;
+
+            // 从EQE曲线缓存中找到选中行的曲线
+            if (_eqeSeriesCache.TryGetValue(SelectedMeasurement.No, out LineSeries selectedEQESeries))
+            {
+                selectedEQESeries.Color = newColor;
+                selectedEQESeries.MarkerFill = newColor; // 标记点同步颜色
+                selectedEQESeries.MarkerStroke = newColor;
+                EQEPlotModel.InvalidatePlot(true); // 实时刷新EQE图表
+            }
+
+            // 同步更新总览图中的EQE选中曲线颜色（如果有）
+            if (OverviewSpectralPlotModel?.Series != null)
+            {
+                var overviewEQESelectedSeries = OverviewSpectralPlotModel.Series.OfType<LineSeries>()
+                    .FirstOrDefault(s => s.Title?.Contains($"No:{SelectedMeasurement.No}") == true);
+                if (overviewEQESelectedSeries != null)
+                {
+                    overviewEQESelectedSeries.Color = newColor;
+                    OverviewSpectralPlotModel.InvalidatePlot(true);
+                }
+            }
+        }
+
+        // 新增：更新所有EQE测量数据的行颜色（未勾选显示所有数据时用）
+        private void UpdateAllEQEMeasurementsLineColor(OxyColor newColor)
+        {
+            // 可扩展：如果需要给EQE测量项单独存储颜色，可在此处遍历更新
+            // 示例：如果有EQEMeasurement实体，可添加EQERowLineColor属性并批量更新
+            foreach (var measurement in Measurements)
+            {
+                // 若需区分光谱/EQE颜色，可给SpectrumMeasurement新增EQERowLineColor属性
+                // measurement.EQERowLineColor = newColor;
+            }
+        }
+        // 1. 新增：绑定DataGrid选中项的属性
+        private SpectrumMeasurement _selectedEQERow;
+        public SpectrumMeasurement SelectedEQERow
+        {
+            get => _selectedEQERow;
+            set
+            {
+                if (SetProperty(ref _selectedEQERow, value))
+                {
+                    OnPropertyChanged(nameof(SelectedEQERow));
+                    if (IsShowAllData)
+                    {
+                        // 显示所有数据时：置顶+高亮选中曲线
+                        UpdateEQESelectedCurveHighlight();
+                    }
+                    else
+                    {
+                        // 未显示所有数据时：清空图表，仅显示当前选中项的曲线
+                        ResetEQEPlotView(); // 先清空图表
+                        if (value != null)
+                        {
+                            DrawSingleEQECurve(value); // 仅绘制选中项的曲线
+                        }
+                        else
+                        {
+                            ShowEQEEmptyChartMessage(); // 无选中项时显示提示
+                        }
+                    }
+                }
+            }
+        }
+
+        // 新增：仅绘制单条EQE曲线的方法
+        private void DrawSingleEQECurve(SpectrumMeasurement selectedItem)
+        {
+            if (selectedItem == null) return;
+
+            // 创建当前选中项的曲线
+            var lineSeries = new LineSeries
+            {
+                Title = $"EQE-{selectedItem.No}",
+                Color = ConvertToOxyColor(EQELineColor),
+                StrokeThickness = 2.0,
+                IsVisible = true
+            };
+
+            // 填充选中项的波长+强度数据
+            for (int i = 0; i < selectedItem.Wavelengths.Length; i++)
+            {
+                if (!float.IsNaN(selectedItem.Intensities[i]) && !float.IsInfinity(selectedItem.Intensities[i]))
+                {
+                    lineSeries.Points.Add(new DataPoint(
+                        selectedItem.Wavelengths[i],
+                        selectedItem.Intensities[i]
+                    ));
+                }
+            }
+
+            // 添加到EQE图表（此时图表已被清空）
+            EQEPlotModel.Series.Add(lineSeries);
+            EQEPlotModel.InvalidatePlot(true); // 刷新图表
+        }
+
+        // 新增：显示所有数据时，高亮+置顶选中EQE曲线（性能优先）
+        private void UpdateEQESelectedCurveHighlight()
+        {
+            if (_eqeSeriesCache.Count == 0 || SelectedEQERow == null)
+                return;
+
+            // 1. 重置所有EQE曲线为未选中样式
+            foreach (var (measNo, series) in _eqeSeriesCache)
+            {
+                bool isSelected = measNo == SelectedEQERow.No;
+                // 未选中样式：半透明循环色 + 细线条 + 无标记点
+                series.Color = isSelected
+                    ? ConvertToOxyColor(EQELineColor)
+                    : GetUnselectedEQEColor(measNo);
+                series.StrokeThickness = isSelected ? 2.0 : 1.5;
+                //series.MarkerType = isSelected ? MarkerType.Circle : MarkerType.None;
+                //series.MarkerSize = isSelected ? 3 : 0;
+            }
+
+            // 2. 置顶选中曲线（核心逻辑）
+            BringEQESeriesToFront(SelectedEQERow.No);
+
+            // 3. 刷新图表
+            EQEPlotModel.InvalidatePlot(true);
+        }
+        // 复用原有方法：获取未选中EQE曲线颜色
+        private OxyColor GetUnselectedEQEColor(int measNo)
+        {
+            var unselectedColors = new[]
+            {
+                OxyColor.FromAColor(115, OxyColors.Blue),
+                OxyColor.FromAColor(115, OxyColors.Green),
+                OxyColor.FromAColor(115, OxyColors.Purple),
+                OxyColor.FromAColor(115, OxyColors.Orange),
+                OxyColor.FromAColor(115, OxyColors.Teal),
+                OxyColor.FromAColor(115, OxyColors.Magenta),
+                OxyColor.FromAColor(115, OxyColors.Gold),
+                OxyColor.FromAColor(115, OxyColors.Cyan),
+                OxyColor.FromAColor(115, OxyColors.Lime),
+                OxyColor.FromAColor(115, OxyColors.Indigo),
+                OxyColor.FromAColor(115, OxyColors.Pink),
+                OxyColor.FromAColor(115, OxyColors.Olive),
+                OxyColor.FromAColor(115, OxyColors.SkyBlue)
+            };
+            return unselectedColors[measNo % unselectedColors.Length];
+        }
+        // 新增：未显示所有数据时，重置EQE图表并显示单条选中曲线
+        private void ResetAndUpdateEQEChart()
+        {
+            // 完全重置EQE图表
+            ResetEQEPlotView();
+
+            if (SelectedEQERow != null)
+            {
+                // 仅绘制选中行的EQE曲线
+                UpdateEQEChartFromSelectedMeasurement();
+            }
+            else
+            {
+                // 无选中项时显示空提示
+                ShowEQEEmptyChartMessage();
+            }
+        }
+        // 2. 新增：根据选中行更新EQE图表的方法
+        private void UpdateEQEChartToSelectedRow()
+        {
+            if (SelectedEQERow == null)
+            {
+                // 无选中项时清空图表
+                EQEPlotModel.Series.Clear();
+                EQEPlotModel.InvalidatePlot(true);
+                return;
+            }
+
+            // 清空原有曲线，绘制选中行对应的EQE曲线
+            EQEPlotModel.Series.Clear();
+
+            var lineSeries = new LineSeries
+            {
+                Title = $"EQE-{SelectedEQERow.No}", // 曲线标题（对应行序号）
+                Color = ConvertToOxyColor(EQELineColor), // 用配置的EQE线条颜色
+                StrokeThickness = 2.0, // 选中曲线加粗
+                //MarkerType = MarkerType.Circle, // 显示标记点（增强辨识度）
+                MarkerSize = 3
+            };
+
+            // 填充选中行的波长+光谱数据到曲线
+            for (int i = 0; i < SelectedEQERow.Wavelengths.Length; i++)
+            {
+                lineSeries.Points.Add(new DataPoint(
+                    SelectedEQERow.Wavelengths[i],
+                    SelectedEQERow.Intensities[i] // 这里替换为实际EQE计算值（若有独立EQE数据则用对应字段）
+                ));
+            }
+
+            EQEPlotModel.Series.Add(lineSeries);
+            EQEPlotModel.InvalidatePlot(true); // 刷新图表
+        }
         private bool _isShowAllData;
         public bool IsShowAllData
         {
@@ -100,6 +337,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged();
                 // 勾选状态变化时，更新图表
                 UpdateChartByShowAllState();
+                // 新增：同步更新EQE图表
+                UpdateEQEChartByShowAllState();
             }
         }
         public SpectrumMeasurement SelectedMeasurement
@@ -532,6 +771,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             InitializeIVPlotModel();
             InitializeILPlotModel();
             InitializeVLPlotModel();
+            // 新增：初始化EQE图表
+            InitializeEQEPlotModel();
             InitializeIVLCameraModel();
             BtnResetStatus = new RelayCommand(IVResetStatus);
              DeviceCode = "DEV.Spectrum.Default";
@@ -857,7 +1098,331 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             OverviewILPlotModel.InvalidatePlot(true);
             OverviewVLPlotModel.InvalidatePlot(true);
         }
+        #region EQE
+        // 新增：EQE值计算方法（可根据实际公式调整）
+        //private double CalculateEQEValue(float wavelength, float intensity)
+        //{
+        //    // 示例计算逻辑：EQE = 光谱强度 × 波长系数（可根据实际需求修改）
+        //    double wavelengthFactor = wavelength / 1000; // 波长归一化
+        //    double eqe = intensity * wavelengthFactor * 100; // 转换为百分比
+        //    return Math.Max(0, eqe); // 确保非负
+        //}
+        // 新增：初始化EQE图表
+        private void InitializeEQEPlotModel()
+        {
+            EQEPlotModel = new PlotModel
+            {
+                Title = (string)Application.Current.FindResource("Sp.EQESpectral"),
+                TitleFontSize = 14
+            };
 
+            // 设置X轴（波长）- 与光谱图保持一致
+            var xAxis = new LinearAxis
+            {
+                Position = AxisPosition.Bottom,
+                Title = (string)Application.Current.FindResource("Sp.Wavelength"), // 复用波长标题
+                MajorGridlineStyle = LineStyle.Solid,
+                MinorGridlineStyle = LineStyle.Dot,
+            };
+            AxisCfg(xAxis, AxisX);
+
+            // 设置Y轴（EQE值）- 可根据实际范围调整
+            var yAxis = new LinearAxis
+            {
+                Position = AxisPosition.Left,
+                Title = (string)Application.Current.FindResource("Sp.Spectral"),
+                MajorGridlineStyle = LineStyle.Solid,
+                MinorGridlineStyle = LineStyle.Dot,
+            };
+            AxisCfg(yAxis, AxisY);
+
+            EQEPlotModel.Axes.Add(xAxis);
+            EQEPlotModel.Axes.Add(yAxis);
+            Wavelengths = new float[10000];
+            for (int i = 0; i < 10000; i++)
+            {
+                Wavelengths[i] = 380 + i / 10.0f;
+            }
+        }
+
+        // 新增：更新EQE图表线条颜色
+        private void UpdateEQEChartLineColor()
+        {
+            if (EQEPlotModel?.Series != null && EQELineColor != null)
+            {
+                OxyColor oxyColor = ConvertToOxyColor(EQELineColor);
+
+                foreach (var lineSeries in EQEPlotModel.Series.OfType<LineSeries>())
+                {
+                    lineSeries.Color = oxyColor;
+                    lineSeries.MarkerFill = oxyColor;
+                    lineSeries.MarkerStroke = oxyColor;
+                }
+                EQEPlotModel.InvalidatePlot(true);
+
+                
+            }
+        }
+
+        // 新增：根据显示所有状态更新EQE图表
+        private void UpdateEQEChartByShowAllState()
+        {
+            ResetEQEPlotView();
+
+            if (IsShowAllData)
+            {
+                DrawAllEQEMeasurementsInChart();
+            }
+            else
+            {
+                if (SelectedMeasurement != null)
+                {
+                    UpdateEQEChartFromSelectedMeasurement();
+                }
+                else
+                {
+                    ShowEQEEmptyChartMessage();
+                }
+            }
+        }
+
+        // 新增：重置EQE图表
+        private void ResetEQEPlotView()
+        {
+            EQEPlotModel.Series.Clear();
+            EQEPlotModel.Annotations.Clear();
+            var xAxis = EQEPlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Bottom) as LinearAxis;
+            var yAxis = EQEPlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Left) as LinearAxis;
+            if (xAxis != null) AxisCfg(xAxis, AxisX);
+
+            if (yAxis != null) AxisCfg(yAxis, AxisY);
+            EQEPlotModel.InvalidatePlot(true);
+        }
+
+        // 新增：绘制所有EQE数据
+        private void DrawAllEQEMeasurementsInChart()
+        {
+            if (!Measurements.Any())
+            {
+                ShowEQEEmptyChartMessage();
+                return;
+            }
+
+            _eqeSeriesCache.Clear();
+            EQEPlotModel.Series.Clear();
+
+            var unselectedColors = new[]
+            {
+                OxyColor.FromAColor(115, OxyColors.Blue),
+                OxyColor.FromAColor(115, OxyColors.Green),
+                OxyColor.FromAColor(115, OxyColors.Purple),
+                OxyColor.FromAColor(115, OxyColors.Orange),
+                OxyColor.FromAColor(115, OxyColors.Teal),
+                OxyColor.FromAColor(115, OxyColors.Magenta),
+                OxyColor.FromAColor(115, OxyColors.Gold),
+                OxyColor.FromAColor(115, OxyColors.Cyan),
+                OxyColor.FromAColor(115, OxyColors.Lime),
+                OxyColor.FromAColor(115, OxyColors.Indigo),
+                OxyColor.FromAColor(115, OxyColors.Pink),
+                OxyColor.FromAColor(115, OxyColors.Olive),
+                OxyColor.FromAColor(115, OxyColors.SkyBlue)
+            };
+            int colorIndex = 0;
+
+            foreach (var measurement in Measurements)
+            {
+                int measNo = measurement.No;
+                bool isSelected = SelectedMeasurement != null && measNo == SelectedMeasurement.No;
+
+                var lineSeries = new LineSeries
+                {
+                    Title = $"{Measurement1} {SelectedMeasurement.Meas_Id}",
+                    Color = isSelected ? ConvertToOxyColor(EQELineColor) : unselectedColors[colorIndex % unselectedColors.Length],
+                    StrokeThickness = isSelected ? 2.0 : 1.5,
+                    IsVisible = true,
+                    //TrackerFormatString = "波长: {X:.00}nm | EQE: {Y:0.00}%"
+                };
+
+                // 填充数据点（过滤异常值）
+                for (int i = 0; i < measurement.Wavelengths.Length; i++)
+                {
+                    if (!float.IsNaN(measurement.Intensities[i]) && !float.IsInfinity(measurement.Intensities[i]))
+                    {
+                        lineSeries.Points.Add(new DataPoint(
+                            measurement.Wavelengths[i],
+                            measurement.Intensities[i]));
+                    }
+                }
+                _eqeSeriesCache.Add(measNo, lineSeries);
+                EQEPlotModel.Series.Add(lineSeries);
+
+                if (!isSelected)
+                    colorIndex++;
+            }
+
+            // 选中曲线移到顶层
+            if (SelectedMeasurement != null && _eqeSeriesCache.ContainsKey(SelectedMeasurement.No))
+            {
+                BringEQESeriesToFront(SelectedMeasurement.No);
+            }
+
+            EQEPlotModel.InvalidatePlot(true);
+        }
+
+        // 新增：EQE选中曲线移到顶层
+        private void BringEQESeriesToFront(int measNo)
+        {
+            if (!_eqeSeriesCache.ContainsKey(measNo))
+                return;
+
+            var series = _eqeSeriesCache[measNo];
+            EQEPlotModel.Series.Remove(series);
+            EQEPlotModel.Series.Add(series);
+        }
+
+        // 新增：显示EQE空图表提示
+        private void ShowEQEEmptyChartMessage()
+        {
+            var textAnnotation = new TextAnnotation
+            {
+                Text = "请选择测量数据以显示EQE曲线",
+                TextPosition = new DataPoint((AxisX.DefaultMin + AxisX.DefaultMax) / 2, 50),
+                TextColor = OxyColors.Gray,
+                FontSize = 16,
+                TextHorizontalAlignment = OxyPlot.HorizontalAlignment.Center,
+                TextVerticalAlignment = OxyPlot.VerticalAlignment.Middle
+            };
+
+            EQEPlotModel.Annotations.Add(textAnnotation);
+            EQEPlotModel.InvalidatePlot(true);
+        }
+
+        // 新增：从选中数据更新EQE图表
+        private void UpdateEQEChartFromSelectedMeasurement()
+        {
+            if (SelectedMeasurement == null) return;
+
+            var lineSeries = new LineSeries
+            {
+                Title = $"EQE {SelectedMeasurement.Meas_Id}",
+                Color = ConvertToOxyColor(EQELineColor),
+                StrokeThickness = 1.5
+            };
+
+            for (int i = 0; i < SelectedMeasurement.Wavelengths.Length; i++)
+            {
+                lineSeries.Points.Add(new DataPoint(
+                                  SelectedMeasurement.Wavelengths[i],
+                                  SelectedMeasurement.Intensities[i]));
+            }
+
+            EQEPlotModel.Series.Clear();
+            EQEPlotModel.Series.Add(lineSeries);
+            EQEPlotModel.InvalidatePlot(true);
+        }
+
+        // 新增：EQE数据导出方法
+        private void ExportEQEToCsv(string fileName, ObservableCollection<SpectrumMeasurement> measurements, float[]? wavelengths)
+        {
+            if (measurements == null || !measurements.Any() || wavelengths == null || wavelengths.Length == 0)
+            {
+                MessageBox.Show("无有效EQE数据可导出！", "提示");
+                return;
+            }
+
+            const int Step = 10;
+            const int MinWave = 380;
+            const int MaxWave = 780;
+
+            try
+            {
+                // EQE表头
+                var fixedHeaders = new List<string>
+                {
+                    "Time","Meas_Id", "Voltage/V", "Current/mA", "EQE_Max(%)", "EQE_Avg(%)"
+                };
+
+                // 波长表头
+                var waveHeaders = new List<string>();
+                var selectedIndexes = new List<int>();
+
+                for (int i = 0; i <= (MaxWave - MinWave) * 10; i += Step)
+                {
+                    double targetWave = i / 10.0 + MinWave;
+                    int originalIndex = Array.FindIndex(wavelengths, w => Math.Abs(w - targetWave) < 0.001);
+
+                    if (originalIndex != -1)
+                    {
+                        waveHeaders.Add($"{targetWave:F0}");
+                        selectedIndexes.Add(originalIndex);
+                    }
+                }
+
+                if (waveHeaders.Count == 0)
+                {
+                    MessageBox.Show("未找到≤780nm的有效波长点！", "错误");
+                    return;
+                }
+
+                var allHeaders = fixedHeaders.Concat(waveHeaders);
+                var csv = new System.Text.StringBuilder();
+                csv.AppendLine(string.Join(",", allHeaders));
+
+                for (int rowIndex = 0; rowIndex < measurements.Count; rowIndex++)
+                {
+                    var item = measurements[rowIndex];
+                    int measId = rowIndex + 1;
+
+                    // 计算EQE最大值和平均值
+                    List<double> eqeValues = new List<double>();
+                    //for (int i = 0; i < item.Intensities.Length; i++)
+                    //{
+                    //    eqeValues.Add(CalculateEQEValue(item.Wavelengths[i], item.Intensities[i]));
+                    //}
+                    double eqeMax = eqeValues.Max();
+                    double eqeAvg = eqeValues.Average();
+
+                    var fixedValues = new List<string>
+                    {
+                        item.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                        measId.ToString(),
+                        item.Voltage.ToString("F6"),
+                        item.Current.ToString(),
+                        eqeMax.ToString("F2"),
+                        eqeAvg.ToString("F2")
+                    };
+
+                    // EQE值
+                    var waveValues = new List<string>();
+                    if (item.Intensities != null && item.Intensities.Length == wavelengths.Length)
+                    {
+                        foreach (int idx in selectedIndexes)
+                        {
+                            //double eqeValue = CalculateEQEValue(item.Wavelengths[idx], item.Intensities[idx]);
+                            //waveValues.Add(EscapeCsvValue(eqeValue.ToString("F4")));
+                        }
+                    }
+                    else
+                    {
+                        waveValues = Enumerable.Repeat("0.0000", waveHeaders.Count)
+                                              .Select(v => EscapeCsvValue(v))
+                                              .ToList();
+                    }
+
+                    var allValues = fixedValues.Concat(waveValues);
+                    csv.AppendLine(string.Join(",", allValues));
+                }
+
+                File.WriteAllText(fileName, csv.ToString(), Encoding.UTF8);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"EQE导出失败：{ex.Message}", "错误");
+            }
+        }
+
+        #endregion
+        
         // 辅助方法：将光谱Measurements转换为图表需要的DataPoint（波长-强度）
         private IEnumerable<DataPoint> GetSpectralDataPoints()
         {
@@ -1842,7 +2407,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             IVLCameraMeasurements.Clear();
             SpectralGridItems?.Clear();
             PlotModel.Series.Clear();
-
+            // 新增：清空EQE图表
+            EQEPlotModel.Series.Clear();
             //彻底清空viewModel的数据
             IL_viewModel.Clear();
             IV_viewModel.Clear();
@@ -1870,6 +2436,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 _spectralCtrl.SpectralData.SetData(new float[0], new float[0]);
                 _spectralCtrl.InvalidateVisual();
             }
+            // 新增：清空EQE曲线缓存
+            _eqeSeriesCache.Clear();
         }
 
         private void LoadCameraData(string serialNumber)
@@ -1981,9 +2549,13 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     _spectralCtrl.SpectralData.SetData(Wavelengths, SelectedMeasurement.Intensities);
                     _spectralCtrl.InvalidateVisual();
                 }
+                // 新增：加载EQE数据
+                UpdateEQEChartFromSelectedMeasurement();
             }
             // 数据加载后，根据“显示所有”状态更新图表
             UpdateChartByShowAllState();
+            // 新增：同步更新EQE图表
+            UpdateEQEChartByShowAllState();
             // 子Tab数据加载完成后，重新初始化总览图Series
             InitializeOverviewSeries();
 

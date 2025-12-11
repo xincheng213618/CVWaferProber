@@ -463,14 +463,14 @@
                                     <SolidColorBrush Color="WhiteSmoke" />
                                     <SolidColorBrush Color="White" />
                                 </ComboBox>
-                                <Button
+                                <!--<Button
                                     x:Name="HongZhi"
                                     Width="60"
                                     Height="20"
                                     Margin="2"
                                     HorizontalAlignment="Left"
                                     Command="{Binding BtnResetStatus}"
-                                    Content="{DynamicResource BtnResetStatus}" />
+                                    Content="{DynamicResource BtnResetStatus}" />-->
                             </StackPanel>
                             <!--  IV图表区域  -->
                             <oxy:PlotView
@@ -887,9 +887,10 @@
             <Grid>
 
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="41*" />
+                    <ColumnDefinition Width="383*"/>
+                    <ColumnDefinition Width="334*" />
+                    <ColumnDefinition Width="334*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
@@ -901,8 +902,7 @@
                 <!--  顶部按钮区域  -->
                 <StackPanel
                     Grid.Row="0"
-                    Margin="0"
-                    Orientation="Horizontal">
+                    Orientation="Horizontal" Grid.ColumnSpan="2">
                     <Button
                         x:Name="btnExport1"
                         Width="80"
@@ -914,15 +914,15 @@
                 </StackPanel>
                 <StackPanel
                     Grid.Row="1"
-                    Grid.ColumnSpan="3"
-                    Margin="2"
+                    Grid.ColumnSpan="4"
+                    Margin="2,2,2,2"
                     Orientation="Horizontal">
                     <TextBlock VerticalAlignment="Center" Text="{DynamicResource Chart.LineColor}" />
                     <ComboBox
                         Width="80"
                         Height="20"
                         Margin="2"
-                        SelectedValue="{Binding SpectralLineColor, Mode=TwoWay}">
+                        SelectedValue="{Binding EQELineColor, Mode=TwoWay}">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
@@ -1016,9 +1016,9 @@
                 <!--  图表区域  -->
                 <oxy:PlotView
                     x:Name="plotView1"
-                    Grid.Row="2"
-                    Grid.ColumnSpan="3"
-                    Margin="5,0,5,0"
+                    Grid.Row="1"
+                    Grid.ColumnSpan="4"
+                    Margin="5,29,5,0"
                     Loaded="PlotView_Loaded"
                     Model="{Binding EQEPlotModel}" />
                 <!--  Model="{Binding PlotModel}"  -->
@@ -1027,7 +1027,7 @@
                 <DataGrid
                     x:Name="eqemeasurementsGrid"
                     Grid.Row="3"
-                    Grid.ColumnSpan="3"
+                    Grid.ColumnSpan="4"
                     Margin="5,2,5,2"
                     AutoGenerateColumns="False"
                     CanUserAddRows="False"
@@ -1039,7 +1039,7 @@
                     IsReadOnly="True"
                     ItemsSource="{Binding Measurements}"
                     RowHeight="25"
-                    SelectedItem="{Binding SelectedMeasurement}"
+                    SelectedItem="{Binding SelectedEQERow, Mode=TwoWay}"
                     SelectionMode="Single"
                     SelectionUnit="FullRow">
 
@@ -1113,7 +1113,7 @@
                 <DataGrid
                     x:Name="WavelengthGrid1"
                     Grid.RowSpan="4"
-                    Grid.Column="3"
+                    Grid.Column="4"
                     Margin="2,2,2,2"
                     AutoGenerateColumns="False"
                     Background="#FFFFFF"
