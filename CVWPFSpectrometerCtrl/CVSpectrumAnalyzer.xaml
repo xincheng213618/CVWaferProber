@@ -888,7 +888,7 @@
 
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="41*" />
-                    <ColumnDefinition Width="383*"/>
+                    <ColumnDefinition Width="383*" />
                     <ColumnDefinition Width="334*" />
                     <ColumnDefinition Width="334*" />
                     <ColumnDefinition Width="Auto" />
@@ -902,7 +902,8 @@
                 <!--  顶部按钮区域  -->
                 <StackPanel
                     Grid.Row="0"
-                    Orientation="Horizontal" Grid.ColumnSpan="2">
+                    Grid.ColumnSpan="2"
+                    Orientation="Horizontal">
                     <Button
                         x:Name="btnExport1"
                         Width="80"
@@ -1016,7 +1017,7 @@
                 <!--  图表区域  -->
                 <oxy:PlotView
                     x:Name="plotView1"
-                    Grid.Row="1"
+                    Grid.Row="2"
                     Grid.ColumnSpan="4"
                     Margin="5,29,5,0"
                     Loaded="PlotView_Loaded"
