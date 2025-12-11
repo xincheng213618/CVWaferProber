@@ -520,7 +520,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
         public CVSpectrumViewModel()
         {
-            // 新增：提前初始化波长数组
+            // 提前初始化波长数组
             Wavelengths = new float[10000];
             for (int i = 0; i < 10000; i++)
             {

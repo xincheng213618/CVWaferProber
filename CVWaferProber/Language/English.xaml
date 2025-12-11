@@ -50,6 +50,7 @@
     <!--  光谱曲线相关  -->
     <sys:String x:Key="Sp.Spectral">Spectral</sys:String>
     <sys:String x:Key="Sp.Overview">Overview</sys:String>
+    <sys:String x:Key="Sp.EQESpectral">EQESpectral Curve</sys:String>
     <sys:String x:Key="Sp.SpectralCurve">Spectral Curve</sys:String>
     <sys:String x:Key="Sp.Wavelength">Wavelength (nm)</sys:String>
     <sys:String x:Key="Sp.RelativeSpectrum">RelativeSpectrum</sys:String>
