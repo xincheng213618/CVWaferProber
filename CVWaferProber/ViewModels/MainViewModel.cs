@@ -510,9 +510,9 @@ namespace CVWaferProber.ViewModels
         //    IsCameraPanelVisible = true;
         //    IsSPPanelVisible = true;
         //}
-        
+
         // ========== AOI列逻辑 ==========
-            #region AOI 全选/部分选中
+        #region AOI 全选/部分选中
         private bool? _selectAllAOI = false;
         public bool? SelectAllAOI
         {
