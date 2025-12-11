@@ -46,7 +46,7 @@
     <sys:String x:Key="Dock.Layout.Title.CameraImage">相机图像</sys:String>
     <sys:String x:Key="Dock.Layout.Title.SP">光谱/IVL</sys:String>
     <sys:String x:Key="Dock.Layout.Title.Log">日志</sys:String>
-
+    <sys:String x:Key="Dock.Layout.Title.DataChart">数据图表</sys:String>
     <sys:String x:Key="Chart.LineColor">线条颜色:</sys:String>
 
     <sys:String x:Key="Chart.Reset">重置</sys:String>

@@ -43,6 +43,7 @@
     <sys:String x:Key="Dock.Layout.Title.CameraImage">CameraImage</sys:String>
     <sys:String x:Key="Dock.Layout.Title.SP">Spectral/IVL</sys:String>
     <sys:String x:Key="Dock.Layout.Title.Log">SysLog</sys:String>
+    <sys:String x:Key="Dock.Layout.Title.DataChart">DataChart</sys:String>
 
     <sys:String x:Key="Chart.LineColor">LineColor:</sys:String>
     <sys:String x:Key="Chart.Reset">Reset</sys:String>

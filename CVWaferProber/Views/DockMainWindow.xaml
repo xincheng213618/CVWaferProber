@@ -164,7 +164,7 @@
                                 <avalon:LayoutAnchorablePane>
                                     <avalon:LayoutAnchorable
                                         x:Name="AnchorableSP"
-                                        Title="{DynamicResource Dock.Layout.Title.SP}"
+                                        Title="{DynamicResource Dock.Layout.Title.DataChart}"
                                         CanClose="False"
                                         CanHide="True">
                                         <DockPanel x:Name="PanelSP" Grid.Row="1">
