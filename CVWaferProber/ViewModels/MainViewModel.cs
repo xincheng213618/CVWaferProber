@@ -288,7 +288,7 @@ namespace CVWaferProber.ViewModels
             _selectedFlow = null;
             _dataGrid = null;
             _isIVLCameraEnabled = false;
-            _isAutoSN = false;
+            _isAutoSN = true;
             rcModel = new RCRestService();
             //algResultModel = new AlgResultModel();
             CustomMappingVM = new ChipMappingControlViewModel();
@@ -1143,8 +1143,9 @@ namespace CVWaferProber.ViewModels
             }
             else
             {
-                CustomImageVM?.ClearImageResult();
-                CustomImageVM?.LoadImageResult(dieViewModel.chipViewModel.ChipData, dieViewModel.SerialNumber);
+                aoiService.AOIResultDisplay(dieViewModel);
+                //CustomImageVM?.ClearImageResult();
+                //CustomImageVM?.LoadImageResult(dieViewModel.chipViewModel.ChipData, dieViewModel.SerialNumber);
             }
 
             //Task.Factory.StartNew(() => CustomImageVM?.LoadImageResult(dieViewModel.chipViewModel.ChipData, dieViewModel.SerialNumber));

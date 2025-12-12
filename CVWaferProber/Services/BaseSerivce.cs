@@ -12,7 +12,6 @@ namespace CVWaferProber.Services
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(BaseSerivce));
 
         protected RCRestService rcService;
-        private int _overTimefRestapi = 30; //S
 
         public string ProberId { get; set; }
 
@@ -28,7 +27,7 @@ namespace CVWaferProber.Services
         {
             try
             {
-                Task<RespDataBaseFlowResultDTO> resp = AsyncRunFlow(_selectedWPFlow.Name, dieViewModel.SerialNumber);
+                Task<RespDataBaseFlowResultDTO> resp = AsyncRunFlow(_selectedWPFlow.Name, dieViewModel.SerialNumber, _selectedWPFlow.Timeout);
                 await resp;
                 if (resp.Result.IsSuccess)
                 {
@@ -63,9 +62,11 @@ namespace CVWaferProber.Services
         protected abstract ChipStatus GetResultStatus(string serialNumber);
         protected abstract ChipStatus FlowResultDisplay(DieViewModel dieViewModel);
 
-        protected async Task<RespDataBaseFlowResultDTO> AsyncRunFlow(string fname, string sn)
+        protected async Task<RespDataBaseFlowResultDTO> AsyncRunFlow(string fname, string sn, int timeout)
         {
-            using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(_overTimefRestapi));
+            CancellationTokenSource cancellationTokenSource;
+            if (timeout > 0) cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(timeout));
+            else cancellationTokenSource = new CancellationTokenSource();
             var cancellationToken = cancellationTokenSource.Token;
 
             // 启动流程
