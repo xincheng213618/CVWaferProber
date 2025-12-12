@@ -474,7 +474,6 @@
                         Grid.Row="1"
                         Margin="5"
                         Loaded="PlotView_Loaded"
->>>>>>> d861a17a4dad062716dc1f31306a358464b25c35
                         Model="{Binding IVPlotModel}" />
 
                     <!--  IV DataGrid区域  -->
@@ -761,7 +760,6 @@
                         Grid.ColumnSpan="2"
                         Margin="5,5,5,5"
                         Loaded="PlotView_Loaded"
->>>>>>> d861a17a4dad062716dc1f31306a358464b25c35
                         Model="{Binding VLPlotModel}" />
 
                     <!--  IL DataGrid区域  -->
