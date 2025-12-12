@@ -21,7 +21,7 @@
     <TabControl
         Padding="0"
         BorderThickness="0"
-        TabStripPlacement="Right">
+        TabStripPlacement="Top">
 
         <!--  SP选项卡（原内容）  -->
         <TabItem Header="{DynamicResource Dock.Layout.Title.SP1}">
