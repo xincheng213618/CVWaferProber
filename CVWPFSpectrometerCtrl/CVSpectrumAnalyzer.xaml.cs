@@ -12,7 +12,7 @@ namespace CVWPFSpectrometerCtrl
     /// <summary>
     /// CVSpectrumAnalyzer.xaml 的交互逻辑
     /// </summary>
-    public partial class CVSpectrumAnalyzer : UserControl
+    public partial class CVSpectrumAnalyzer : System.Windows.Controls.UserControl
     {
        
         private SpectralData _spectralData;

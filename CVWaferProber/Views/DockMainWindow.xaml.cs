@@ -6,8 +6,12 @@ using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl;
 using log4net;
 using log4net.Config;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
 
 namespace CVWaferProber.Views
 {
@@ -16,10 +20,22 @@ namespace CVWaferProber.Views
     /// </summary>
     public partial class DockMainWindow : Window
     {
+        //// 导入Win32 API（用于窗口托管）
+        //[DllImport("user32.dll")]
+        //private static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
+        //[DllImport("user32.dll")]
+        //private static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
+
+        //private Process _demoProcess; // 保存Demo进程引用
+        // 1. 导入Win32 API（放在类内部，方法外部）
+       
+
         public DockMainWindow()
         {
             InitializeComponent();
             InitializeLogging();
+            
+            //LoadConoscopeDemo();
             // 监听Mapping面板可见性变化
             AnchorableMapping.IsVisibleChanged += (s, e) =>
             {
@@ -41,7 +57,79 @@ namespace CVWaferProber.Views
             //    vm.ResetLayoutRequested += (s, e) => ResetToDefaultLayout();
             //}
         }
+        private void LanguageMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            // 获取选中的语言标签
+            var menuItem = sender as MenuItem;
+            if (menuItem?.Tag is string language)
+            {
+                // 调用AppSettingsManager切换语言
+                AppSettingsManager.ChangeLanguage(language);
 
+                // （可选）刷新界面布局（部分控件可能需要强制更新）
+                Application.Current.MainWindow?.InvalidateVisual();
+            }
+        }
+        // 4. 窗口加载完成后执行Demo嵌入
+
+        // 在界面加载时调用（如ViewModel的初始化方法、窗口的Loaded事件）
+        //public void LoadConoscopeDemo()
+        //{
+        //    try
+        //    {
+        //        // 1. 获取Demo.exe路径（编译后会复制到输出目录）
+        //        string demoPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "External/Demo/ConoscopeDemo.exe");
+        //        if (!System.IO.File.Exists(demoPath))
+        //        {
+        //            MessageBox.Show("Demo文件不存在，请检查复制配置");
+        //            return;
+        //        }
+
+        //        // 2. 启动Demo（隐藏初始窗口）
+        //        _demoProcess = new Process
+        //        {
+        //            StartInfo = new ProcessStartInfo
+        //            {
+        //                FileName = demoPath,
+        //                WindowStyle = ProcessWindowStyle.Minimized,
+        //                CreateNoWindow = false
+        //            }
+        //        };
+        //        _demoProcess.Start();
+        //        _demoProcess.WaitForInputIdle(); // 等待Demo窗口初始化
+
+        //        // 3. 获取Demo窗口句柄和容器句柄
+        //        IntPtr demoHwnd = _demoProcess.MainWindowHandle;
+        //        IntPtr hostHwnd = DemoHost.Handle; // DemoHost是XAML中的WindowsFormsHost
+
+        //        // 4. 将Demo窗口嵌入到WPF界面的容器中
+        //        SetParent(demoHwnd, hostHwnd);
+
+        //        // 5. 调整Demo窗口大小以适配容器
+        //        MoveWindow(demoHwnd, 0, 0, (int)DemoHost.ActualWidth, (int)DemoHost.ActualHeight, true);
+
+        //        // 6. 监听容器大小变化，同步调整Demo窗口
+        //        DemoHost.SizeChanged += (s, e) =>
+        //        {
+        //            if (demoHwnd != IntPtr.Zero)
+        //            {
+        //                MoveWindow(demoHwnd, 0, 0, (int)DemoHost.ActualWidth, (int)DemoHost.ActualHeight, true);
+        //            }
+        //        };
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show($"Demo嵌入失败：{ex.Message}");
+        //    }
+        //}
+
+        //// 界面关闭时关闭Demo进程，避免残留
+        //protected override void OnClosing(CancelEventArgs e)
+        //{
+        //    _demoProcess?.Kill();
+        //    _demoProcess?.Dispose();
+        //    base.OnClosing(e);
+        //}
         //private void ResetToDefaultLayout()
         //{
         //    // 1. 新建布局根
@@ -63,7 +151,7 @@ namespace CVWaferProber.Views
         //    // 左侧垂直容器（用LayoutPanel控制方向）
         //    var leftVerticalContainer = new LayoutPanel
         //    {
-               
+
         //        Children = { mappingPane }
         //    };
 
@@ -121,7 +209,7 @@ namespace CVWaferProber.Views
         //        Children = { cameraPane, rightHorizentolContainer }
         //    };
 
-           
+
         //    // --------------------------
         //    // 主容器：左右区域水平排列
         //    // --------------------------
@@ -137,7 +225,7 @@ namespace CVWaferProber.Views
         //    DockingManager.Layout = newLayoutRoot;
         //}
 
-       
+
 
         private void InitializeLogging()
         {

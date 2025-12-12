@@ -102,7 +102,7 @@
     <sys:String x:Key="Zoom level">Zoom level：</sys:String>
     <sys:String x:Key="Zoom">Zoom：</sys:String>
     <sys:String x:Key="Image Dimensions">Image Dimensions：</sys:String>
-    <sys:String x:Key="0 × 0 pixels">0 × 0 pixels</sys:String>
+    <sys:String x:Key="pixels">pixels</sys:String>
     <sys:String x:Key="Display Dimensions">Display Dimensions：</sys:String>
     <sys:String x:Key="Resolution">Resolution：</sys:String>
     <sys:String x:Key="CurrentFile">CurrentFile：</sys:String>
@@ -118,6 +118,9 @@
 
     <!--  菜单相关  -->
     <sys:String x:Key="Menu.View">View(V)</sys:String>
+    <sys:String x:Key="Menu.Language">Language(L)</sys:String>
+    <sys:String x:Key="Menu.Language.Chinese">Chinese</sys:String>
+    <sys:String x:Key="Menu.Language.English">English</sys:String>
     <sys:String x:Key="Menu.MappingPanelVisible">MappingPanelVisible</sys:String>
     <sys:String x:Key="Menu.CameraPanelVisible">CameraPanelVisible</sys:String>
     <sys:String x:Key="Menu.SPPanelVisible">SPPanelVisible</sys:String>

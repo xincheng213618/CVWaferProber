@@ -88,7 +88,18 @@
                 <Separator />
 
             </MenuItem>
-
+            <!--  新增：语言菜单  -->
+            <MenuItem Header="{DynamicResource Menu.Language}">
+                <!--  中文子菜单  -->
+                <MenuItem
+                    Click="LanguageMenuItem_Click"
+                    Header="{DynamicResource Menu.Language.Chinese}" Tag="Chinese" />
+                <!--  英文子菜单  -->
+                <MenuItem
+                    Click="LanguageMenuItem_Click"
+                    Header="{DynamicResource Menu.Language.English}"
+                    Tag="English" />
+            </MenuItem>
             <!--  帮助菜单  -->
             <MenuItem Header="{DynamicResource Menu.Help}" InputGestureText="Alt+H">
                 <MenuItem Command="{Binding OpenHelpCommand}" Header="{DynamicResource Menu.UserManual}" />
@@ -170,8 +181,16 @@
                                         Title="VAM"
                                         CanClose="False"
                                         CanHide="True">
-                                        <DockPanel x:Name="PanelVAM" Grid.Row="2">
-                                            <!--<cvsp:CVSpectrumAnalyzer x:Name="MyVAMControl" DataContext="{Binding CustomVAMVM}" />-->
+                                        <DockPanel x:Name="DockPanelVAM" Grid.Row="2">
+                                            <!--<WindowsFormsHost
+                                                x:Name="DemoHost"
+                                                Width="Auto"
+                                                Height="Auto"
+                                                Visibility="Visible" />-->
+                                            <Grid
+                                                x:Name="DemoHostGrid"
+                                                Width="Auto"
+                                                Height="Auto" />
                                         </DockPanel>
                                     </avalon:LayoutAnchorable>
                                     <avalon:LayoutAnchorable

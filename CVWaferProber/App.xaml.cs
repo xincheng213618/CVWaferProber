@@ -23,11 +23,13 @@ namespace CVWaferProber
             var configFile = new System.IO.FileInfo("log4net.config");
             XmlConfigurator.Configure(logRepository, configFile);
 
-            AppSettingsManager.InitializeLanguage();
+           
 
             log.Info("Application starting...");
 
             base.OnStartup(e);
+            // 初始化语言（读取Settings中的默认语言）
+            AppSettingsManager.InitializeLanguage();
         }
     }
 

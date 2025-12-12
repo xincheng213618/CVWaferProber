@@ -107,7 +107,7 @@
     <sys:String x:Key="Zoom level">缩放级别：</sys:String>
     <sys:String x:Key="Zoom">缩放：</sys:String>
     <sys:String x:Key="Image Dimensions">图像尺寸：</sys:String>
-    <sys:String x:Key="0 × 0 pixels">0 × 0 像素</sys:String>
+    <sys:String x:Key="pixels">像素</sys:String>
     <sys:String x:Key="Display Dimensions">显示尺寸：</sys:String>
     <sys:String x:Key="Resolution">分辨率：</sys:String>
     <sys:String x:Key="CurrentFile">当前文件：</sys:String>
@@ -123,6 +123,10 @@
 
     <!--  菜单相关  -->
     <sys:String x:Key="Menu.View">视图(V)</sys:String>
+    <sys:String x:Key="Menu.Language">语言(L)</sys:String>
+    <sys:String x:Key="Menu.Language.Chinese">中文</sys:String>
+    <sys:String x:Key="Menu.Language.English">英文</sys:String>
+
     <sys:String x:Key="Menu.MappingPanelVisible">显示Mapping面板</sys:String>
     <sys:String x:Key="Menu.CameraPanelVisible">显示相机面板</sys:String>
     <sys:String x:Key="Menu.SPPanelVisible">显示SP面板</sys:String>

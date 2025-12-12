@@ -575,7 +575,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 }
             }
         }
-        string Measurement1 = (string)Application.Current.FindResource("Sp.Measurement");
+        string Measurement1 = (string)System.Windows.Application.Current.FindResource("Sp.Measurement");
         private void DrawAllMeasurementsInChart()
         {
             if (!Measurements.Any())
@@ -782,7 +782,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 try
                 {
                     string currentTab = GetCurrentTabName();
-                    var saveFileDialog = new SaveFileDialog
+                    var saveFileDialog = new Microsoft.Win32.SaveFileDialog
                     {
                         Filter = "CSV Files|*.csv",
                         Title = $"Save {currentTab} Data to CSV",
@@ -818,15 +818,15 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         catch (Exception ex)
                         {
                             log.Error("Failed to save CSV file", ex);
-                            MessageBox.Show($"Failed to save CSV file:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            System.Windows.MessageBox.Show($"Failed to save CSV file:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         }
                         // 直接把导出逻辑写在这里
-                        MessageBox.Show("导出执行成功");
+                        System.Windows.MessageBox.Show("导出执行成功");
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"错误: {ex.Message}");
+                    System.Windows.MessageBox.Show($"错误: {ex.Message}");
                 }
             });
             #endregion
@@ -860,7 +860,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         // 初始化总览图的PlotModel（克隆子Tab配置并绑定数据）
         private void InitializeOverviewPlotModels()
         {
-            string Title = (string)Application.Current.FindResource("Sp.Spectral");
+            string Title = (string)System.Windows.Application.Current.FindResource("Sp.Spectral");
             // 1. 克隆子Tab的图表配置（轴、样式）
             OverviewSpectralPlotModel = ClonePlotModel(PlotModel, Title); // 克隆光谱子Tab配置
             OverviewIVPlotModel = ClonePlotModel(IVPlotModel, "IV");       // 克隆IV子Tab配置
@@ -906,7 +906,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     };
                     // ========== 总览光谱图强制锁定X轴650~800nm ==========
 
-            if (title == (string)Application.Current.FindResource("Sp.Spectral") || title == "光谱")
+            if (title == (string)System.Windows.Application.Current.FindResource("Sp.Spectral") || title == "光谱")
             {
                 if (clonedAxis.Position == AxisPosition.Bottom) // X轴（波长）
                 {
@@ -1112,7 +1112,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             EQEPlotModel = new PlotModel
             {
-                Title = (string)Application.Current.FindResource("Sp.EQESpectral"),
+                Title = (string)System.Windows.Application.Current.FindResource("Sp.EQESpectral"),
                 TitleFontSize = 14
             };
 
@@ -1120,7 +1120,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var xAxis = new LinearAxis
             {
                 Position = AxisPosition.Bottom,
-                Title = (string)Application.Current.FindResource("Sp.Wavelength"), // 复用波长标题
+                Title = (string)System.Windows.Application.Current.FindResource("Sp.Wavelength"), // 复用波长标题
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
             };
@@ -1130,7 +1130,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var yAxis = new LinearAxis
             {
                 Position = AxisPosition.Left,
-                Title = (string)Application.Current.FindResource("Sp.Spectral"),
+                Title = (string)System.Windows.Application.Current.FindResource("Sp.Spectral"),
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
             };
@@ -1326,7 +1326,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             if (measurements == null || !measurements.Any() || wavelengths == null || wavelengths.Length == 0)
             {
-                MessageBox.Show("无有效EQE数据可导出！", "提示");
+                System.Windows.MessageBox.Show("无有效EQE数据可导出！", "提示");
                 return;
             }
 
@@ -1360,7 +1360,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
                 if (waveHeaders.Count == 0)
                 {
-                    MessageBox.Show("未找到≤780nm的有效波长点！", "错误");
+                    System.Windows.MessageBox.Show("未找到≤780nm的有效波长点！", "错误");
                     return;
                 }
 
@@ -1417,7 +1417,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"EQE导出失败：{ex.Message}", "错误");
+                System.Windows.MessageBox.Show($"EQE导出失败：{ex.Message}", "错误");
             }
         }
 
@@ -1442,7 +1442,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             {
                 if (data == null || !data.Any())
                 {
-                    MessageBox.Show("没有数据可导出");
+                    System.Windows.MessageBox.Show("没有数据可导出");
                     return;
                 }
                 if (string.IsNullOrWhiteSpace(filePath))
@@ -1523,7 +1523,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"导出失败: {ex.Message}");
+                System.Windows.MessageBox.Show($"导出失败: {ex.Message}");
             }
         }
         #endregion
@@ -1534,7 +1534,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             if (measurements == null || !measurements.Any() || wavelengths == null || wavelengths.Length == 0)
             {
-                MessageBox.Show("无有效数据可导出！", "提示");
+                System.Windows.MessageBox.Show("无有效数据可导出！", "提示");
                 return;
             }
 
@@ -1581,7 +1581,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
                 if (waveHeaders.Count == 0)
                 {
-                    MessageBox.Show("未找到≤780nm的有效波长点！", "错误");
+                    System.Windows.MessageBox.Show("未找到≤780nm的有效波长点！", "错误");
                     return;
                 }
 
@@ -1660,7 +1660,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"导出失败：{ex.Message}", "错误");
+                System.Windows.MessageBox.Show($"导出失败：{ex.Message}", "错误");
             }
         }
         #endregion
@@ -2211,7 +2211,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             PlotModel = new PlotModel
             {
-                Title = (string)Application.Current.FindResource("Sp.SpectralCurve"),
+                Title = (string)System.Windows.Application.Current.FindResource("Sp.SpectralCurve"),
                 TitleFontSize = 14
             };
 
@@ -2219,7 +2219,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var xAxis = new LinearAxis
             {
                 Position = AxisPosition.Bottom,
-                Title = (string)Application.Current.FindResource("Sp.Wavelength"),
+                Title = (string)System.Windows.Application.Current.FindResource("Sp.Wavelength"),
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
             };
@@ -2229,7 +2229,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var yAxis = new LinearAxis
             {
                 Position = AxisPosition.Left,
-                Title = (string)Application.Current.FindResource("Sp.Spectral"),
+                Title = (string)System.Windows.Application.Current.FindResource("Sp.Spectral"),
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
             };
@@ -2279,7 +2279,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             var lineSeries = new LineSeries
             {
-                Title = (string)Application.Current.FindResource("Sp.Spectral"),
+                Title = (string)System.Windows.Application.Current.FindResource("Sp.Spectral"),
                 Color = OxyColors.Blue,
                 StrokeThickness = 1.5
             };

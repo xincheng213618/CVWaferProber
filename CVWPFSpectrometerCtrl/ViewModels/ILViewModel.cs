@@ -49,14 +49,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
         private PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = 0, DefaultMaxRange = 200000000000000000 };
         private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = 0, DefaultMaxRange = 6000000000000000 };
-        string I = (string)Application.Current.FindResource("Sp.Current");
-        string L = (string)Application.Current.FindResource("Sp.Luminance");
+        string I = (string)System.Windows.Application.Current.FindResource("Sp.Current");
+        string L = (string)System.Windows.Application.Current.FindResource("Sp.Luminance");
         private void InitializePlotModel()
         {
           
             _plotModel = new PlotModel
             {
-                Title = (string)Application.Current.FindResource("Sp.IL Curve"),
+                Title = (string)System.Windows.Application.Current.FindResource("Sp.IL Curve"),
                 TitleFontSize = 14,
                 TitleFontWeight = OxyPlot.FontWeights.Bold,
                
@@ -189,7 +189,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             // 6. 保留原有折线图配置
             var lineSeries = new LineSeries
             {
-                Title = (string)Application.Current.FindResource("Sp.IL Curve"),
+                Title = (string)System.Windows.Application.Current.FindResource("Sp.IL Curve"),
                 Color = OxyColors.Green,
                 StrokeThickness = 1.5,
                 MarkerType = MarkerType.Circle,

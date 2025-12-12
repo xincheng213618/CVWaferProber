@@ -16,6 +16,7 @@
     <ProjectReference Include="..\CVWaferProber.Core\CVWaferProber.Core.csproj" />
     <ProjectReference Include="..\CVWPFCamImageCtrl\CVWPFCamImageCtrl.csproj" />
     <ProjectReference Include="..\CVWPFSpectrometerCtrl\CVWPFSpectrometerCtrl.csproj" />
+    <ProjectReference Include="..\GSWinMsgSim\GSWinMsgSim.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,6 +33,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="ConoscopeDemo">
+      <HintPath>..\VAMdemo(1)\net8.0-windows\ConoscopeDemo.dll</HintPath>
+    </Reference>
     <Reference Include="CV.DBEntities">
       <HintPath>..\DLL\CV.DBEntities.dll</HintPath>
     </Reference>
