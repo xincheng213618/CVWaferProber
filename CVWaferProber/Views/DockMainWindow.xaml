@@ -10,7 +10,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CVWaferProber.ViewModels"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:vm="clr-namespace:CVWaferProber.ViewModels"
+    xmlns:vm="clr-namespace:CVWaferProber.ViewModels" xmlns:cop="clr-namespace:ConoscopeDemo;assembly=ConoscopeDemo"
     Title="晶圆探针台"
     Width="1200"
     Height="1000"
@@ -106,6 +106,9 @@
                 <MenuItem Command="{Binding OpenAboutCommand}" Header="{DynamicResource Menu.About}" />
             </MenuItem>
             <MenuItem
+                Command="{Binding OpenCommand}"
+                Header="{DynamicResource Menu.UserManual}" />
+            <MenuItem
                 Command="{Binding ExitCommand}"
                 Header="{DynamicResource Menu.Exit}"
                 InputGestureText="Alt+F4" />
@@ -182,15 +185,12 @@
                                         CanClose="False"
                                         CanHide="True">
                                         <DockPanel x:Name="DockPanelVAM" Grid.Row="2">
-                                            <!--<WindowsFormsHost
-                                                x:Name="DemoHost"
-                                                Width="Auto"
-                                                Height="Auto"
-                                                Visibility="Visible" />-->
                                             <Grid
                                                 x:Name="DemoHostGrid"
                                                 Width="Auto"
-                                                Height="Auto" />
+                                                Height="Auto" >
+                                                <cop:DemoWindow />
+                                            </Grid>
                                         </DockPanel>
                                     </avalon:LayoutAnchorable>
                                     <avalon:LayoutAnchorable

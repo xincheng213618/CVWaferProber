@@ -3,6 +3,7 @@ using AvalonDock.Layout;
 using ChipMapping.Models;
 using ChipMapping.ViewModels;
 using ColorVision.Core.Entities;
+using ConoscopeDemo;
 using CVDB.Services.Buz;
 using CVWaferProber.Components;
 using CVWaferProber.Core.Models.Enums;
@@ -53,6 +54,7 @@ namespace CVWaferProber.ViewModels
                 }
             }
         }
+
         private WPFlowViewModel? _selectedWPFlow;
         public WPFlowViewModel? SelectedWPFlow
         {
@@ -72,6 +74,8 @@ namespace CVWaferProber.ViewModels
         public ICommand ExitCommand { get; }
         // 打开帮助命令
         public ICommand OpenHelpCommand { get; }
+        public ICommand OpenCommand { get; }
+
 
         // 打开关于命令
         public ICommand OpenAboutCommand { get; }
@@ -307,7 +311,7 @@ namespace CVWaferProber.ViewModels
             SaveTestResultCommand = new RelayCommand(SaveTestResult);
             LoadTestResultCommand = new RelayCommand(LoadTestResult);
             ResetStatusCommand = new RelayCommand(ResetStatus);
-            LoadMappingFileCommand = new RelayCommand(_ => LoadMappingFileFromCsv());
+            OpenCommand  = new RelayCommand( Opena);
             ClearMappingCommand = new RelayCommand(_ => ClearMapping());
             FlowLoadCommand = new RelayCommand(_ => LoadBuzWPFlows());
             RCRegCommand = new RelayCommand(_ => RCReg());
@@ -393,6 +397,14 @@ namespace CVWaferProber.ViewModels
             //IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
 
         }
+
+        private void Opena(object obj)
+        {
+            DemoWindow demoWindow = new DemoWindow();
+            demoWindow.Show();
+           
+        }
+
         // SN索引字典
         private Dictionary<string, List<DieViewModel>> _snIndex = new Dictionary<string, List<DieViewModel>>(StringComparer.OrdinalIgnoreCase);
 

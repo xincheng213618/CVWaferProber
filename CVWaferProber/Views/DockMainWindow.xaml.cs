@@ -59,17 +59,47 @@ namespace CVWaferProber.Views
         }
         private void LanguageMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            // 获取选中的语言标签
             var menuItem = sender as MenuItem;
             if (menuItem?.Tag is string language)
             {
-                // 调用AppSettingsManager切换语言
+                // 1. 保存语言设置
                 AppSettingsManager.ChangeLanguage(language);
 
-                // （可选）刷新界面布局（部分控件可能需要强制更新）
-                Application.Current.MainWindow?.InvalidateVisual();
+                // 2. 提示用户重启程序
+                var result = MessageBox.Show("语言已切换，需要重启程序生效！\n是否立即重启？", "提示",
+                                             MessageBoxButton.YesNo, MessageBoxImage.Information);
+                if (result == MessageBoxResult.Yes)
+                {
+                    // 3. 重启程序
+                    RestartApplication();
+                }
             }
         }
+
+        private void RestartApplication()
+        {
+            try
+            {
+                // 1. 获取当前程序路径和参数（简化获取逻辑，减少耗时）
+                string exePath = Process.GetCurrentProcess().MainModule.FileName;
+
+                // 2. 快速启动新实例（不等待、无窗口隐藏，加速启动）
+                Process.Start(new ProcessStartInfo(exePath)
+                {
+                    CreateNoWindow = false,
+                    UseShellExecute = true, // 用系统外壳启动，比直接启动更快
+                    WindowStyle = ProcessWindowStyle.Normal
+                });
+
+                // 3. 强制退出当前进程（跳过WPF的Shutdown流程，大幅缩短退出耗时）
+                Process.GetCurrentProcess().Kill();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"重启失败：{ex.Message}", "错误");
+            }
+        }
+
         // 4. 窗口加载完成后执行Demo嵌入
 
         // 在界面加载时调用（如ViewModel的初始化方法、窗口的Loaded事件）

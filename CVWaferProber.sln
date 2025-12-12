@@ -20,9 +20,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GSWinMsgSim", "GSWinMsgSim\GSWinMsgSim.csproj", "{94DCE7C1-63E6-4EF4-A537-E6CF683D1D64}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案项", "解决方案项", "{9FA3D6BD-1EC1-3BA5-80CB-CE02773A58D5}"
-	ProjectSection(SolutionItems) = preProject
-		VAMdemo(1)\net8.0-windows\ConoscopeDemo.exe = VAMdemo(1)\net8.0-windows\ConoscopeDemo.exe
-	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConoscopeDemo", "VAMdemo\ConoscopeDemo.csproj", "{490FD384-21C5-3E3F-E3BE-55C61494890B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -96,6 +95,14 @@ Global
 		{94DCE7C1-63E6-4EF4-A537-E6CF683D1D64}.Release|Any CPU.Build.0 = Release|Any CPU
 		{94DCE7C1-63E6-4EF4-A537-E6CF683D1D64}.Release|x64.ActiveCfg = Release|Any CPU
 		{94DCE7C1-63E6-4EF4-A537-E6CF683D1D64}.Release|x64.Build.0 = Release|Any CPU
+		{490FD384-21C5-3E3F-E3BE-55C61494890B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{490FD384-21C5-3E3F-E3BE-55C61494890B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{490FD384-21C5-3E3F-E3BE-55C61494890B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{490FD384-21C5-3E3F-E3BE-55C61494890B}.Debug|x64.Build.0 = Debug|Any CPU
+		{490FD384-21C5-3E3F-E3BE-55C61494890B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{490FD384-21C5-3E3F-E3BE-55C61494890B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{490FD384-21C5-3E3F-E3BE-55C61494890B}.Release|x64.ActiveCfg = Release|Any CPU
+		{490FD384-21C5-3E3F-E3BE-55C61494890B}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
