@@ -68,7 +68,15 @@ namespace CVWaferProber.Services
             LoadImageResult(dieViewModel.chipViewModel.ChipData, dieViewModel.SerialNumber);
         }
 
-        public void LoadImageResult(ChipData? chipData, string serialNumber)
+        private void AddResultImage(int id,string imgFile)
+        {
+            ImageItem loc = new ImageItem(id);
+            loc.FileName = System.IO.Path.GetFileName(imgFile);
+            loc.ImagePath = imgFile;
+            CustomImageVM?.AddImage(loc);
+        }
+
+        private void LoadImageResult(ChipData? chipData, string serialNumber)
         {
             string? resultImageFile = null;
             DateTime? TestTime = null;
@@ -84,6 +92,21 @@ namespace CVWaferProber.Services
                 {
                     resultImageFile = result.ImgFile;
                     TestTime = result.CreateDate;
+                }
+                else if (resultType == AlgorithmResultType.OLED_CombineQuaterImages)
+                {
+                    AddResultImage(id++, result.ImgResult);
+                }
+                else if (resultType == AlgorithmResultType.OLED_RebuildPixelsMem)
+                {
+                    var details = AlgResultService.GetPOIDetailResultFileByPid(result.Id);
+                    if (details != null && details.Count == 1)
+                    {
+                        if (System.IO.File.Exists(details[0].FileUrl))
+                        {
+                            AddResultImage(id++, details[0].FileUrl);
+                        }
+                    }
                 }
                 else if (resultType == AlgorithmResultType.POI_Y)
                 {
@@ -102,34 +125,36 @@ namespace CVWaferProber.Services
                         DetailResult_CommFile_V2 detailResult_Comm = JsonConvert.DeserializeObject<DetailResult_CommFile_V2>(details[0].Result);
                         if (System.IO.File.Exists(detailResult_Comm.ResultFileName))
                         {
-                            ImageItem imageResultViewModel = new ImageItem(id++);
+                            //ImageItem imageResultViewModel = new ImageItem(id++);
 
                             PoiAnalysis poiAnalysis = JsonConvert.DeserializeObject<PoiAnalysis>(System.IO.File.ReadAllText(detailResult_Comm.ResultFileName));
-                            chipData.DataValue = imageResultViewModel.BrightnessUniformity = poiAnalysis.result.Value;
-                            ImageDisplayBrightnessUniformity = string.Format("[{0},{1}]={2:F4}", chipData.Row, chipData.Column, imageResultViewModel.BrightnessUniformity);
+                            chipData.DataValue = poiAnalysis.result.Value;
+                            ImageDisplayBrightnessUniformity = string.Format("[{0},{1}]={2:F4}", chipData.Row, chipData.Column, chipData.DataValue);
                             //
-                            imageResultViewModel.FileName = System.IO.Path.GetFileName(resultImageFile);
-                            imageResultViewModel.ImagePath = resultImageFile;
+                            //imageResultViewModel.FileName = System.IO.Path.GetFileName(resultImageFile);
+                            //imageResultViewModel.ImagePath = resultImageFile;
                             //imageResultViewModel.SerialNumber = serialNumber;
                             //imageResultViewModel.TestTime = TestTime;
                             //imageResultViewModel.ResultType = "数据提取";
                             // 在UI线程更新集合
-                            CustomImageVM?.AddImage(imageResultViewModel);
+                            //CustomImageVM?.AddImage(imageResultViewModel);
 
+                            if (!string.IsNullOrEmpty(resultImageFile)) AddResultImage(id++, resultImageFile);
                         }
                     }
                 }
                 //定位
                 else if (resultType == AlgorithmResultType.OLED_FindDotsArrayOutFile)
                 {
-                    ImageItem loc = new ImageItem(id++);
-                    loc.FileName = System.IO.Path.GetFileName(result.ImgFile);
-                    loc.ImagePath = result.ImgFile;
-                    //loc.ResultType = "定位";
-                    //loc.SerialNumber = serialNumber;
-                    //loc.TestTime = result.CreateDate;
-                    // 在UI线程更新集合
-                    CustomImageVM?.AddImage(loc);
+                    //ImageItem loc = new ImageItem(id++);
+                    //loc.FileName = System.IO.Path.GetFileName(result.ImgFile);
+                    //loc.ImagePath = result.ImgFile;
+                    ////loc.ResultType = "定位";
+                    ////loc.SerialNumber = serialNumber;
+                    ////loc.TestTime = result.CreateDate;
+                    //// 在UI线程更新集合
+                    //CustomImageVM?.AddImage(loc);
+                    AddResultImage(id++, result.ImgFile);
                 }
             }
 
