@@ -1,6 +1,7 @@
 ﻿using ColorVision.Core.Entities;
 using CVWaferProber.Core.Restful.DTO;
 using CVWaferProber.Core.ViewModels;
+using Newtonsoft.Json;
 
 namespace CVWaferProber.ViewModels
 {
@@ -22,7 +23,10 @@ namespace CVWaferProber.ViewModels
         public string Name { get; set; }
 
     }
-
+    public struct BuzProductCfg
+    {
+        public int Timeout { get; set; }
+    }
     public class WPFlowViewModel : ViewModelBase
     {
         public WPFlowViewModel(TScgdBuzProductDetail flow)
@@ -47,6 +51,11 @@ namespace CVWaferProber.ViewModels
                     FlowType = CVWaferProberFlowType.VAM;
                     break;
             }
+            if (!string.IsNullOrEmpty(flow.CfgJson))
+            {
+                BuzProductCfg cfg = JsonConvert.DeserializeObject<BuzProductCfg>(flow.CfgJson);
+                this.Timeout = cfg.Timeout;
+            }
         }
 
         /// <summary>
@@ -61,6 +70,11 @@ namespace CVWaferProber.ViewModels
         /// 
         /// </summary>
         public CVWaferProberFlowType FlowType { get; set; }
+
+        /// <summary>
+        /// 超时时间,单位S
+        /// </summary>
+        public int Timeout { get; set; } = 120;
     }
 
     public enum CVWaferProberFlowType
