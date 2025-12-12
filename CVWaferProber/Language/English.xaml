@@ -41,7 +41,8 @@
 
     <sys:String x:Key="Dock.Layout.Title.Mapping">Mapping</sys:String>
     <sys:String x:Key="Dock.Layout.Title.CameraImage">CameraImage</sys:String>
-    <sys:String x:Key="Dock.Layout.Title.SP">Spectral/IVL</sys:String>
+    <sys:String x:Key="Dock.Layout.Title.SP">Spectral/IVL/EQE</sys:String>
+    <sys:String x:Key="Dock.Layout.Title.SP1">Spectral/IVL</sys:String>
     <sys:String x:Key="Dock.Layout.Title.Log">SysLog</sys:String>
     <sys:String x:Key="Dock.Layout.Title.DataChart">DataChart</sys:String>
 
@@ -124,10 +125,16 @@
     <sys:String x:Key="Menu.MappingPanelVisible">MappingPanelVisible</sys:String>
     <sys:String x:Key="Menu.CameraPanelVisible">CameraPanelVisible</sys:String>
     <sys:String x:Key="Menu.SPPanelVisible">SPPanelVisible</sys:String>
+    <sys:String x:Key="Menu.VAMPanelVisible">VAMPanel</sys:String>
     <sys:String x:Key="Menu.LogPanelVisible">LogPanelVisible</sys:String>
     <sys:String x:Key="Menu.ResetLayout">ResetLayout</sys:String>
     <sys:String x:Key="Menu.Help">Help(H)</sys:String>
     <sys:String x:Key="Menu.UserManual">User Manual</sys:String>
     <sys:String x:Key="Menu.About">About</sys:String>
     <sys:String x:Key="Menu.Exit">Exit(Alt+F4)</sys:String>
+
+    <sys:String x:Key="Plot.Title.DiameterLine">Diameter Line Distribution</sys:String>
+    <sys:String x:Key="Plot.Title.RCircle">R Circle Distribution</sys:String>
+    <sys:String x:Key="Plot.Axis.X">Degrees</sys:String>
+    <sys:String x:Key="Plot.Axis.Y">Luminance (cd/m²)</sys:String>
 </ResourceDictionary>

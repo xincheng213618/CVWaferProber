@@ -8,6 +8,7 @@
     xmlns:cv="clr-namespace:CVWaferProber.Converters"
     xmlns:cvimg="clr-namespace:CVWPFCamImageCtrl;assembly=CVWPFCamImageCtrl"
     xmlns:cvsp="clr-namespace:CVWPFSpectrometerCtrl;assembly=CVWPFSpectrometerCtrl"
+    xmlns:cvvam="clr-namespace:CVAVMControl;assembly=CVVAMControl"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CVWaferProber.ViewModels"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -80,11 +81,15 @@
                     IsCheckable="True"
                     IsChecked="{Binding ElementName=AnchorableSP, Path=IsVisible, Mode=TwoWay}" />
                 <MenuItem
+                    x:Name="MenuVAMSPPanel"
+                    Header="{DynamicResource Menu.VAMPanelVisible}"
+                    IsCheckable="True"
+                    IsChecked="{Binding ElementName=AnchorableVAM, Path=IsVisible, Mode=TwoWay}" />
+                <MenuItem
                     Command="{Binding OpenLogCommand}"
                     Header="{DynamicResource Menu.LogPanelVisible}"
                     IsCheckable="True"
                     IsChecked="{Binding ElementName=AnchorableLog, Path=IsVisible, Mode=TwoWay}" />
-
 
                 <Separator />
 
@@ -184,14 +189,9 @@
                                         Title="VAM"
                                         CanClose="False"
                                         CanHide="True">
-                                        <!--<DockPanel x:Name="DockPanelVAM" Grid.Row="2">
-                                            <Grid
-                                                x:Name="DemoHostGrid"
-                                                Width="Auto"
-                                                Height="Auto">
-                                                <cop:DemoWindow />
-                                            </Grid>
-                                        </DockPanel>-->
+                                        <DockPanel x:Name="PanelVAM" Grid.Row="1">
+                                            <cvvam:CVVAMAnalyzer x:Name="MyVAM" />
+                                        </DockPanel>
                                     </avalon:LayoutAnchorable>
                                     <avalon:LayoutAnchorable
                                         x:Name="AnchorableLog"

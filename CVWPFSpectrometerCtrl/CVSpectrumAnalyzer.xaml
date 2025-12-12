@@ -21,10 +21,10 @@
     <TabControl
         Padding="0"
         BorderThickness="0"
-        TabStripPlacement="Top">
+        TabStripPlacement="Right">
 
         <!--  SP选项卡（原内容）  -->
-        <TabItem Header="{DynamicResource Dock.Layout.Title.SP}">
+        <TabItem Header="{DynamicResource Dock.Layout.Title.SP1}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -896,8 +896,8 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
-                    <RowDefinition Height="7.5*" />
-                    <RowDefinition Height="2.5*" />
+                    <RowDefinition Height="8  *" />
+                    <RowDefinition Height="2*" />
                 </Grid.RowDefinitions>
                 <!--  顶部按钮区域  -->
                 <StackPanel

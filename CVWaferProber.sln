@@ -23,6 +23,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案项", "解决�
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConoscopeDemo", "VAMdemo\ConoscopeDemo.csproj", "{490FD384-21C5-3E3F-E3BE-55C61494890B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CVVAMControl", "CVAVMControl\CVVAMControl.csproj", "{59C63ABC-5583-4B1F-B15C-B0BE9CEEC58C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -103,6 +105,14 @@ Global
 		{490FD384-21C5-3E3F-E3BE-55C61494890B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{490FD384-21C5-3E3F-E3BE-55C61494890B}.Release|x64.ActiveCfg = Release|Any CPU
 		{490FD384-21C5-3E3F-E3BE-55C61494890B}.Release|x64.Build.0 = Release|Any CPU
+		{59C63ABC-5583-4B1F-B15C-B0BE9CEEC58C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59C63ABC-5583-4B1F-B15C-B0BE9CEEC58C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59C63ABC-5583-4B1F-B15C-B0BE9CEEC58C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{59C63ABC-5583-4B1F-B15C-B0BE9CEEC58C}.Debug|x64.Build.0 = Debug|Any CPU
+		{59C63ABC-5583-4B1F-B15C-B0BE9CEEC58C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59C63ABC-5583-4B1F-B15C-B0BE9CEEC58C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59C63ABC-5583-4B1F-B15C-B0BE9CEEC58C}.Release|x64.ActiveCfg = Release|Any CPU
+		{59C63ABC-5583-4B1F-B15C-B0BE9CEEC58C}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

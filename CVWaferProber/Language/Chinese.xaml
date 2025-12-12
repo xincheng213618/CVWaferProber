@@ -44,7 +44,8 @@
 
     <sys:String x:Key="Dock.Layout.Title.Mapping">映射</sys:String>
     <sys:String x:Key="Dock.Layout.Title.CameraImage">相机图像</sys:String>
-    <sys:String x:Key="Dock.Layout.Title.SP">光谱/IVL</sys:String>
+    <sys:String x:Key="Dock.Layout.Title.SP">光谱/IVL/EQE</sys:String>
+    <sys:String x:Key="Dock.Layout.Title.SP1">光谱/IVL</sys:String>
     <sys:String x:Key="Dock.Layout.Title.Log">日志</sys:String>
     <sys:String x:Key="Dock.Layout.Title.DataChart">数据图表</sys:String>
 
@@ -127,17 +128,22 @@
     <sys:String x:Key="Menu.Language.Chinese">中文</sys:String>
     <sys:String x:Key="Menu.Language.English">英文</sys:String>
 
-    <sys:String x:Key="Menu.MappingPanelVisible">显示Mapping面板</sys:String>
-    <sys:String x:Key="Menu.CameraPanelVisible">显示相机面板</sys:String>
-    <sys:String x:Key="Menu.SPPanelVisible">显示SP面板</sys:String>
-    <sys:String x:Key="Menu.LogPanelVisible">显示日志面板</sys:String>
+    <sys:String x:Key="Menu.MappingPanelVisible">Mapping面板</sys:String>
+    <sys:String x:Key="Menu.CameraPanelVisible">相机面板</sys:String>
+    <sys:String x:Key="Menu.SPPanelVisible">SP面板</sys:String>
+    <sys:String x:Key="Menu.VAMPanelVisible">VAM面板</sys:String>
+
+    <sys:String x:Key="Menu.LogPanelVisible">日志面板</sys:String>
     <sys:String x:Key="Menu.ResetLayout">重置布局</sys:String>
     <sys:String x:Key="Menu.Help">帮助(H)</sys:String>
     <sys:String x:Key="Menu.UserManual">使用手册</sys:String>
     <sys:String x:Key="Menu.About">关于软件</sys:String>
     <sys:String x:Key="Menu.Exit">退出(Alt+F4)</sys:String>
 
-
+    <sys:String x:Key="Plot.Title.DiameterLine">直径线分布曲线</sys:String>
+    <sys:String x:Key="Plot.Title.RCircle">R圆分布曲线</sys:String>
+    <sys:String x:Key="Plot.Axis.X">Degrees</sys:String>
+    <sys:String x:Key="Plot.Axis.Y">Luminance (cd/m²)</sys:String>
 
 
 
