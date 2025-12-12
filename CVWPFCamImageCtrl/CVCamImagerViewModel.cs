@@ -17,10 +17,12 @@ namespace CVWPFCamImageCtrl
         private ImageSource? _imageSource;
         private ObservableCollection<ImageItem> _imageResults;
         private ObservableCollection<POIMarker> _poiMarkers;
+        private CVImager? _imageDisplay;
         private uint id = 1;
         public CVCamImagerViewModel()
         {
             _imageSource = null;
+            _imageDisplay = null;
             _poiMarkers = new ObservableCollection<POIMarker>();
             _imageResults = new ObservableCollection<ImageItem>();
         }
@@ -44,98 +46,8 @@ namespace CVWPFCamImageCtrl
             id = 1;
             ImageSrc = null;
             _imageResults.Clear();
-        }
-        public void LoadImageResult(ChipData? chipData, string serialNumber)
-        {
-            string? resultImageFile = null;
-            DateTime? TestTime = null;
-            string? ImageDisplayBrightnessUniformity = null;
-            var results = AlgResultService.LoadAlgResultByBatchCode(serialNumber);
             if (_imageDisplay != null) _imageDisplay.CurrentImage = null;
-            if (results == null || results.Count == 0) return;
-            List<POIMarker> POIMarkers = new List<POIMarker>();
-            foreach (var result in results)
-            {
-                AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
-                if (result.ImgFileType >= 42 && result.ImgFileType <= 45)
-                {
-                    resultImageFile = result.ImgFile;
-                    TestTime = result.CreateDate;
-                }
-                else if (resultType == AlgorithmResultType.POI_Y)
-                {
-                    var details = AlgResultService.GetPOIDetailResult(result.Id);
-                    foreach (var poi in details)
-                    {
-                        if(poi.PoiType == 0) POIMarkers.Add(new CircleMarker() { Label = poi.PoiName, X = (double)poi.PoiX, Y = (double)poi.PoiY, Width = (double)poi.PoiWidth, Height = (double)poi.PoiHeight, Fill = null });
-                        else if(poi.PoiType == 1) POIMarkers.Add(new RectangleMarker() { Label = poi.PoiName, X = (double)poi.PoiX, Y = (double)poi.PoiY, Width = (double)poi.PoiWidth, Height = (double)poi.PoiHeight, Fill = null });
-                    }
-                }
-                else if (resultType == AlgorithmResultType.PoiAnalysis)
-                {
-                    var details = AlgResultService.GetCommDetailResult(result.Id);
-                    if (details != null && details.Count == 1)
-                    {
-                        DetailResult_CommFile_V2 detailResult_Comm = JsonConvert.DeserializeObject<DetailResult_CommFile_V2>(details[0].Result);
-                        if (System.IO.File.Exists(detailResult_Comm.ResultFileName))
-                        {
-                            ImageItem imageResultViewModel = new ImageItem(id++);
-
-                            PoiAnalysis poiAnalysis = JsonConvert.DeserializeObject<PoiAnalysis>(System.IO.File.ReadAllText(detailResult_Comm.ResultFileName));
-                            chipData.DataValue = imageResultViewModel.BrightnessUniformity = poiAnalysis.result.Value;
-                            ImageDisplayBrightnessUniformity = string.Format("[{0},{1}]={2:F4}", chipData.Row, chipData.Column, imageResultViewModel.BrightnessUniformity);
-                            //
-                            imageResultViewModel.FileName = System.IO.Path.GetFileName(resultImageFile);
-                            imageResultViewModel.ImagePath = resultImageFile;
-                            //imageResultViewModel.SerialNumber = serialNumber;
-                            //imageResultViewModel.TestTime = TestTime;
-                            //imageResultViewModel.ResultType = "数据提取";
-                            // 在UI线程更新集合
-                            Application.Current.Dispatcher.Invoke(() =>
-                            {
-                                ImageResults.Add(imageResultViewModel);
-                            });
-
-                        }
-                    }
-                }
-                //定位
-                else if (resultType == AlgorithmResultType.OLED_FindDotsArrayOutFile)
-                {
-                    ImageItem loc = new ImageItem(id++);
-                    loc.FileName = System.IO.Path.GetFileName(result.ImgFile);
-                    loc.ImagePath = result.ImgFile;
-                    //loc.ResultType = "定位";
-                    //loc.SerialNumber = serialNumber;
-                    //loc.TestTime = result.CreateDate;
-                    // 在UI线程更新集合
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        ImageResults.Add(loc);
-                    });
-                }
-            }
-
-            if (!string.IsNullOrEmpty(resultImageFile))
-            {
-                OpenCvSharp.Mat? image = null;
-                if (!CVImageFileUtil.LoadImgFile(resultImageFile, ref image)) return;
-                image = OpenCvMatTools.ConvertImageTo8UC3(image);
-                PutPOIToImage(ref image, POIMarkers);
-                OpenCvMatTools.PutTextToImage(ImageDisplayBrightnessUniformity, ref image, Scalar.Green);
-                // 在UI线程更新集合
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    ImageSrc = image.ToBitmapSource();
-                    if (_imageDisplay != null)
-                    {
-                        _imageDisplay.CurrentImage = ImageSrc;
-                        //_imageDisplay.POIMarkers = _poiMarkers;
-                    }
-                });
-            }
         }
-
         private void DrawCircleToImage(ref Mat image, CircleMarker poi)
         {
             // 将WPF Point转换为OpenCV Point
@@ -242,10 +154,33 @@ namespace CVWPFCamImageCtrl
             }
         }
 
-        private CVImager _imageDisplay;
         public void SetImageCtrl(CVImager imageDisplay)
         {
             _imageDisplay = imageDisplay;
+        }
+
+        public void UpdatePOIImage(Mat image, List<POIMarker> POIMarkers, string imageDisplayBrightnessUniformity)
+        {
+            PutPOIToImage(ref image, POIMarkers);
+            OpenCvMatTools.PutTextToImage(imageDisplayBrightnessUniformity, ref image, Scalar.Green);
+            // 在UI线程更新集合
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                ImageSrc = image.ToBitmapSource();
+                if (_imageDisplay != null)
+                {
+                    _imageDisplay.CurrentImage = ImageSrc;
+                    //_imageDisplay.POIMarkers = _poiMarkers;
+                }
+            });
+        }
+
+        public void AddImage(ImageItem imageItem)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                ImageResults.Add(imageItem);
+            });
         }
     }
 }
