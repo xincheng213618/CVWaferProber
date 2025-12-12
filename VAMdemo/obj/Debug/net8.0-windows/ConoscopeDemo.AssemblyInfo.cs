@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ConoscopeDemo")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9e873f16394a75c3d265428d2a6ca84a4cd9763e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0109ad658911ef752ae8b15b4bb1ee16eee13cb8")]
 [assembly: System.Reflection.AssemblyProductAttribute("ConoscopeDemo")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ConoscopeDemo")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
