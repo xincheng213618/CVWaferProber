@@ -8,6 +8,7 @@ namespace CVWPFSpectrometerCtrl.Models
 {
     public enum TabType
     {
+        Overview,
         Spectrum,
         IV,
         IL,

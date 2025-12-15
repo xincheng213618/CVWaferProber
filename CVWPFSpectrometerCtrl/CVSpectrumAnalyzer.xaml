@@ -19,8 +19,10 @@
 
     <!--  外层TabControl：标题固定在底部  -->
     <TabControl
+        x:Name="outerTabControl"
         Padding="0"
         BorderThickness="0"
+        SelectedIndex="{Binding OuterTabSelectedIndex, Mode=TwoWay}"
         TabStripPlacement="Top">
 
         <!--  SP选项卡（原内容）  -->
@@ -49,9 +51,10 @@
                 <!--  原内层TabControl（总览/光谱/IV等）  -->
                 <!--  Tab区域  -->
                 <TabControl
+                    x:Name="innerTabControl"
                     Grid.Row="1"
                     Margin="5"
-                    SelectedIndex="{Binding SelectedTabIndex}">
+                    SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
                     <TabItem Header="{DynamicResource Sp.Overview}">
                         <Grid Margin="5">
                             <Grid.RowDefinitions>

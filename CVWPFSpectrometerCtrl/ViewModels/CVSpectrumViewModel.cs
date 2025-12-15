@@ -744,7 +744,15 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         public int SelectedTabIndex
         {
             get => (int)SelectedTab;
-            set => SelectedTab = (TabType)value;
+            set
+            {
+                // 校验值是否在枚举范围内，避免越界
+                if (Enum.IsDefined(typeof(TabType), value))
+                {
+                    SelectedTab = (TabType)value;
+                }
+               
+            }
         }
         #endregion Tab
         // 默认轴范围
@@ -2814,6 +2822,81 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
 
         public ICommand BtnResetStatus { get; }
-       
+
+        #region 激活 IVLCamera Tab
+
+        // 外部调用的激活IVLCamera Tab方法
+        public void ActivateIVLCameraTab()
+        {
+            // 直接赋值枚举（而非索引），触发绑定更新
+            SelectedTab = TabType.IVLCamera;
+
+            // 延迟聚焦（解决UI时序问题）
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                NeedFocusIVLCameraTab = true;
+            }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        }
+
+        // 用于通知View聚焦IVLCamera Tab的标记属性
+        private bool _needFocusIVLCameraTab;
+        public bool NeedFocusIVLCameraTab
+        {
+            get => _needFocusIVLCameraTab;
+            set
+            {
+                if (_needFocusIVLCameraTab != value)
+                {
+                    _needFocusIVLCameraTab = value;
+                    OnPropertyChanged(nameof(NeedFocusIVLCameraTab));
+                }
+            }
+        }
+        #endregion
+
+
+
+        #region EQE 激活方法
+        //外层TabControl的选中索引（绑定XAML的外层TabControl.SelectedIndex）
+        private int _outerTabSelectedIndex;
+        public int OuterTabSelectedIndex
+        {
+            get => _outerTabSelectedIndex;
+            set
+            {
+                if (_outerTabSelectedIndex != value)
+                {
+                    _outerTabSelectedIndex = value;
+                    OnPropertyChanged(nameof(OuterTabSelectedIndex));
+                }
+            }
+        }
+
+        // 激活EQE Tab的方法（外部调用）
+        public void ActivateEQETab()
+        {
+            // 外层Tab索引：SP=0，EQE=1
+            OuterTabSelectedIndex = 1;
+
+            // 触发聚焦，强化置顶效果
+            NeedFocusEQETab = true;
+        }
+
+        // EQE Tab聚焦标记
+        private bool _needFocusEQETab;
+        public bool NeedFocusEQETab
+        {
+            get => _needFocusEQETab;
+            set
+            {
+                if (_needFocusEQETab != value)
+                {
+                    _needFocusEQETab = value;
+                    OnPropertyChanged(nameof(NeedFocusEQETab));
+                }
+            }
+        }
+        #endregion
+
     }
 }

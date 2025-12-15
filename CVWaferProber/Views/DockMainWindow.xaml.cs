@@ -4,6 +4,7 @@ using CVWaferProber.Log;
 using CVWaferProber.ViewModels;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl;
+using CVWPFSpectrometerCtrl.ViewModels;
 using log4net;
 using log4net.Config;
 using System.ComponentModel;
@@ -34,7 +35,46 @@ namespace CVWaferProber.Views
         {
             InitializeComponent();
             InitializeLogging();
-            
+            if (DataContext is MainViewModel mainVm)
+            {
+                // 传递DockingManager和面板实例
+                mainVm.DockingManager = DockingManager;
+                mainVm.AnchorableCamera = AnchorableCamera; // 绑定XAML中的AOI面板
+                mainVm.AnchorableSP = AnchorableSP;         // 绑定XAML中的SP面板
+                mainVm.AnchorableVAM = AnchorableVAM;       // 绑定XAML中的VAM面板
+
+                // 2. 获取SP面板的ViewModel并传递给MainViewModel
+                if (AnchorableSP.Content is CVSpectrumAnalyzer spPanel)
+                {
+                    if (spPanel.DataContext is CVSpectrumViewModel spVm)
+                    {
+                        mainVm.SpPanelViewModel = spVm;
+
+                        // 3. 监听SP面板的聚焦指令，强制IVLCamera Tab聚焦
+                        spVm.PropertyChanged += (s, e) =>
+                        {
+                            if (e.PropertyName == nameof(spVm.NeedFocusIVLCameraTab) && spVm.NeedFocusIVLCameraTab)
+                            {
+                                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                                {
+                                    if (spPanel.FindName("innerTabControl") is TabControl innerTab)
+                                    {
+                                        innerTab.SelectedIndex = 5;
+                                        innerTab.UpdateLayout(); // 强制刷新布局
+                                        innerTab.Focus(); // 聚焦TabControl
+                                        if (innerTab.SelectedItem is TabItem ivlCameraTab)
+                                        {
+                                            ivlCameraTab.Focus(); // 聚焦TabItem
+                                            ivlCameraTab.IsSelected = true;
+                                        }
+                                    }
+                                    spVm.NeedFocusIVLCameraTab = false;
+                                }));
+                            }
+                        };
+                    }
+                }
+            }
             //LoadConoscopeDemo();
             // 监听Mapping面板可见性变化
             AnchorableMapping.IsVisibleChanged += (s, e) =>
@@ -50,6 +90,7 @@ namespace CVWaferProber.Views
                 // 强制布局更新
                 DockingManager.UpdateLayout();
             };
+           
             // 创建并初始化消息处理器
             //this.Loaded += DockMainWindow_Loaded;
             //if (DataContext is MainViewModel vm)
@@ -57,6 +98,9 @@ namespace CVWaferProber.Views
             //    vm.ResetLayoutRequested += (s, e) => ResetToDefaultLayout();
             //}
         }
+
+      
+
         private void LanguageMenuItem_Click(object sender, RoutedEventArgs e)
         {
             var menuItem = sender as MenuItem;

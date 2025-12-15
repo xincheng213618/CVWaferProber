@@ -149,7 +149,7 @@
                                         CanHide="True">
                                         <!--  绑定Grid的Visibility  -->
                                         <DockPanel x:Name="PanelMapping">
-                                            <comp:MappingDataControl />
+                                            <comp:MappingDataControl x:Name="mappingDataControl" />
                                         </DockPanel>
                                     </avalon:LayoutAnchorable>
                                 </avalon:LayoutAnchorablePane>

@@ -25,6 +25,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
+
 using static FreeSql.Internal.GlobalFilter;
 
 
@@ -51,7 +52,9 @@ namespace CVWaferProber.ViewModels
                 if (_selectedFlow != value)
                 {
                     SetProperty(ref _selectedFlow, value);
+
                 }
+        
             }
         }
 
@@ -64,7 +67,10 @@ namespace CVWaferProber.ViewModels
                 if (_selectedWPFlow != value)
                 {
                     SetProperty(ref _selectedWPFlow, value);
+                    // 选中选项后，激活对应右侧面板
+                    ActivateCorrespondingPanel();
                 }
+
             }
         }
 
@@ -806,7 +812,7 @@ namespace CVWaferProber.ViewModels
 
         private void EQE_Item_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(DieViewModel.IsAOIEnabled) && !_isUpdatingFromHeader_EQE)
+            if (e.PropertyName == nameof(DieViewModel.IsEQEEnabled) && !_isUpdatingFromHeader_EQE)
             {
                 UpdateSelectAllEQEState();
             }
@@ -1164,7 +1170,7 @@ namespace CVWaferProber.ViewModels
         }
         private void NextTestingDie()
         {
-            var sel = TestResults[CurTestDieIdx];
+            /*var sel = TestResults[CurTestDieIdx];
             sel.UnSelected();
             if (IsLocalSim)
             {
@@ -1179,7 +1185,17 @@ namespace CVWaferProber.ViewModels
             else if (sel.Status.HasValue && sel.MapX.HasValue && sel.MapY.HasValue)
             {
                 _wmProcessor.MeasurementProcessResult((ChipStatus)sel.Status, (int)sel.MapY, (int)sel.MapX);
+            }*/
+            // 标记当前项测试完成
+            if (_currentTestIndex < _testQueue.Count)
+            {
+                var currentDie = _testQueue[_currentTestIndex];
+                currentDie.UnSelected();
             }
+
+            // 推进到下一个勾选项
+            _currentTestIndex++;
+            StartNextTestItem(); // 执行下一个测试项
         }
 
         //private void StartTestingDie(DieViewModel dieViewModel)
@@ -1307,30 +1323,104 @@ namespace CVWaferProber.ViewModels
             else return string.Format("{0}_{1}[{3},{4}]", ProberId, Timestamp, Snowflake.Instance.NextSeqId(), dieViewModel.MapY, dieViewModel.MapX);
         }
         //////////////////////*/
-
+        private List<DieViewModel> _testQueue; // 待测试队列
+        private int _currentTestIndex; // 当前测试项索引
         private bool IsLocalSim = false;
         private void StartAutoFlow()
         {
-            if (SelectedWPFlow != null)
+            if (SelectedWPFlow == null)
             {
-                CustomMappingVM.DisabledInput = IsProcessing = true;
-                EnableBtn(false);
+                logger.Error("未选择测试流程（Flow）");
+                return;
+            }
 
-                TestingReady();
+            // 1. 筛选已勾选的测试项
+            _testQueue = GetSelectedTestItems();
+            if (_testQueue.Count == 0)
+            {
+                MessageBox.Show("请先勾选需要测试的项", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
 
-                if (IsLocalSim)
-                {
-                    aoiService.StartTestingAOI(Timestamp, TestResults[CurTestDieIdx], _selectedWPFlow, false);
-                    //StartTestingDie(TestResults[CurTestDieIdx]);
-                    //获取结果
-                    _simAutoTestTimer?.Start();
-                }
-                else
-                {
-                    _wmProcessor.MeasurementReady();
-                }
+            // 2. 初始化测试状态
+            CustomMappingVM.DisabledInput = IsProcessing = true;
+            EnableBtn(false);
+            TestingReady(); // 重置测试状态
+            _currentTestIndex = 0; // 从第一个勾选项开始
+
+            // 3. 启动测试（先执行第一个勾选项）
+            if (IsLocalSim)
+            {
+                StartNextTestItem(); // 启动下一个测试项
+                _simAutoTestTimer?.Start();
+            }
+            else
+            {
+                _wmProcessor.MeasurementReady();
             }
         }
+
+        private void StartNextTestItem()
+        {
+            // 检查队列是否已完成所有测试
+            if (_currentTestIndex >= _testQueue.Count)
+            {
+                StopAutoTest(null); // 测试完成，停止流程
+                MessageBox.Show("所有勾选项测试完成", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // 获取当前要测试的项
+            DieViewModel currentDie = _testQueue[_currentTestIndex];
+            CurTestDieIdx = TestResults.IndexOf(currentDie); // 同步DataGrid索引
+
+            // 滚动到当前测试项
+            ScrollToItem(currentDie);
+
+            // 4. 根据勾选的类型，执行对应测试
+            if (currentDie.IsAOIEnabled)
+            {
+                aoiService.StartTestingAOI(Timestamp, currentDie, _selectedWPFlow, false);
+            }
+            else if (currentDie.IsIVLEnabled)
+            {
+                ivlService.StartTestingIVL(Timestamp, currentDie, _selectedWPFlow);
+            }
+            else if (currentDie.IsEQEEnabled)
+            {
+                // 补充EQE测试逻辑（若有对应Service）
+                // eqeService.StartTestingEQE(Timestamp, currentDie, _selectedWPFlow);
+            }
+            else if (currentDie.IsVAMEnabled)
+            {
+                // 补充VAM测试逻辑（若有对应Service）
+                // vamService.StartTestingVAM(Timestamp, currentDie, _selectedWPFlow);
+            }
+        }
+
+        /*private bool IsLocalSim = false;
+        private void StartAutoFlow()
+        {
+           if (SelectedWPFlow != null)
+           {
+               CustomMappingVM.DisabledInput = IsProcessing = true;
+               EnableBtn(false);
+
+               TestingReady();
+
+               if (IsLocalSim)
+               {
+                   aoiService.StartTestingAOI(Timestamp, TestResults[CurTestDieIdx], _selectedWPFlow, false);
+                   //StartTestingDie(TestResults[CurTestDieIdx]);
+                   //获取结果
+                   _simAutoTestTimer?.Start();
+               }
+               else
+               {
+                   _wmProcessor.MeasurementReady();
+               }
+           }
+        }*/
         private void StartManFlow()
         {
             if (SelectedWPFlow != null)
@@ -1600,5 +1690,92 @@ namespace CVWaferProber.ViewModels
         {
             if (obj != null) SelectItemById((uint)obj);
         }
+        #region 勾选列表选项后，点击按钮自动依次测试勾选项
+        private List<DieViewModel> GetSelectedTestItems()
+        {
+            // 筛选出至少勾选了一项（AOI/IVL/EQE/VAM）的Die
+            return TestResults.Where(die =>
+                die.IsAOIEnabled || die.IsIVLEnabled || die.IsEQEEnabled || die.IsVAMEnabled
+            ).ToList();
+        }
+
+        #endregion
+        // MainViewModel中新增字段
+        public DockingManager? DockingManager { get; set; }
+        public LayoutAnchorable? AnchorableCamera { get; set; }
+        public LayoutAnchorable? AnchorableSP { get; set; }
+        public LayoutAnchorable? AnchorableVAM { get; set; }
+        /***********************激活相应面板************************/
+        private void ActivateCorrespondingPanel()
+        {
+            if (SelectedWPFlow == null) return;
+
+            // 空值校验
+            if (DockingManager == null || AnchorableSP == null)
+            {
+                logger.Warn("SP面板未初始化，无法激活");
+                return;
+            }
+
+            // 根据FlowType激活对应面板
+            switch (SelectedWPFlow.FlowType)
+            {
+                case CVWaferProberFlowType.AOI:
+                    if (AnchorableCamera != null)
+                    {
+                        AnchorableCamera.Show();
+                        AnchorableCamera.IsSelected = true;
+                    }
+                    else
+                    {
+                        logger.Warn("AOI面板未初始化，无法激活");
+                    }
+                    break;
+                case CVWaferProberFlowType.IVL_SP:
+                case CVWaferProberFlowType.IVL_Camera:
+                    // 1. 激活外层SP面板（AvalonDock层面置顶）
+                    AnchorableSP.Show();
+                    AnchorableSP.IsSelected = true;
+                    // 2. 触发SP面板内的IVLCamera Tab激活
+                    SpPanelViewModel?.ActivateIVLCameraTab();
+                    break;
+                case CVWaferProberFlowType.EQE:
+                    AnchorableSP.Show();
+                    AnchorableSP.IsSelected = true;
+                    break;
+                case CVWaferProberFlowType.VAM:
+                    if (AnchorableVAM != null)
+                    {
+                        AnchorableVAM.Show();
+                        AnchorableVAM.IsSelected = true;
+                    }
+                    else
+                    {
+                        logger.Warn("VAM面板未初始化，无法激活");
+                    }
+                    
+                    break;
+            }
+
+            DockingManager.UpdateLayout();
+            DockingManager.Focus();
+        }
+        //private void ActivatePanel(LayoutAnchorable? panel)
+        //{
+        //    if (panel == null)
+        //    {
+        //        logger.Warn("目标面板未初始化，无法激活");
+        //        return;
+        //    }
+
+        //    // 激活面板（显示+选中）
+        //    panel.Show();
+        //    panel.IsSelected = true;
+        //    panel.IsActive = true; // 强化置顶效果
+        //}
+        #region 引用SP面板的ViewModel
+        //引用SP面板的ViewModel（需从View层传递）
+        public CVSpectrumViewModel? SpPanelViewModel { get; set; }
+        #endregion
     }
 }
