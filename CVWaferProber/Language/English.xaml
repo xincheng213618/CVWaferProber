@@ -83,7 +83,7 @@
     <sys:String x:Key="Sp.VL Curve">VL Curve</sys:String>
     <!--  Camera曲线相关  -->
     <sys:String x:Key="Sp.Camera Curve">Camera Curve</sys:String>
-
+    <sys:String x:Key="Dock.Layout.Title.AOI">AOI Panel</sys:String>
     <sys:String x:Key="IVLCamera">IVLCamera</sys:String>
     <sys:String x:Key="Image">Image</sys:String>
     <sys:String x:Key="Export CSV">Export CSV</sys:String>
@@ -122,19 +122,36 @@
     <sys:String x:Key="Menu.Language">Language(L)</sys:String>
     <sys:String x:Key="Menu.Language.Chinese">Chinese</sys:String>
     <sys:String x:Key="Menu.Language.English">English</sys:String>
-    <sys:String x:Key="Menu.MappingPanelVisible">MappingPanelVisible</sys:String>
-    <sys:String x:Key="Menu.CameraPanelVisible">CameraPanelVisible</sys:String>
-    <sys:String x:Key="Menu.SPPanelVisible">SPPanelVisible</sys:String>
-    <sys:String x:Key="Menu.VAMPanelVisible">VAMPanel</sys:String>
-    <sys:String x:Key="Menu.LogPanelVisible">LogPanelVisible</sys:String>
+    <sys:String x:Key="Menu.MappingPanelVisible">Mapping Panel</sys:String>
+    <sys:String x:Key="Menu.Layout.Title.AOI">AOI Panel</sys:String>
+    <sys:String x:Key="Menu.SPPanelVisible">SP Panel</sys:String>
+    <sys:String x:Key="Menu.VAMPanelVisible">VAM Panel</sys:String>
+    <sys:String x:Key="Menu.LogPanelVisible">Log Panel</sys:String>
     <sys:String x:Key="Menu.ResetLayout">ResetLayout</sys:String>
     <sys:String x:Key="Menu.Help">Help(H)</sys:String>
     <sys:String x:Key="Menu.UserManual">User Manual</sys:String>
     <sys:String x:Key="Menu.About">About</sys:String>
     <sys:String x:Key="Menu.Exit">Exit(Alt+F4)</sys:String>
 
+    <!--  VAM相关  -->
+    <sys:String x:Key="VAM.OpenCVCIEFile">Open CVCIE File</sys:String>
+    <sys:String x:Key="VAM.SelectCVCIEFile">Select CVCIE File</sys:String>
+    <sys:String x:Key="VAM.PseudocolorImage">Pseudocolor Image (Jet)</sys:String>
+    <sys:String x:Key="VAM.ViewingAngle">Viewing Angle:</sys:String>
+    <sys:String x:Key="VAM.DisplayChannel">Display Channel:</sys:String>
+    <sys:String x:Key="VAM.XChannel">XChannel</sys:String>
+    <sys:String x:Key="VAM.YChannel">YChannel</sys:String>
+    <sys:String x:Key="VAM.ZChannel">ZChannel</sys:String>
     <sys:String x:Key="Plot.Title.DiameterLine">Diameter Line Distribution</sys:String>
     <sys:String x:Key="Plot.Title.RCircle">R Circle Distribution</sys:String>
     <sys:String x:Key="Plot.Axis.X">Degrees</sys:String>
     <sys:String x:Key="Plot.Axis.Y">Luminance (cd/m²)</sys:String>
+    <sys:String x:Key="VAM.RCircleRadius">R Circle Radius:</sys:String>
+    <sys:String x:Key="VAM.ExportDiameterLineCSV">Export DiameterLine CSV (0°~180°)</sys:String>
+    <sys:String x:Key="VAM.ExportRCircleCSV">Export R Circle CSV</sys:String>
+
+    <sys:String x:Key="VAM.RCircle">RRCircle</sys:String>
+    <sys:String x:Key="VAM.CircumferentialDistributionCurve">Circumferential Distribution Curve</sys:String>
+    <sys:String x:Key="VAM.CircumferentialAngle">Circumferential Angle (°)</sys:String>
+    <sys:String x:Key="VAM.PixelValue">Pixel Value</sys:String>
 </ResourceDictionary>

@@ -107,12 +107,13 @@ namespace CVAVMControl
         //    plot.Plot.Axes.SetLimits(-80, 80, 0, 600);
         //    plot.Refresh();
         //}
+        string select = (string)Application.Current.FindResource("VAM.SelectCVCIEFile");
         private void BtnOpenFile_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
                 Filter = "CVCIE Files (*.cvcie)|*.cvcie|All Files (*.*)|*.*",
-                Title = "选择CVCIE文件"
+                Title = select
             };
             if (openFileDialog.ShowDialog() == true)
             {
@@ -237,7 +238,10 @@ namespace CVAVMControl
             wpfPlotDiameterLine.Refresh();
         }
 
-
+        string RC = (string)Application.Current.FindResource("VAM.RCircle");
+        string CDC = (string)Application.Current.FindResource("VAM.CircumferentialDistributionCurve");
+        string CA = (string)Application.Current.FindResource("VAM.CircumferentialAngle");
+        string Pixel = (string)Application.Current.FindResource("VAM.PixelValue");
         private void PlotRCircleChart()
         {
             var circleLine = CreateRCircleLine(displayRadius);
@@ -262,9 +266,9 @@ namespace CVAVMControl
             yScatter.LegendText = "Y";
 
 
-            wpfPlotRCircle.Plot.Title($"R圆 {displayRadius}° 圆周分布曲线");
-            wpfPlotRCircle.Plot.XLabel("圆周角度 (°)");
-            wpfPlotRCircle.Plot.YLabel("像素值");
+            wpfPlotRCircle.Plot.Title($"{RC} {displayRadius}° {CDC}");
+            wpfPlotRCircle.Plot.XLabel($"{CA}");
+            wpfPlotRCircle.Plot.YLabel($"{Pixel}");
             wpfPlotRCircle.Plot.Legend.IsVisible = true;
             wpfPlotRCircle.Plot.Axes.AutoScale();
 
@@ -705,18 +709,26 @@ namespace CVAVMControl
                 }
             }
         }
-
-        /// <summary>
-        /// 窗口关闭时释放资源
-        /// </summary>
-        //protected override void Unloaded(EventArgs e)
-        //{
-        //    base.OnClosed(e);
-
-        //    XMat?.Dispose();
-        //    YMat?.Dispose();
-        //    ZMat?.Dispose();
-        //    pseudoColorMat?.Dispose();
-        //}
+        // 切换图表
+        string RCircle = (string)Application.Current.FindResource("Plot.Title.RCircle");
+        string Diameter = (string)Application.Current.FindResource("Plot.Title.DiameterLine");
+        private void BtnSwitchChart_Click(object sender, RoutedEventArgs e)
+        {
+            if (btnSwitchChart.Content.ToString() == RCircle)
+            {
+                // 切换到R圆面板
+                btnSwitchChart.Content = Diameter;
+                panelDiameter.Visibility = Visibility.Collapsed;
+                panelRCircle.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                // 切换回直径线面板
+                btnSwitchChart.Content = RCircle;
+                panelDiameter.Visibility = Visibility.Visible;
+                panelRCircle.Visibility = Visibility.Collapsed;
+            }
+        }
+        
     }
 }

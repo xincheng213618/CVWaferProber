@@ -72,12 +72,12 @@
                     IsChecked="{Binding ElementName=AnchorableMapping, Path=IsVisible, Mode=TwoWay}" />
                 <MenuItem
                     x:Name="MenuCameraPanel"
-                    Header="{DynamicResource Menu.CameraPanelVisible}"
+                    Header="{DynamicResource Menu.Layout.Title.AOI}"
                     IsCheckable="True"
                     IsChecked="{Binding ElementName=AnchorableCamera, Path=IsVisible, Mode=TwoWay}" />
                 <MenuItem
                     x:Name="MenuSPPanel"
-                    Header="{DynamicResource Menu.SPPanelVisible}"
+                    Header="{DynamicResource Dock.Layout.Title.SP}"
                     IsCheckable="True"
                     IsChecked="{Binding ElementName=AnchorableSP, Path=IsVisible, Mode=TwoWay}" />
                 <MenuItem
