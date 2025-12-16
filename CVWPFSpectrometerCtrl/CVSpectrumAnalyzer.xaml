@@ -27,7 +27,7 @@
 
         <!--  SP选项卡（原内容）  -->
         <TabItem Header="{DynamicResource Dock.Layout.Title.SP1}">
-            <Grid>
+            <Grid x:Name="InnerTabContainer" Visibility="Visible">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -50,10 +50,16 @@
 
                 <!--  原内层TabControl（总览/光谱/IV等）  -->
                 <!--  Tab区域  -->
+                <!--  FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}"  -->
+                <!--  IsTabStop="True"  -->
+                <!--  KeyboardNavigation.TabNavigation="Local"  -->
                 <TabControl
                     x:Name="innerTabControl"
                     Grid.Row="1"
                     Margin="5"
+                    FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}"
+                    IsTabStop="True"
+                    KeyboardNavigation.TabNavigation="Local"
                     SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
                     <TabItem Header="{DynamicResource Sp.Overview}">
                         <Grid Margin="5">

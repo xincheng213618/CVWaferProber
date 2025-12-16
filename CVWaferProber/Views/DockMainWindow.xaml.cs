@@ -4,6 +4,7 @@ using CVWaferProber.Log;
 using CVWaferProber.ViewModels;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl;
+using CVWPFSpectrometerCtrl.Models;
 using CVWPFSpectrometerCtrl.ViewModels;
 using log4net;
 using log4net.Config;
@@ -12,29 +13,38 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Interop;
+using System.Windows.Media;
 
 namespace CVWaferProber.Views
 {
+    public static class DispatcherExtensions
+    {
+        public static void DoEvents(this System.Windows.Threading.Dispatcher dispatcher)
+        {
+            var frame = new System.Windows.Threading.DispatcherFrame();
+            dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background,
+                new Action(() => frame.Continue = false));
+            System.Windows.Threading.Dispatcher.PushFrame(frame);
+        }
+    }
     /// <summary>
     /// DockMainWindow.xaml 的交互逻辑
-    /// </summary>
+    /// </summary> 
     public partial class DockMainWindow : Window
     {
-        //// 导入Win32 API（用于窗口托管）
-        //[DllImport("user32.dll")]
-        //private static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
-        //[DllImport("user32.dll")]
-        //private static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
-
-        //private Process _demoProcess; // 保存Demo进程引用
-        // 1. 导入Win32 API（放在类内部，方法外部）
-       
-
+        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(DockMainWindow));
+        // 缓存SP面板核心控件
+        private CVSpectrumAnalyzer? _spAnalyzer; // 对应XAML中的spaly
+        private TabControl? _spInnerTabControl;  // spaly内的innerTabControl
+                                                 // 1. 红框第一项：切换到SP内层面板索引0（光谱）
+        
         public DockMainWindow()
         {
             InitializeComponent();
             InitializeLogging();
+            InitializeSPControls();
             if (DataContext is MainViewModel mainVm)
             {
                 // 传递DockingManager和面板实例
@@ -43,63 +53,191 @@ namespace CVWaferProber.Views
                 mainVm.AnchorableSP = AnchorableSP;         // 绑定XAML中的SP面板
                 mainVm.AnchorableVAM = AnchorableVAM;       // 绑定XAML中的VAM面板
 
-                // 2. 获取SP面板的ViewModel并传递给MainViewModel
-                if (AnchorableSP.Content is CVSpectrumAnalyzer spPanel)
+                // 监听SP面板显示/隐藏事件，重新获取控件引用
+                AnchorableSP.IsVisibleChanged += (s, e) =>
                 {
-                    if (spPanel.DataContext is CVSpectrumViewModel spVm)
+                    if (AnchorableSP.IsVisible && _spAnalyzer != null)
                     {
-                        mainVm.SpPanelViewModel = spVm;
-
-                        // 3. 监听SP面板的聚焦指令，强制IVLCamera Tab聚焦
-                        spVm.PropertyChanged += (s, e) =>
-                        {
-                            if (e.PropertyName == nameof(spVm.NeedFocusIVLCameraTab) && spVm.NeedFocusIVLCameraTab)
-                            {
-                                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-                                {
-                                    if (spPanel.FindName("innerTabControl") is TabControl innerTab)
-                                    {
-                                        innerTab.SelectedIndex = 5;
-                                        innerTab.UpdateLayout(); // 强制刷新布局
-                                        innerTab.Focus(); // 聚焦TabControl
-                                        if (innerTab.SelectedItem is TabItem ivlCameraTab)
-                                        {
-                                            ivlCameraTab.Focus(); // 聚焦TabItem
-                                            ivlCameraTab.IsSelected = true;
-                                        }
-                                    }
-                                    spVm.NeedFocusIVLCameraTab = false;
-                                }));
-                            }
-                        };
+                        _spInnerTabControl = _spAnalyzer.FindName("innerTabControl") as TabControl;
                     }
-                }
+                };
             }
-            //LoadConoscopeDemo();
-            // 监听Mapping面板可见性变化
-            AnchorableMapping.IsVisibleChanged += (s, e) =>
+        }
+        /// <summary>
+        /// 初始化SP面板控件引用
+        /// </summary>
+        private void InitializeSPControls()
+        {
+            _ = Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (AnchorableMapping.IsVisible)
+                // 1. 直接获取XAML中命名为spaly的CVSpectrumAnalyzer控件
+                _spAnalyzer = spaly;
+                if (_spAnalyzer == null)
                 {
-                    LeftPaneGroup.DockWidth = new GridLength(300); // 显示时宽度300
+                    MessageBox.Show("未找到x:Name=spaly的CVSpectrumAnalyzer控件！");
+                    return;
                 }
-                else
+
+                // 2. 获取内层TabControl（innerTabControl）
+                _spInnerTabControl = _spAnalyzer.FindName("innerTabControl") as TabControl;
+                if (_spInnerTabControl == null)
                 {
-                    LeftPaneGroup.DockWidth = new GridLength(0); // 隐藏时宽度0
+                    MessageBox.Show("spaly内未找到x:Name=innerTabControl的TabControl！");
+                    return;
                 }
-                // 强制布局更新
-                DockingManager.UpdateLayout();
-            };
-           
-            // 创建并初始化消息处理器
-            //this.Loaded += DockMainWindow_Loaded;
-            //if (DataContext is MainViewModel vm)
+
+                // 3. 绑定MainViewModel的切换方法
+                if (DataContext is ViewModels.MainViewModel mainVm)
+                {
+                    mainVm.ActivateSpectralInnerTabAction = ActivateSpectralInnerTab;
+                    mainVm.ActivateIVLCameraInnerTabAction = ActivateIVLCameraInnerTab;
+                    mainVm.ActivateEQEOuterTabAction = ActivateEQEOuterTab;
+                    mainVm.SpPanelViewModel = _spAnalyzer.DataContext as CVWPFSpectrometerCtrl.ViewModels.CVSpectrumViewModel;
+                }
+            }), System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+        #region 核心切换方法（适配红框3个选项）
+        /// <summary>
+        /// 红框第一项：切换到SP内层面板索引0（光谱）
+        /// </summary>
+        private void ActivateSpectralInnerTab()
+        {
+            if (_spAnalyzer == null) return;
+
+            // 步骤1：强制切回外层Tab索引0（内层Tab所在的面板）
+            SwitchOuterTab(0);
+
+            // 步骤2：重置SP面板+激活内层Tab
+            ResetSPPanelState();
+            SwitchInnerTab(0);
+        }
+
+        /// <summary>
+        /// 红框第二项：切换到SP内层面板索引5（IVLCamera）
+        /// </summary>
+        private void ActivateIVLCameraInnerTab()
+        {
+            if (_spAnalyzer == null) return;
+
+            // 步骤1：强制切回外层Tab索引0
+            SwitchOuterTab(0);
+
+            // 步骤2：重置SP面板+激活内层Tab
+            ResetSPPanelState();
+            SwitchInnerTab(5);
+        }
+        // 切换外层TabControl的通用方法
+        private void SwitchOuterTab(int index)
+        {
+            var outerTab = _spAnalyzer?.FindName("outerTabControl") as TabControl;
+            if (outerTab == null) return;
+
+            // 强制重置外层索引（避免缓存）
+            outerTab.SelectedIndex = -1;
+            outerTab.UpdateLayout();
+            this.Dispatcher.DoEvents();
+            outerTab.SelectedIndex = index;
+            outerTab.Focus();
+            outerTab.UpdateLayout();
+            this.Dispatcher.DoEvents();
+        }
+        /// <summary>
+        /// 红框第三项：切换到SP外层面板索引1（EQE）
+        /// </summary>
+        private void ActivateEQEOuterTab()
+        {
+            if (_spAnalyzer == null) return;
+
+            // 重置SP面板状态
+            ResetSPPanelState();
+
+            // 找到外层TabControl并切换到索引1
+            if (_spAnalyzer.FindName("outerTabControl") is TabControl outerTab)
+            {
+                outerTab.SelectedIndex = -1;
+                outerTab.UpdateLayout();
+                Dispatcher.DoEvents();
+                outerTab.SelectedIndex = 1;
+                outerTab.Focus();
+            }
+        }
+        #endregion
+        #region 辅助方法
+        /// <summary>
+        /// 重置SP面板状态（解决仅第一次有效）
+        /// </summary>
+        private void ResetSPPanelState()
+        {
+            // 1. 重置AvalonDock面板
+            AnchorableSP.Hide();
+            AnchorableSP.Show();
+            AnchorableSP.IsSelected = true;
+            AnchorableSP.IsActive = true;
+            DockingManager.UpdateLayout();
+            this.Dispatcher.DoEvents();
+
+            //// 2. 确保外层Tab索引0的面板已加载
+            //var outerTab = _spAnalyzer?.FindName("outerTabControl") as TabControl;
+            //if (outerTab != null && outerTab.SelectedIndex != 0)
             //{
-            //    vm.ResetLayoutRequested += (s, e) => ResetToDefaultLayout();
+            //    outerTab.SelectedIndex = 0;
+            //    outerTab.UpdateLayout();
+            //    this.Dispatcher.DoEvents();
+            //}
+
+            //// 3. 强制刷新内层TabControl的父容器
+            //var innerTab = _spAnalyzer?.FindName("innerTabControl") as TabControl;
+            //if (innerTab != null && innerTab.Parent is Panel parent)
+            //{
+            //    parent.UpdateLayout();
+            //    this.Dispatcher.DoEvents();
             //}
         }
 
-      
+        /// <summary>
+        /// 切换内层TabControl索引（通用方法）
+        /// </summary>
+        /// <param name="index">目标索引</param>
+        private void SwitchInnerTab(int index)
+        {
+            var innerTab = _spAnalyzer?.FindName("innerTabControl") as TabControl;
+            if (innerTab == null) return;
+
+            // 强制重置内层索引+刷新
+            innerTab.SelectedIndex = -1;
+            innerTab.UpdateLayout();
+            this.Dispatcher.DoEvents();
+            innerTab.SelectedIndex = index;
+            innerTab.UpdateLayout();
+            this.Dispatcher.DoEvents();
+
+            // 强制聚焦TabItem（避免子控件抢占焦点）
+            innerTab.Focus();
+            if (innerTab.ItemContainerGenerator.ContainerFromIndex(index) is TabItem tabItem)
+            {
+                tabItem.Focus();
+                tabItem.IsSelected = true;
+                // 手动触发选中事件（确保UI响应）
+                tabItem.RaiseEvent(new RoutedEventArgs(Selector.SelectedEvent));
+            }
+
+            _spAnalyzer?.UpdateLayout();
+            DockingManager.UpdateLayout();
+        }
+
+        // 辅助：查找TabItem的标题栏控件
+        private T? GetVisualChild<T>(DependencyObject parent) where T : DependencyObject
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T tChild) return tChild;
+                var result = GetVisualChild<T>(child);
+                if (result != null) return result;
+            }
+            return null;
+        }
+        #endregion
 
         private void LanguageMenuItem_Click(object sender, RoutedEventArgs e)
         {

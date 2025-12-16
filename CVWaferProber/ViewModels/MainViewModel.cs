@@ -43,6 +43,21 @@ namespace CVWaferProber.ViewModels
 
         private GSWMProcessor _wmProcessor;
 
+        // AvalonDock面板引用
+        public DockingManager? DockingManager { get; set; }
+        public LayoutAnchorable? AnchorableCamera { get; set; }
+        public LayoutAnchorable? AnchorableSP { get; set; }
+        public LayoutAnchorable? AnchorableVAM { get; set; }
+
+        // SP面板ViewModel引用
+        public CVSpectrumViewModel? SpPanelViewModel { get; set; }
+
+        // 切换委托（对应红框3个选项）
+        public Action? ActivateSpectralInnerTabAction { get; set; }
+        public Action? ActivateIVLCameraInnerTabAction { get; set; }
+        public Action? ActivateEQEOuterTabAction { get; set; }
+
+
         private FlowViewModel? _selectedFlow;
         public FlowViewModel? SelectedFlow
         {
@@ -66,11 +81,10 @@ namespace CVWaferProber.ViewModels
             {
                 if (_selectedWPFlow != value)
                 {
-                    SetProperty(ref _selectedWPFlow, value);
-                    // 选中选项后，激活对应右侧面板
+                    _selectedWPFlow = value;
+                    OnPropertyChanged();
                     ActivateCorrespondingPanel();
                 }
-
             }
         }
 
@@ -1700,11 +1714,8 @@ namespace CVWaferProber.ViewModels
         }
 
         #endregion
-        // MainViewModel中新增字段
-        public DockingManager? DockingManager { get; set; }
-        public LayoutAnchorable? AnchorableCamera { get; set; }
-        public LayoutAnchorable? AnchorableSP { get; set; }
-        public LayoutAnchorable? AnchorableVAM { get; set; }
+  
+      
         /***********************激活相应面板************************/
         private void ActivateCorrespondingPanel()
         {
@@ -1731,34 +1742,30 @@ namespace CVWaferProber.ViewModels
                         logger.Warn("AOI面板未初始化，无法激活");
                     }
                     break;
-                case CVWaferProberFlowType.IVL_SP:
-                case CVWaferProberFlowType.IVL_Camera:
-                    // 1. 激活外层SP面板（AvalonDock层面置顶）
-                    AnchorableSP.Show();
-                    AnchorableSP.IsSelected = true;
-                    // 2. 触发SP面板内的IVLCamera Tab激活
-                    SpPanelViewModel?.ActivateIVLCameraTab();
+                case CVWaferProberFlowType.IVL_SP: // 红框第一项：光谱（内层索引0）
+                    ActivateSpectralInnerTabAction?.Invoke();
                     break;
-                case CVWaferProberFlowType.EQE:
-                    AnchorableSP.Show();
-                    AnchorableSP.IsSelected = true;
+
+                case CVWaferProberFlowType.IVL_Camera: // 红框第二项：IVLCamera（内层索引5）
+                    ActivateIVLCameraInnerTabAction?.Invoke();
                     break;
-                case CVWaferProberFlowType.VAM:
+
+                case CVWaferProberFlowType.EQE: // 红框第三项：EQE（外层索引1）
+                    ActivateEQEOuterTabAction?.Invoke();
+                    break;
+
+                case CVWaferProberFlowType.VAM: // AOI面板
                     if (AnchorableVAM != null)
                     {
                         AnchorableVAM.Show();
                         AnchorableVAM.IsSelected = true;
+                        AnchorableVAM.IsActive = true;
                     }
-                    else
-                    {
-                        logger.Warn("VAM面板未初始化，无法激活");
-                    }
-                    
                     break;
             }
 
             DockingManager.UpdateLayout();
-            DockingManager.Focus();
+       
         }
         //private void ActivatePanel(LayoutAnchorable? panel)
         //{
@@ -1773,9 +1780,6 @@ namespace CVWaferProber.ViewModels
         //    panel.IsSelected = true;
         //    panel.IsActive = true; // 强化置顶效果
         //}
-        #region 引用SP面板的ViewModel
-        //引用SP面板的ViewModel（需从View层传递）
-        public CVSpectrumViewModel? SpPanelViewModel { get; set; }
-        #endregion
+       
     }
 }

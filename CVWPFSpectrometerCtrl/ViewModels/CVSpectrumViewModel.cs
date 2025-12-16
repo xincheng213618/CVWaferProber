@@ -2864,15 +2864,17 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             get => _outerTabSelectedIndex;
             set
             {
-                if (_outerTabSelectedIndex != value)
+                _outerTabSelectedIndex = value;
+                OnPropertyChanged();
+                // 切回外层0时，强制刷新内层Tab的选中状态
+                if (value == 0)
                 {
-                    _outerTabSelectedIndex = value;
-                    OnPropertyChanged(nameof(OuterTabSelectedIndex));
+                    OnPropertyChanged(nameof(SelectedTabIndex));
                 }
             }
         }
 
-        // 激活EQE Tab的方法（外部调用）
+        //// 激活EQE Tab的方法（外部调用）
         public void ActivateEQETab()
         {
             // 外层Tab索引：SP=0，EQE=1
