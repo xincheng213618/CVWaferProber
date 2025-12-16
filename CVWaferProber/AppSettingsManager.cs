@@ -10,7 +10,7 @@ namespace CVWaferProber
     public static class AppSettingsManager
     {
         public static string CurrentLanguage => Properties.Settings.Default.AppLanguage;
-
+       
         public static void ChangeLanguage(string language)
         {
             if (language == "Chinese" || language == "English")

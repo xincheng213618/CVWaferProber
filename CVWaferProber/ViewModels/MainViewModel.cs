@@ -533,15 +533,7 @@ namespace CVWaferProber.ViewModels
                 leftPaneGroup.Children.Add((ILayoutAnchorablePane)mappingAnchorable);
             }
         }
-        /// <summary>
-        /// 重置布局逻辑
-        /// </summary>
-        //private void ResetLayout(object obj)
-        //{
-        //    IsMappingPanelVisible = true;
-        //    IsCameraPanelVisible = true;
-        //    IsSPPanelVisible = true;
-        //}
+        
 
         // ========== AOI列逻辑 ==========
         #region AOI 全选/部分选中

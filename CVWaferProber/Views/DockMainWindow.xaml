@@ -64,30 +64,37 @@
             </MenuItem>-->
 
             <!--  视图菜单（控制面板显示/隐藏）  -->
-            <MenuItem Header="{DynamicResource Menu.View}" InputGestureText="Alt+V">
+            <MenuItem
+                x:Name="MenuView"
+                Header="{DynamicResource Menu.View}"
+                >
                 <MenuItem
                     x:Name="MenuMappingPanel"
                     Header="{DynamicResource Menu.MappingPanelVisible}"
+                    InputGestureText="Alt+M"
                     IsCheckable="True"
                     IsChecked="{Binding ElementName=AnchorableMapping, Path=IsVisible, Mode=TwoWay}" />
                 <MenuItem
                     x:Name="MenuCameraPanel"
                     Header="{DynamicResource Menu.Layout.Title.AOI}"
+                    InputGestureText="Alt+A"
                     IsCheckable="True"
                     IsChecked="{Binding ElementName=AnchorableCamera, Path=IsVisible, Mode=TwoWay}" />
                 <MenuItem
                     x:Name="MenuSPPanel"
                     Header="{DynamicResource Dock.Layout.Title.SP}"
+                    InputGestureText="Alt+S"
                     IsCheckable="True"
                     IsChecked="{Binding ElementName=AnchorableSP, Path=IsVisible, Mode=TwoWay}" />
                 <MenuItem
                     x:Name="MenuVAMSPPanel"
                     Header="{DynamicResource Menu.VAMPanelVisible}"
+                    InputGestureText="Alt+V"
                     IsCheckable="True"
                     IsChecked="{Binding ElementName=AnchorableVAM, Path=IsVisible, Mode=TwoWay}" />
                 <MenuItem
-                    Command="{Binding OpenLogCommand}"
                     Header="{DynamicResource Menu.LogPanelVisible}"
+                    InputGestureText="Alt+L"
                     IsCheckable="True"
                     IsChecked="{Binding ElementName=AnchorableLog, Path=IsVisible, Mode=TwoWay}" />
 
@@ -98,21 +105,34 @@
             <MenuItem Header="{DynamicResource Menu.Language}">
                 <!--  中文子菜单  -->
                 <MenuItem
+                    x:Name="MenuLanguageChinese"
                     Click="LanguageMenuItem_Click"
                     Header="{DynamicResource Menu.Language.Chinese}"
+                    InputGestureText="Alt+C"
                     Tag="Chinese" />
                 <!--  英文子菜单  -->
                 <MenuItem
+                    x:Name="MenuLanguageEnglish"
                     Click="LanguageMenuItem_Click"
                     Header="{DynamicResource Menu.Language.English}"
+                    InputGestureText="Alt+E"
                     Tag="English" />
             </MenuItem>
             <!--  帮助菜单  -->
             <MenuItem Header="{DynamicResource Menu.Help}" InputGestureText="Alt+H">
-                <MenuItem Command="{Binding OpenHelpCommand}" Header="{DynamicResource Menu.UserManual}" />
-                <MenuItem Command="{Binding OpenAboutCommand}" Header="{DynamicResource Menu.About}" />
+                <MenuItem
+                    Command="{Binding OpenHelpCommand}"
+                    Header="{DynamicResource Menu.UserManual}"
+                    InputGestureText="Alt+U" />
+                <MenuItem
+                    Command="{Binding OpenAboutCommand}"
+                    Header="{DynamicResource Menu.About}"
+                    InputGestureText="Alt+T" />
             </MenuItem>
-            <MenuItem Command="{Binding OpenCommand}" Header="VAM Demo" />
+            <MenuItem
+                Command="{Binding OpenCommand}"
+                Header="VAM Demo"
+                InputGestureText="Alt+D" />
             <MenuItem
                 Command="{Binding ExitCommand}"
                 Header="{DynamicResource Menu.Exit}"
