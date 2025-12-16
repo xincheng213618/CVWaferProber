@@ -18,6 +18,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace CVAVMControl
 {
@@ -39,23 +40,43 @@ namespace CVAVMControl
         private int displayAngle = 120; // Default display angle
         private ExportChannel displayChannel = ExportChannel.Y; // Default display channel
         private int displayRadius = 40; // Default display radius angle
-
+                                        // CVVAMAnalyzer.cs 中新增定时器
+        private DispatcherTimer? _resourceCleanTimer;
         public CVVAMAnalyzer()
         {
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             InitializeComponent();
-            this.Unloaded += CVVAMAnalyzer_Unloaded;
+            // 初始化定时器：5分钟未使用VAM则释放资源
+            _resourceCleanTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMinutes(20)
+            };
+            _resourceCleanTimer.Tick += (s, e) =>
+            {
+                if (!IsVisible) // 面板隐藏且5分钟未使用
+                {
+                    ResetDataWithoutDispose();
+                    _resourceCleanTimer.Stop();
+                }
+            };
+            //this.Unloaded += CVVAMAnalyzer_Unloaded;
         }
 
-        private void CVVAMAnalyzer_Unloaded(object sender, RoutedEventArgs e)
+        //private void CVVAMAnalyzer_Unloaded(object sender, RoutedEventArgs e)
+        //{
+        //    XMat?.Dispose();
+        //    YMat?.Dispose();
+        //    ZMat?.Dispose();
+        //    pseudoColorMat?.Dispose();
+        //}
+
+        private void CVVAMAnalyzer_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            XMat?.Dispose();
-            YMat?.Dispose();
-            ZMat?.Dispose();
-            pseudoColorMat?.Dispose();
+            if (IsVisible)
+            {
+                _resourceCleanTimer?.Start();
+            }
         }
-
-
         private void WpfPlot_Loaded(object sender, RoutedEventArgs e)
         {
             if (sender is ScottPlot.WPF.WpfPlot plot)
@@ -108,7 +129,7 @@ namespace CVAVMControl
         //    plot.Refresh();
         //}
         string select = (string)Application.Current.FindResource("VAM.SelectCVCIEFile");
-        private void BtnOpenFile_Click(object sender, RoutedEventArgs e)
+        public void BtnOpenFile_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
@@ -165,6 +186,7 @@ namespace CVAVMControl
                 UpdateDisplay();
 
                 fileInfo.Dispose();
+                _isDataValid = true;
             }
             catch (Exception ex)
             {
@@ -401,7 +423,30 @@ namespace CVAVMControl
             return polarLine;
         }
 
+        // CVVAMAnalyzer.cs 中新增
+        private bool _isDataValid = false; // 标记数据是否有效
 
+        // 切换Flow时调用（替代ResetAllResources）
+        public void ResetDataWithoutDispose()
+        {
+            // 仅清空数据、重置参数，不释放Mat
+            _isDataValid = false;
+            displayAngle = 120;
+            displayRadius = 40;
+            wpfPlotDiameterLine.Plot.Clear();
+            wpfPlotRCircle.Plot.Clear();
+            imgDisplay.Source = null;
+        }
+        public void UpdateVAMParams(double maxAngle, double conoscopeCoefficient)
+        {
+            // 更新VAM的核心参数（与坐标/角度映射逻辑强相关）
+            this.MaxAngle = maxAngle;
+            this.ConoscopeCoefficient = conoscopeCoefficient;
+
+            // 参数更新后可同步刷新显示（若需要）
+            this.displayAngle = 120; // 重置默认显示角度（根据业务需求调整）
+            this.displayRadius = 40; // 重置默认显示半径
+        }
         private void ExtractPixelValues(int ix, int iy, out double X, out double Y, out double Z)
         {
             X = Y = Z = 0;
@@ -659,21 +704,36 @@ namespace CVAVMControl
         /// <summary>
         /// 显示角度选择改变
         /// </summary>
+        private bool _isFirstLoad = true;
         private void CbDisplayAngle_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // 步骤1：首次加载（启动时）直接标记为非首次，不执行后续逻辑
+            if (_isFirstLoad)
+            {
+                _isFirstLoad = false;
+                return;
+            }
+
+            // 步骤2：用户主动切换时才检查数据
             if (cbDisplayAngle.SelectedItem is ComboBoxItem item && item.Tag is string angleStr)
             {
                 if (int.TryParse(angleStr, out int angle))
                 {
                     displayAngle = angle;
-                    if (YMat != null && !YMat.Empty())
+                    if (IsMatSafe(YMat))
                     {
                         UpdateDisplay();
                     }
+                    else
+                    {
+                        // 仅用户主动切换时弹提示
+                        MessageBox.Show("数据未加载或已释放，请重新打开CVCIE文件", "提示");
+                    }
                 }
-            }
+            } 
         }
 
+      
         /// <summary>
         /// 显示通道选择改变
         /// </summary>
@@ -729,6 +789,23 @@ namespace CVAVMControl
                 panelRCircle.Visibility = Visibility.Collapsed;
             }
         }
-        
+
+        /// <summary>
+        /// 安全校验Mat对象（未释放、非空、非空矩阵）
+        /// </summary>
+        private bool IsMatSafe(Mat? mat)
+        {
+            try
+            {
+                // 仅校验非空、非空矩阵，不校验是否Disposed
+                return mat != null && !mat.Empty();
+            }
+            catch (ObjectDisposedException)
+            {
+                // 若仍触发Disposed异常，直接返回false并提示重新加载
+                MessageBox.Show("VAM数据已失效，请重新加载CVCIE文件", "提示");
+                return false;
+            }
+        }
     }
 }
