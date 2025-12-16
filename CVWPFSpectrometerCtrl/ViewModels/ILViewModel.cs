@@ -49,14 +49,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
         private PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = 0, DefaultMaxRange = 200000000000000000 };
         private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = 0, DefaultMaxRange = 6000000000000000 };
-        string I = (string)System.Windows.Application.Current.FindResource("Sp.Current");
-        string L = (string)System.Windows.Application.Current.FindResource("Sp.Luminance");
+        string I = (string)Application.Current.FindResource("Sp.Current");
+        string L = (string)Application.Current.FindResource("Sp.Luminance");
         private void InitializePlotModel()
         {
           
             _plotModel = new PlotModel
             {
-                Title = (string)System.Windows.Application.Current.FindResource("Sp.IL Curve"),
+                Title = (string)Application.Current.FindResource("Sp.IL Curve"),
                 TitleFontSize = 14,
                 TitleFontWeight = OxyPlot.FontWeights.Bold,
                

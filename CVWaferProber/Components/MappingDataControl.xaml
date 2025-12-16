@@ -336,12 +336,13 @@
                                             Margin="5,5"
                                             Orientation="Horizontal">
                                             <ComboBox
+                                                x:Name="cbLeftSelector"
                                                 Width="250"
                                                 Height="30"
                                                 VerticalAlignment="Center"
                                                 IsEnabled="{Binding IsNotProcessing}"
                                                 ItemsSource="{Binding WPFlows}"
-                                                SelectedItem="{Binding SelectedWPFlow, Mode=TwoWay}">
+                                                SelectedItem="{Binding SelectedWPFlow}">
                                                 <ComboBox.ItemTemplate>
                                                     <DataTemplate>
                                                         <StackPanel Orientation="Horizontal">

@@ -8,6 +8,7 @@
     xmlns:cv="clr-namespace:CVWaferProber.Converters"
     xmlns:cvimg="clr-namespace:CVWPFCamImageCtrl;assembly=CVWPFCamImageCtrl"
     xmlns:cvsp="clr-namespace:CVWPFSpectrometerCtrl;assembly=CVWPFSpectrometerCtrl"
+    xmlns:cvvam="clr-namespace:CVAVMControl;assembly=CVVAMControl"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CVWaferProber.ViewModels"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -63,28 +64,39 @@
             </MenuItem>-->
 
             <!--  视图菜单（控制面板显示/隐藏）  -->
-            <MenuItem Header="{DynamicResource Menu.View}" InputGestureText="Alt+V">
+            <MenuItem
+                x:Name="MenuView"
+                Header="{DynamicResource Menu.View}"
+                >
                 <MenuItem
                     x:Name="MenuMappingPanel"
                     Header="{DynamicResource Menu.MappingPanelVisible}"
+                    InputGestureText="Alt+M"
                     IsCheckable="True"
                     IsChecked="{Binding ElementName=AnchorableMapping, Path=IsVisible, Mode=TwoWay}" />
                 <MenuItem
                     x:Name="MenuCameraPanel"
-                    Header="{DynamicResource Menu.CameraPanelVisible}"
+                    Header="{DynamicResource Menu.Layout.Title.AOI}"
+                    InputGestureText="Alt+A"
                     IsCheckable="True"
                     IsChecked="{Binding ElementName=AnchorableCamera, Path=IsVisible, Mode=TwoWay}" />
                 <MenuItem
                     x:Name="MenuSPPanel"
-                    Header="{DynamicResource Menu.SPPanelVisible}"
+                    Header="{DynamicResource Dock.Layout.Title.SP}"
+                    InputGestureText="Alt+S"
                     IsCheckable="True"
                     IsChecked="{Binding ElementName=AnchorableSP, Path=IsVisible, Mode=TwoWay}" />
                 <MenuItem
-                    Command="{Binding OpenLogCommand}"
+                    x:Name="MenuVAMSPPanel"
+                    Header="{DynamicResource Menu.VAMPanelVisible}"
+                    InputGestureText="Alt+V"
+                    IsCheckable="True"
+                    IsChecked="{Binding ElementName=AnchorableVAM, Path=IsVisible, Mode=TwoWay}" />
+                <MenuItem
                     Header="{DynamicResource Menu.LogPanelVisible}"
+                    InputGestureText="Alt+L"
                     IsCheckable="True"
                     IsChecked="{Binding ElementName=AnchorableLog, Path=IsVisible, Mode=TwoWay}" />
-
 
                 <Separator />
 
@@ -93,21 +105,34 @@
             <MenuItem Header="{DynamicResource Menu.Language}">
                 <!--  中文子菜单  -->
                 <MenuItem
+                    x:Name="MenuLanguageChinese"
                     Click="LanguageMenuItem_Click"
                     Header="{DynamicResource Menu.Language.Chinese}"
+                    InputGestureText="Alt+C"
                     Tag="Chinese" />
                 <!--  英文子菜单  -->
                 <MenuItem
+                    x:Name="MenuLanguageEnglish"
                     Click="LanguageMenuItem_Click"
                     Header="{DynamicResource Menu.Language.English}"
+                    InputGestureText="Alt+E"
                     Tag="English" />
             </MenuItem>
             <!--  帮助菜单  -->
             <MenuItem Header="{DynamicResource Menu.Help}" InputGestureText="Alt+H">
-                <MenuItem Command="{Binding OpenHelpCommand}" Header="{DynamicResource Menu.UserManual}" />
-                <MenuItem Command="{Binding OpenAboutCommand}" Header="{DynamicResource Menu.About}" />
+                <MenuItem
+                    Command="{Binding OpenHelpCommand}"
+                    Header="{DynamicResource Menu.UserManual}"
+                    InputGestureText="Alt+U" />
+                <MenuItem
+                    Command="{Binding OpenAboutCommand}"
+                    Header="{DynamicResource Menu.About}"
+                    InputGestureText="Alt+T" />
             </MenuItem>
-            <MenuItem Command="{Binding OpenCommand}" Header="VAM Demo" />
+            <MenuItem
+                Command="{Binding OpenCommand}"
+                Header="VAM Demo"
+                InputGestureText="Alt+D" />
             <MenuItem
                 Command="{Binding ExitCommand}"
                 Header="{DynamicResource Menu.Exit}"
@@ -144,7 +169,7 @@
                                         CanHide="True">
                                         <!--  绑定Grid的Visibility  -->
                                         <DockPanel x:Name="PanelMapping">
-                                            <comp:MappingDataControl />
+                                            <comp:MappingDataControl x:Name="mappingDataControl" />
                                         </DockPanel>
                                     </avalon:LayoutAnchorable>
                                 </avalon:LayoutAnchorablePane>
@@ -184,14 +209,9 @@
                                         Title="VAM"
                                         CanClose="False"
                                         CanHide="True">
-                                        <!--<DockPanel x:Name="DockPanelVAM" Grid.Row="2">
-                                            <Grid
-                                                x:Name="DemoHostGrid"
-                                                Width="Auto"
-                                                Height="Auto">
-                                                <cop:DemoWindow />
-                                            </Grid>
-                                        </DockPanel>-->
+                                        <DockPanel x:Name="PanelVAM" Grid.Row="1">
+                                            <cvvam:CVVAMAnalyzer x:Name="MyVAM" />
+                                        </DockPanel>
                                     </avalon:LayoutAnchorable>
                                     <avalon:LayoutAnchorable
                                         x:Name="AnchorableLog"

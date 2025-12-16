@@ -19,13 +19,15 @@
 
     <!--  外层TabControl：标题固定在底部  -->
     <TabControl
+        x:Name="outerTabControl"
         Padding="0"
         BorderThickness="0"
+        SelectedIndex="{Binding OuterTabSelectedIndex, Mode=TwoWay}"
         TabStripPlacement="Top">
 
         <!--  SP选项卡（原内容）  -->
-        <TabItem Header="{DynamicResource Dock.Layout.Title.SP}">
-            <Grid>
+        <TabItem Header="{DynamicResource Dock.Layout.Title.SP1}">
+            <Grid x:Name="InnerTabContainer" Visibility="Visible">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -48,10 +50,17 @@
 
                 <!--  原内层TabControl（总览/光谱/IV等）  -->
                 <!--  Tab区域  -->
+                <!--  FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}"  -->
+                <!--  IsTabStop="True"  -->
+                <!--  KeyboardNavigation.TabNavigation="Local"  -->
                 <TabControl
+                    x:Name="innerTabControl"
                     Grid.Row="1"
                     Margin="5"
-                    SelectedIndex="{Binding SelectedTabIndex}">
+                    FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}"
+                    IsTabStop="True"
+                    KeyboardNavigation.TabNavigation="Local"
+                    SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
                     <TabItem Header="{DynamicResource Sp.Overview}">
                         <Grid Margin="5">
                             <Grid.RowDefinitions>
@@ -896,8 +905,8 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
-                    <RowDefinition Height="7.5*" />
-                    <RowDefinition Height="2.5*" />
+                    <RowDefinition Height="8  *" />
+                    <RowDefinition Height="2*" />
                 </Grid.RowDefinitions>
                 <!--  顶部按钮区域  -->
                 <StackPanel

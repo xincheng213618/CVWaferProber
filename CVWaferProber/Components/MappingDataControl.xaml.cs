@@ -8,6 +8,7 @@ namespace CVWaferProber.Components
     /// </summary>
     public partial class MappingDataControl : UserControl
     {
+        
         public MappingDataControl()
         {
             InitializeComponent();
@@ -19,7 +20,7 @@ namespace CVWaferProber.Components
                 }
             };
         }
+       
 
-      
     }
 }
