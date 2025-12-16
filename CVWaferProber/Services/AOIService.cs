@@ -1,4 +1,5 @@
 ﻿using CVCommCore;
+using CVCommCore.CVImage;
 using CVDB.Services.Algorithm;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
@@ -41,7 +42,7 @@ namespace CVWaferProber.Services
         private ChipStatus GetDieResultStatus(string serialNumber)
         {
             ChipStatus status = ChipStatus.FAILED;
-            var results = AlgResultService.LoadAlgResultByBatchCodeAndType(serialNumber, (int)CVResultType.Algorithm_OLED_AOI_ALL);
+            var results = AlgResultService.LoadAlgResultByBatchCode(serialNumber);
             if (results != null && results.Count > 0)
             {
                 foreach (var result in results)
@@ -61,10 +62,109 @@ namespace CVWaferProber.Services
             }
             return status;
         }
-        private void AOIResultDisplay(DieViewModel dieViewModel)
+        public void AOIResultDisplay(DieViewModel dieViewModel)
         {
             CustomImageVM?.ClearImageResult();
-            CustomImageVM?.LoadImageResult(dieViewModel.chipViewModel.ChipData, dieViewModel.SerialNumber);
+            LoadImageResult(dieViewModel.chipViewModel.ChipData, dieViewModel.SerialNumber);
+        }
+
+        private void AddResultImage(int id,string imgFile)
+        {
+            ImageItem loc = new ImageItem(id);
+            loc.FileName = System.IO.Path.GetFileName(imgFile);
+            loc.ImagePath = imgFile;
+            CustomImageVM?.AddImage(loc);
+        }
+
+        private void LoadImageResult(ChipData? chipData, string serialNumber)
+        {
+            string? resultImageFile = null;
+            DateTime? TestTime = null;
+            string? ImageDisplayBrightnessUniformity = null;
+            var results = AlgResultService.LoadAlgResultByBatchCode(serialNumber);
+            if (results == null || results.Count == 0) return;
+            List<POIMarker> POIMarkers = new List<POIMarker>();
+            int id = 1;
+            foreach (var result in results)
+            {
+                AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
+                if (result.ImgFileType >= 42 && result.ImgFileType <= 45)
+                {
+                    resultImageFile = result.ImgFile;
+                    TestTime = result.CreateDate;
+                }
+                else if (resultType == AlgorithmResultType.OLED_CombineQuaterImages)
+                {
+                    AddResultImage(id++, result.ImgResult);
+                }
+                else if (resultType == AlgorithmResultType.OLED_RebuildPixelsMem)
+                {
+                    var details = AlgResultService.GetPOIDetailResultFileByPid(result.Id);
+                    if (details != null && details.Count == 1)
+                    {
+                        if (System.IO.File.Exists(details[0].FileUrl))
+                        {
+                            AddResultImage(id++, details[0].FileUrl);
+                        }
+                    }
+                }
+                else if (resultType == AlgorithmResultType.POI_Y)
+                {
+                    var details = AlgResultService.GetPOIDetailResult(result.Id);
+                    foreach (var poi in details)
+                    {
+                        if (poi.PoiType == 0) POIMarkers.Add(new CircleMarker() { Label = poi.PoiName, X = (double)poi.PoiX, Y = (double)poi.PoiY, Width = (double)poi.PoiWidth, Height = (double)poi.PoiHeight, Fill = null });
+                        else if (poi.PoiType == 1) POIMarkers.Add(new RectangleMarker() { Label = poi.PoiName, X = (double)poi.PoiX, Y = (double)poi.PoiY, Width = (double)poi.PoiWidth, Height = (double)poi.PoiHeight, Fill = null });
+                    }
+                }
+                else if (resultType == AlgorithmResultType.PoiAnalysis)
+                {
+                    var details = AlgResultService.GetCommDetailResult(result.Id);
+                    if (details != null && details.Count == 1)
+                    {
+                        DetailResult_CommFile_V2 detailResult_Comm = JsonConvert.DeserializeObject<DetailResult_CommFile_V2>(details[0].Result);
+                        if (System.IO.File.Exists(detailResult_Comm.ResultFileName))
+                        {
+                            //ImageItem imageResultViewModel = new ImageItem(id++);
+
+                            PoiAnalysis poiAnalysis = JsonConvert.DeserializeObject<PoiAnalysis>(System.IO.File.ReadAllText(detailResult_Comm.ResultFileName));
+                            chipData.DataValue = poiAnalysis.result.Value;
+                            ImageDisplayBrightnessUniformity = string.Format("[{0},{1}]={2:F4}", chipData.Row, chipData.Column, chipData.DataValue);
+                            //
+                            //imageResultViewModel.FileName = System.IO.Path.GetFileName(resultImageFile);
+                            //imageResultViewModel.ImagePath = resultImageFile;
+                            //imageResultViewModel.SerialNumber = serialNumber;
+                            //imageResultViewModel.TestTime = TestTime;
+                            //imageResultViewModel.ResultType = "数据提取";
+                            // 在UI线程更新集合
+                            //CustomImageVM?.AddImage(imageResultViewModel);
+
+                            if (!string.IsNullOrEmpty(resultImageFile)) AddResultImage(id++, resultImageFile);
+                        }
+                    }
+                }
+                //定位
+                else if (resultType == AlgorithmResultType.OLED_FindDotsArrayOutFile)
+                {
+                    //ImageItem loc = new ImageItem(id++);
+                    //loc.FileName = System.IO.Path.GetFileName(result.ImgFile);
+                    //loc.ImagePath = result.ImgFile;
+                    ////loc.ResultType = "定位";
+                    ////loc.SerialNumber = serialNumber;
+                    ////loc.TestTime = result.CreateDate;
+                    //// 在UI线程更新集合
+                    //CustomImageVM?.AddImage(loc);
+                    AddResultImage(id++, result.ImgFile);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(resultImageFile) && !string.IsNullOrEmpty(ImageDisplayBrightnessUniformity))
+            {
+                OpenCvSharp.Mat? image = null;
+                if (!CVImageFileUtil.LoadImgFile(resultImageFile, ref image)) return;
+                image = OpenCvMatTools.ConvertImageTo8UC3(image);
+                CustomImageVM?.UpdatePOIImage(image, POIMarkers, ImageDisplayBrightnessUniformity);             
+            }
         }
     }
 }

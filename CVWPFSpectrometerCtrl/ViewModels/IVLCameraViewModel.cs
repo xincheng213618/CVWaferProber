@@ -82,12 +82,12 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 loc.I = result.IResult;
                 if(il_results!=null && il_results.Count > i) loc.Luminance = il_results[i];
                 // 在UI线程更新集合
-                Application.Current.Dispatcher.Invoke(() =>
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
                     Measurements.Add(loc);
                 });
             }
-            Application.Current.Dispatcher.Invoke(() =>
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
                 if (Measurements.Any())
                 {

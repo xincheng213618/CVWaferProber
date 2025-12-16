@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalon="https://github.com/Dirkster99/AvalonDock"
     xmlns:comp="clr-namespace:CVWaferProber.Components"
+    xmlns:cop="clr-namespace:ConoscopeDemo;assembly=ConoscopeDemo"
     xmlns:cv="clr-namespace:CVWaferProber.Converters"
     xmlns:cvimg="clr-namespace:CVWPFCamImageCtrl;assembly=CVWPFCamImageCtrl"
     xmlns:cvsp="clr-namespace:CVWPFSpectrometerCtrl;assembly=CVWPFSpectrometerCtrl"
@@ -88,12 +89,25 @@
                 <Separator />
 
             </MenuItem>
-
+            <!--  新增：语言菜单  -->
+            <MenuItem Header="{DynamicResource Menu.Language}">
+                <!--  中文子菜单  -->
+                <MenuItem
+                    Click="LanguageMenuItem_Click"
+                    Header="{DynamicResource Menu.Language.Chinese}"
+                    Tag="Chinese" />
+                <!--  英文子菜单  -->
+                <MenuItem
+                    Click="LanguageMenuItem_Click"
+                    Header="{DynamicResource Menu.Language.English}"
+                    Tag="English" />
+            </MenuItem>
             <!--  帮助菜单  -->
             <MenuItem Header="{DynamicResource Menu.Help}" InputGestureText="Alt+H">
                 <MenuItem Command="{Binding OpenHelpCommand}" Header="{DynamicResource Menu.UserManual}" />
                 <MenuItem Command="{Binding OpenAboutCommand}" Header="{DynamicResource Menu.About}" />
             </MenuItem>
+            <MenuItem Command="{Binding OpenCommand}" Header="VAM Demo" />
             <MenuItem
                 Command="{Binding ExitCommand}"
                 Header="{DynamicResource Menu.Exit}"
@@ -138,17 +152,17 @@
                         </avalon:LayoutPanel>
 
                         <!--  右半部分面板  -->
-                        <avalon:LayoutPanel
-                            x:Name="RightPaneGroup"
-                            DockWidth="300"
-                            Orientation="Vertical">
+                        <avalon:LayoutPanel x:Name="RightPaneGroup" DockWidth="300">
 
                             <!--  右上角面板  -->
+                            <!--<avalon:LayoutAnchorablePaneGroup />-->
+
+                            <!--  右边面板  -->
                             <avalon:LayoutAnchorablePaneGroup>
                                 <avalon:LayoutAnchorablePane>
                                     <avalon:LayoutAnchorable
                                         x:Name="AnchorableCamera"
-                                        Title="{DynamicResource Dock.Layout.Title.CameraImage}"
+                                        Title="AOI"
                                         AutoHideMinHeight="100"
                                         CanClose="False"
                                         CanHide="True">
@@ -156,12 +170,6 @@
                                             <cvimg:CVCamImagerCtrl x:Name="MyImageControl" DataContext="{Binding CustomImageVM}" />
                                         </DockPanel>
                                     </avalon:LayoutAnchorable>
-                                </avalon:LayoutAnchorablePane>
-                            </avalon:LayoutAnchorablePaneGroup>
-
-                            <!--  右下角面板  -->
-                            <avalon:LayoutAnchorablePaneGroup>
-                                <avalon:LayoutAnchorablePane>
                                     <avalon:LayoutAnchorable
                                         x:Name="AnchorableSP"
                                         Title="{DynamicResource Dock.Layout.Title.SP}"
@@ -170,6 +178,20 @@
                                         <DockPanel x:Name="PanelSP" Grid.Row="1">
                                             <cvsp:CVSpectrumAnalyzer x:Name="spaly" DataContext="{Binding CustomIVLVM}" />
                                         </DockPanel>
+                                    </avalon:LayoutAnchorable>
+                                    <avalon:LayoutAnchorable
+                                        x:Name="AnchorableVAM"
+                                        Title="VAM"
+                                        CanClose="False"
+                                        CanHide="True">
+                                        <!--<DockPanel x:Name="DockPanelVAM" Grid.Row="2">
+                                            <Grid
+                                                x:Name="DemoHostGrid"
+                                                Width="Auto"
+                                                Height="Auto">
+                                                <cop:DemoWindow />
+                                            </Grid>
+                                        </DockPanel>-->
                                     </avalon:LayoutAnchorable>
                                     <avalon:LayoutAnchorable
                                         x:Name="AnchorableLog"

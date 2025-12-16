@@ -94,10 +94,11 @@
                         FontWeight="Bold"
                         Foreground="#FF333333"
                         Text="{DynamicResource Image Dimensions}" />
+                    <TextBlock Text="0×0" />
                     <TextBlock
                         x:Name="ImageDimensionsText"
                         MinWidth="100"
-                        Text="{DynamicResource 0 × 0 pixels}"
+                        Text="{DynamicResource pixels}"
                         ToolTip="原始图像尺寸" />
                     <TextBlock
                         Margin="8,0"
@@ -105,10 +106,11 @@
                         Text="|" />
 
                     <TextBlock Text="{DynamicResource Display Dimensions}" />
+                    <TextBlock Text="0×0" />
                     <TextBlock
                         x:Name="DisplayDimensionsText"
                         MinWidth="100"
-                        Text="{DynamicResource 0 × 0 pixels}"
+                        Text="{DynamicResource pixels}"
                         ToolTip="当前显示尺寸" />
                     <TextBlock
                         Margin="8,0"

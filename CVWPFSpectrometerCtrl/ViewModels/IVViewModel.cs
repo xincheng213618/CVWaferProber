@@ -52,7 +52,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             _plotModel = new PlotModel
             {
-                Title = (string)Application.Current.FindResource("Sp.IV Curve"),
+                Title = (string)System.Windows.Application.Current.FindResource("Sp.IV Curve"),
                 TitleFontSize = 14
             };
 
@@ -60,7 +60,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var xAxis = new LinearAxis
             {
                 Position = AxisPosition.Bottom,
-                Title = (string)Application.Current.FindResource("Sp.Current"),
+                Title = (string)System.Windows.Application.Current.FindResource("Sp.Current"),
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
                 Minimum = 0,
@@ -72,7 +72,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var yAxis = new LinearAxis
             {
                 Position = AxisPosition.Left,
-                Title = (string)Application.Current.FindResource("Sp.Voltage"),
+                Title = (string)System.Windows.Application.Current.FindResource("Sp.Voltage"),
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
                 Minimum = 0,
@@ -244,7 +244,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             // 5. 创建线形系列（保留原有样式）
             var lineSeries = new LineSeries
             {
-                Title = (string)Application.Current.FindResource("Sp.IV Curve"),
+                Title = (string)System.Windows.Application.Current.FindResource("Sp.IV Curve"),
                 Color = OxyColors.Red,
                 StrokeThickness = 1.5,
                 MarkerType = MarkerType.Circle,

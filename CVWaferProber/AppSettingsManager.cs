@@ -24,19 +24,27 @@ namespace CVWaferProber
         private static void ApplyLanguage(string language)
         {
             var app = Application.Current;
-            if (app?.Resources?.MergedDictionaries?.Count > 0)
+            if (app?.Resources?.MergedDictionaries == null) return;
+
+            app.Resources.MergedDictionaries.Clear();
+
+            // 修正资源字典路径（根据实际文件存放位置调整）
+            // 示例：资源字典放在项目的"Language"文件夹下
+            var dictionaryPath = language == "English"
+                ? "Language/English.xaml"  // 英文资源文件路径
+                : "Language/Chinese.xaml"; // 中文资源文件路径
+
+            try
             {
-                app.Resources.MergedDictionaries.Clear();
-
-                var dictionaryPath = language == "English"
-                    ? "Language/English.xaml"
-                    : "Language/Chinese.xaml";
-
                 var newDictionary = new ResourceDictionary
                 {
                     Source = new Uri(dictionaryPath, UriKind.Relative)
                 };
                 app.Resources.MergedDictionaries.Add(newDictionary);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"加载语言资源失败：{ex.Message}");
             }
         }
 
