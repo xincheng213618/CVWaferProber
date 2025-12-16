@@ -4,6 +4,7 @@ using ChipMapping.Models;
 using ChipMapping.ViewModels;
 using ColorVision.Core.Entities;
 using ConoscopeDemo;
+using CVAVMControl;
 using CVDB.Services.Buz;
 using CVWaferProber.Components;
 using CVWaferProber.Core.Models.Enums;
@@ -48,6 +49,7 @@ namespace CVWaferProber.ViewModels
         public LayoutAnchorable? AnchorableCamera { get; set; }
         public LayoutAnchorable? AnchorableSP { get; set; }
         public LayoutAnchorable? AnchorableVAM { get; set; }
+        public CVVAMAnalyzer? VAMAnalyzer { get; set; }
 
         // SP面板ViewModel引用
         public CVSpectrumViewModel? SpPanelViewModel { get; set; }
@@ -1759,19 +1761,8 @@ namespace CVWaferProber.ViewModels
             DockingManager.UpdateLayout();
        
         }
-        //private void ActivatePanel(LayoutAnchorable? panel)
-        //{
-        //    if (panel == null)
-        //    {
-        //        logger.Warn("目标面板未初始化，无法激活");
-        //        return;
-        //    }
-
-        //    // 激活面板（显示+选中）
-        //    panel.Show();
-        //    panel.IsSelected = true;
-        //    panel.IsActive = true; // 强化置顶效果
-        //}
        
+
+
     }
 }
