@@ -283,9 +283,9 @@ namespace CVWaferProber.Views
                 AppSettingsManager.ChangeLanguage(language);
 
                 // 2. 提示用户重启程序
-                var result = MessageBox.Show("语言已切换，需要重启程序生效！\n是否立即重启？", "提示",
-                                             MessageBoxButton.YesNo, MessageBoxImage.Information);
-                if (result == MessageBoxResult.Yes)
+                var result = MessageBox.Show("语言已切换，需要重启程序生效！\n即将重启！", "提示",
+                                             MessageBoxButton.OK, MessageBoxImage.Information);
+                if (result == MessageBoxResult.OK)
                 {
                     // 3. 重启程序
                     RestartApplication();
