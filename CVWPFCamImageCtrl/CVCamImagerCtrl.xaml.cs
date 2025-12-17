@@ -1,6 +1,7 @@
 ﻿using CVCommCore.CVImage;
 using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using OpenCvSharp;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -450,7 +451,8 @@ namespace CVWPFCamImageCtrl
                         if(CVImageFileUtil.LoadImgFile_Raw(selectedImage.ImagePath,ref fileInfo))
                         {
                             var infoCV = (fileInfo.FrameInfo.widthInt, fileInfo.FrameInfo.heightInt, fileInfo.FrameInfo.channelsInt);
-                            var bitmapSourceCV = OpenCVImageLoader.ConvertMatToBitmap(OpenCvMatTools.ConvertImage32To8ByNorm(new OpenCvSharp.Mat(fileInfo.FrameInfo.heightInt, fileInfo.FrameInfo.widthInt,OpenCvMatTools.GetMatType(fileInfo.FrameInfo.bppInt, fileInfo.FrameInfo.channelsInt), fileInfo.data)));
+                            Mat src = OpenCvSharp.Mat.FromPixelData(fileInfo.FrameInfo.heightInt, fileInfo.FrameInfo.widthInt, OpenCvMatTools.GetMatType(fileInfo.FrameInfo.bppInt, fileInfo.FrameInfo.channelsInt), fileInfo.data);
+                            var bitmapSourceCV = OpenCVImageLoader.ConvertMatToBitmap(OpenCvMatTools.ConvertImage32To8ByNorm(src));
                             var imageInfoCV = (infoCV, bitmapSourceCV);
                             if (imageInfoCV.bitmapSourceCV != null)
                             {

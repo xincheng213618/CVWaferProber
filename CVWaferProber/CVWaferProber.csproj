@@ -18,7 +18,6 @@
     <ProjectReference Include="..\CVWPFCamImageCtrl\CVWPFCamImageCtrl.csproj" />
     <ProjectReference Include="..\CVWPFSpectrometerCtrl\CVWPFSpectrometerCtrl.csproj" />
     <ProjectReference Include="..\GSWinMsgSim\GSWinMsgSim.csproj" />
-    <ProjectReference Include="..\VAMdemo\ConoscopeDemo.csproj" />
   </ItemGroup>
 
   <ItemGroup>
