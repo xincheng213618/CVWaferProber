@@ -52,6 +52,7 @@ namespace ChipMapping.ViewModels
             } }
         public bool EnabledInput => !DisabledInput;
 
+        
         public ObservableCollection<ChipViewModel> Chips { get; } = new ObservableCollection<ChipViewModel>();
         public ICollectionView FilteredChips { get; }
 
@@ -80,12 +81,28 @@ namespace ChipMapping.ViewModels
 
             Refresh();
         }
+        // 1. 新增：芯片选中事件（供上层ViewModel订阅）
+        public event EventHandler<ChipViewModel> ChipSelected;
 
+        // 2. 新增：选中芯片的行列信息（供绑定）
+        private int? _selectedChipRow;
+        public int? SelectedChipRow
+        {
+            get => _selectedChipRow;
+            set => SetProperty(ref _selectedChipRow, value);
+        }
+
+        private int? _selectedChipColumn;
+        public int? SelectedChipColumn
+        {
+            get => _selectedChipColumn;
+            set => SetProperty(ref _selectedChipColumn, value);
+        }
         // 选中芯片ID属性（用于安全绑定）
         public uint? SelectedChipId => SelectedChip?.Id;
 
         // 选中芯片的显示文本
-        public string? SelectedChipDisplay => SelectedChip != null ? SelectedChip.Id.ToString() : "无";
+        public string? SelectedChipDisplay => SelectedChip != null ? SelectedChip.Id.ToString() : "null";
 
         // 选中芯片属性
         public ChipViewModel? SelectedChip
@@ -105,10 +122,21 @@ namespace ChipMapping.ViewModels
                     if (_selectedChip != null)
                     {
                         _selectedChip.IsSelected = true;
+                        // 同步行列信息
+                        SelectedChipRow = _selectedChip.Row;
+                        SelectedChipColumn = _selectedChip.Column;
+                        // 触发选中事件
+                        ChipSelected?.Invoke(this, _selectedChip);
                     }
-                    UpdateChipDetails();
+                    else
+                    {
+                        // 清空选中时重置行列
+                        SelectedChipRow = null;
+                        SelectedChipColumn = null;
+                        ChipSelected?.Invoke(this, null);
+                    }
 
-                    // 通知相关属性变化
+                    UpdateChipDetails();
                     OnPropertyChanged(nameof(SelectedChipId));
                     OnPropertyChanged(nameof(SelectedChipDisplay));
                 }
@@ -180,18 +208,54 @@ namespace ChipMapping.ViewModels
         }
 
         // 在指定位置查找芯片
-        private ChipViewModel? FindChipAtPosition(System.Windows.Point position)
+        //private ChipViewModel? FindChipAtPosition(System.Windows.Point position)
+        //{
+        //    const double clickTolerance = 10.0; // 点击容差范围
+
+        //    foreach (var chip in Chips)
+        //    {
+        //        double distanceX = Math.Abs(position.X - chip.Position.X);
+        //        double distanceY = Math.Abs(position.Y - chip.Position.Y);
+
+        //        // 检查是否点击在芯片范围内
+        //        if (distanceX <= chip.Width / 2 + clickTolerance &&
+        //            distanceY <= chip.Height / 2 + clickTolerance)
+        //        {
+        //            return chip;
+        //        }
+        //    }
+
+        //    return null; // 没有找到芯片
+        //}
+        private ChipViewModel? FindChipAtPosition(System.Windows.Point scaledClickPos)
         {
-            const double clickTolerance = 10.0; // 点击容差范围
+            // 1. 关键：将缩放后的点击坐标转换为原始画布坐标（除以缩放比例）
+            var originalPos = new System.Windows.Point(
+                scaledClickPos.X / Scale,
+                scaledClickPos.Y / Scale
+            );
+
+            // 2. 扩大点击容差（边缘芯片友好，可根据需要调整）
+            const double clickTolerance = 4.0;
 
             foreach (var chip in Chips)
             {
-                double distanceX = Math.Abs(position.X - chip.Position.X);
-                double distanceY = Math.Abs(position.Y - chip.Position.Y);
+                // 3. 计算芯片的实际显示区域（匹配CenterOffsetConverter的居中偏移）
+                // 芯片Position是Canvas.Left/Top的原始值，Rectangle通过RenderTransform偏移了 -Width/2 和 -Height/2
+                double chipLeft = chip.Position.X - (chip.Width / 2);   // 芯片左边界
+                double chipTop = chip.Position.Y - (chip.Height / 2);  // 芯片上边界
+                double chipRight = chipLeft + chip.Width;              // 芯片右边界
+                double chipBottom = chipTop + chip.Height;             // 芯片下边界
 
-                // 检查是否点击在芯片范围内
-                if (distanceX <= chip.Width / 2 + clickTolerance &&
-                    distanceY <= chip.Height / 2 + clickTolerance)
+                // 4. 扩大热区（左右上下各加容差）
+                double hitLeft = chipLeft - clickTolerance;
+                double hitTop = chipTop - clickTolerance;
+                double hitRight = chipRight + clickTolerance;
+                double hitBottom = chipBottom + clickTolerance;
+
+                // 5. 精准检测点击是否在芯片热区内
+                if (originalPos.X >= hitLeft && originalPos.X <= hitRight &&
+                    originalPos.Y >= hitTop && originalPos.Y <= hitBottom)
                 {
                     return chip;
                 }
@@ -336,8 +400,22 @@ namespace ChipMapping.ViewModels
 
         private void UpdateCanvasSize()
         {
-            CanvasWidth = _screenWidth;
-            CanvasHeight = _screenHeight;
+            //CanvasWidth = _screenWidth;
+            //CanvasHeight = _screenHeight;
+            //OnPropertyChanged(nameof(CanvasWidth));
+            //OnPropertyChanged(nameof(CanvasHeight));
+            if (Chips.Count > 0)
+            {
+                double maxX = Chips.Max(c => c.Position.X) + 50; // 预留50px边缘空间
+                double maxY = Chips.Max(c => c.Position.Y) + 50;
+                CanvasWidth = Math.Max(maxX, _screenWidth);
+                CanvasHeight = Math.Max(maxY, _screenHeight);
+            }
+            else
+            {
+                CanvasWidth = _screenWidth;
+                CanvasHeight = _screenHeight;
+            }
             OnPropertyChanged(nameof(CanvasWidth));
             OnPropertyChanged(nameof(CanvasHeight));
         }
@@ -541,5 +619,7 @@ namespace ChipMapping.ViewModels
         {
             MousePositionText = $"X: {position.X:F0}, Y: {position.Y:F0}";
         }
+
+       
     }
 }

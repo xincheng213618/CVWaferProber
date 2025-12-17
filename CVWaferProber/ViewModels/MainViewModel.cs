@@ -318,6 +318,9 @@ namespace CVWaferProber.ViewModels
             rcModel = new RCRestService();
             //algResultModel = new AlgResultModel();
             CustomMappingVM = new ChipMappingControlViewModel();
+
+            // ========== 订阅芯片选中事件 ==========
+            CustomMappingVM.ChipSelected += OnChipSelected;
             CustomImageVM = new CVCamImagerViewModel();
             CustomIVLVM = new CVSpectrumViewModel();
             //
@@ -419,6 +422,27 @@ namespace CVWaferProber.ViewModels
             //IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
 
         }
+
+
+        // ========== 芯片选中事件处理方法 ==========
+        private void OnChipSelected(object sender, ChipViewModel chip)
+        {
+            if (chip == null || TestResults.Count == 0)
+            {
+                SelectedItem = null;
+                return;
+            }
+
+            // 根据芯片的ID查找对应的DieViewModel
+            var targetDie = TestResults.FirstOrDefault(die => die.Id == chip.Id);
+            if (targetDie != null)
+            {
+                selfClick = false;
+                SelectedItem = targetDie;
+                ScrollToItem(targetDie);
+            }
+        }
+
 
         private void Opena(object obj)
         {
@@ -1676,7 +1700,7 @@ namespace CVWaferProber.ViewModels
             {
                 _dataGrid.ScrollIntoView(toItem);
 
-                // 确保行完全可见（可选）
+                // 确保行完全可见
                 _dataGrid.UpdateLayout();
 
                 //// 如果需要聚焦到选中行
