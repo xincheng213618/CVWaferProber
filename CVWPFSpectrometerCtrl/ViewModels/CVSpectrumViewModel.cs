@@ -862,8 +862,15 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         #region 自动导出CSV
         // CVSpectrumViewModel类内新增
         private static readonly ILog logger = LogManager.GetLogger(typeof(CVSpectrumViewModel));
-        // 新增：存储当前测试的SerialNumber（用于自动导出）
-        public string CurrentSerialNumber { get; private set; }
+
+        // 新增：存储当前测试的序号、行、列
+        public string CurrentDieIndex { get; set; }
+        public string CurrentDieRow { get; set; }
+        public string CurrentDieCol { get; set; }
+
+
+        // 存储当前测试的SerialNumber（用于自动导出）
+        public string CurrentSerialNumber { get; set; }
 
         private void AutoExportData()
         {
@@ -878,9 +885,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 // 1. 构造导出路径（与截图目录结构完全一致）
                 DateTime now = DateTime.Now;
                 string dateFolder = now.ToString("yyyy-MM-dd");
-                // 根路径（匹配截图）
-                string basePath = Path.Combine("F:", "Projects", "Micro LED", "星钥", "software", dateFolder, "WaferID");
-
+                // 根路径
+                string basePath = Path.Combine("F:", "Projects", "Micro LED", "星钥", "software", dateFolder, "WaferID", "IVL");
+                string basePath1 = Path.Combine("F:", "Projects", "Micro LED", "星钥", "software", dateFolder, "WaferID");
                 // 确保基础目录存在
                 if (!Directory.Exists(basePath))
                 {
@@ -939,9 +946,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     exportedFiles.Add(vlFile);
                     logger.Info($"已导出VL数据：{vlPath}");
                 }
-
+              
                 // 4. 更新Summary.csv（汇总记录，追加模式）
-                string summaryPath = Path.Combine(basePath, "Summary.csv");
+                string summaryPath = Path.Combine(basePath1, "Summary.csv");
                 bool isNewSummary = !File.Exists(summaryPath);
                 using (StreamWriter sw = new StreamWriter(summaryPath, true, Encoding.UTF8))
                 {
@@ -1217,6 +1224,109 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         //    double eqe = intensity * wavelengthFactor * 100; // 转换为百分比
         //    return Math.Max(0, eqe); // 确保非负
         //}
+
+        // EQE测量完成标记（确保仅测量后导出）
+        private bool _isEQEMeasured = false;
+        public bool IsEQEMeasured
+        {
+            get => _isEQEMeasured;
+            set
+            {
+                _isEQEMeasured = value;
+                // 测量完成后自动触发导出（仅EQE数据）
+                if (value)
+                {
+                    AutoExportEQEDataOnly();
+                }
+            }
+        }
+
+        private void AutoExportEQEDataOnly()
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(CurrentSerialNumber) || !Measurements.Any())
+                {
+                    logger.Warn("EQE导出失败：SerialNumber为空或无测量数据");
+                    return;
+                }
+
+                // 复用原有路径逻辑（与IVL保持一致）
+                DateTime now = DateTime.Now;
+                string dateFolder = now.ToString("yyyy-MM-dd");
+                string basePath = Path.Combine("F:", "Projects", "Micro LED", "星钥", "software", dateFolder, "WaferID", "EQE");
+
+                // 找到当前已创建的die_Location文件夹（避免重复创建新文件夹）
+                string[] dieFolders = Directory.GetDirectories(basePath, "die_Location_*");
+                string dieLocationPath = dieFolders.Any()
+                    ? dieFolders.OrderByDescending(Directory.GetCreationTime).First() // 取最新的文件夹
+                    : Path.Combine(basePath, $"die_Location_{now.ToString("yyyyMMddHHmmss")}");
+
+                // 确保文件夹存在
+                if (!Directory.Exists(dieLocationPath))
+                {
+                    Directory.CreateDirectory(dieLocationPath);
+                    logger.Info($"创建EQE导出目录：{dieLocationPath}");
+                }
+
+                // 导出EQE数据
+                string eqeFile = $"EQE_{CurrentSerialNumber}_{now:HHmmss}.csv";
+                string eqePath = Path.Combine(dieLocationPath, eqeFile);
+                ExportEQEToCsv(eqePath, Measurements, Wavelengths);
+
+                // 更新Summary.csv（追加EQE导出记录）
+                UpdateSummaryCsv(now, CurrentSerialNumber, Path.GetFileName(dieLocationPath), eqeFile);
+
+                logger.Info($"EQE测量完成，已自动导出至：{eqePath}");
+                // 重置标记，避免重复导出
+                _isEQEMeasured = false;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("EQE自动导出失败", ex);
+                MessageBox.Show($"EQE自动导出错误：{ex.Message}", "提示", MessageBoxButton.OK, MessageBoxImage.Error);
+                _isEQEMeasured = false;
+            }
+        }
+
+        /// <summary>
+        /// 单独更新Summary.csv的EQE导出记录
+        /// </summary>
+        private void UpdateSummaryCsv(DateTime exportTime, string serialNumber, string dieFolder, string eqeFileName)
+        {
+            string basePath = Path.Combine("F:", "Projects", "Micro LED", "星钥", "software", exportTime.ToString("yyyy-MM-dd"), "WaferID");
+            string summaryPath = Path.Combine(basePath, "Summary.csv");
+
+            bool isNewSummary = !File.Exists(summaryPath);
+            using (StreamWriter sw = new StreamWriter(summaryPath, true, Encoding.UTF8))
+            {
+                if (isNewSummary)
+                {
+                    sw.WriteLine("导出时间,SerialNumber,DieLocation文件夹,导出文件列表");
+                }
+
+                // 读取原有记录，追加EQE文件（避免覆盖其他数据）
+                string existingFiles = "";
+                if (!isNewSummary)
+                {
+                    // 查找当前SerialNumber对应的已有记录
+                    var lines = File.ReadAllLines(summaryPath);
+                    var targetLine = lines.Skip(1).FirstOrDefault(l => l.Contains(serialNumber) && l.Contains(dieFolder));
+                    if (!string.IsNullOrEmpty(targetLine))
+                    {
+                        existingFiles = targetLine.Split(',').LastOrDefault() ?? "";
+                    }
+                }
+
+                // 拼接已有文件和新导出的EQE文件
+                string allFiles = string.IsNullOrEmpty(existingFiles)
+                    ? eqeFileName
+                    : $"{existingFiles};{eqeFileName}";
+
+                sw.WriteLine($"{exportTime:yyyy-MM-dd HH:mm:ss},{serialNumber},{dieFolder},{allFiles}");
+            }
+        }
+
         // 新增：初始化EQE图表
         private void InitializeEQEPlotModel()
         {
@@ -1377,6 +1487,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
 
             EQEPlotModel.InvalidatePlot(true);
+
+            // ========== 批量EQE测量完成，标记并触发导出 ==========
+            IsEQEMeasured = true;
         }
 
         // 新增：EQE选中曲线移到顶层
@@ -1429,6 +1542,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             EQEPlotModel.Series.Clear();
             EQEPlotModel.Series.Add(lineSeries);
             EQEPlotModel.InvalidatePlot(true);
+            // ========== EQE测量完成，标记并触发导出 ==========
+            IsEQEMeasured = true;
         }
 
         // 新增：EQE数据导出方法

@@ -1239,6 +1239,7 @@ namespace CVWaferProber.ViewModels
         //}
         private void StartTestingDie(int row, int col)
         {
+            
             if (CurTestDieIdx>=0)
             {
                 TestResults[CurTestDieIdx].UnSelected();
@@ -1623,8 +1624,11 @@ namespace CVWaferProber.ViewModels
                 TestResults[i].UnSelected();
             CustomMappingVM.DisabledInput = IsProcessing = false;
             EnableBtn(true);
-
-            _wmProcessor.MeasurementStoped();
+            if (_wmProcessor != null)
+            {
+                _wmProcessor.MeasurementStoped();
+            }
+            //_wmProcessor.MeasurementStoped();
         }
         private void StopSim()
         {
