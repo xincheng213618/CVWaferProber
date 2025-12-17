@@ -16,8 +16,8 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="307*" />
+            <ColumnDefinition Width="171*" />
         </Grid.ColumnDefinitions>
 
         <!--  顶部：打开文件按钮  -->
@@ -26,7 +26,6 @@
             Grid.Row="0"
             Grid.Column="0"
             Grid.ColumnSpan="2"
-            Height="40"
             Margin="0,0,0,10"
             Click="BtnOpenFile_Click"
             Content="{DynamicResource VAM.OpenCVCIEFile}"
@@ -34,11 +33,10 @@
 
         <!--  左侧：伪彩色图像区域  -->
         <Border
-            Grid.Row="1"
             Grid.Column="0"
-            Margin="0,0,5,0"
+            Margin="0,34,5,0"
             BorderBrush="#FF3F3F46"
-            BorderThickness="1">
+            BorderThickness="1" Grid.RowSpan="2">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -56,16 +54,16 @@
                     x:Name="imgDisplay"
                     Grid.Row="1"
                     Stretch="Uniform" />
+                
             </Grid>
         </Border>
 
         <!--  右侧：切换面板区域  -->
         <Border
-            Grid.Row="1"
             Grid.Column="1"
-            Margin="5,0,0,0"
+            Margin="5,34,0,0"
             BorderBrush="#FF3F3F46"
-            BorderThickness="1">
+            BorderThickness="1" Grid.RowSpan="2">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
