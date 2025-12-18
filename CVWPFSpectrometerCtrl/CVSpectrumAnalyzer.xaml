@@ -1015,7 +1015,7 @@
                         Margin="5"
                         VerticalAlignment="Center"
                         Content="{DynamicResource Sp.ShowAllData}"
-                        IsChecked="{Binding IsShowAllData, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        IsChecked="{Binding IsShowAllEQEData, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                     <CheckBox
                         x:Name="chkShowDetails1"
                         Margin="5"

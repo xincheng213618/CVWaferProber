@@ -99,7 +99,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             set => SetProperty(ref _eqePlotModel, value);
         }
         // 新增：EQE曲线颜色配置
-        private SolidColorBrush _eqeLineColor = new SolidColorBrush(Colors.Green);
+        private SolidColorBrush _eqeLineColor = new SolidColorBrush(Colors.Red);
         public SolidColorBrush EQELineColor
         {
             get => _eqeLineColor;
@@ -176,7 +176,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 if (SetProperty(ref _selectedEQERow, value))
                 {
                     OnPropertyChanged(nameof(SelectedEQERow));
-                    if (IsShowAllData)
+                    if (IsShowAllEQEData)
                     {
                         // 显示所有数据时：置顶+高亮选中曲线
                         UpdateEQESelectedCurveHighlight();
@@ -243,7 +243,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 series.Color = isSelected
                     ? ConvertToOxyColor(EQELineColor)
                     : GetUnselectedEQEColor(measNo);
-                series.StrokeThickness = isSelected ? 2.0 : 1.5;
+                series.StrokeThickness = isSelected ? 2.5 : 1.5;
                 //series.MarkerType = isSelected ? MarkerType.Circle : MarkerType.None;
                 //series.MarkerSize = isSelected ? 3 : 0;
             }
@@ -337,6 +337,17 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged();
                 // 勾选状态变化时，更新图表
                 UpdateChartByShowAllState();
+              
+            }
+        }
+        private bool _isShowAllEQEData;
+        public bool IsShowAllEQEData
+        {
+            get => _isShowAllEQEData;
+            set
+            {
+                _isShowAllEQEData = value;
+                OnPropertyChanged();
                 // 新增：同步更新EQE图表
                 UpdateEQEChartByShowAllState();
             }
@@ -368,6 +379,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 }
             }
         }
+
+
         private SolidColorBrush _spectralLineColor = new SolidColorBrush(Colors.Red);
 
         public SolidColorBrush SpectralLineColor
@@ -1236,58 +1249,63 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 // 测量完成后自动触发导出（仅EQE数据）
                 if (value)
                 {
-                    AutoExportEQEDataOnly();
+                    //AutoExportEQEDataOnly();
                 }
             }
         }
 
-        private void AutoExportEQEDataOnly()
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(CurrentSerialNumber) || !Measurements.Any())
-                {
-                    logger.Warn("EQE导出失败：SerialNumber为空或无测量数据");
-                    return;
-                }
+        //private void AutoExportEQEDataOnly()
+        //{
+        //    try
+        //    {
+        //        if (string.IsNullOrWhiteSpace(CurrentSerialNumber) || !Measurements.Any())
+        //        {
+        //            logger.Warn("EQE导出失败：SerialNumber为空或无测量数据");
+        //            return;
+        //        }
 
-                // 复用原有路径逻辑（与IVL保持一致）
-                DateTime now = DateTime.Now;
-                string dateFolder = now.ToString("yyyy-MM-dd");
-                string basePath = Path.Combine("F:", "Projects", "Micro LED", "星钥", "software", dateFolder, "WaferID", "EQE");
+        //        // 复用原有路径逻辑（与IVL保持一致）
+        //        DateTime now = DateTime.Now;
+        //        string dateFolder = now.ToString("yyyy-MM-dd");
+        //        string basePath = Path.Combine("F:", "Projects", "Micro LED", "星钥", "software", dateFolder, "WaferID", "EQE");
 
-                // 找到当前已创建的die_Location文件夹（避免重复创建新文件夹）
-                string[] dieFolders = Directory.GetDirectories(basePath, "die_Location_*");
-                string dieLocationPath = dieFolders.Any()
-                    ? dieFolders.OrderByDescending(Directory.GetCreationTime).First() // 取最新的文件夹
-                    : Path.Combine(basePath, $"die_Location_{now.ToString("yyyyMMddHHmmss")}");
+        //        if (!Directory.Exists(basePath))
+        //        {
+        //            Directory.CreateDirectory(basePath);
+        //            logger.Info($"创建基础目录：{basePath}");
+        //        }
+        //        // 找到当前已创建的die_Location文件夹（避免重复创建新文件夹）
+        //        string[] dieFolders = Directory.GetDirectories(basePath, "die_Location_*");
+        //        string dieLocationPath = dieFolders.Any()
+        //            ? dieFolders.OrderByDescending(Directory.GetCreationTime).First() // 取最新的文件夹
+        //            : Path.Combine(basePath, $"die_Location_{now.ToString("yyyyMMddHHmmss")}");
 
-                // 确保文件夹存在
-                if (!Directory.Exists(dieLocationPath))
-                {
-                    Directory.CreateDirectory(dieLocationPath);
-                    logger.Info($"创建EQE导出目录：{dieLocationPath}");
-                }
+        //        // 确保文件夹存在
+        //        if (!Directory.Exists(dieLocationPath))
+        //        {
+        //            Directory.CreateDirectory(dieLocationPath);
+        //            logger.Info($"创建EQE导出目录：{dieLocationPath}");
+        //        }
 
-                // 导出EQE数据
-                string eqeFile = $"EQE_{CurrentSerialNumber}_{now:HHmmss}.csv";
-                string eqePath = Path.Combine(dieLocationPath, eqeFile);
-                ExportEQEToCsv(eqePath, Measurements, Wavelengths);
+        //        // 导出EQE数据
+        //        string eqeFile = $"EQE_{CurrentSerialNumber}_{now:HHmmss}.csv";
+        //        string eqePath = Path.Combine(dieLocationPath, eqeFile);
+        //        ExportEQEToCsv(eqePath, Measurements, Wavelengths);
 
-                // 更新Summary.csv（追加EQE导出记录）
-                UpdateSummaryCsv(now, CurrentSerialNumber, Path.GetFileName(dieLocationPath), eqeFile);
+        //        // 更新Summary.csv（追加EQE导出记录）
+        //        UpdateSummaryCsv(now, CurrentSerialNumber, Path.GetFileName(dieLocationPath), eqeFile);
 
-                logger.Info($"EQE测量完成，已自动导出至：{eqePath}");
-                // 重置标记，避免重复导出
-                _isEQEMeasured = false;
-            }
-            catch (Exception ex)
-            {
-                logger.Error("EQE自动导出失败", ex);
-                MessageBox.Show($"EQE自动导出错误：{ex.Message}", "提示", MessageBoxButton.OK, MessageBoxImage.Error);
-                _isEQEMeasured = false;
-            }
-        }
+        //        logger.Info($"EQE测量完成，已自动导出至：{eqePath}");
+        //        // 重置标记，避免重复导出
+        //        _isEQEMeasured = false;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        logger.Error("EQE自动导出失败", ex);
+        //        MessageBox.Show($"EQE自动导出错误：{ex.Message}", "提示", MessageBoxButton.OK, MessageBoxImage.Error);
+        //        _isEQEMeasured = false;
+        //    }
+        //}
 
         /// <summary>
         /// 单独更新Summary.csv的EQE导出记录
@@ -1389,7 +1407,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             ResetEQEPlotView();
 
-            if (IsShowAllData)
+            if (IsShowAllEQEData)
             {
                 DrawAllEQEMeasurementsInChart();
             }

@@ -64,10 +64,7 @@
             </MenuItem>-->
 
             <!--  视图菜单（控制面板显示/隐藏）  -->
-            <MenuItem
-                x:Name="MenuView"
-                Header="{DynamicResource Menu.View}"
-                >
+            <MenuItem x:Name="MenuView" Header="{DynamicResource Menu.View}">
                 <MenuItem
                     x:Name="MenuMappingPanel"
                     Header="{DynamicResource Menu.MappingPanelVisible}"
@@ -139,9 +136,9 @@
                 InputGestureText="Alt+F4" />
         </Menu>
 
-        <avalon:DockingManager x:Name="DockingManager" Grid.Row="1">
-            
-
+        <avalon:DockingManager
+            x:Name="DockingManager"
+            Grid.Row="1">
             <avalon:DockingManager.Theme>
                 <avalon:GenericTheme />
             </avalon:DockingManager.Theme>
