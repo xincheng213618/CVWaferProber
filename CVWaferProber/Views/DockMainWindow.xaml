@@ -4,7 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalon="https://github.com/Dirkster99/AvalonDock"
     xmlns:comp="clr-namespace:CVWaferProber.Components"
-    xmlns:cop="clr-namespace:ConoscopeDemo;assembly=ConoscopeDemo"
     xmlns:cv="clr-namespace:CVWaferProber.Converters"
     xmlns:cvimg="clr-namespace:CVWPFCamImageCtrl;assembly=CVWPFCamImageCtrl"
     xmlns:cvsp="clr-namespace:CVWPFSpectrometerCtrl;assembly=CVWPFSpectrometerCtrl"
@@ -28,6 +27,7 @@
             FalseValue="0"
             TrueValue="300" />
     </Window.Resources>
+
     <Grid>
         <!--  第1行：顶部菜单栏  -->
         <Grid.RowDefinitions>
@@ -140,6 +140,8 @@
         </Menu>
 
         <avalon:DockingManager x:Name="DockingManager" Grid.Row="1">
+            
+
             <avalon:DockingManager.Theme>
                 <avalon:GenericTheme />
             </avalon:DockingManager.Theme>

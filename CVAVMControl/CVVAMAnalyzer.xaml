@@ -220,12 +220,12 @@
     xmlns:oxy="http://oxyplot.org/wpf"
     xmlns:wpf="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
     mc:Ignorable="d">
-    <Grid Margin="10">
+    <Grid Margin="5">
         <!--  总体布局：3行2列     Background="#FF2D2D30"  -->
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <!--  第1行：打开文件按钮  -->
-            <RowDefinition Height="*" />
+            <RowDefinition Height="1.15*" />
             <!--  第2行：伪彩图  -->
             <RowDefinition Height="*" />
             <!--  第3行：图表区  -->
@@ -395,7 +395,7 @@
                         <!--  导出直径线CSV按钮  -->
                         <Button
                             x:Name="btnExportDiameter"
-                            Height="35"
+                            Height="30"
                             Margin="5"
                             Click="BtnExportDiameter_Click"
                             Content="{DynamicResource VAM.ExportDiameterLineCSV}" />
