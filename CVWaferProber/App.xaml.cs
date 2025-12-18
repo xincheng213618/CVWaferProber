@@ -2,6 +2,8 @@
 using log4net.Config;
 using System.Reflection;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace CVWaferProber
 {
@@ -30,6 +32,72 @@ namespace CVWaferProber
             base.OnStartup(e);
             // 初始化语言（读取Settings中的默认语言）
             AppSettingsManager.InitializeLanguage();
+            // 1. 定义DataGrid行的样式（覆盖选中状态）
+            var rowStyle = new Style(typeof(DataGridRow))
+            {
+                Setters =
+                {
+                    // 默认行背景
+                    new Setter(DataGridRow.BackgroundProperty, Brushes.White),
+                    // 默认行文字色
+                    new Setter(DataGridRow.ForegroundProperty, Brushes.Black),
+                },
+                Triggers =
+                {
+                    // 覆盖选中状态的背景/文字色
+                    new Trigger
+                    {
+                        Property = DataGridRow.IsSelectedProperty,
+                        Value = true,
+                        Setters =
+                        {
+                            // 选中行背景（自定义蓝色，可替换为任意色）
+                            new Setter(DataGridRow.BackgroundProperty, new SolidColorBrush(Color.FromArgb(255, 30, 144, 255))),
+                            // 选中行文字色
+                            new Setter(DataGridRow.ForegroundProperty, Brushes.White),
+                            // 选中行边框（可选，强化视觉）
+                            new Setter(DataGridRow.BorderBrushProperty, new SolidColorBrush(Color.FromArgb(255, 0, 80, 160))),
+                            new Setter(DataGridRow.BorderThicknessProperty, new Thickness(1)),
+                        }
+                    },
+                    // 可选：鼠标悬浮样式
+                    new Trigger
+                    {
+                        Property = DataGridRow.IsMouseOverProperty,
+                        Value = true,
+                        Setters =
+                        {
+                            new Setter(DataGridRow.BackgroundProperty, Brushes.LightBlue),
+                        }
+                    }
+                }
+            };
+
+            // 2. 定义单元格样式（避免单元格遮挡行背景）
+            var cellStyle = new Style(typeof(DataGridCell))
+            {
+                Triggers =
+                {
+                    new Trigger
+                    {
+                        Property = DataGridCell.IsSelectedProperty,
+                        Value = true,
+                        Setters =
+                        {
+                            // 单元格选中背景（和行背景一致）
+                            new Setter(DataGridCell.BackgroundProperty, new SolidColorBrush(Color.FromArgb(255, 0, 102, 204))),
+                            // 单元格选中文字色
+                            new Setter(DataGridCell.ForegroundProperty, Brushes.White),
+                            // 取消单元格选中边框
+                            new Setter(DataGridCell.BorderBrushProperty, Brushes.Transparent),
+                        }
+                    }
+                }
+            };
+
+            // 3. 注册全局样式
+            Application.Current.Resources.Add(typeof(DataGridRow), rowStyle);
+            Application.Current.Resources.Add(typeof(DataGridCell), cellStyle);
         }
     }
 

@@ -157,26 +157,34 @@
             </Style.Triggers>
         </Style>-->
 
-        <!--  定义行样式（可放在Window/UserControl的Resources中）  -->
-        <Style x:Key="HighlightSelectedRowStyle" TargetType="DataGridRow">
+        <!--  定义行样式  -->
+        <!--<Style x:Key="HighlightSelectedRowStyle" TargetType="DataGrid">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="Black" />
-            <!--  选中状态高亮（蓝色背景）  -->
+        -->
+        <!--  选中状态高亮（蓝色背景）  -->
+        <!--
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsSelected}" Value="True">
                     <Setter Property="Background" Value="#337AB7" />
-                    <!--  蓝色高亮（可自定义RGB）  -->
+        -->
+        <!--  蓝色高亮（可自定义RGB）  -->
+        <!--
                     <Setter Property="Foreground" Value="White" />
-                    <!--  文字白色对比  -->
+        -->
+        <!--  文字白色对比  -->
+        <!--
                     <Setter Property="BorderBrush" Value="#286090" />
                     <Setter Property="BorderThickness" Value="1" />
                 </DataTrigger>
-                <!--  鼠标悬浮效果（可选）  -->
+        -->
+        <!--  鼠标悬浮效果（可选）  -->
+        <!--
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="#E6F7FF" />
                 </Trigger>
             </Style.Triggers>
-        </Style>
+        </Style>-->
         <!--  单元格复选框样式（优化选中态）  -->
         <Style x:Key="CellCheckBoxStyle" TargetType="CheckBox">
             <Setter Property="Margin" Value="1,0" />
@@ -225,7 +233,7 @@
         BorderThickness="0">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="5*" />
+                <RowDefinition Height="6.1*" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="5*" />
             </Grid.RowDefinitions>

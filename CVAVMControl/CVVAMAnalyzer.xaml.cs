@@ -256,10 +256,10 @@ namespace CVAVMControl
             scatter.Color = ScottPlot.Color.FromHex("#1f77b4");
 
             wpfPlotDiameterLine.Plot.Axes.AutoScale();
-
+            wpfPlotDiameterLine.Plot.Title(DC);
             wpfPlotDiameterLine.Refresh();
-        }
-
+        } 
+        string DC=(string)Application.Current.FindResource("Plot.Title.DiameterLine");
         string RC = (string)Application.Current.FindResource("VAM.RCircle");
         string CDC = (string)Application.Current.FindResource("VAM.CircumferentialDistributionCurve");
         string CA = (string)Application.Current.FindResource("VAM.CircumferentialAngle");
@@ -774,19 +774,43 @@ namespace CVAVMControl
         string Diameter = (string)Application.Current.FindResource("Plot.Title.DiameterLine");
         private void BtnSwitchChart_Click(object sender, RoutedEventArgs e)
         {
-            if (btnSwitchChart.Content.ToString() == RCircle)
+            //if (btnSwitchChart.Content.ToString() == RCircle)
+            //{
+            //    // 切换到R圆面板
+            //    btnSwitchChart.Content = Diameter;
+            //    panelDiameter.Visibility = Visibility.Collapsed;
+            //    panelRCircle.Visibility = Visibility.Visible;
+            //}
+            //else
+            //{
+            //    // 切换回直径线面板
+            //    btnSwitchChart.Content = RCircle;
+            //    panelDiameter.Visibility = Visibility.Visible;
+            //    panelRCircle.Visibility = Visibility.Collapsed;
+            //}
+
+            // 获取当前按钮显示的文本（通过DynamicResource对应的Key）
+            string currentBtnText = btnSwitchChart.Content.ToString();
+            string rCircleTitle = FindResource("Plot.Title.RCircle").ToString();
+            string diameterTitle = FindResource("Plot.Title.DiameterLine").ToString();
+
+            if (currentBtnText == rCircleTitle)
             {
-                // 切换到R圆面板
-                btnSwitchChart.Content = Diameter;
-                panelDiameter.Visibility = Visibility.Collapsed;
-                panelRCircle.Visibility = Visibility.Visible;
+                // 切换为R圆分布曲线
+                btnSwitchChart.Content = diameterTitle;
+                chartPanelDiameter.Visibility = Visibility.Collapsed;
+                chartPanelRCircle.Visibility = Visibility.Visible;
+                paramPanelDiameter.Visibility = Visibility.Collapsed;
+                paramPanelRCircle.Visibility = Visibility.Visible;
             }
             else
             {
-                // 切换回直径线面板
-                btnSwitchChart.Content = RCircle;
-                panelDiameter.Visibility = Visibility.Visible;
-                panelRCircle.Visibility = Visibility.Collapsed;
+                // 切换为直径线分布曲线
+                btnSwitchChart.Content = rCircleTitle;
+                chartPanelDiameter.Visibility = Visibility.Visible;
+                chartPanelRCircle.Visibility = Visibility.Collapsed;
+                paramPanelDiameter.Visibility = Visibility.Visible;
+                paramPanelRCircle.Visibility = Visibility.Collapsed;
             }
         }
 

@@ -150,6 +150,21 @@ namespace CVWaferProber.ViewModels
         //    MessageBox.Show($"已成功将「{assignValue}」赋给所有 {_employeeList.Count} 行的「部门」列！");
         //    txtColumnValue.Clear();
         //}
-       
+        //private bool _isSelected;
+        ///// <summary>
+        ///// 标记当前芯片是否被选中（用于表格高亮）
+        ///// </summary>
+        //public bool IsSelected
+        //{
+        //    get => _isSelected;
+        //    set
+        //    {
+        //        if (_isSelected != value)
+        //        {
+        //            _isSelected = value;
+        //            OnPropertyChanged(nameof(IsSelected)); // 确保继承了INotifyPropertyChanged
+        //        }
+        //    }
+        //}
     }
 }
