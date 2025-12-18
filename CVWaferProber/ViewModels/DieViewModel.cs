@@ -19,7 +19,7 @@ namespace CVWaferProber.ViewModels
         public bool IsIVLCameraEnabled {  get; set; }
         public bool IsChinese {  get; set; }
 
-        // 新增AOI复选框绑定属性
+        // AOI复选框绑定属性
         private bool _isAOIEnabled;
         public bool IsAOIEnabled
         {
@@ -27,7 +27,7 @@ namespace CVWaferProber.ViewModels
             set { _isAOIEnabled = value; OnPropertyChanged(); }
         }
 
-        // 新增IVL复选框绑定属性
+        // IVL复选框绑定属性
         private bool _isIVLEnabled;
         public bool IsIVLEnabled
         {
@@ -41,7 +41,7 @@ namespace CVWaferProber.ViewModels
             set { _isEQEEnabled = value; OnPropertyChanged(); }
         }
 
-        // 新增IVL复选框绑定属性
+        // IVL复选框绑定属性
         private bool _isVAMEnabled;
         public bool IsVAMEnabled
         {
