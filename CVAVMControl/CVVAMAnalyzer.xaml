@@ -226,6 +226,7 @@
             <RowDefinition Height="Auto" />
             <!--  第1行：打开文件按钮  -->
             <RowDefinition Height="1.15*" />
+            <RowDefinition Height="Auto" />
             <!--  第2行：伪彩图  -->
             <RowDefinition Height="*" />
             <!--  第3行：图表区  -->
@@ -276,11 +277,18 @@
                     Stretch="Uniform" />
             </Grid>
         </Border>
-
+        <!--  添加GridSplitter  -->
+        <GridSplitter
+            Grid.Row="2"
+            Height="2"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            Background="Transparent"
+            ShowsPreview="True" />
 
         <!--  第3行第1列：图表区（包含两个图表面板）  -->
         <Border
-            Grid.Row="2"
+            Grid.Row="3"
             Grid.Column="0"
             Grid.ColumnSpan="2"
             Margin="0,5,0,0"

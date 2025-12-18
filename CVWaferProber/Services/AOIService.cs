@@ -65,7 +65,7 @@ namespace CVWaferProber.Services
         public void AOIResultDisplay(DieViewModel dieViewModel)
         {
             CustomImageVM?.ClearImageResult();
-            LoadImageResult(dieViewModel.chipViewModel.ChipData, dieViewModel.SerialNumber);
+            LoadImageResult(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
         }
 
         private void AddResultImage(int id,string imgFile)
