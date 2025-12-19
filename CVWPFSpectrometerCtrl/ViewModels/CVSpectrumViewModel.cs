@@ -885,6 +885,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         // 存储当前测试的SerialNumber（用于自动导出）
         public string CurrentSerialNumber { get; set; }
 
+        /*****************自动导出**********************/
         private void AutoExportData()
         {
             try
@@ -2731,24 +2732,190 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 return ""; // 空数组返回空字符串
             return string.Join(",", array); // 用逗号拼接元素
         }
+        //public void LoadSpectrumData(string serialNumber)
+        //{
+        //    if (string.IsNullOrWhiteSpace(serialNumber))
+        //    {
+        //        ClearAllDisplays();
+        //        return;
+        //    }
+        //    var results = SpectrumResultService.LoadResultByBatchCode(DeviceCode, serialNumber);
+        //    if (results == null || results.Count == 0) return;
+
+        //    IL_viewModel.LoadData(results);
+        //    IV_viewModel.LoadData(serialNumber);
+        //    VL_viewModel.LoadData(results);
+        //    //
+        //    int n = 1;
+        //    foreach (var result in results)
+        //    {
+        //        if (string.IsNullOrWhiteSpace(result.FPLFileName)) continue;
+
+
+        //        float[] intensities = null;
+        //        try
+        //        {
+        //            // 1. 补充：读取文件内容（关键：定义fileContent）
+        //            string fileContent = File.ReadAllText(result.FPLFileName);
+
+        //            // 2. 按逗号分割字符串（处理文件中的逗号分隔数据）
+        //            string[] strArray = fileContent.Split(',');
+
+        //            // 3. 转换为float数组（解析失败的项默认设为0）
+        //            intensities = Array.ConvertAll(strArray, s =>
+        //                float.TryParse(s.Trim(), out float val) ? val : 0); // 增加Trim()，避免空格干扰
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            // 捕获文件读取/反序列化异常（避免单个文件错误导致整个循环中断）
+        //            logger.Error($"读取/解析文件 {result.FPLFileName} 失败: {ex.Message}", ex);
+        //            continue;
+        //        }
+        //        var measurement = new SpectrumMeasurement(n++)
+        //        {
+        //            Timestamp = result.CreateDate,
+        //            Meas_Id = result.BatchCode,
+        //            Voltage = (float)result.VResult,
+        //            Current = (float)result.IResult,
+        //            Luminance = (float)result.FPh / 1,
+
+        //            IP = Math.Round((decimal)(result.FIp / 65535 * 100), 2).ToString() + "%",
+
+        //            Blue = (float)result.FBR ,
+        //            CIE_x = (float)result.Fx,
+        //            CIE_y = (float)result.Fy,
+        //            CIE_u = (float)result.Fu,
+        //            CIE_v = (float)result.Fv,
+        //            CCT = (float)result.FCCT,
+        //            PeakWavelength = (float)result.FLd,
+        //            fPur= (float)result.FPur,
+        //            //fPuPercent = $"{Math.Round((decimal)(result.FPur * 100), 2)}%",
+        //            PeakIntensity = (float)result.FLp,
+        //            FHW= (float)result.FHW,
+        //            //Intensities = JsonConvert.DeserializeObject<float[]>(result.FPL),
+        //            Intensities = intensities,
+        //            Wavelengths = Wavelengths,
+        //            fPlambda= (float)result.FPlambda,
+        //            RowLineColor = ConvertToOxyColor(SpectralLineColor)
+        //        };
+        //        double sum1 = 0, sum2 = 0;
+        //        for (int i = 35; i <= 75; i++)
+        //            sum1 += measurement.Intensities[i * 10];
+        //        for (int i = 20; i <= 120; i++)
+        //            sum2 += measurement.Intensities[i * 10];
+        //        measurement.Blue = (float)Math.Round(sum1 / sum2 * 100, 2);
+        //        Measurements.Add(measurement);
+
+
+        //    }
+
+        //    if (Measurements.Any())
+        //    {
+        //        SelectedMeasurement = Measurements.First();
+        //        if (_spectralCtrl != null)
+        //        {
+        //            _spectralCtrl.SpectralData.SetData(Wavelengths, SelectedMeasurement.Intensities);
+        //            _spectralCtrl.InvalidateVisual();
+        //        }
+        //        // 新增：加载EQE数据
+        //        UpdateEQEChartFromSelectedMeasurement();
+        //    }
+        //    // 数据加载后，根据“显示所有”状态更新图表
+        //    UpdateChartByShowAllState();
+        //    // 新增：同步更新EQE图表
+        //    UpdateEQEChartByShowAllState();
+        //    // 子Tab数据加载完成后，重新初始化总览图Series
+        //    InitializeOverviewSeries();
+        //    // 触发自动导出
+        //    AutoExportData();
+        //}
+
         public void LoadSpectrumData(string serialNumber)
         {
             if (string.IsNullOrWhiteSpace(serialNumber))
             {
                 ClearAllDisplays();
+                logger.Warn("LoadSpectrumData: serialNumber为空，清空显示");
                 return;
             }
+
+            // 清空旧数据（关键：避免旧数据干扰）
+            Measurements.Clear();
+
             var results = SpectrumResultService.LoadResultByBatchCode(DeviceCode, serialNumber);
-            if (results == null || results.Count == 0) return;
+            if (results == null || results.Count == 0)
+            {
+                logger.Warn($"LoadSpectrumData: 未查询到serialNumber={serialNumber}的光谱数据");
+                return;
+            }
 
             IL_viewModel.LoadData(results);
             IV_viewModel.LoadData(serialNumber);
             VL_viewModel.LoadData(results);
-            //
+
             int n = 1;
             foreach (var result in results)
             {
-                 
+                logger.Debug($"处理结果项：BatchCode={result.BatchCode}, FPLFileName={result.FPLFileName}");
+
+                // 1. 校验文件路径
+                if (string.IsNullOrWhiteSpace(result.FPLFileName))
+                {
+                    logger.Warn($"跳过空文件路径：BatchCode={result.BatchCode}");
+                    continue;
+                }
+
+                // 2. 校验文件是否存在
+                if (!File.Exists(result.FPLFileName))
+                {
+                    logger.Error($"文件不存在：{result.FPLFileName}");
+                    continue;
+                }
+
+                float[] intensities = null;
+                try
+                {
+                    // 读取文件文本内容
+                    string fileContent = File.ReadAllText(result.FPLFileName);
+                    logger.Debug($"读取文件内容长度：{fileContent.Length} 字符");
+
+                    // 反序列化前先校验内容格式（避免空/无效JSON）
+                    if (string.IsNullOrWhiteSpace(fileContent) || !fileContent.StartsWith("[") || !fileContent.EndsWith("]"))
+                    {
+                        logger.Error($"文件内容不是有效的float数组JSON：{result.FPLFileName}");
+                        continue;
+                    }
+
+                    // 将文件内容反序列化为float数组
+                    intensities = JsonConvert.DeserializeObject<float[]>(fileContent);
+
+                    // 3. 校验反序列化结果
+                    if (intensities == null || intensities.Length == 0)
+                    {
+                        logger.Error($"反序列化后数组为空：{result.FPLFileName}");
+                        continue;
+                    }
+                    logger.Debug($"反序列化成功，数组长度：{intensities.Length}");
+
+                    // 4. 校验数组长度与Wavelengths匹配（关键：曲线渲染的核心前提）
+                    if (Wavelengths == null || Wavelengths.Length == 0)
+                    {
+                        logger.Error("Wavelengths数组为空，无法渲染光谱曲线");
+                        continue;
+                    }
+                    if (intensities.Length != Wavelengths.Length)
+                    {
+                        logger.Warn($"Intensities长度({intensities.Length})与Wavelengths长度({Wavelengths.Length})不匹配");
+                        // 可选：截断/补零适配，避免曲线不显示
+                        // Array.Resize(ref intensities, Wavelengths.Length);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.Error($"读取/解析文件 {result.FPLFileName} 失败: {ex.Message}", ex);
+                    continue;
+                }
+
                 var measurement = new SpectrumMeasurement(n++)
                 {
                     Timestamp = result.CreateDate,
@@ -2756,49 +2923,88 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     Voltage = (float)result.VResult,
                     Current = (float)result.IResult,
                     Luminance = (float)result.FPh / 1,
-                    // Luminance = (float)result.FPh,
                     IP = Math.Round((decimal)(result.FIp / 65535 * 100), 2).ToString() + "%",
-                    // IP = ,
-                    Blue = (float)result.FBR ,
-                    //Blue = (float)Math.Round(sum1 / sum2 * 100 , 2),
-                   
+                    Blue = (float)result.FBR,
                     CIE_x = (float)result.Fx,
                     CIE_y = (float)result.Fy,
                     CIE_u = (float)result.Fu,
                     CIE_v = (float)result.Fv,
                     CCT = (float)result.FCCT,
                     PeakWavelength = (float)result.FLd,
-                    fPur= (float)result.FPur,
-                    //fPuPercent = $"{Math.Round((decimal)(result.FPur * 100), 2)}%",
+                    fPur = (float)result.FPur,
                     PeakIntensity = (float)result.FLp,
-                    FHW= (float)result.FHW,
-                    Intensities = JsonConvert.DeserializeObject<float[]>(result.FPL),
+                    FHW = (float)result.FHW,
+                    Intensities = intensities, // 赋值反序列化后的数组
                     Wavelengths = Wavelengths,
-                    fPlambda= (float)result.FPlambda,
+                    fPlambda = (float)result.FPlambda,
                     RowLineColor = ConvertToOxyColor(SpectralLineColor)
                 };
-                double sum1 = 0, sum2 = 0;
-                for (int i = 35; i <= 75; i++)
-                    sum1 += measurement.Intensities[i * 10];
-                for (int i = 20; i <= 120; i++)
-                    sum2 += measurement.Intensities[i * 10];
-                measurement.Blue = (float)Math.Round(sum1 / sum2 * 100, 2);
+
+                // 5. 校验Intensities数组访问（避免索引越界）
+                try
+                {
+                    double sum1 = 0, sum2 = 0;
+                    // 先校验数组长度是否足够
+                    int maxIndex1 = 75 * 10;
+                    int maxIndex2 = 120 * 10;
+                    if (measurement.Intensities.Length <= maxIndex2)
+                    {
+                        logger.Warn($"Intensities数组长度({measurement.Intensities.Length})不足，无法计算Blue值（需要至少{maxIndex2 + 1}个元素）");
+                        // 给默认值，避免后续逻辑中断
+                        measurement.Blue = 0;
+                    }
+                    else
+                    {
+                        for (int i = 35; i <= 75; i++)
+                            sum1 += measurement.Intensities[i * 10];
+                        for (int i = 20; i <= 120; i++)
+                            sum2 += measurement.Intensities[i * 10];
+                        measurement.Blue = (float)Math.Round(sum1 / sum2 * 100, 2);
+                    }
+                }
+                catch (IndexOutOfRangeException ex)
+                {
+                    logger.Error($"计算Blue值时索引越界：{ex.Message}", ex);
+                    measurement.Blue = 0; // 给默认值
+                }
+
                 Measurements.Add(measurement);
-                
-                
+                logger.Debug($"添加Measurement成功，当前Measurements总数：{Measurements.Count}");
             }
-            
+
             if (Measurements.Any())
             {
                 SelectedMeasurement = Measurements.First();
+                logger.Debug($"选中第一个Measurement，Intensities长度：{SelectedMeasurement.Intensities?.Length ?? 0}");
+
                 if (_spectralCtrl != null)
                 {
-                    _spectralCtrl.SpectralData.SetData(Wavelengths, SelectedMeasurement.Intensities);
-                    _spectralCtrl.InvalidateVisual();
+                    // 6. 校验光谱控件和数据（核心渲染步骤）
+                    if (SelectedMeasurement.Intensities == null || SelectedMeasurement.Wavelengths == null)
+                    {
+                        logger.Error("SelectedMeasurement的Intensities/Wavelengths为空，无法设置光谱数据");
+                    }
+                    else
+                    {
+                        _spectralCtrl.SpectralData.SetData(SelectedMeasurement.Wavelengths, SelectedMeasurement.Intensities);
+                        _spectralCtrl.InvalidateVisual(); // 强制重绘控件
+                        logger.Debug("光谱控件数据已设置并强制重绘");
+                    }
                 }
+                else
+                {
+                    logger.Error("_spectralCtrl为空，无法渲染光谱曲线");
+                }
+
                 // 新增：加载EQE数据
                 UpdateEQEChartFromSelectedMeasurement();
             }
+            else
+            {
+                logger.Warn("Measurements为空，无光谱数据可显示");
+                ClearAllDisplays(); // 清空显示，避免旧曲线残留
+            }
+
             // 数据加载后，根据“显示所有”状态更新图表
             UpdateChartByShowAllState();
             // 新增：同步更新EQE图表
