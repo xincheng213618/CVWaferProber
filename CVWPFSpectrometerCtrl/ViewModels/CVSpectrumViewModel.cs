@@ -69,14 +69,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
         public float[] Wavelengths;
         //private double[] Intensities;
-        public ICommand ExportCommand { get;}
+        public ICommand ExportCommand { get; }
         private ILViewModel IL_viewModel;
         private IVViewModel IV_viewModel;
         private VLViewModel VL_viewModel;
         private IVLCameraViewModel IVLCamera_viewModel;
-        
+
         private SpectrumControl _spectralCtrl;
-       
+
         private WpfPlot _plotControl;
         // 新增：EQE曲线缓存
         private Dictionary<int, LineSeries> _eqeSeriesCache = new Dictionary<int, LineSeries>();
@@ -337,7 +337,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged();
                 // 勾选状态变化时，更新图表
                 UpdateChartByShowAllState();
-              
+
             }
         }
         private bool _isShowAllEQEData;
@@ -375,7 +375,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     {
                         UpdateSpectralGridData(value);
                     }
-                    
+
                 }
             }
         }
@@ -547,7 +547,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             get => _measurements;
             set => SetProperty(ref _measurements, value);
         }
-        
+
         public ObservableCollection<IVMeasurement> IVMeasurements
         {
             get => _IVMeasurements;
@@ -563,8 +563,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             get => _VLMeasurements;
             set => SetProperty(ref _VLMeasurements, value);
         }
-        
-        
+
+
 
         private void UpdateChartByShowAllState()
         {
@@ -619,16 +619,16 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OxyColor.FromAColor(115, OxyColors.SkyBlue)
             };
             int colorIndex = 0;
-            
+
             foreach (var measurement in Measurements)
             {
                 // 用测量No作为缓存Key（唯一标识）
                 int measNo = measurement.No;
                 // 显示「测量No + 时间戳」
-               // string seriesTitle = $"No:{measNo} | {measurement.Timestamp:yyyy-MM-dd HH:mm}";
+                // string seriesTitle = $"No:{measNo} | {measurement.Timestamp:yyyy-MM-dd HH:mm}";
                 // 判断是否为当前选中项
                 bool isSelected = SelectedMeasurement != null && measNo == SelectedMeasurement.No;
-               
+
                 var lineSeries = new LineSeries
                 {
                     Title = $"{Measurement1} {SelectedMeasurement.Meas_Id}",
@@ -638,10 +638,10 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     StrokeThickness = isSelected ? 2.0 : 1.5,
                     // 选中：显示圆形标记点；未选中：无标记点
                     //MarkerType = isSelected ? MarkerType.Circle : MarkerType.None,
-                   // MarkerSize = 3,
+                    // MarkerSize = 3,
                     //MarkerFill = OxyColors.Red,
-                   // MarkerStroke = OxyColors.White, // 标记点白色边框，更醒目
-                   // MarkerStrokeThickness = 0.5,
+                    // MarkerStroke = OxyColors.White, // 标记点白色边框，更醒目
+                    // MarkerStrokeThickness = 0.5,
                     IsVisible = true,
                     //TrackerFormatString = "波长: {X:.00}nm | 光谱: {Y:0.00}" // 鼠标悬浮提示
                 };
@@ -677,7 +677,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             //AutoAdjustAxisRange();
             PlotModel.InvalidatePlot(true); // 刷新图表
         }
-       
+
         // 在CVSpectrumViewModel类中添加
         public void RefreshAllPlots()
         {
@@ -689,7 +689,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             OverviewILPlotModel?.InvalidatePlot(true);
             OverviewVLPlotModel?.InvalidatePlot(true);
             // 显式触发属性变更，确保UI感知到PlotModel的更新
-            OnPropertyChanged( nameof(PlotModel));
+            OnPropertyChanged(nameof(PlotModel));
             OnPropertyChanged(nameof(OverviewSpectralPlotModel));
             // 刷新ScottPlot控件
             PlotControl?.Refresh();
@@ -764,15 +764,15 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 {
                     SelectedTab = (TabType)value;
                 }
-               
+
             }
         }
         #endregion Tab
         // 默认轴范围
         private PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = 350, DefaultMax = 800, DefaultMaxRange = 500 };
         private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 1.0f, DefaultMaxRange = 1.1f };
-
-        public string DeviceCode { get;set; }
+        public ICommand EQEExportCommand { get; }
+        public string DeviceCode { get; set; }
 
         private SpectraDataViewModel CurrentSpectrum;
         public ScottPlot.IColormap VisibleSpectrumColormap { get; }
@@ -796,7 +796,30 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             InitializeEQEPlotModel();
             InitializeIVLCameraModel();
             BtnResetStatus = new RelayCommand(IVResetStatus);
-             DeviceCode = "DEV.Spectrum.Default";
+            #region 导出EQE CSV
+            EQEExportCommand = new RelayCommand(() =>
+            {
+                // 弹出保存文件对话框，获取fileName
+                var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Filter = "CSV Files|*.csv",
+                    Title = "Save EQE Data to CSV",
+                    FileName = $"EQE_Data_{DateTime.Now:yyyyMMdd_HHmmss}.csv"
+                };
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    // 调用ExportEQEToCsv，参数从ViewModel的属性中获取
+                    ExportEQEToCsv(
+                        saveFileDialog.FileName,  // fileName
+                        Measurements,             // ObservableCollection<SpectrumMeasurement>
+                        Wavelengths               // float[]? wavelengths
+                    );
+                }
+            });
+            #endregion
+
+            DeviceCode = "DEV.Spectrum.Default";
             #region 输出CSV文件
             ExportCommand = new RelayCommand((s) =>
             {
@@ -867,11 +890,13 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             InitializeSampleData();
 
             InitializePlot();
-            
+
             // 初始化总览图（关键步骤）
             InitializeOverviewPlotModels();
-            
+
         }
+
+
         #region 自动导出CSV
         // CVSpectrumViewModel类内新增
         private static readonly ILog logger = LogManager.GetLogger(typeof(CVSpectrumViewModel));
@@ -960,7 +985,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     exportedFiles.Add(vlFile);
                     logger.Info($"已导出VL数据：{vlPath}");
                 }
-              
+
                 // 4. 更新Summary.csv（汇总记录，追加模式）
                 string summaryPath = Path.Combine(basePath1, "Summary.csv");
                 bool isNewSummary = !File.Exists(summaryPath);
@@ -1033,32 +1058,32 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         MinorGridlineStyle = linearAxis.MinorGridlineStyle,
                         IsZoomEnabled = false, // 总览图禁用手动缩放
                         IsPanEnabled = false
-                       
+
                     };
                     // ========== 总览光谱图强制锁定X轴650~800nm ==========
 
-            if (title == (string)System.Windows.Application.Current.FindResource("Sp.Spectral") || title == "光谱")
-            {
-                if (clonedAxis.Position == AxisPosition.Bottom) // X轴（波长）
-                {
-                    clonedAxis.Minimum = _overviewSpectralXMin; // 固定650
-                    clonedAxis.Maximum = _overviewSpectralXMax; // 固定800
-                    clonedAxis.AbsoluteMinimum = _overviewSpectralXMin; // 禁止自动缩小
-                    clonedAxis.AbsoluteMaximum = _overviewSpectralXMax; // 禁止自动扩大
-                }
-                else // Y轴（强度）保留自动适配
-                {
-                    clonedAxis.Minimum = double.NaN;
-                    clonedAxis.Maximum = double.NaN;
-                }
-            }
-            else // 其他总览图（IV/IL/VL）保留原有逻辑
-            {
-                clonedAxis.Minimum = double.NaN;
-                clonedAxis.Maximum = double.NaN;
-            }
+                    if (title == (string)System.Windows.Application.Current.FindResource("Sp.Spectral") || title == "光谱")
+                    {
+                        if (clonedAxis.Position == AxisPosition.Bottom) // X轴（波长）
+                        {
+                            clonedAxis.Minimum = _overviewSpectralXMin; // 固定650
+                            clonedAxis.Maximum = _overviewSpectralXMax; // 固定800
+                            clonedAxis.AbsoluteMinimum = _overviewSpectralXMin; // 禁止自动缩小
+                            clonedAxis.AbsoluteMaximum = _overviewSpectralXMax; // 禁止自动扩大
+                        }
+                        else // Y轴（强度）保留自动适配
+                        {
+                            clonedAxis.Minimum = double.NaN;
+                            clonedAxis.Maximum = double.NaN;
+                        }
+                    }
+                    else // 其他总览图（IV/IL/VL）保留原有逻辑
+                    {
+                        clonedAxis.Minimum = double.NaN;
+                        clonedAxis.Maximum = double.NaN;
+                    }
 
-            targetModel.Axes.Add(clonedAxis);
+                    targetModel.Axes.Add(clonedAxis);
                 }
             }
             return targetModel;
@@ -1107,7 +1132,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             OverviewVLPlotModel.Series.Clear();
 
             // 2. 绑定光谱数据
-            
+
             if (Measurements.Any())
             {
                 // 预设多组不透明颜色（无Alpha通道，颜色鲜明且不重复）
@@ -1399,7 +1424,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 }
                 EQEPlotModel.InvalidatePlot(true);
 
-                
+
             }
         }
 
@@ -1564,8 +1589,110 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             // ========== EQE测量完成，标记并触发导出 ==========
             IsEQEMeasured = true;
         }
-
+        #region EQE数据导出方法
         // 新增：EQE数据导出方法
+        //private void ExportEQEToCsv(string fileName, ObservableCollection<SpectrumMeasurement> measurements, float[]? wavelengths)
+        //{
+        //    if (measurements == null || !measurements.Any() || wavelengths == null || wavelengths.Length == 0)
+        //    {
+        //        System.Windows.MessageBox.Show("无有效EQE数据可导出！", "提示");
+        //        return;
+        //    }
+
+        //    const int Step = 10;
+        //    const int MinWave = 380;
+        //    const int MaxWave = 780;
+
+        //    try
+        //    {
+        //        // EQE表头
+        //        var fixedHeaders = new List<string>
+        //        {
+        //            "Time","Meas_Id", "Voltage/V", "Current/mA", "Luminous Flux(lm)", "EQE(%)","Efficacy(lm/watt)","IP","BlueLight","cx","cy","u'","v'","CCT(K)","Dominant Wavelength(nm)","Saturation(%)","Peak Wavelength(nm)","FWHM"
+        //        };
+
+        //        // 波长表头
+        //        var waveHeaders = new List<string>();
+        //        var selectedIndexes = new List<int>();
+
+        //        for (int i = 0; i <= (MaxWave - MinWave) * 10; i += Step)
+        //        {
+        //            double targetWave = i / 10.0 + MinWave;
+        //            int originalIndex = Array.FindIndex(wavelengths, w => Math.Abs(w - targetWave) < 0.001);
+
+        //            if (originalIndex != -1)
+        //            {
+        //                waveHeaders.Add($"{targetWave:F0}");
+        //                selectedIndexes.Add(originalIndex);
+        //            }
+        //        }
+
+        //        if (waveHeaders.Count == 0)
+        //        {
+        //            System.Windows.MessageBox.Show("未找到≤780nm的有效波长点！", "错误");
+        //            return;
+        //        }
+
+        //        var allHeaders = fixedHeaders.Concat(waveHeaders);
+        //        var csv = new System.Text.StringBuilder();
+        //        csv.AppendLine(string.Join(",", allHeaders));
+
+        //        for (int rowIndex = 0; rowIndex < measurements.Count; rowIndex++)
+        //        {
+        //            var item = measurements[rowIndex];
+        //            int measId = rowIndex + 1;
+
+        //            // 计算EQE最大值和平均值
+        //            List<double> eqeValues = new List<double>();
+        //            //for (int i = 0; i < item.Intensities.Length; i++)
+        //            //{
+        //            //    eqeValues.Add(CalculateEQEValue(item.Wavelengths[i], item.Intensities[i]));
+        //            //}
+        //            double eqeMax = eqeValues.Max();
+        //            double eqeAvg = eqeValues.Average();
+
+        //            var fixedValues = new List<string>
+        //            {
+        //                item.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+        //                measId.ToString(),
+        //                item.Voltage.ToString("F6"),
+        //                item.Current.ToString(),
+        //                eqeMax.ToString("F2"),
+        //                eqeAvg.ToString("F2")
+        //            };
+
+        //            // EQE值
+        //            var waveValues = new List<string>();
+        //            if (item.Intensities != null && item.Intensities.Length == wavelengths.Length)
+        //            {
+        //                foreach (int idx in selectedIndexes)
+        //                {
+        //                    //double eqeValue = CalculateEQEValue(item.Wavelengths[idx], item.Intensities[idx]);
+        //                    //waveValues.Add(EscapeCsvValue(eqeValue.ToString("F4")));
+        //                }
+        //            }
+        //            else
+        //            {
+        //                waveValues = Enumerable.Repeat("0.0000", waveHeaders.Count)
+        //                                      .Select(v => EscapeCsvValue(v))
+        //                                      .ToList();
+        //            }
+
+        //            var allValues = fixedValues.Concat(waveValues);
+        //            csv.AppendLine(string.Join(",", allValues));
+        //        }
+
+        //        File.WriteAllText(fileName, csv.ToString(), Encoding.UTF8);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        System.Windows.MessageBox.Show($"EQE导出失败：{ex.Message}", "错误");
+        //    }
+        //}
+
+
+
+        // ---------- 辅助方法：计算单条测量的整体EQE（需替换为真实业务逻辑） ----------
         private void ExportEQEToCsv(string fileName, ObservableCollection<SpectrumMeasurement> measurements, float[]? wavelengths)
         {
             if (measurements == null || !measurements.Any() || wavelengths == null || wavelengths.Length == 0)
@@ -1580,15 +1707,32 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             try
             {
-                // EQE表头
+                // ========== 1. 构造表头（与需求一致） ==========
                 var fixedHeaders = new List<string>
                 {
-                    "Time","Meas_Id", "Voltage/V", "Current/mA", "EQE_Max(%)", "EQE_Avg(%)"
+                    "Time",
+                    "Meas_Id",
+                    "Voltage/V",
+                    "Current/mA",
+                    "Luminous Flux(lm)",
+                    "EQE(%)",
+                    "Efficacy(lm/watt)",
+                    "IP",
+                    "BlueLight",
+                    "cx",
+                    "cy",
+                    "u'",
+                    "v'",
+                    "CCT(K)",
+                    "Dominant Wavelength(nm)",
+                    "Saturation(%)",
+                    "Peak Wavelength(nm)",
+                    "FWHM"
                 };
 
-                // 波长表头
+                // ========== 2. 构造波长表头（380~780nm，步长10） ==========
                 var waveHeaders = new List<string>();
-                var selectedIndexes = new List<int>();
+                var selectedIndexes = new List<int>(); // 存储目标波长对应的原数组索引
 
                 for (int i = 0; i <= (MaxWave - MinWave) * 10; i += Step)
                 {
@@ -1597,7 +1741,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
                     if (originalIndex != -1)
                     {
-                        waveHeaders.Add($"{targetWave:F0}");
+                        waveHeaders.Add($"{targetWave:F0}"); // 波长格式：380、390...
                         selectedIndexes.Add(originalIndex);
                     }
                 }
@@ -1608,65 +1752,113 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     return;
                 }
 
+                // 合并固定表头 + 波长表头
                 var allHeaders = fixedHeaders.Concat(waveHeaders);
-                var csv = new System.Text.StringBuilder();
+                var csv = new StringBuilder();
                 csv.AppendLine(string.Join(",", allHeaders));
 
+
+                // ========== 3. 遍历数据，填充每行内容 ==========
                 for (int rowIndex = 0; rowIndex < measurements.Count; rowIndex++)
                 {
                     var item = measurements[rowIndex];
-                    int measId = rowIndex + 1;
+                    int measId = rowIndex + 1; // Meas_Id从1开始递增
 
-                    // 计算EQE最大值和平均值
-                    List<double> eqeValues = new List<double>();
-                    //for (int i = 0; i < item.Intensities.Length; i++)
-                    //{
-                    //    eqeValues.Add(CalculateEQEValue(item.Wavelengths[i], item.Intensities[i]));
-                    //}
-                    double eqeMax = eqeValues.Max();
-                    double eqeAvg = eqeValues.Average();
 
+                    // ---------- 计算EQE相关指标 ----------
+                    // （这里需要你根据实际业务逻辑实现，以下是示例逻辑，需替换为真实计算）
+                    // 1. 光通量（示例：假设从item中读取或计算）
+                    double luminousFlux = item.Luminance * 0.01; // 示例逻辑，需替换
+                                                                 // 2. EQE（示例：假设根据强度和波长计算）
+                    double eqeValue = CalculateEQEValue(item); // 需实现真实的EQE计算方法
+                                                               // 3. 光效（光通量 / 功率，功率=电压*电流）
+                    double power = (item.Voltage * item.Current) / 1000; // 电压(V)*电流(mA) → 功率(W)
+                    double efficacy = power > 0 ? luminousFlux / power : 0;
+
+
+                    // ---------- 填充固定字段值 ----------
                     var fixedValues = new List<string>
                     {
-                        item.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                        measId.ToString(),
-                        item.Voltage.ToString("F6"),
-                        item.Current.ToString(),
-                        eqeMax.ToString("F2"),
-                        eqeAvg.ToString("F2")
+                        item.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"), // Time
+                        measId.ToString(), // Meas_Id
+                        item.Voltage.ToString("F6"), // Voltage/V
+                        item.Current.ToString("F3"), // Current/mA
+                        luminousFlux.ToString("F4"), // Luminous Flux(lm)
+                        eqeValue.ToString("F2"), // EQE(%)
+                        efficacy.ToString("F2"), // Efficacy(lm/watt)
+                        EscapeCsvValue(item.IP ?? ""), // IP
+                        item.Blue.ToString("F2"), // BlueLight
+                        item.CIE_x.ToString("F4"), // cx
+                        item.CIE_y.ToString("F4"), // cy
+                        item.CIE_u.ToString("F4"), // u'
+                        item.CIE_v.ToString("F4"), // v'
+                        item.CCT.ToString("F0"), // CCT(K)
+                        item.PeakWavelength.ToString("F1"), // Dominant Wavelength(nm)
+                        (item.fPur * 100).ToString("F2"), // Saturation(%)（转换为百分比）
+                        item.PeakWavelength.ToString("F1"), // Peak Wavelength(nm)
+                        item.FHW.ToString("F2") // FWHM
                     };
 
-                    // EQE值
+
+                    // ---------- 填充波长对应的EQE值 ----------
                     var waveValues = new List<string>();
                     if (item.Intensities != null && item.Intensities.Length == wavelengths.Length)
                     {
                         foreach (int idx in selectedIndexes)
                         {
-                            //double eqeValue = CalculateEQEValue(item.Wavelengths[idx], item.Intensities[idx]);
-                            //waveValues.Add(EscapeCsvValue(eqeValue.ToString("F4")));
+                            // 计算当前波长对应的EQE值（示例逻辑，需替换为真实计算）
+                            double waveEQE = CalculateWaveEQE(item.Wavelengths[idx], item.Intensities[idx]);
+                            waveValues.Add(waveEQE.ToString("F4"));
                         }
                     }
                     else
                     {
+                        // 数据不匹配时填充默认值
                         waveValues = Enumerable.Repeat("0.0000", waveHeaders.Count)
                                               .Select(v => EscapeCsvValue(v))
                                               .ToList();
                     }
 
+
+                    // ---------- 拼接当前行并写入CSV ----------
                     var allValues = fixedValues.Concat(waveValues);
                     csv.AppendLine(string.Join(",", allValues));
                 }
 
+
+                // ========== 4. 写入文件 ==========
                 File.WriteAllText(fileName, csv.ToString(), Encoding.UTF8);
+                System.Windows.MessageBox.Show($"EQE数据已成功导出至：\n{fileName}", "导出成功");
             }
             catch (Exception ex)
             {
                 System.Windows.MessageBox.Show($"EQE导出失败：{ex.Message}", "错误");
+                logger.Error("EQE导出失败", ex);
             }
         }
 
+        private double CalculateEQEValue(SpectrumMeasurement measurement)
+        {
+            // 示例：这里需要你根据实际的EQE公式实现（比如结合光谱强度、波长、电流等）
+            // 以下是占位逻辑，需替换为真实计算
+            double avgIntensity = measurement.Intensities.Average();
+            return Math.Min(100, avgIntensity * 10); // 示例：限制EQE不超过100%
+        }
+
+
+        // ---------- 辅助方法：计算单个波长对应的EQE值（需替换为真实业务逻辑） ----------
+        private double CalculateWaveEQE(float wavelength, float intensity)
+        {
+            // 示例：这里需要你根据波长和强度计算对应EQE
+            // 以下是占位逻辑，需替换为真实计算
+            double wavelengthFactor = wavelength / 1000;
+            return intensity * wavelengthFactor * 100;
+        }
         #endregion
-        
+
+
+        #endregion
+
         // 辅助方法：将光谱Measurements转换为图表需要的DataPoint（波长-强度）
         private IEnumerable<DataPoint> GetSpectralDataPoints()
         {
@@ -1694,7 +1886,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
                 var csv = new StringBuilder();
                 var properties = typeof(T).GetProperties();
-               
+
                 var headerMap = new Dictionary<string, string>();
 
                 //IV
@@ -1763,7 +1955,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 }
 
                 File.WriteAllText(filePath, csv.ToString(), Encoding.UTF8);
-               // MessageBox.Show($"成功导出 {data.Count()} 行数据");
+                // MessageBox.Show($"成功导出 {data.Count()} 行数据");
             }
             catch (Exception ex)
             {
@@ -1787,12 +1979,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             const int MaxWave = 780;
             //const int OriginalTotalPoints = (MaxWave - MinWave) * 10 + 1; // 4001个原始点（380.0~780.0nm，步长0.1）
 
-            //// 校验wavelengths数组长度是否符合目标代码要求（避免数据来源不一致）
-            //if (wavelengths.Length != OriginalTotalPoints)
-            //{
-            //    MessageBox.Show($"wavelengths数组长度需为{OriginalTotalPoints}（380.0~780.0nm，步长0.1）！", "错误");
-            //    return;
-            //}
+
 
             try
             {
@@ -1896,11 +2083,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 }
 
                 File.WriteAllText(fileName, csv.ToString(), Encoding.UTF8);
-               // MessageBox.Show($"CSV导出成功！\n路径：{fileName}", "成功");
-            
+                // MessageBox.Show($"CSV导出成功！\n路径：{fileName}", "成功");
+
                 // 6. 写入文件
                 //File.WriteAllText(fileName, csv.ToString(), Encoding.UTF8);
-               // MessageBox.Show($"CSV导出成功！\n路径：{fileName}\n筛选后波长点：{waveHeaders.Count}（与目标代码一致）", "成功");
+                // MessageBox.Show($"CSV导出成功！\n路径：{fileName}\n筛选后波长点：{waveHeaders.Count}（与目标代码一致）", "成功");
             }
             catch (Exception ex)
             {
@@ -1919,7 +2106,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
             return value;
         }
-        private string FormatValue(object  value)
+        private string FormatValue(object value)
         {
             if (value == null) return "";
 
@@ -1966,7 +2153,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             {
                 Wavelengths[i] = 380 + i / 10.0;
             }
-          double[]  Intensities = GenerateSampleSpectrum(Wavelengths);
+            double[] Intensities = GenerateSampleSpectrum(Wavelengths);
             CurrentSpectrum = new SpectraDataViewModel(Wavelengths, Intensities);
         }
         private Random _random = new Random();
@@ -2400,21 +2587,21 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             // 刷新显示
             PlotControl.Refresh();
         }
-        
+
         private static readonly ILog log = LogManager.GetLogger(nameof(CVSpectrumAnalyzer));
-       
+
         private void InitializeIVLCameraModel()
         {
             IVLCameraViewModel viewModel = new IVLCameraViewModel();
             IVLCamera_viewModel = viewModel;
             IVLCameraMeasurements = viewModel.Measurements;
-           
+
             IVLCamera_viewModel.PropertyChanged += OnIVLCameraPropertyChanged;
         }
-     
-        
 
-        
+
+
+
         private void OnIVLCameraPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(IVLCameraViewModel.ImageSrc))
@@ -2422,8 +2609,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged(nameof(IVLCameraImageSrc));
             }
         }
-        
-       
+
+
         //电压/电流
         private void InitializeIVPlotModel()
         {
@@ -2485,7 +2672,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             Wavelengths = new float[10000];
             for (int i = 0; i < 10000; i++)
             {
-                Wavelengths[i] = 380 + i/10.0f; 
+                Wavelengths[i] = 380 + i / 10.0f;
             }
         }
         private void ResetPlotView()
@@ -2617,7 +2804,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
             Clear();
             if (string.IsNullOrEmpty(serialNumber)) return;
-            if (isIVLCameraEnabled) LoadCameraData(serialNumber); 
+            if (isIVLCameraEnabled) LoadCameraData(serialNumber);
             else LoadSpectrumData(serialNumber);
         }
 
@@ -3057,7 +3244,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 // 选中样式
                 selectedSeries.Color = SelectedMeasurement.RowLineColor;
                 selectedSeries.StrokeThickness = 2.0;
-              
+
                 selectedSeries.Title = $"No:{SelectedMeasurement.No} | {SelectedMeasurement.Timestamp:yyyy-MM-dd HH:mm}（选中）";
 
                 // 移到顶层
@@ -3080,45 +3267,45 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
 
         // 自动调整轴范围（适配所有数据，避免数据贴边）
-     /*/   private void AutoAdjustAxisRange()
-        {
-            if (!PlotModel.Series.Any())
-                return;
+        /*/   private void AutoAdjustAxisRange()
+           {
+               if (!PlotModel.Series.Any())
+                   return;
 
-            // 收集所有有效数据点的X/Y值
-            var allX = new List<double>();
-            var allY = new List<double>();
+               // 收集所有有效数据点的X/Y值
+               var allX = new List<double>();
+               var allY = new List<double>();
 
-            foreach (var series in PlotModel.Series.OfType<LineSeries>())
-            {
-                allX.AddRange(series.Points.Select(p => p.X));
-                allY.AddRange(series.Points.Select(p => p.Y));
-            }
+               foreach (var series in PlotModel.Series.OfType<LineSeries>())
+               {
+                   allX.AddRange(series.Points.Select(p => p.X));
+                   allY.AddRange(series.Points.Select(p => p.Y));
+               }
 
-            if (!allX.Any() || !allY.Any())
-                return;
+               if (!allX.Any() || !allY.Any())
+                   return;
 
-            // 获取X轴（波长）和Y轴（强度）
-            var xAxis = PlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Bottom) as LinearAxis;
-            var yAxis = PlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Left) as LinearAxis;
+               // 获取X轴（波长）和Y轴（强度）
+               var xAxis = PlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Bottom) as LinearAxis;
+               var yAxis = PlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Left) as LinearAxis;
 
-            if (xAxis != null)
-            {
-                double xMin = allX.Min();
-                double xMax = allX.Max();
-                double xMargin = (xMax - xMin) * 0.05; // X轴5%边距
-                xAxis.Minimum = xMin - xMargin;
-                xAxis.Maximum = xMax + xMargin;
-            }
+               if (xAxis != null)
+               {
+                   double xMin = allX.Min();
+                   double xMax = allX.Max();
+                   double xMargin = (xMax - xMin) * 0.05; // X轴5%边距
+                   xAxis.Minimum = xMin - xMargin;
+                   xAxis.Maximum = xMax + xMargin;
+               }
 
-            if (yAxis != null)
-            {
-                double yMin = Math.Max(0, allY.Min() * 0.9); // Y轴最低为0，10%边距
-                double yMax = allY.Max() * 1.1; // Y轴10%边距
-                yAxis.Minimum = yMin;
-                yAxis.Maximum = yMax;
-            }
-        }*/
+               if (yAxis != null)
+               {
+                   double yMin = Math.Max(0, allY.Min() * 0.9); // Y轴最低为0，10%边距
+                   double yMax = allY.Max() * 1.1; // Y轴10%边距
+                   yAxis.Minimum = yMin;
+                   yAxis.Maximum = yMax;
+               }
+           }*/
         #endregion
         public void ClearResult()
         {
@@ -3151,7 +3338,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 else
                 {
                     SpectralGridItems?.Clear();
-                    
+
                 }
             }
         }

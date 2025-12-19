@@ -105,14 +105,14 @@
                     x:Name="MenuLanguageChinese"
                     Click="LanguageMenuItem_Click"
                     Header="{DynamicResource Menu.Language.Chinese}"
-                    InputGestureText="Alt+C"
+                    InputGestureText="Alt+Shift+C"
                     Tag="Chinese" />
                 <!--  英文子菜单  -->
                 <MenuItem
                     x:Name="MenuLanguageEnglish"
                     Click="LanguageMenuItem_Click"
                     Header="{DynamicResource Menu.Language.English}"
-                    InputGestureText="Alt+E"
+                    InputGestureText="Alt+Shift+E"
                     Tag="English" />
             </MenuItem>
             <!--  帮助菜单  -->
@@ -136,9 +136,7 @@
                 InputGestureText="Alt+F4" />
         </Menu>
 
-        <avalon:DockingManager
-            x:Name="DockingManager"
-            Grid.Row="1">
+        <avalon:DockingManager x:Name="DockingManager" Grid.Row="1">
             <avalon:DockingManager.Theme>
                 <avalon:GenericTheme />
             </avalon:DockingManager.Theme>

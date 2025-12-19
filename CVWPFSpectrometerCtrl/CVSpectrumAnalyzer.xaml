@@ -917,7 +917,7 @@
                         x:Name="btnExport1"
                         Width="80"
                         Margin="5"
-                        Command="{Binding ExportCommand}"
+                        Command="{Binding EQEExportCommand}"
                         CommandParameter="{Binding SelectedTabIndex}"
                         Content="{DynamicResource Export CSV}"
                         IsEnabled="True" />
