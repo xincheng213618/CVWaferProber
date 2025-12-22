@@ -44,10 +44,19 @@ namespace CVAVMControl
                                         // CVVAMAnalyzer.cs 中新增定时器
         private DispatcherTimer? _resourceCleanTimer;
         private static readonly ILog log = LogManager.GetLogger(typeof(CVVAMAnalyzer));
+        // 自定义悬浮面板（用于显示格式信息）
+        private Border? _hoverInfoPanel;
+        private TextBlock? _hoverInfoText;
+        // 移除动态位置相关变量，新增固定面板配置
+        private bool _isHovering = false; // 仅标记是否悬浮，不跟踪坐标
+        private readonly object _lockObj = new object(); // 线程锁，避免并发更新
+
         public CVVAMAnalyzer()
         {
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             InitializeComponent();
+            // 初始化悬浮信息面板（样式匹配目标图）
+            InitializeHoverInfoPanel();
             // 初始化定时器：5分钟未使用VAM则释放资源
             _resourceCleanTimer = new DispatcherTimer
             {
@@ -195,7 +204,182 @@ namespace CVAVMControl
                 MessageBox.Show($"处理文件时出错: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+       
+        #region 角度备注绘制（通用方法）
+        /// <summary>
+        /// 绘制角度/半径备注（通用方法，支持不同位置和样式）
+        /// </summary>
+        /// <param name="mat">绘制画布</param>
+        /// <param name="pos">标注位置</param>
+        /// <param name="text">标注文本</param>
+        /// <param name="textColor">文字颜色（默认白色）</param>
+        /// <param name="bgColor">背景颜色（默认黑色半透明）</param>
+        /// <param name="fontScale">字体缩放（默认0.8）</param>
+        /// <param name="thickness">文字粗细（默认2）</param>
+        private void DrawAngleLabel(Mat mat, OpenCvSharp.Point pos, string text, Scalar? textColor = null, Scalar? bgColor = null, double fontScale = 0.8, int thickness = 10)
+        {
+            Scalar txtColor = textColor ?? new Scalar(0, 0, 0); // 默认白色
+            //Scalar backgroundColor = bgColor ?? new Scalar(0, 0, 0, 128); // 黑色半透明
 
+            // 1. 计算文本尺寸，绘制背景框（避免文字与图像重叠）
+            int baseline = 0;
+            OpenCvSharp.Size textSize = Cv2.GetTextSize(text, HersheyFonts.HersheySimplex, fontScale, thickness, out baseline);
+            OpenCvSharp.Rect bgRect = new OpenCvSharp.Rect(
+                pos.X - textSize.Width / 2 - 4,
+                pos.Y - textSize.Height / 2 - 4,
+                textSize.Width + 8,
+                textSize.Height + 8
+            );
+
+            // 确保背景框不超出图像边界
+            bgRect.X = Math.Max(0, Math.Min(mat.Width - bgRect.Width, bgRect.X));
+            bgRect.Y = Math.Max(0, Math.Min(mat.Height - bgRect.Height, bgRect.Y));
+
+            // 绘制背景框（半透明）
+           // Cv2.Rectangle(mat, bgRect, backgroundColor, -1);
+            // 绘制背景框边框（增加辨识度）
+            Cv2.Rectangle(mat, bgRect, txtColor, 1);
+
+            // 2. 绘制文字（带描边，增强可读性）
+            OpenCvSharp.Point textPos = new OpenCvSharp.Point(
+                bgRect.X + 4,
+                bgRect.Y + textSize.Height + 2
+            );
+            // 先绘制黑色描边（文字更清晰）
+            Cv2.PutText(mat, text, textPos, HersheyFonts.HersheySimplex, fontScale, new Scalar(0, 0, 0), thickness + 2);
+            // 再绘制主文字
+            Cv2.PutText(mat, text, textPos, HersheyFonts.HersheySimplex, fontScale, txtColor, thickness);
+        }
+
+
+        #endregion
+        #region 通用角度添加/删除逻辑（支持不同ComboBox）
+        /// <summary>
+        /// 通用添加角度方法（支持任意ComboBox）
+        /// </summary>
+        /// <param name="targetComboBox">目标下拉框（如cbDisplayAngle/cbDisplayRadius）</param>
+        /// <param name="inputAngleText">输入的角度文本</param>
+        private void AddAngleToComboBox(ComboBox targetComboBox, string inputAngleText)
+        {
+            // 1. 输入校验
+            if (!int.TryParse(inputAngleText.Trim(), out int newAngle))
+            {
+                MessageBox.Show("请输入有效的整数角度", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            if (newAngle < 0 || newAngle > 360)
+            {
+                MessageBox.Show("角度范围应为0-360°", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // 2. 检查是否已存在
+            if (IsAngleExistsInComboBox(targetComboBox, newAngle))
+            {
+                MessageBox.Show("角度已存在", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // 3. 添加到目标ComboBox
+            ComboBoxItem newItem = new ComboBoxItem
+            {
+                Content = $"{newAngle}°",
+                Tag = newAngle.ToString()
+            };
+            targetComboBox.Items.Add(newItem);
+
+            // 4. 自动选中新项
+            targetComboBox.SelectedItem = newItem;
+
+            // 5. 刷新显示
+            if (IsMatSafe(YMat)) UpdateDisplay();
+        }
+
+        /// <summary>
+        /// 通用删除角度方法（支持任意ComboBox）
+        /// </summary>
+        /// <param name="targetComboBox">目标下拉框（如cbDisplayAngle/cbDisplayRadius）</param>
+        /// <param name="inputAngleText">输入的角度文本</param>
+        private void DeleteAngleFromComboBox(ComboBox targetComboBox, string inputAngleText)
+        {
+            // 1. 输入校验
+            if (!int.TryParse(inputAngleText.Trim(), out int delAngle))
+            {
+                MessageBox.Show("请输入有效的整数角度", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // 2. 查找目标项
+            ComboBoxItem targetItem = null;
+            foreach (ComboBoxItem item in targetComboBox.Items)
+            {
+                if (int.TryParse(item.Tag?.ToString(), out int existingAngle) && existingAngle == delAngle)
+                {
+                    targetItem = item;
+                    break;
+                }
+            }
+
+            // 3. 处理删除
+            if (targetItem == null)
+            {
+                MessageBox.Show("找不到相应数据", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            targetComboBox.Items.Remove(targetItem);
+            // 自动选中第一个项（可选）
+            if (targetComboBox.SelectedItem == targetItem && targetComboBox.Items.Count > 0)
+            {
+                targetComboBox.SelectedIndex = 0;
+            }
+
+            // 4. 刷新显示
+            if (IsMatSafe(YMat)) UpdateDisplay();
+        }
+
+        /// <summary>
+        /// 检查目标ComboBox中是否存在指定角度
+        /// </summary>
+        private bool IsAngleExistsInComboBox(ComboBox targetComboBox, int angle)
+        {
+            foreach (ComboBoxItem item in targetComboBox.Items)
+            {
+                if (int.TryParse(item.Tag?.ToString(), out int existingAngle) && existingAngle == angle)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // 直径线面板 - 添加角度
+        private void BtnAddAngle_Diameter_Click(object sender, RoutedEventArgs e)
+        {
+            AddAngleToComboBox(cbDisplayAngle, txtAddAngle.Text);
+            txtAddAngle.Text = string.Empty;
+        }
+
+        // 直径线面板 - 删除角度
+        private void BtnDeleteAngle_Diameter_Click(object sender, RoutedEventArgs e)
+        {
+            DeleteAngleFromComboBox(cbDisplayAngle, txtDeleteAngle.Text);
+            txtDeleteAngle.Text = string.Empty;
+        }
+        // R圆面板 - 添加角度
+        private void BtnAddAngle_RCircle_Click(object sender, RoutedEventArgs e)
+        {
+            AddAngleToComboBox(cbDisplayRadius, txtAddAngle1.Text);
+            txtAddAngle1.Text = string.Empty;
+        }
+
+        // R圆面板 - 删除角度
+        private void BtnDeleteAngle_RCircle_Click(object sender, RoutedEventArgs e)
+        {
+            DeleteAngleFromComboBox(cbDisplayRadius, txtDeleteAngle1.Text);
+            txtDeleteAngle1.Text = string.Empty;
+        }
+        #endregion
         private void UpdateDisplay()
         {
             // Get the selected channel
@@ -212,13 +396,179 @@ namespace CVAVMControl
             Cv2.ApplyColorMap(mat8U, colorMat, ColormapTypes.Jet);
             normalizedMat.Dispose();
             mat8U.Dispose();
+            // ========== 画角度显示线 ==========
+            // 基础参数
+            OpenCvSharp.Point centerPoint = new OpenCvSharp.Point((int)center.X, (int)center.Y);
+            float maxRadius = (float)(MaxAngle / ConoscopeCoefficient); // 图像半径
+
+            // 1. 绘制同心圆（黄色细环线）
+            Scalar circleColor = new Scalar(0, 255, 255);
+            int circleLineWidth = 10;
+            int circleIntervalAngle = 10;
+            for (int angle = circleIntervalAngle; angle <= MaxAngle; angle += circleIntervalAngle)
+            {
+                float circleRadius = (float)(angle / ConoscopeCoefficient);
+                Cv2.Circle(colorMat, centerPoint, (int)circleRadius, circleColor, circleLineWidth);
+            }
+
+            // 3. 黄色辅助角度线（直径线：边缘一侧→中心→边缘另一侧）
+            //var yellowAngles = new List<double> { 20, 40, 110, 130, 150 };
+            //Scalar yellowColor = new Scalar(0, 255, 255);
+            //int yellowLineWidth = 10;
+            //foreach (double angle in yellowAngles)
+            //{
+            //    double radian = angle * Math.PI / 180.0;
+            //    // 直径线的起点（图像边缘一侧）
+            //    OpenCvSharp.Point startPoint = new OpenCvSharp.Point(
+            //        (int)(centerPoint.X - maxRadius * Math.Cos(radian)),
+            //        (int)(centerPoint.Y - maxRadius * Math.Sin(radian))
+            //    );
+            //    // 直径线的终点（图像边缘另一侧）
+            //    OpenCvSharp.Point endPoint = new OpenCvSharp.Point(
+            //        (int)(centerPoint.X + maxRadius * Math.Cos(radian)),
+            //        (int)(centerPoint.Y + maxRadius * Math.Sin(radian))
+            //    );
+            //    // 绘制完整直径线（贯穿整个图像）
+            //    Cv2.Line(colorMat, startPoint, endPoint, yellowColor, yellowLineWidth);
+            //}
+            // 2. 核心逻辑：根据按钮文本切换绘制的下拉框黄线
+            Scalar yellowColor = new Scalar(0, 255, 255); // 基础黄色
+            int yellowLineWidth = 10;
+
+            // 获取按钮当前显示的文本（匹配动态资源）
+            string currentBtnText = btnSwitchChart.Content.ToString();
+            string rCircleTitle = FindResource("Plot.Title.RCircle").ToString();
+            string diameterTitle = FindResource("Plot.Title.DiameterLine").ToString();
+             if (currentBtnText == rCircleTitle)
+            {
+                // 按钮显示R圆标题：绘制cbDisplayAngle的所有黄线
+                List<double> angleValues = GetAllComboBoxValues(cbDisplayAngle);
+                foreach (double angle in angleValues)
+                {
+                    double radian = angle * Math.PI / 180.0;
+                    OpenCvSharp.Point startPoint = new OpenCvSharp.Point(
+                        (int)(centerPoint.X - maxRadius * Math.Cos(radian)),
+                        (int)(centerPoint.Y - maxRadius * Math.Sin(radian))
+                    );
+                    OpenCvSharp.Point endPoint = new OpenCvSharp.Point(
+                        (int)(centerPoint.X + maxRadius * Math.Cos(radian)),
+                        (int)(centerPoint.Y + maxRadius * Math.Sin(radian))
+                    );
+                    Cv2.Line(colorMat, startPoint, endPoint, yellowColor, yellowLineWidth);
+                    // 添加半径角度备注（标注在终点外侧）
+                    OpenCvSharp.Point labelPos = new OpenCvSharp.Point(
+                        (int)(endPoint.X + 15 * Math.Cos(radian)),
+                        (int)(endPoint.Y + 15 * Math.Sin(radian))
+                    );
+                    DrawAngleLabel(colorMat, labelPos, $"{angle}(R)", new Scalar(0, 255, 255), fontScale: 7);
+                }
+            }
+            else if (currentBtnText == diameterTitle)
+            {
+                // 按钮显示直径线标题：绘制cbDisplayRadius的所有黄线
+                List<double> radiusValues = GetAllComboBoxValues(cbDisplayRadius);
+                foreach (double angle in radiusValues)
+                {
+                    double radian = angle * Math.PI / 180.0;
+                    OpenCvSharp.Point startPoint = new OpenCvSharp.Point(
+                        (int)(centerPoint.X - maxRadius * Math.Cos(radian)),
+                        (int)(centerPoint.Y - maxRadius * Math.Sin(radian))
+                    );
+                    OpenCvSharp.Point endPoint = new OpenCvSharp.Point(
+                        (int)(centerPoint.X + maxRadius * Math.Cos(radian)),
+                        (int)(centerPoint.Y + maxRadius * Math.Sin(radian))
+                    );
+                    Cv2.Line(colorMat, startPoint, endPoint, yellowColor, yellowLineWidth);
+                    // 添加角度备注（标注在终点外侧）
+                    OpenCvSharp.Point labelPos = new OpenCvSharp.Point(
+                        (int)(endPoint.X + 15 * Math.Cos(radian)),
+                        (int)(endPoint.Y + 15 * Math.Sin(radian))
+                    );
+                    DrawAngleLabel(colorMat, labelPos, $"{angle}(A)", new Scalar(0, 255, 255), fontScale: 7);
+                }
+
+            
+           
+            }
+
+            // 3. 红色主角度线（X/Y轴，贯穿整张图）
+            Scalar redColor = new Scalar(0, 0, 255);
+            int redLineWidth = 12;
+            // X轴（水平贯穿：左边缘→右边缘，经过中心点）
+            OpenCvSharp.Point xAxisStart = new OpenCvSharp.Point(0, (int)centerPoint.Y);
+            OpenCvSharp.Point xAxisEnd = new OpenCvSharp.Point(colorMat.Width, (int)centerPoint.Y);
+            Cv2.Line(colorMat, xAxisStart, xAxisEnd, redColor, redLineWidth);
+            // Y轴（垂直贯穿：上边缘→下边缘，经过中心点）
+            OpenCvSharp.Point yAxisStart = new OpenCvSharp.Point((int)centerPoint.X, 0);
+            OpenCvSharp.Point yAxisEnd = new OpenCvSharp.Point((int)centerPoint.X, colorMat.Height);
+            Cv2.Line(colorMat, yAxisStart, yAxisEnd, redColor, redLineWidth);
+            // 4. 保留参数框
+            // ========== 参数框 ==========
+            // 原始参数框：宽200，高120 → 放大3倍：宽600，高360
+            //int boxWidth = 700;  // 原1400 * 0.5
+            //int boxHeight = 360; // 原720 * 0.5
+            //                     // 调整位置：内边距同步缩小，避免超出图像（根据图像宽度自适应）
+            //int boxX = Math.Max(20, colorMat.Width - boxWidth - 20); // 原40 → 20
+            //int boxY = 20;                                          // 原40 → 20
+
+            //// 绘制白色半透明背景框
+            //Mat roi = colorMat[new OpenCvSharp.Rect(boxX, boxY, boxWidth, boxHeight)];
+            //roi.SetTo(new Scalar(255, 255, 255, 0.8));
+            //// 边框粗细缩小0.5倍（原12 → 6）
+            //Cv2.Rectangle(colorMat, new OpenCvSharp.Rect(boxX, boxY, boxWidth, boxHeight), new Scalar(0, 0, 0), 6);
+
+            //// 字体/行间距同步缩小0.5倍（回到原3倍放大效果）
+            //int textY = boxY + 80;   // 文字起始位置（原160 → 80）
+            //int textStep = 75;       // 行间距（原150 → 75）
+            //double fontScale = 2.1;  // 字体大小（原4.2 → 2.1）
+            //int fontThickness = 6;   // 文字粗细（原12 → 6）
+            //int textPadding = 40;    // 文字内边距（原80 → 40）
+
+            //// 绘制参数文字（缩小0.5倍后比例协调）
+            //Cv2.PutText(colorMat, $"MaxAngle: {MaxAngle}°", new OpenCvSharp.Point(boxX + textPadding, textY),
+            //            (int)HersheyFonts.HersheySimplex, fontScale, new Scalar(0, 0, 0), fontThickness);
+            //Cv2.PutText(colorMat, $"Coeff: {ConoscopeCoefficient:F4}", new OpenCvSharp.Point(boxX + textPadding, textY + textStep),
+            //            (int)HersheyFonts.HersheySimplex, fontScale, new Scalar(0, 0, 0), fontThickness);
+            //Cv2.PutText(colorMat, $"DisplayAngle: {displayAngle}°", new OpenCvSharp.Point(boxX + textPadding, textY + 2 * textStep),
+            //            (int)HersheyFonts.HersheySimplex, fontScale, new Scalar(0, 0, 0), fontThickness);
+            //Cv2.PutText(colorMat, $"DisplayRadius: {displayRadius}°", new OpenCvSharp.Point(boxX + textPadding, textY + 3 * textStep),
+            //            (int)HersheyFonts.HersheySimplex, fontScale, new Scalar(0, 0, 0), fontThickness);
+            // ========== 绘制结束 ==========
+
             pseudoColorMat = colorMat;
             WriteableBitmap writeableBitmap = pseudoColorMat.ToWriteableBitmap();
             imgDisplay.Source = writeableBitmap;
 
-
+            // ========== 新增：重置缩放 ==========
+            ResetImageScale();
             PlotDiameterLineChart();
             PlotRCircleChart();
+        }
+
+
+        /// <summary>
+        /// 辅助方法：读取ComboBox中所有ComboBoxItem的Tag值（转为double）
+        /// </summary>
+        /// <param name="comboBox">目标下拉框（cbDisplayAngle/cbDisplayRadius）</param>
+        /// <returns>所有有效的角度/半径值列表</returns>
+        private List<double> GetAllComboBoxValues(ComboBox comboBox)
+        {
+            List<double> values = new List<double>();
+            if (comboBox == null || comboBox.Items.Count == 0)
+                return values;
+
+            foreach (var item in comboBox.Items)
+            {
+                if (item is ComboBoxItem comboItem && !string.IsNullOrEmpty(comboItem.Tag?.ToString()))
+                {
+                    // 尝试转换为double，兼容整数/小数角度值
+                    if (double.TryParse(comboItem.Tag.ToString(), out double value))
+                    {
+                        values.Add(value);
+                    }
+                }
+            }
+            return values;
         }
 
         private Mat? GetSelectedChannelMat(ExportChannel channel)
@@ -774,6 +1124,8 @@ namespace CVAVMControl
         // 切换图表
         string RCircle = (string)Application.Current.FindResource("Plot.Title.RCircle");
         string Diameter = (string)Application.Current.FindResource("Plot.Title.DiameterLine");
+        private HersheyFonts labelFontFace;
+
         private void BtnSwitchChart_Click(object sender, RoutedEventArgs e)
         {
             //if (btnSwitchChart.Content.ToString() == RCircle)
@@ -814,6 +1166,12 @@ namespace CVAVMControl
                 paramPanelDiameter.Visibility = Visibility.Visible;
                 paramPanelRCircle.Visibility = Visibility.Collapsed;
             }
+
+            // 切换后刷新显示，重新绘制对应黄线
+            if (YMat != null && !YMat.Empty())
+            {
+                UpdateDisplay();
+            }
         }
 
         /// <summary>
@@ -833,107 +1191,220 @@ namespace CVAVMControl
                 return false;
             }
         }
+
+        #region  自定义悬浮面板
         /// <summary>
-        /// 创建极角线并进行分析
+        /// 初始化悬浮信息面板（黑色背景、白色文字，匹配目标图样式）
         /// </summary>
-        #region 创建极角线并进行分析
-        //private void CreateAndAnalyzePolarLines()
-        //{
-        //    try
-        //    {
-        //        // Check if image is loaded
-        //        if (imgDisplay.Source == null)
-        //        {
-        //            log.Warn("图像未加载，无法创建极角线");
-        //            return;
-        //        }
+        private void InitializeHoverInfoPanel()
+        {
+            if (_hoverInfoPanel != null) return;
 
-        //        BitmapSource bitmapSource = imgDisplay.Source as BitmapSource;
-        //        if (bitmapSource == null)
-        //        {
-        //            log.Error("无法获取图像源");
-        //            return;
-        //        }
+            _hoverInfoPanel = new Border
+            {
+                Background = new SolidColorBrush(Color.FromArgb(128, 0, 0, 0)),
+                BorderBrush = Brushes.White,
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(8),
+                Visibility = Visibility.Collapsed,
+                CornerRadius = new CornerRadius(3),
+                CacheMode = new BitmapCache(192), // 保留硬件加速
+                IsHitTestVisible = false,
+                SnapsToDevicePixels = true,
+                UseLayoutRounding = true
+            };
 
-        //        // Get image dimensions
-        //        int imageWidth = bitmapSource.PixelWidth;
-        //        int imageHeight = bitmapSource.PixelHeight;
+            // 渲染优化（静态方法设置）
+            RenderOptions.SetBitmapScalingMode(_hoverInfoPanel, BitmapScalingMode.NearestNeighbor);
+            RenderOptions.SetEdgeMode(_hoverInfoPanel, EdgeMode.Aliased);
+            RenderOptions.SetClearTypeHint(_hoverInfoPanel, ClearTypeHint.Enabled);
 
-        //        // Use the smaller dimension for circular symmetry
-        //        int radius = (int)(MaxAngle / ConoscopeConfig.ConoscopeCoefficient);
+            _hoverInfoText = new TextBlock
+            {
+                Foreground = Brushes.White,
+                FontFamily = new FontFamily("Consolas"),
+                FontSize = 11,
+                LineHeight = 15,
+                TextWrapping = TextWrapping.NoWrap,
+                SnapsToDevicePixels = true,
+                UseLayoutRounding = true,
+               
+            };
+            // 禁用文本渲染优化，避免文字抖动
+            // 移到外部，用静态方法设置RenderOptions属性
+            RenderOptions.SetBitmapScalingMode(_hoverInfoPanel, BitmapScalingMode.HighQuality);
+            RenderOptions.SetEdgeMode(_hoverInfoPanel, EdgeMode.Aliased);
+            _hoverInfoPanel.Child = _hoverInfoText;
 
-        //        // Calculate center point
-        //        System.Windows.Point center = new System.Windows.Point(imageWidth / 2.0, imageHeight / 2.0);
+            // 固定面板位置：图像控件的右下角（绝对定位，不随鼠标移动）
+            Canvas.SetZIndex(_hoverInfoPanel, 999); // 置顶显示
+            Canvas.SetLeft(_hoverInfoPanel, 20); // 固定X坐标
+            Canvas.SetTop(_hoverInfoPanel, 20);  // 固定Y坐标（也可设为imgDisplay.ActualHeight - 100）
 
-        //        // Store current image state for dynamic angle addition
-        //        currentBitmapSource = bitmapSource;
-        //        currentImageCenter = center;
-        //        currentImageRadius = radius;
+            // 添加到Canvas容器（若当前布局不是Canvas，需先包裹）
+            if (this.Parent is Canvas canvas)
+            {
+                canvas.Children.Add(_hoverInfoPanel);
+            }
+            else
+            {
+                // 若没有Canvas，创建一个覆盖层
+                var overlayCanvas = new Canvas { Width = double.NaN, Height = double.NaN };
+                this.LayoutRoot.Children.Add(overlayCanvas);
+                overlayCanvas.Children.Add(_hoverInfoPanel);
+            }
+        }
 
-        //        log.Info($"图像尺寸: {imageWidth}x{imageHeight}, 中心: ({center.X}, {center.Y}), 半径: {radius}");
+        /// <summary>
+        /// 鼠标在图像上移动时，显示悬浮信息
+        /// </summary>
+        private void ImgDisplay_MouseMove(object sender, MouseEventArgs e)
+        {
+            lock (_lockObj) // 加锁，避免并发更新
+            {
+                if (!_isHovering)
+                {
+                    _isHovering = true;
+                    _hoverInfoPanel?.SetValue(VisibilityProperty, Visibility.Visible);
+                }
 
-        //        // Clear existing displayed circles
-        //        ClearDisplayedCircles();
+                if (XMat == null || YMat == null || ZMat == null || pseudoColorMat == null || _hoverInfoText == null)
+                    return;
 
-        //        foreach (var item in ConoscopeConfig.DefaultRAngles)
-        //        {
-        //            CircleProperties circleProperties = new CircleProperties
-        //            {
-        //                Center = center,
-        //                Radius = radius * item / MaxAngle,
-        //                Pen = new Pen(Brushes.Yellow, 1 / ImageView.EditorContext.ZoomRatio),
-        //                Brush = Brushes.Transparent
-        //            };
-        //            DVCircle circle = new DVCircle(circleProperties);
-        //            ImageView.AddVisual(circle);
+                // 1. 获取坐标（仅计算一次）
+                System.Windows.Point currentMousePos = e.GetPosition(imgDisplay);
+                var writeableBmp = imgDisplay.Source as WriteableBitmap;
+                if (writeableBmp == null) return;
 
-        //            // Add to displayed circles collection for management
-        //            ConcentricCircleLine circleLine = new ConcentricCircleLine
-        //            {
-        //                RadiusAngle = item,
-        //                Circle = circle
-        //            };
+                int pixelX = (int)(currentMousePos.X * writeableBmp.PixelWidth / imgDisplay.ActualWidth);
+                int pixelY = (int)(currentMousePos.Y * writeableBmp.PixelHeight / imgDisplay.ActualHeight);
 
-        //            // Extract RGB data along the circle
-        //            ExtractRgbAlongCircle(circleLine, center, item, bitmapSource);
+                // 2. 越界判断
+                if (pixelX < 0 || pixelX >= pseudoColorMat.Width || pixelY < 0 || pixelY >= pseudoColorMat.Height)
+                    return;
 
-        //            displayedCircles.Add(circleLine);
-        //        }
+                // 3. 仅更新文本（无布局变化，彻底消除闪烁）
+                try
+                {
+                    Vec3b bgr = pseudoColorMat.At<Vec3b>(pixelY, pixelX);
+                    double xVal = XMat.At<float>(pixelY, pixelX);
+                    double yVal = YMat.At<float>(pixelY, pixelX);
+                    double zVal = ZMat.At<float>(pixelY, pixelX);
+                    double dx = pixelX - center.X;
+                    double dy = pixelY - center.Y;
+                    double u = dx * ConoscopeCoefficient;
+                    double v = dy * ConoscopeCoefficient;
 
-        //        // Set up circles ComboBox
-        //        if (displayedCircles.Count > 0)
-        //        {
-        //            cbConcentricCircles.ItemsSource = displayedCircles;
-        //            cbConcentricCircles.SelectedIndex = 0;
-        //            selectedCircleLine = displayedCircles[0];
-        //            // Update the R circle plot with the first circle's data
-        //            UpdatePlotForCircle();
-        //        }
+                    // 文本格式化（仅更新内容，无布局操作）
+                    string infoText = $"R:{bgr.Item2,-3} G:{bgr.Item1,-3} B:{bgr.Item0,-2}\n" +
+                                      $"({pixelX,-4},{pixelY,-4})\n" +
+                                      $"X:{xVal,-6:F1} Y:{yVal,-6:F1} Z:{zVal,-2:F1}\n" +
+                                      $"x:{u,-4:F2} y:{v,-4:F2},u:{Math.Abs(u),-4:F2} v:{Math.Abs(v),-4:F2}";
 
-        //        // Clear existing lines
-        //        ClearPolarLines();
+                    // 仅当文本变化时才更新（避免无意义刷新）
+                    if (_hoverInfoText.Text != infoText)
+                    {
+                        _hoverInfoText.Text = infoText;
+                    }
+                }
+                catch { /* 忽略异常，避免UI卡顿 */ }
+            }
+        }
 
-        //        // Create lines for each angle
-        //        foreach (double angle in ConoscopeConfig.DefaultAngles)
-        //        {
-        //            CreatePolarLine(angle, center, radius, bitmapSource);
-        //        }
+        /// <summary>
+        /// 鼠标离开图像时，隐藏悬浮信息
+        /// </summary>
+        private void ImgDisplay_MouseLeave(object sender, MouseEventArgs e)
+        {
+            lock (_lockObj)
+            {
+                _isHovering = false;
+                _hoverInfoPanel?.SetValue(VisibilityProperty, Visibility.Collapsed);
+                // 清空文本（可选，避免残留）
+                _hoverInfoText.Text = string.Empty;
+            }
+        }
+        #endregion
 
-        //        // Select the first line by default
-        //        if (polarAngleLines.Count > 0)
-        //        {
-        //            selectedPolarLine = polarAngleLines[0];
-        //            cbPolarAngleLines.ItemsSource = polarAngleLines;
-        //            cbPolarAngleLines.SelectedIndex = 0;
-        //            UpdatePlot();
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        log.Error($"创建极角线失败: {ex.Message}", ex);
-        //        MessageBox.Show($"创建极角线失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-        //    }
-        //}
+        #region 鼠标事件处理
+        // 缩放相关变量
+        private double _currentScale = 1.0; // 当前缩放比例
+        private const double _scaleStep = 0.1; // 每次滚轮缩放步长
+        private const double _minScale = 0.5; // 最小缩放比例（避免缩太小）
+        private const double _maxScale = 5.0; // 最大缩放比例（避免缩太大）
+        private System.Windows.Point _lastMousePos; // 记录鼠标位置，用于中心缩放
+
+        /// <summary>
+        /// 鼠标滚轮缩放图片（以鼠标位置为中心）
+        /// </summary>
+        private void ImgDisplay_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (imgDisplay.Source == null) return; // 图片未加载时不处理
+
+            // 1. 获取鼠标在图片控件上的位置
+            _lastMousePos = e.GetPosition(imgDisplay);
+
+            // 2. 计算新的缩放比例（向上滚轮放大，向下缩小）
+            double delta = e.Delta > 0 ? _scaleStep : -_scaleStep;
+            double newScale = _currentScale + delta;
+
+            // 3. 限制缩放范围
+            newScale = Math.Clamp(newScale, _minScale, _maxScale);
+            if (newScale == _currentScale) return; // 达到边界时不处理
+
+            // 4. 计算缩放偏移（保证以鼠标位置为中心缩放）
+            UpdateScaleTransform(newScale);
+
+            // 5. 更新当前缩放比例
+            _currentScale = newScale;
+
+            // 可选：显示当前缩放比例（调试用，可删除）
+            // Debug.WriteLine($"当前缩放比例：{_currentScale:F2}");
+        }
+
+        /// <summary>
+        /// 更新缩放变换，保证以鼠标位置为中心缩放
+        /// </summary>
+        /// <param name="newScale">新的缩放比例</param>
+        private void UpdateScaleTransform(double newScale)
+        {
+            if (imgDisplay.Source == null) return;
+
+            var transform = imgScaleTransform;
+            var img = imgDisplay.Source as WriteableBitmap;
+            if (img == null) return;
+
+            // 1. 计算鼠标在图片上的实际坐标（缩放前）
+            double imgWidth = img.PixelWidth;
+            double imgHeight = img.PixelHeight;
+            double imgRenderWidth = imgDisplay.ActualWidth;
+            double imgRenderHeight = imgDisplay.ActualHeight;
+
+            // 2. 计算缩放前后的偏移量，保证鼠标位置不变
+            double mouseX = _lastMousePos.X / imgRenderWidth * imgWidth;
+            double mouseY = _lastMousePos.Y / imgRenderHeight * imgHeight;
+
+            // 3. 更新缩放变换（中心为鼠标位置）
+            transform.ScaleX = newScale;
+            transform.ScaleY = newScale;
+
+            // 4. 调整渲染变换的中心点（实现中心缩放）
+            transform.CenterX = mouseX / imgWidth;
+            transform.CenterY = mouseY / imgHeight;
+
+            imgDisplay.RenderTransform = transform;
+        }
+        /// <summary>
+        /// 重置图片缩放到原始大小
+        /// </summary>
+        private void ResetImageScale()
+        {
+            _currentScale = 1.0;
+            imgScaleTransform.ScaleX = 1.0;
+            imgScaleTransform.ScaleY = 1.0;
+            imgScaleTransform.CenterX = 0.5; // 重置为图片中心
+            imgScaleTransform.CenterY = 0.5;
+        }
         #endregion
     }
 }
