@@ -1,5 +1,6 @@
 ﻿using ColorVision.FileIO;
 using ConoscopeDemo;
+using log4net;
 using Microsoft.Win32;
 using OpenCvSharp;
 using OpenCvSharp.WpfExtensions;
@@ -42,6 +43,7 @@ namespace CVAVMControl
         private int displayRadius = 40; // Default display radius angle
                                         // CVVAMAnalyzer.cs 中新增定时器
         private DispatcherTimer? _resourceCleanTimer;
+        private static readonly ILog log = LogManager.GetLogger(typeof(CVVAMAnalyzer));
         public CVVAMAnalyzer()
         {
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
@@ -831,5 +833,107 @@ namespace CVAVMControl
                 return false;
             }
         }
+        /// <summary>
+        /// 创建极角线并进行分析
+        /// </summary>
+        #region 创建极角线并进行分析
+        //private void CreateAndAnalyzePolarLines()
+        //{
+        //    try
+        //    {
+        //        // Check if image is loaded
+        //        if (imgDisplay.Source == null)
+        //        {
+        //            log.Warn("图像未加载，无法创建极角线");
+        //            return;
+        //        }
+
+        //        BitmapSource bitmapSource = imgDisplay.Source as BitmapSource;
+        //        if (bitmapSource == null)
+        //        {
+        //            log.Error("无法获取图像源");
+        //            return;
+        //        }
+
+        //        // Get image dimensions
+        //        int imageWidth = bitmapSource.PixelWidth;
+        //        int imageHeight = bitmapSource.PixelHeight;
+
+        //        // Use the smaller dimension for circular symmetry
+        //        int radius = (int)(MaxAngle / ConoscopeConfig.ConoscopeCoefficient);
+
+        //        // Calculate center point
+        //        System.Windows.Point center = new System.Windows.Point(imageWidth / 2.0, imageHeight / 2.0);
+
+        //        // Store current image state for dynamic angle addition
+        //        currentBitmapSource = bitmapSource;
+        //        currentImageCenter = center;
+        //        currentImageRadius = radius;
+
+        //        log.Info($"图像尺寸: {imageWidth}x{imageHeight}, 中心: ({center.X}, {center.Y}), 半径: {radius}");
+
+        //        // Clear existing displayed circles
+        //        ClearDisplayedCircles();
+
+        //        foreach (var item in ConoscopeConfig.DefaultRAngles)
+        //        {
+        //            CircleProperties circleProperties = new CircleProperties
+        //            {
+        //                Center = center,
+        //                Radius = radius * item / MaxAngle,
+        //                Pen = new Pen(Brushes.Yellow, 1 / ImageView.EditorContext.ZoomRatio),
+        //                Brush = Brushes.Transparent
+        //            };
+        //            DVCircle circle = new DVCircle(circleProperties);
+        //            ImageView.AddVisual(circle);
+
+        //            // Add to displayed circles collection for management
+        //            ConcentricCircleLine circleLine = new ConcentricCircleLine
+        //            {
+        //                RadiusAngle = item,
+        //                Circle = circle
+        //            };
+
+        //            // Extract RGB data along the circle
+        //            ExtractRgbAlongCircle(circleLine, center, item, bitmapSource);
+
+        //            displayedCircles.Add(circleLine);
+        //        }
+
+        //        // Set up circles ComboBox
+        //        if (displayedCircles.Count > 0)
+        //        {
+        //            cbConcentricCircles.ItemsSource = displayedCircles;
+        //            cbConcentricCircles.SelectedIndex = 0;
+        //            selectedCircleLine = displayedCircles[0];
+        //            // Update the R circle plot with the first circle's data
+        //            UpdatePlotForCircle();
+        //        }
+
+        //        // Clear existing lines
+        //        ClearPolarLines();
+
+        //        // Create lines for each angle
+        //        foreach (double angle in ConoscopeConfig.DefaultAngles)
+        //        {
+        //            CreatePolarLine(angle, center, radius, bitmapSource);
+        //        }
+
+        //        // Select the first line by default
+        //        if (polarAngleLines.Count > 0)
+        //        {
+        //            selectedPolarLine = polarAngleLines[0];
+        //            cbPolarAngleLines.ItemsSource = polarAngleLines;
+        //            cbPolarAngleLines.SelectedIndex = 0;
+        //            UpdatePlot();
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        log.Error($"创建极角线失败: {ex.Message}", ex);
+        //        MessageBox.Show($"创建极角线失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+        //    }
+        //}
+        #endregion
     }
 }
