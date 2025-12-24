@@ -60,20 +60,34 @@
                     HorizontalAlignment="Center"
                     FontSize="14"
                     Text="{DynamicResource VAM.PseudocolorImage}" />
-                <Image
-                    x:Name="imgDisplay"
+                <Grid
+                    x:Name="imgGrid"
                     Grid.Row="1"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    MouseLeave="ImgDisplay_MouseLeave"
-                    MouseMove="ImgDisplay_MouseMove"
-                    MouseWheel="ImgDisplay_MouseWheel"
-                    Stretch="Uniform">
-                    <!--  新增：缩放变换  -->
-                    <Image.RenderTransform>
-                        <ScaleTransform x:Name="imgScaleTransform" CenterX="0.5" CenterY="0.5" ScaleX="1" ScaleY="1" />
-                    </Image.RenderTransform>
-                </Image>
+                    SizeChanged="ImgGrid_SizeChanged">
+
+                    <Grid.Clip>
+                        <RectangleGeometry x:Name="imgGridClip" />
+                    </Grid.Clip>
+
+                    <Image
+                        x:Name="imgDisplay"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        MouseLeave="ImgDisplay_MouseLeave"
+                        MouseMove="ImgDisplay_MouseMove"
+                        MouseWheel="ImgDisplay_MouseWheel"
+                        Stretch="Uniform">
+                        <Image.RenderTransform>
+                            <TransformGroup>
+                                <!--  平移变换（补偿缩放偏移）  -->
+                                <TranslateTransform x:Name="imgTranslateTransform" />
+                                <!--  缩放变换  -->
+                                <ScaleTransform x:Name="imgScaleTransform" ScaleX="1" ScaleY="1" />
+                            </TransformGroup>
+                        </Image.RenderTransform>
+                    </Image>
+                </Grid>
+
             </Grid>
         </Border>
         <!--  添加GridSplitter  -->

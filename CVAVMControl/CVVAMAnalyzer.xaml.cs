@@ -539,6 +539,9 @@ namespace CVAVMControl
             WriteableBitmap writeableBitmap = pseudoColorMat.ToWriteableBitmap();
             imgDisplay.Source = writeableBitmap;
 
+            // ========== 新增：记录图片自然尺寸 ==========
+            _imgNaturalWidth = writeableBitmap.PixelWidth;
+            _imgNaturalHeight = writeableBitmap.PixelHeight;
             // ========== 新增：重置缩放 ==========
             ResetImageScale();
             PlotDiameterLineChart();
@@ -1327,6 +1330,11 @@ namespace CVAVMControl
         #endregion
 
         #region 鼠标事件处理
+        // 保留原有变量，新增以下关键变量
+        private double _imgRenderWidth; // 图片渲染宽度（Image控件显示宽度）
+        private double _imgRenderHeight; // 图片渲染高度（Image控件显示高度）
+        private double _imgNaturalWidth; // 图片原始宽度（像素）
+        private double _imgNaturalHeight; // 图片原始高度（像素）
         // 缩放相关变量
         private double _currentScale = 1.0; // 当前缩放比例
         private const double _scaleStep = 0.1; // 每次滚轮缩放步长
@@ -1339,60 +1347,99 @@ namespace CVAVMControl
         /// </summary>
         private void ImgDisplay_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            if (imgDisplay.Source == null) return; // 图片未加载时不处理
+            if (imgDisplay.Source == null || imgGrid == null) return;
 
-            // 1. 获取鼠标在图片控件上的位置
-            _lastMousePos = e.GetPosition(imgDisplay);
+            // 1. 获取基础尺寸信息
+            _imgRenderWidth = imgDisplay.ActualWidth;
+            _imgRenderHeight = imgDisplay.ActualHeight;
+            if (_imgRenderWidth == 0 || _imgRenderHeight == 0) return;
 
-            // 2. 计算新的缩放比例（向上滚轮放大，向下缩小）
+            // 2. 获取鼠标在imgGrid中的绝对位置（关键：基于Grid而非Image）
+            System.Windows.Point mousePosInGrid = e.GetPosition(imgGrid);
+            _lastMousePos = mousePosInGrid;
+
+            // 3. 计算缩放前鼠标在图片上的绝对像素坐标
+            // 3.1 计算Image控件在imgGrid中的偏移（处理居中对齐）
+            double imgOffsetX = (imgGrid.ActualWidth - _imgRenderWidth) / 2;
+            double imgOffsetY = (imgGrid.ActualHeight - _imgRenderHeight) / 2;
+
+            // 3.2 计算鼠标在Image控件内的相对位置（去除偏移）
+            double mouseXInImage = Math.Max(0, mousePosInGrid.X - imgOffsetX);
+            double mouseYInImage = Math.Max(0, mousePosInGrid.Y - imgOffsetY);
+
+            // 3.3 计算鼠标指向的图片原始像素坐标
+            double pixelX = (mouseXInImage / _imgRenderWidth) * _imgNaturalWidth;
+            double pixelY = (mouseYInImage / _imgRenderHeight) * _imgNaturalHeight;
+
+            // 4. 计算新的缩放比例
             double delta = e.Delta > 0 ? _scaleStep : -_scaleStep;
             double newScale = _currentScale + delta;
-
-            // 3. 限制缩放范围
             newScale = Math.Clamp(newScale, _minScale, _maxScale);
-            if (newScale == _currentScale) return; // 达到边界时不处理
+            if (newScale == _currentScale) return;
 
-            // 4. 计算缩放偏移（保证以鼠标位置为中心缩放）
-            UpdateScaleTransform(newScale);
+            // 5. 核心：计算平移补偿量（保证鼠标位置固定）
+            // 5.1 缩放前鼠标位置的屏幕坐标（相对于Image左上角）
+            double screenXBefore = (pixelX / _imgNaturalWidth) * _imgRenderWidth * _currentScale;
+            double screenYBefore = (pixelY / _imgNaturalHeight) * _imgRenderHeight * _currentScale;
 
-            // 5. 更新当前缩放比例
+            // 5.2 缩放后鼠标位置的屏幕坐标
+            double screenXAfter = (pixelX / _imgNaturalWidth) * _imgRenderWidth * newScale;
+            double screenYAfter = (pixelY / _imgNaturalHeight) * _imgRenderHeight * newScale;
+
+            // 5.3 计算需要补偿的平移量（抵消缩放带来的位置变化）
+            double deltaX = screenXBefore - screenXAfter;
+            double deltaY = screenYBefore - screenYAfter;
+
+            // 6. 更新变换
+            // 6.1 先更新缩放
+            imgScaleTransform.ScaleX = newScale;
+            imgScaleTransform.ScaleY = newScale;
+
+            // 6.2 再更新平移（累加补偿量）
+            imgTranslateTransform.X += deltaX;
+            imgTranslateTransform.Y += deltaY;
+
+            // 7. 限制平移范围（避免图片完全移出可视区域）
+            LimitTranslation();
+
+            // 8. 更新当前缩放比例
             _currentScale = newScale;
-
-            // 可选：显示当前缩放比例（调试用，可删除）
-            // Debug.WriteLine($"当前缩放比例：{_currentScale:F2}");
         }
-
-        /// <summary>
-        /// 更新缩放变换，保证以鼠标位置为中心缩放
-        /// </summary>
-        /// <param name="newScale">新的缩放比例</param>
-        private void UpdateScaleTransform(double newScale)
+        // 3.限制平移范围
+        private void LimitTranslation()
         {
-            if (imgDisplay.Source == null) return;
+            if (_imgRenderWidth == 0 || _imgRenderHeight == 0) return;
 
-            var transform = imgScaleTransform;
-            var img = imgDisplay.Source as WriteableBitmap;
-            if (img == null) return;
+            // 计算图片缩放后的尺寸
+            double scaledWidth = _imgRenderWidth * _currentScale;
+            double scaledHeight = _imgRenderHeight * _currentScale;
 
-            // 1. 计算鼠标在图片上的实际坐标（缩放前）
-            double imgWidth = img.PixelWidth;
-            double imgHeight = img.PixelHeight;
-            double imgRenderWidth = imgDisplay.ActualWidth;
-            double imgRenderHeight = imgDisplay.ActualHeight;
+            // 计算最大平移范围（保证图片至少有一部分在可视区域）
+            double maxTranslateX = Math.Max(0, scaledWidth - imgGrid.ActualWidth);
+            double maxTranslateY = Math.Max(0, scaledHeight - imgGrid.ActualHeight);
 
-            // 2. 计算缩放前后的偏移量，保证鼠标位置不变
-            double mouseX = _lastMousePos.X / imgRenderWidth * imgWidth;
-            double mouseY = _lastMousePos.Y / imgRenderHeight * imgHeight;
+            // 限制平移X轴
+            imgTranslateTransform.X = Math.Clamp(
+                imgTranslateTransform.X,
+                -maxTranslateX,
+                0
+            );
 
-            // 3. 更新缩放变换（中心为鼠标位置）
-            transform.ScaleX = newScale;
-            transform.ScaleY = newScale;
-
-            // 4. 调整渲染变换的中心点（实现中心缩放）
-            transform.CenterX = mouseX / imgWidth;
-            transform.CenterY = mouseY / imgHeight;
-
-            imgDisplay.RenderTransform = transform;
+            // 限制平移Y轴
+            imgTranslateTransform.Y = Math.Clamp(
+                imgTranslateTransform.Y,
+                -maxTranslateY,
+                0
+            );
+        }
+        // imgGrid大小变化时更新裁剪区域
+        private void ImgGrid_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (imgGrid != null)
+            {
+                // 设置裁剪区域为imgGrid的完整边界
+                imgGridClip.Rect = new System.Windows.Rect(0, 0, imgGrid.ActualWidth, imgGrid.ActualHeight);
+            }
         }
         /// <summary>
         /// 重置图片缩放到原始大小
@@ -1402,8 +1449,21 @@ namespace CVAVMControl
             _currentScale = 1.0;
             imgScaleTransform.ScaleX = 1.0;
             imgScaleTransform.ScaleY = 1.0;
-            imgScaleTransform.CenterX = 0.5; // 重置为图片中心
+            // 重置缩放中心为图片中心
+            imgScaleTransform.CenterX = 0.5;
             imgScaleTransform.CenterY = 0.5;
+            // 重置平移变换
+            imgTranslateTransform.X = 0;
+            imgTranslateTransform.Y = 0;
+
+            // 重置平移变换
+            imgTranslateTransform.X = 0;
+            imgTranslateTransform.Y = 0;
+            // 确保裁剪区域始终有效
+            if (imgGrid != null)
+            {
+                imgGridClip.Rect = new System.Windows.Rect(0, 0, imgGrid.ActualWidth, imgGrid.ActualHeight);
+            }
         }
         #endregion
     }
