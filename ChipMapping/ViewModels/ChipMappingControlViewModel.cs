@@ -36,7 +36,7 @@ namespace ChipMapping.ViewModels
         private double _startY = 5;
         private int _screenWidth = 640;
         private int _screenHeight = 480;
-
+       
         private bool selfClick = true;
 
         private ChipViewModel? _selectedChip;
@@ -93,6 +93,12 @@ namespace ChipMapping.ViewModels
         }
 
         private int? _selectedChipColumn;
+
+        private double _temperatures = 25;
+        private string _pressure="0,0,0,0";
+        private int _tdCount = 10;
+        private string _sn = "54561891";
+
         public int? SelectedChipColumn
         {
             get => _selectedChipColumn;
@@ -393,7 +399,27 @@ namespace ChipMapping.ViewModels
                 }
             }
         }
-
+        // 温度属性
+        public double Temperatures
+        {
+            get => _temperatures;
+            set => SetProperty(ref _temperatures, value);
+        }
+        public string Pressure
+        {
+            get => _pressure;
+            set => SetProperty(ref _pressure, value);
+        }
+        public string SN
+        {
+            get => _sn;
+            set => SetProperty(ref _sn, value);
+        }
+        public int TDCount
+        {
+            get => _tdCount;
+            set => SetProperty(ref _tdCount, value);
+        }
         // 计算画布大小
         public double CanvasWidth { get; private set; } = 1000;
         public double CanvasHeight { get; private set; } = 1000;
