@@ -3012,7 +3012,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     // 2. 检查文件是否存在
                     if (File.Exists(filePath))
                     {
-                        // 3. 读取文件内容
+                        // 3. 读取文件内容 
                         string fileContent = File.ReadAllText(filePath, Encoding.UTF8);
                         // 4. 校验文件内容非空
                         if (!string.IsNullOrWhiteSpace(fileContent))
@@ -3027,7 +3027,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         }
                     }
                 }
-                catch (Exception ex)
+                catch (Exception ex) 
                 {
                     // 捕获所有文件操作/反序列化异常，避免影响主流程
                     // 可替换为项目日志框架（如log4net/NLog）

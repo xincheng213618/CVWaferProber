@@ -24,6 +24,7 @@ using System.IO;
 using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Threading;
 
@@ -1202,32 +1203,16 @@ namespace CVWaferProber.ViewModels
         }
         private void NextTestingDie()
         {
-            /*var sel = TestResults[CurTestDieIdx];
-            sel.UnSelected();
-            if (IsLocalSim)
-            {
-                CurTestDieIdx++;
-                //
-                var itemToSelect = TestResults[CurTestDieIdx];
-                ScrollToItem(itemToSelect);
-
-                aoiService.StartTestingAOI(Timestamp, itemToSelect, _selectedWPFlow, false);
-                //StartTestingDie(itemToSelect);
-            }
-            else if (sel.Status.HasValue && sel.MapX.HasValue && sel.MapY.HasValue)
-            {
-                _wmProcessor.MeasurementProcessResult((ChipStatus)sel.Status, (int)sel.MapY, (int)sel.MapX);
-            }*/
-            // 标记当前项测试完成
+            // 标记当前项完成
             if (_currentTestIndex < _testQueue.Count)
             {
-                var currentDie = _testQueue[_currentTestIndex];
+                var currentDie = _testQueue[_currentTestIndex].Die;
                 currentDie.UnSelected();
             }
 
-            // 推进到下一个勾选项
+            // 推进到下一个测试项
             _currentTestIndex++;
-            StartNextTestItem(); // 执行下一个测试项
+            StartNextTestItem();
         }
 
         //private void StartTestingDie(DieViewModel dieViewModel)
@@ -1356,9 +1341,9 @@ namespace CVWaferProber.ViewModels
             else return string.Format("{0}_{1}[{3},{4}]", ProberId, Timestamp, Snowflake.Instance.NextSeqId(), dieViewModel.MapY, dieViewModel.MapX);
         }
         //////////////////////*/
-        private List<DieViewModel> _testQueue; // 待测试队列
+        private List<TestItem> _testQueue; // 待测试队列
         private int _currentTestIndex; // 当前测试项索引
-        private bool IsLocalSim = false;
+        
         private void StartAutoFlow()
         {
             if (SelectedWPFlow == null)
@@ -1367,7 +1352,7 @@ namespace CVWaferProber.ViewModels
                 return;
             }
 
-            // 1. 筛选已勾选的测试项
+            // 1. 收集勾选的测试项（带类型）
             _testQueue = GetSelectedTestItems();
             if (_testQueue.Count == 0)
             {
@@ -1378,56 +1363,48 @@ namespace CVWaferProber.ViewModels
             // 2. 初始化测试状态
             CustomMappingVM.DisabledInput = IsProcessing = true;
             EnableBtn(false);
-            TestingReady(); // 重置测试状态
-            _currentTestIndex = 0; // 从第一个勾选项开始
+            TestingReady();
+            _currentTestIndex = 0;
 
-            // 3. 启动测试（先执行第一个勾选项）
-            if (IsLocalSim)
-            {
-                StartNextTestItem(); // 启动下一个测试项
-                _simAutoTestTimer?.Start();
-            }
-            else
-            {
-                _wmProcessor.MeasurementReady();
-            }
+            // 3. 启动第一个测试项
+            StartNextTestItem();
         }
 
         private void StartNextTestItem()
         {
-            // 检查队列是否已完成所有测试
+            // 测试完成
             if (_currentTestIndex >= _testQueue.Count)
             {
-                StopAutoTest(null); // 测试完成，停止流程
+                StopAutoTest(null);
                 MessageBox.Show("所有勾选项测试完成", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
-            // 获取当前要测试的项
-            DieViewModel currentDie = _testQueue[_currentTestIndex];
-            CurTestDieIdx = TestResults.IndexOf(currentDie); // 同步DataGrid索引
+            // 获取当前测试项
+            var currentTest = _testQueue[_currentTestIndex];
+            DieViewModel currentDie = currentTest.Die;
+            CurTestDieIdx = TestResults.IndexOf(currentDie);
 
             // 滚动到当前测试项
             ScrollToItem(currentDie);
 
-            // 4. 根据勾选的类型，执行对应测试
-            if (currentDie.IsAOIEnabled)
+            // 4. 根据测试类型执行对应逻辑
+            switch (currentTest.TestType)
             {
-                aoiService.StartTestingAOI(Timestamp, currentDie, _selectedWPFlow, false);
-            }
-            else if (currentDie.IsIVLEnabled)
-            {
-                ivlService.StartTestingIVL(Timestamp, currentDie, _selectedWPFlow);
-            }
-            else if (currentDie.IsEQEEnabled)
-            {
-                // 补充EQE测试逻辑（若有对应Service）
-                // eqeService.StartTestingEQE(Timestamp, currentDie, _selectedWPFlow);
-            }
-            else if (currentDie.IsVAMEnabled)
-            {
-                // 补充VAM测试逻辑（若有对应Service）
-                // vamService.StartTestingVAM(Timestamp, currentDie, _selectedWPFlow);
+                case "AOI":
+                    aoiService.StartTestingAOI(Timestamp, currentDie, _selectedWPFlow, false);
+                    break;
+                case "IVL":
+                    ivlService.StartTestingIVL(Timestamp, currentDie, _selectedWPFlow);
+                    break;
+                case "EQE":
+                    // 补充EQE测试逻辑（若有对应Service）
+                    // eqeService.StartTestingEQE(Timestamp, currentDie, _selectedWPFlow);
+                    break;
+                case "VAM":
+                    // 补充VAM测试逻辑（若有对应Service）
+                    // vamService.StartTestingVAM(Timestamp, currentDie, _selectedWPFlow);
+                    break;
             }
         }
 
@@ -1727,17 +1704,44 @@ namespace CVWaferProber.ViewModels
             if (obj != null) SelectItemById((uint)obj);
         }
         #region 勾选列表选项后，点击按钮自动依次测试勾选项
-        private List<DieViewModel> GetSelectedTestItems()
+        // 定义测试项类型（区分AOI/IVL等）
+        private class TestItem
         {
-            // 筛选出至少勾选了一项（AOI/IVL/EQE/VAM）的Die
-            return TestResults.Where(die =>
-                die.IsAOIEnabled || die.IsIVLEnabled || die.IsEQEEnabled || die.IsVAMEnabled
-            ).ToList();
+            public DieViewModel Die { get; set; }
+            public string TestType { get; set; } // "AOI"/"IVL"/"EQE"/"VAM"
+        }
+        private List<TestItem> GetSelectedTestItems()
+        {
+            var testQueue = new List<TestItem>();
+
+            // 遍历所有Die，按【行顺序】收集勾选的测试项
+            foreach (var die in TestResults)
+            {
+                // 按AOI→IVL→EQE→VAM的顺序（可按实际需求调整）
+                if (die.IsAOIEnabled)
+                {
+                    testQueue.Add(new TestItem { Die = die, TestType = "AOI" });
+                }
+                if (die.IsIVLEnabled)
+                {
+                    testQueue.Add(new TestItem { Die = die, TestType = "IVL" });
+                }
+                if (die.IsEQEEnabled)
+                {
+                    testQueue.Add(new TestItem { Die = die, TestType = "EQE" });
+                }
+                if (die.IsVAMEnabled)
+                {
+                    testQueue.Add(new TestItem { Die = die, TestType = "VAM" });
+                }
+            }
+
+            return testQueue;
         }
 
         #endregion
-  
-      
+
+
         /***********************激活相应面板************************/
         private void ActivateCorrespondingPanel()
         {
