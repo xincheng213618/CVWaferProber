@@ -3012,8 +3012,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     // 2. 检查文件是否存在
                     if (File.Exists(filePath))
                     {
-                        // 3. 读取文件内容（使用UTF-8编码，适配多数场景）
-                        string fileContent = File.ReadAllText(filePath, System.Text.Encoding.UTF8);
+                        // 3. 读取文件内容
+                        string fileContent = File.ReadAllText(filePath, Encoding.UTF8);
                         // 4. 校验文件内容非空
                         if (!string.IsNullOrWhiteSpace(fileContent))
                         {
