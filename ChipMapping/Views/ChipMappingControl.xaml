@@ -184,6 +184,7 @@
             <Separator />
 
             <!--  行列布局控制  -->
+            <!--
             <TextBlock
                 Margin="5,0"
                 VerticalAlignment="Center"
@@ -198,25 +199,25 @@
                 VerticalAlignment="Center"
                 Text="Col:" />
             <TextBox IsEnabled="False" Text="{Binding Columns}" />
-            <Separator />
+            <Separator />-->
             <TextBlock
                 Margin="5,0"
                 VerticalAlignment="Center"
                 Text="Temperature:" />
             <TextBox IsEnabled="False" Text="{Binding Temperatures, StringFormat='{}{0}℃'}" />
-
+            <Separator />
             <TextBlock
                 Margin="2,0"
                 VerticalAlignment="Center"
                 Text="Probe Pressure:" />
             <TextBox IsEnabled="False" Text="{Binding Pressure}" />
-
+            <Separator />
             <TextBlock
                 Margin="5,0"
                 VerticalAlignment="Center"
                 Text="Probe Card SN:" />
             <TextBox IsEnabled="False" Text="{Binding SN}" />
-
+            <Separator />
             <TextBlock
                 Margin="2,0"
                 VerticalAlignment="Center"

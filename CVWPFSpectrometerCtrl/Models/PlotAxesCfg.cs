@@ -15,6 +15,7 @@ namespace CVWPFSpectrometerCtrl.Models
         VL,
         IVLCamera
     }
+   
     public struct PlotAxesCfg
     {
         public float DefaultMin;

@@ -28,6 +28,8 @@ namespace CVWaferProber.Core.Models.Enums
         AOI_LINE_NG,
         IVL_TESTING,
         IVL_COMPLETED,
+        EQE_TESTING,
+        EQE_COMPLETED,
         //失败
         FAILED,
         //超时

@@ -1768,15 +1768,15 @@ namespace CVWaferProber.ViewModels
                         logger.Warn("AOI面板未初始化，无法激活");
                     }
                     break;
-                case CVWaferProberFlowType.IVL_SP: // 红框第一项：光谱（内层索引0）
+                case CVWaferProberFlowType.IVL_SP: // 光谱（内层索引0）
                     ActivateSpectralInnerTabAction?.Invoke();
                     break;
 
-                case CVWaferProberFlowType.IVL_Camera: // 红框第二项：IVLCamera（内层索引5）
+                case CVWaferProberFlowType.IVL_Camera: // IVLCamera（内层索引5）
                     ActivateIVLCameraInnerTabAction?.Invoke();
                     break;
 
-                case CVWaferProberFlowType.EQE: // 红框第三项：EQE（外层索引1）
+                case CVWaferProberFlowType.EQE: // EQE（外层索引1）
                     ActivateEQEOuterTabAction?.Invoke();
                     break;
 

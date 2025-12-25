@@ -169,34 +169,43 @@
 
         <!--  主内容区域  -->
         <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="3*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="2*" />
+            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="3*" />
                 <ColumnDefinition Width="2*" />
             </Grid.ColumnDefinitions>
 
-            <!--  左侧图像显示区域  -->
+            <!--  图像显示区域  -->
             <Grid
                 x:Name="container"
-                Grid.Column="0"
+                Grid.ColumnSpan="2"
                 RenderTransformOrigin="0.5,0.5">
                 <local:CVImager
                     x:Name="ImageDisplay"
                     Margin="5"
                     CurrentImage="{Binding ImageSrc}" />
             </Grid>
-            <!--  右侧数据网格区域  -->
+            <!--  添加GridSplitter  -->
             <GridSplitter
-                Grid.Column="0"
-                Width="3"
-                HorizontalAlignment="Right"
+                Grid.Row="1"
+                Height="2"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Center"
                 Background="Transparent"
                 ShowsPreview="True" />
 
-            <DockPanel Grid.Column="1" Margin="0,5">
+            <DockPanel
+                Grid.Row="2"
+                Grid.ColumnSpan="2"
+                Margin="0,5">
                 <!--<TextBlock DockPanel.Dock="Top" Text="图像列表:" FontWeight="Bold" Margin="0,0,0,5"/>-->
                 <!--  文件操作按钮组  -->
                 <StackPanel
-                    Height="40"
+                    Height="30"
                     Margin="0,0,0,5"
                     Background="#FFF0F0F0"
                     DockPanel.Dock="Top"

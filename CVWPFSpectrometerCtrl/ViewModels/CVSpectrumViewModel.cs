@@ -897,117 +897,117 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
 
 
-        #region 自动导出CSV
-        // CVSpectrumViewModel类内新增
-        private static readonly ILog logger = LogManager.GetLogger(typeof(CVSpectrumViewModel));
+        //#region 自动导出CSV
+        //// CVSpectrumViewModel类内新增
+        //private static readonly ILog logger = LogManager.GetLogger(typeof(CVSpectrumViewModel));
 
-        // 新增：存储当前测试的序号、行、列
-        public string CurrentDieIndex { get; set; }
-        public string CurrentDieRow { get; set; }
-        public string CurrentDieCol { get; set; }
+        //// 新增：存储当前测试的序号、行、列
+        //public string CurrentDieIndex { get; set; }
+        //public string CurrentDieRow { get; set; }
+        //public string CurrentDieCol { get; set; }
 
 
-        // 存储当前测试的SerialNumber（用于自动导出）
-        public string CurrentSerialNumber { get; set; }
+        //// 存储当前测试的SerialNumber（用于自动导出）
+        //public string CurrentSerialNumber { get; set; }
 
-        /*****************自动导出**********************/
-        private void AutoExportData()
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(CurrentSerialNumber))
-                {
-                    logger.Warn("自动导出失败：SerialNumber为空");
-                    return;
-                }
+        ///*****************自动导出**********************/
+        //private void AutoExportData()
+        //{
+        //    try
+        //    {
+        //        if (string.IsNullOrWhiteSpace(CurrentSerialNumber))
+        //        {
+        //            logger.Warn("自动导出失败：SerialNumber为空");
+        //            return;
+        //        }
 
-                // 1. 构造导出路径（与截图目录结构完全一致）
-                DateTime now = DateTime.Now;
-                string dateFolder = now.ToString("yyyy-MM-dd");
-                // 根路径
-                string basePath = Path.Combine("F:", "Projects", "Micro LED", "星钥", "software", dateFolder, "WaferID", "IVL");
-                string basePath1 = Path.Combine("F:", "Projects", "Micro LED", "星钥", "software", dateFolder, "WaferID");
-                // 确保基础目录存在
-                if (!Directory.Exists(basePath))
-                {
-                    Directory.CreateDirectory(basePath);
-                    logger.Info($"创建基础目录：{basePath}");
-                }
+        //        // 1. 构造导出路径（与截图目录结构完全一致）
+        //        DateTime now = DateTime.Now;
+        //        string dateFolder = now.ToString("yyyy-MM-dd");
+        //        // 根路径
+        //        string basePath = Path.Combine("F:", "Projects", "Micro LED", "星钥", "software", dateFolder, "WaferID", "IVL");
+        //        string basePath1 = Path.Combine("F:", "Projects", "Micro LED", "星钥", "software", dateFolder, "WaferID");
+        //        // 确保基础目录存在
+        //        if (!Directory.Exists(basePath))
+        //        {
+        //            Directory.CreateDirectory(basePath);
+        //            logger.Info($"创建基础目录：{basePath}");
+        //        }
 
-                // 2. 创建die_Location文件夹（格式：die_Location_yyyyMMddHHmmss）
-                string dieLocationFolder = $"die_Location_{now.ToString("yyyyMMddHHmmss")}";
-                string dieLocationPath = Path.Combine(basePath, dieLocationFolder);
-                if (!Directory.Exists(dieLocationPath))
-                {
-                    Directory.CreateDirectory(dieLocationPath);
-                    logger.Info($"创建DieLocation目录：{dieLocationPath}");
-                }
+        //        // 2. 创建die_Location文件夹（格式：die_Location_yyyyMMddHHmmss）
+        //        string dieLocationFolder = $"die_Location_{now.ToString("yyyyMMddHHmmss")}";
+        //        string dieLocationPath = Path.Combine(basePath, dieLocationFolder);
+        //        if (!Directory.Exists(dieLocationPath))
+        //        {
+        //            Directory.CreateDirectory(dieLocationPath);
+        //            logger.Info($"创建DieLocation目录：{dieLocationPath}");
+        //        }
 
-                // 3. 导出各类型数据（光谱/IV/IL/VL）
-                List<string> exportedFiles = new List<string>();
+        //        // 3. 导出各类型数据（光谱/IV/IL/VL）
+        //        List<string> exportedFiles = new List<string>();
 
-                // 3.1 导出光谱数据
-                if (Measurements.Any())
-                {
-                    string spectrumFile = $"Spectrum_{CurrentSerialNumber}_{now:HHmmss}.csv";
-                    string spectrumPath = Path.Combine(dieLocationPath, spectrumFile);
-                    ExportToCsv(spectrumPath, Measurements, Wavelengths, Measurements.First().fPlambda);
-                    exportedFiles.Add(spectrumFile);
-                    logger.Info($"已导出光谱数据：{spectrumPath}");
-                }
+        //        // 3.1 导出光谱数据
+        //        if (Measurements.Any())
+        //        {
+        //            string spectrumFile = $"Spectrum_{CurrentSerialNumber}_{now:HHmmss}.csv";
+        //            string spectrumPath = Path.Combine(dieLocationPath, spectrumFile);
+        //            ExportToCsv(spectrumPath, Measurements, Wavelengths, Measurements.First().fPlambda);
+        //            exportedFiles.Add(spectrumFile);
+        //            logger.Info($"已导出光谱数据：{spectrumPath}");
+        //        }
 
-                // 3.2 导出IV数据
-                if (IVMeasurements.Any())
-                {
-                    string ivFile = $"IV_{CurrentSerialNumber}_{now:HHmmss}.csv";
-                    string ivPath = Path.Combine(dieLocationPath, ivFile);
-                    ExportToCsv(IVMeasurements, ivPath, 1); // startIndex=1对应IV
-                    exportedFiles.Add(ivFile);
-                    logger.Info($"已导出IV数据：{ivPath}");
-                }
+        //        // 3.2 导出IV数据
+        //        if (IVMeasurements.Any())
+        //        {
+        //            string ivFile = $"IV_{CurrentSerialNumber}_{now:HHmmss}.csv";
+        //            string ivPath = Path.Combine(dieLocationPath, ivFile);
+        //            ExportToCsv(IVMeasurements, ivPath, 1); // startIndex=1对应IV
+        //            exportedFiles.Add(ivFile);
+        //            logger.Info($"已导出IV数据：{ivPath}");
+        //        }
 
-                // 3.3 导出IL数据
-                if (ILMeasurements.Any())
-                {
-                    string ilFile = $"IL_{CurrentSerialNumber}_{now:HHmmss}.csv";
-                    string ilPath = Path.Combine(dieLocationPath, ilFile);
-                    ExportToCsv(ILMeasurements, ilPath, 2); // startIndex=2对应IL
-                    exportedFiles.Add(ilFile);
-                    logger.Info($"已导出IL数据：{ilPath}");
-                }
+        //        // 3.3 导出IL数据
+        //        if (ILMeasurements.Any())
+        //        {
+        //            string ilFile = $"IL_{CurrentSerialNumber}_{now:HHmmss}.csv";
+        //            string ilPath = Path.Combine(dieLocationPath, ilFile);
+        //            ExportToCsv(ILMeasurements, ilPath, 2); // startIndex=2对应IL
+        //            exportedFiles.Add(ilFile);
+        //            logger.Info($"已导出IL数据：{ilPath}");
+        //        }
 
-                // 3.4 导出VL数据
-                if (VLMeasurements.Any())
-                {
-                    string vlFile = $"VL_{CurrentSerialNumber}_{now:HHmmss}.csv";
-                    string vlPath = Path.Combine(dieLocationPath, vlFile);
-                    ExportToCsv(VLMeasurements, vlPath, 0); // startIndex=0对应VL
-                    exportedFiles.Add(vlFile);
-                    logger.Info($"已导出VL数据：{vlPath}");
-                }
+        //        // 3.4 导出VL数据
+        //        if (VLMeasurements.Any())
+        //        {
+        //            string vlFile = $"VL_{CurrentSerialNumber}_{now:HHmmss}.csv";
+        //            string vlPath = Path.Combine(dieLocationPath, vlFile);
+        //            ExportToCsv(VLMeasurements, vlPath, 0); // startIndex=0对应VL
+        //            exportedFiles.Add(vlFile);
+        //            logger.Info($"已导出VL数据：{vlPath}");
+        //        }
 
-                // 4. 更新Summary.csv（汇总记录，追加模式）
-                string summaryPath = Path.Combine(basePath1, "Summary.csv");
-                bool isNewSummary = !File.Exists(summaryPath);
-                using (StreamWriter sw = new StreamWriter(summaryPath, true, Encoding.UTF8))
-                {
-                    // 首次创建时写入表头
-                    if (isNewSummary)
-                    {
-                        sw.WriteLine("导出时间,SerialNumber,DieLocation文件夹,导出文件列表");
-                    }
-                    // 写入当前导出记录
-                    sw.WriteLine($"{now:yyyy-MM-dd HH:mm:ss},{CurrentSerialNumber},{dieLocationFolder},{string.Join(";", exportedFiles)}");
-                }
-                logger.Info($"已更新汇总文件：{summaryPath}");
-            }
-            catch (Exception ex)
-            {
-                logger.Error("自动导出失败", ex);
-                MessageBox.Show($"自动导出错误：{ex.Message}", "提示", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-        #endregion
+        //        // 4. 更新Summary.csv（汇总记录，追加模式）
+        //        string summaryPath = Path.Combine(basePath1, "Summary.csv");
+        //        bool isNewSummary = !File.Exists(summaryPath);
+        //        using (StreamWriter sw = new StreamWriter(summaryPath, true, Encoding.UTF8))
+        //        {
+        //            // 首次创建时写入表头
+        //            if (isNewSummary)
+        //            {
+        //                sw.WriteLine("导出时间,SerialNumber,DieLocation文件夹,导出文件列表");
+        //            }
+        //            // 写入当前导出记录
+        //            sw.WriteLine($"{now:yyyy-MM-dd HH:mm:ss},{CurrentSerialNumber},{dieLocationFolder},{string.Join(";", exportedFiles)}");
+        //        }
+        //        logger.Info($"已更新汇总文件：{summaryPath}");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        logger.Error("自动导出失败", ex);
+        //        MessageBox.Show($"自动导出错误：{ex.Message}", "提示", MessageBoxButton.OK, MessageBoxImage.Error);
+        //    }
+        //}
+        //#endregion
         private void IVResetStatus(object obj)
         {
             //OverviewIVPlotModel?.InvalidatePlot(true);
@@ -1833,7 +1833,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             catch (Exception ex)
             {
                 System.Windows.MessageBox.Show($"EQE导出失败：{ex.Message}", "错误");
-                logger.Error("EQE导出失败", ex);
+                //logger.Error("EQE导出失败", ex);
             }
         }
 
@@ -2796,7 +2796,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
         public void LoadData(string serialNumber, bool isIVLCameraEnabled)
         {
-            CurrentSerialNumber = serialNumber; // 保存当前SerialNumber
+            //CurrentSerialNumber = serialNumber; // 保存当前SerialNumber
             if (string.IsNullOrWhiteSpace(serialNumber))
             {
                 ClearAllDisplays(); // 清空所有图像和数据
@@ -2911,7 +2911,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             InitializeOverviewSeries();
 
             // 触发自动导出
-            AutoExportData();
+           // AutoExportData();
         }
         private static string ArrayToString(float[] array)
         {
@@ -2993,9 +2993,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             // 子Tab数据加载完成后，重新初始化总览图Series
             InitializeOverviewSeries();
             // 触发自动导出
-            AutoExportData();
+            //AutoExportData();
         }
-
+        public SpectrumMeasurement GetSpectrumData(string serialNumber)
+        {
+            // 逻辑：根据serialNumber获取对应的光谱数据（与LoadData中的数据加载逻辑一致）
+            var targetMeasurement = Measurements.FirstOrDefault(m => m.Meas_Id == serialNumber);
+            return targetMeasurement ?? new SpectrumMeasurement(0); // 找不到则返回空对象
+        }
         /// <summary>
         /// 优先从FPLFileName指定的文件读取Intensities数据，失败则使用原始result.FPL
         /// </summary>
