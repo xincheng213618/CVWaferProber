@@ -21,6 +21,9 @@
     <Compile Update="Views\NoneMapingDockWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Views\ProberDebugWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Views\TestWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -45,6 +48,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Views\NoneMapingDockWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\ProberDebugWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Views\TestWindow.xaml">
