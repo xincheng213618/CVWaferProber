@@ -51,6 +51,10 @@ namespace CVAVMControl
         private bool _isHovering = false; // 仅标记是否悬浮，不跟踪坐标
         private readonly object _lockObj = new object(); // 线程锁，避免并发更新
 
+        // 记录当前选中的角度（用于区分普通线和选中线）
+        private int _selectedAngle = -1;
+        // 记录当前选中的半径（R圆面板用）
+        private int _selectedRadius = -1;
         public CVVAMAnalyzer()
         {
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
@@ -194,6 +198,16 @@ namespace CVAVMControl
                 }
                 center = new System.Windows.Point(YMat.Width / 2.0, YMat.Height / 2.0);
                 imageRadius = (int)(MaxAngle / ConoscopeCoefficient);
+
+                // 初始化：默认选中第一个角度
+                if (cbDisplayAngle.Items.Count > 0 && cbDisplayAngle.Items[0] is ComboBoxItem firstItem)
+                {
+                    cbDisplayAngle.SelectedItem = firstItem;
+                    if (int.TryParse(firstItem.Tag?.ToString(), out int firstAngle))
+                    {
+                        _selectedAngle = firstAngle;
+                    }
+                }
                 UpdateDisplay();
 
                 fileInfo.Dispose();
@@ -411,29 +425,12 @@ namespace CVAVMControl
                 Cv2.Circle(colorMat, centerPoint, (int)circleRadius, circleColor, circleLineWidth);
             }
 
-            // 3. 黄色辅助角度线（直径线：边缘一侧→中心→边缘另一侧）
-            //var yellowAngles = new List<double> { 20, 40, 110, 130, 150 };
-            //Scalar yellowColor = new Scalar(0, 255, 255);
-            //int yellowLineWidth = 10;
-            //foreach (double angle in yellowAngles)
-            //{
-            //    double radian = angle * Math.PI / 180.0;
-            //    // 直径线的起点（图像边缘一侧）
-            //    OpenCvSharp.Point startPoint = new OpenCvSharp.Point(
-            //        (int)(centerPoint.X - maxRadius * Math.Cos(radian)),
-            //        (int)(centerPoint.Y - maxRadius * Math.Sin(radian))
-            //    );
-            //    // 直径线的终点（图像边缘另一侧）
-            //    OpenCvSharp.Point endPoint = new OpenCvSharp.Point(
-            //        (int)(centerPoint.X + maxRadius * Math.Cos(radian)),
-            //        (int)(centerPoint.Y + maxRadius * Math.Sin(radian))
-            //    );
-            //    // 绘制完整直径线（贯穿整个图像）
-            //    Cv2.Line(colorMat, startPoint, endPoint, yellowColor, yellowLineWidth);
-            //}
+           
             // 2. 核心逻辑：根据按钮文本切换绘制的下拉框黄线
             Scalar yellowColor = new Scalar(0, 255, 255); // 基础黄色
+            Scalar greenColor = new Scalar(255, 0, 255);   // 选中→紫色
             int yellowLineWidth = 10;
+            int selectedLineWidth = 20; // 选中绿线宽（新增15）
 
             // 获取按钮当前显示的文本（匹配动态资源）
             string currentBtnText = btnSwitchChart.Content.ToString();
@@ -454,12 +451,18 @@ namespace CVAVMControl
                         (int)(centerPoint.X + maxRadius * Math.Cos(radian)),
                         (int)(centerPoint.Y + maxRadius * Math.Sin(radian))
                     );
-                    Cv2.Line(colorMat, startPoint, endPoint, yellowColor, yellowLineWidth);
+                    // 关键：判断当前角度是否为选中状态，设置颜色
+                    // 关键：同时判断颜色和线宽
+                    bool isSelected = angle == _selectedAngle;
+                    Scalar lineColor = isSelected ? greenColor : yellowColor;
+                    int lineWidth = isSelected ? selectedLineWidth : yellowLineWidth;
+                    Cv2.Line(colorMat, startPoint, endPoint, lineColor, lineWidth);
                     // 添加半径角度备注（标注在终点外侧）
                     OpenCvSharp.Point labelPos = new OpenCvSharp.Point(
                         (int)(endPoint.X + 15 * Math.Cos(radian)),
                         (int)(endPoint.Y + 15 * Math.Sin(radian))
                     );
+                   
                     DrawAngleLabel(colorMat, labelPos, $"{angle}(R)", new Scalar(0, 255, 255), fontScale: 7);
                 }
             }
@@ -478,7 +481,12 @@ namespace CVAVMControl
                         (int)(centerPoint.X + maxRadius * Math.Cos(radian)),
                         (int)(centerPoint.Y + maxRadius * Math.Sin(radian))
                     );
-                    Cv2.Line(colorMat, startPoint, endPoint, yellowColor, yellowLineWidth);
+                    // 关键：同时判断颜色和线宽
+                    bool isSelected = angle == _selectedRadius;
+                    Scalar lineColor = isSelected ? greenColor : yellowColor;
+                    int lineWidth = isSelected ? selectedLineWidth : yellowLineWidth;
+
+                    Cv2.Line(colorMat, startPoint, endPoint, lineColor, lineWidth);
                     // 添加角度备注（标注在终点外侧）
                     OpenCvSharp.Point labelPos = new OpenCvSharp.Point(
                         (int)(endPoint.X + 15 * Math.Cos(radian)),
@@ -1075,15 +1083,10 @@ namespace CVAVMControl
                 if (int.TryParse(angleStr, out int angle))
                 {
                     displayAngle = angle;
-                    if (IsMatSafe(YMat))
-                    {
-                        UpdateDisplay();
-                    }
-                    else
-                    {
-                        // 仅用户主动切换时弹提示
-                        MessageBox.Show("数据未加载或已释放，请重新打开CVCIE文件", "提示");
-                    }
+                    _selectedAngle = angle; // 更新“选中角度”
+                    _selectedRadius = -1; // 切换面板时重置另一面板的选中状态
+                    if (IsMatSafe(YMat)) UpdateDisplay();
+                    else MessageBox.Show("数据未加载或已释放，请重新打开CVCIE文件", "提示");
                 }
             } 
         }
@@ -1117,18 +1120,14 @@ namespace CVAVMControl
                 if (int.TryParse(radiusStr, out int radius))
                 {
                     displayRadius = radius;
-                    if (YMat != null && !YMat.Empty())
-                    {
-                        UpdateDisplay();
-                    }
+                    _selectedRadius = radius; // 更新“选中半径”
+                    _selectedAngle = -1; // 切换面板时重置另一面板的选中状态
+                    if (IsMatSafe(YMat)) UpdateDisplay();
                 }
             }
         }
-        // 切换图表
-        string RCircle = (string)Application.Current.FindResource("Plot.Title.RCircle");
-        string Diameter = (string)Application.Current.FindResource("Plot.Title.DiameterLine");
-        private HersheyFonts labelFontFace;
 
+        // 切换图表
         private void BtnSwitchChart_Click(object sender, RoutedEventArgs e)
         {
             //if (btnSwitchChart.Content.ToString() == RCircle)
