@@ -126,10 +126,10 @@
                     Header="{DynamicResource Menu.About}"
                     InputGestureText="Alt+T" />
             </MenuItem>
-            <MenuItem
+            <!--<MenuItem
                 Command="{Binding OpenCommand}"
                 Header="VAM Demo"
-                InputGestureText="Alt+D" />
+                InputGestureText="Alt+D" />-->
             <MenuItem
                 Command="{Binding ExitCommand}"
                 Header="{DynamicResource Menu.Exit}"

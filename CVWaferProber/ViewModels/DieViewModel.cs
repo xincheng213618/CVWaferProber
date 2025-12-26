@@ -15,7 +15,23 @@ namespace CVWaferProber.ViewModels
         public int? ScreenY => (int?)chipViewModel?.Position.Y;
         public int? MapX => chipViewModel?.Column;
         public int? MapY => chipViewModel?.Row;
-        public string? SerialNumber {  get; set; }
+        // 核心修改：SerialNumber 属性添加变更通知
+        private string? _serialNumber;
+        public string? SerialNumber
+        {
+            get => _serialNumber;
+            set
+            {
+                if (_serialNumber != value)
+                {
+                    _serialNumber = value;
+                    OnPropertyChanged(nameof(SerialNumber));
+                    // 通知MainViewModel更新良率
+                    MainViewModel.Instance?.CalculateYieldBySerialNumber();
+                }
+            }
+        }
+
         public bool IsIVLCameraEnabled {  get; set; }
         public bool IsChinese {  get; set; }
 

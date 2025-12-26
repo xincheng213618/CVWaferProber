@@ -238,14 +238,14 @@ namespace CVWaferProber.Views
                     e.Handled = true;
                     AnchorableMapping.IsVisible = !AnchorableMapping.IsVisible;
                     break;
-                case Key.C: // Alt+C 切换中文
-                    e.Handled = true;
-                    LanguageMenuItem_Click(MenuLanguageChinese, new RoutedEventArgs());
-                    break;
-                case Key.E: // Alt+E 切换英文
-                    e.Handled = true;
-                    LanguageMenuItem_Click(MenuLanguageEnglish, new RoutedEventArgs());
-                    break;
+                //case Key.C: // Alt+C 切换中文
+                //    e.Handled = true;
+                //    LanguageMenuItem_Click(MenuLanguageChinese, new RoutedEventArgs());
+                //    break;
+                //case Key.E: // Alt+E 切换英文
+                //    e.Handled = true;
+                //    LanguageMenuItem_Click(MenuLanguageEnglish, new RoutedEventArgs());
+                //    break;
                 case Key.F4: // Alt+F4 退出
                     e.Handled = true;
                     (DataContext as ViewModels.MainViewModel)?.ExitCommand?.Execute(null);

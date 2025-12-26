@@ -415,6 +415,7 @@
                                                     BorderThickness="0"
                                                     Command="{Binding SearchCommand}"
                                                     Content="{DynamicResource BtnSearch}" />
+                                                
                                             </StackPanel>
                                         </StackPanel>
                                         <DockPanel Height="30" Margin="5,5">

@@ -97,7 +97,7 @@ namespace CVWaferProber.ViewModels
         public ICommand ExitCommand { get; }
         // 打开帮助命令
         public ICommand OpenHelpCommand { get; }
-        public ICommand OpenCommand { get; }
+        //public ICommand OpenCommand { get; }
 
 
         // 打开关于命令
@@ -337,7 +337,7 @@ namespace CVWaferProber.ViewModels
             SaveTestResultCommand = new RelayCommand(SaveTestResult);
             LoadTestResultCommand = new RelayCommand(LoadTestResult);
             ResetStatusCommand = new RelayCommand(ResetStatus);
-            OpenCommand  = new RelayCommand( Opena);
+            //OpenCommand  = new RelayCommand( Opena);
             ClearMappingCommand = new RelayCommand(_ => ClearMapping());
             FlowLoadCommand = new RelayCommand(_ => LoadBuzWPFlows());
             RCRegCommand = new RelayCommand(_ => RCReg());
@@ -445,12 +445,12 @@ namespace CVWaferProber.ViewModels
         }
 
 
-        private void Opena(object obj)
-        {
-            DemoWindow demoWindow = new DemoWindow();
-            demoWindow.Show();
+        //private void Opena(object obj)
+        //{
+        //    DemoWindow demoWindow = new DemoWindow();
+        //    demoWindow.Show();
 
-        }
+        //}
 
         // SN索引字典
         private Dictionary<string, List<DieViewModel>> _snIndex = new Dictionary<string, List<DieViewModel>>(StringComparer.OrdinalIgnoreCase);
@@ -1053,6 +1053,9 @@ namespace CVWaferProber.ViewModels
             {
                 die.ResetStatus();
             }
+
+            // 新增：计算良率
+            CalculateYieldBySerialNumber();
         }
 
         private void RCReg()
@@ -1198,7 +1201,8 @@ namespace CVWaferProber.ViewModels
                 //CustomImageVM?.ClearImageResult();
                 //CustomImageVM?.LoadImageResult(dieViewModel.chipViewModel.ChipData, dieViewModel.SerialNumber);
             }
-
+            // 新增：计算良率
+            CalculateYieldBySerialNumber();
             //Task.Factory.StartNew(() => CustomImageVM?.LoadImageResult(dieViewModel.chipViewModel.ChipData, dieViewModel.SerialNumber));
         }
         private void NextTestingDie()
@@ -1238,6 +1242,10 @@ namespace CVWaferProber.ViewModels
                 aoiService.StartTestingAOI(Timestamp, itemToSelect, _selectedWPFlow, false);
                 //Task task = DoAsyncStartTestingDie(itemToSelect, false);
                 //StartTestingDie(itemToSelect);
+
+
+                // 新增：计算良率（序列号赋值后立即更新）
+                CalculateYieldBySerialNumber();
             }
             else
             {
@@ -1605,6 +1613,8 @@ namespace CVWaferProber.ViewModels
             {
                 _wmProcessor.MeasurementStoped();
             }
+            // 新增：计算良率
+            CalculateYieldBySerialNumber();
             //_wmProcessor.MeasurementStoped();
         }
         private void StopSim()
@@ -1665,6 +1675,9 @@ namespace CVWaferProber.ViewModels
             {
                 ExecuteSearch();
             }
+
+            // 新增：计算良率
+            CalculateYieldBySerialNumber();
         }
         // 设置DataGrid引用
         public void SetDataGrid(DataGrid dataGrid)
@@ -1793,8 +1806,48 @@ namespace CVWaferProber.ViewModels
             DockingManager.UpdateLayout();
        
         }
-       
 
+        #region 计算良率
+        private string _yieldInfo = "0/0 (0.00%)";
+        /// <summary>
+        /// 良率信息（成功数/已测试数 + 良率百分比）
+        /// </summary>
+        public string YieldInfo
+        {
+            get => _yieldInfo;
+            set => SetProperty(ref _yieldInfo, value);
+        }
+
+        // 新增：基于序列号统计良率的核心方法
+        public void CalculateYieldBySerialNumber()
+        {
+            if (TestResults == null || !TestResults.Any())
+            {
+                YieldInfo = "0/0 (0.00%)";
+                return;
+            }
+
+            // 1. 筛选已测试芯片：SerialNumber 不为空/空字符串
+            var testedDices = TestResults.Where(d => !string.IsNullOrEmpty(d.SerialNumber)).ToList();
+            if (!testedDices.Any())
+            {
+                YieldInfo = "0/0 (0.00%)";
+                return;
+            }
+
+            // 2. 统计已测试芯片中的成功数（根据业务定义成功状态）
+            int successCount = testedDices.Count(d =>
+                d.Status == ChipStatus.OK ||
+                d.Status == ChipStatus.IVL_COMPLETED||
+                d.Status == ChipStatus.EQE_COMPLETED); // 可扩展其他成功状态
+
+            // 3. 计算良率
+            double yieldRate = (double)successCount / testedDices.Count * 100;
+
+            // 4. 格式化显示：成功数/已测试数 (百分比)
+            YieldInfo = $"{successCount}/{testedDices.Count} ({yieldRate:F2}%)";
+        }
+        #endregion
 
     }
 }

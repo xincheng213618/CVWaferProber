@@ -223,6 +223,14 @@
                 VerticalAlignment="Center"
                 Text="TD Count:" />
             <TextBox IsEnabled="False" Text="{Binding TDCount}" />
+            <TextBlock
+                Margin="2,0"
+                VerticalAlignment="Center"
+                Text="良率:" />
+            <TextBox
+                Width="80"
+                IsEnabled="False"
+                Text="{Binding DataContext.YieldInfo, RelativeSource={RelativeSource AncestorType=UserControl}}" />
             <!--
             <TextBlock Text="间距:" VerticalAlignment="Center" Margin="5,0"/>
             <TextBlock Text="水平:" VerticalAlignment="Center" Margin="2,0"/>
