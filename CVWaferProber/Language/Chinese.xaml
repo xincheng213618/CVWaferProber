@@ -140,6 +140,9 @@
     <sys:String x:Key="Menu.UserManual">使用手册</sys:String>
     <sys:String x:Key="Menu.About">关于软件</sys:String>
     <sys:String x:Key="Menu.Exit">退出(Alt+F4)</sys:String>
+    <!--  设备调试相关  -->
+    <sys:String x:Key="Menu.DeviceDebug">设备(D)</sys:String>
+    <sys:String x:Key="Menu.ProberDeviceDebug">机台调试</sys:String>
 
     <!--  VAM相关  -->
     <sys:String x:Key="VAM.OpenCVCIEFile">打开CVCIE文件</sys:String>

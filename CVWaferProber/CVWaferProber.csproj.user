@@ -9,6 +9,9 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Components\ProberDebugControl.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Views\DockMainWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -21,11 +24,17 @@
     <Compile Update="Views\NoneMapingDockWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Views\ProberDebugWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Views\TestWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Page Update="Components\ProberDebugControl.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Language\Chinese.xaml">
       <SubType>Designer</SubType>
     </Page>
@@ -45,6 +54,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Views\NoneMapingDockWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\ProberDebugWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Views\TestWindow.xaml">

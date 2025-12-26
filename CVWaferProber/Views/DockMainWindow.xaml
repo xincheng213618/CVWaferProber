@@ -35,6 +35,7 @@
             <!--  菜单高度自适应  -->
             <RowDefinition Height="*" />
             <!--  剩余空间给docking面板  -->
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!--  顶部菜单栏  -->
@@ -114,6 +115,13 @@
                     Header="{DynamicResource Menu.Language.English}"
                     InputGestureText="Alt+Shift+E"
                     Tag="English" />
+            </MenuItem>
+            <!--  设备菜单  -->
+            <MenuItem Header="{DynamicResource Menu.DeviceDebug}" InputGestureText="Alt+D">
+                <MenuItem
+                    Command="{Binding OpenProberDeviceDebugCommand}"
+                    Header="{DynamicResource Menu.ProberDeviceDebug}"
+                    InputGestureText="Alt+U" />
             </MenuItem>
             <!--  帮助菜单  -->
             <MenuItem Header="{DynamicResource Menu.Help}" InputGestureText="Alt+H">
@@ -243,5 +251,11 @@
                 </avalon:LayoutPanel>
             </avalon:LayoutRoot>
         </avalon:DockingManager>
+
+        <StatusBar Grid.Row="2">
+            <StatusBarItem>
+                <TextBlock x:Name="tbConnectionStatus" Text="状态: 未连接"/>
+            </StatusBarItem>
+        </StatusBar>
     </Grid>
 </Window>

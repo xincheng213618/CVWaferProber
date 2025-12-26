@@ -97,8 +97,9 @@ namespace CVWaferProber.ViewModels
         public ICommand ExitCommand { get; }
         // 打开帮助命令
         public ICommand OpenHelpCommand { get; }
-        //public ICommand OpenCommand { get; }
-
+        public ICommand OpenCommand { get; }
+        //打开机台设备调试窗口
+        public ICommand OpenProberDeviceDebugCommand { get; }
 
         // 打开关于命令
         public ICommand OpenAboutCommand { get; }
@@ -345,6 +346,8 @@ namespace CVWaferProber.ViewModels
             //ResetLayoutCommand = new RelayCommand(ExecuteResetLayout);
             OpenHelpCommand = new RelayCommand(ExecuteOpenHelp);
             OpenAboutCommand = new RelayCommand(ExecuteOpenAbout);
+            //
+            OpenProberDeviceDebugCommand = new RelayCommand(OpenProberDeviceDebug);
             // 绑定退出命令：执行 Application.Shutdown() 关闭整个程序
             ExitCommand = new CVImgRelayCommand(() =>
             {
@@ -422,6 +425,12 @@ namespace CVWaferProber.ViewModels
             //IsCameraPanelVisible = Properties.Settings.Default.IsCameraPanelVisible;
             //IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
 
+        }
+
+        private void OpenProberDeviceDebug(object obj)
+        {
+            ProberDebugWindow newWindow = new ProberDebugWindow();
+            newWindow.Show();
         }
 
 
