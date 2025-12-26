@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace ChipMapping.ViewModels
@@ -27,6 +28,7 @@ namespace ChipMapping.ViewModels
         //private ChipStatus _filterStatus = ChipStatus.Normal | ChipStatus.Warning | ChipStatus.Error | ChipStatus.Offline;
         private ChipStatus _filterStatus = ChipStatus.OK | ChipStatus.WAITING;
 
+       
         // 行列布局参数
         private int _rows = 30;
         private int _columns = 40;
@@ -54,6 +56,8 @@ namespace ChipMapping.ViewModels
 
         
         public ObservableCollection<ChipViewModel> Chips { get; } = new ObservableCollection<ChipViewModel>();
+        // 新增：状态提示列表（绑定到UI）
+        public ObservableCollection<StatusTip> StatusTips { get; } = new ObservableCollection<StatusTip>();
         public ICollectionView FilteredChips { get; }
 
         public ICommand RefreshCommand { get; }
@@ -78,9 +82,86 @@ namespace ChipMapping.ViewModels
             DisabledInput = false;
             // 初始化画布大小
             UpdateCanvasSize();
-
+            InitStatusTips();
             Refresh();
         }
+
+        #region 颜色状态说明
+        // 初始化状态-颜色-说明的映射
+        private void InitStatusTips()
+        {
+            StatusTips.Clear();
+            // 对应ChipStatus的每个状态，配置颜色和说明
+            StatusTips.Add(new StatusTip
+            {
+                Status = ChipStatus.WAITING,
+                Color = new SolidColorBrush(Colors.Blue), // 蓝
+                Description = "未检测"
+            });
+            StatusTips.Add(new StatusTip
+            {
+                Status = ChipStatus.TESTING,
+                Color = new SolidColorBrush(Colors.Yellow), // 黄
+                Description = "正在检测"
+            });
+            StatusTips.Add(new StatusTip
+            {
+                Status = ChipStatus.OK,
+                Color = new SolidColorBrush(Colors.Green), // 绿
+                Description = "检测OK"
+            });
+            StatusTips.Add(new StatusTip
+            {
+                Status = ChipStatus.AOI_NG,
+                Color = new SolidColorBrush(Colors.Red), // 红
+                Description = "AOI外观检测NG"
+            });
+            StatusTips.Add(new StatusTip
+            {
+                Status = ChipStatus.DW_NG,
+                Color = new SolidColorBrush(Colors.Orange), // 橙
+                Description = "定位NG"
+            });
+            StatusTips.Add(new StatusTip
+            {
+                Status = ChipStatus.BLIND,
+                Color = new SolidColorBrush(Colors.Gray), // 灰
+                Description = "完全不亮"
+            });
+            StatusTips.Add(new StatusTip
+            {
+                Status = ChipStatus.CAL_NG,
+                Color = new SolidColorBrush(Colors.Purple), // 紫
+                Description = "提取失败"
+            });
+            StatusTips.Add(new StatusTip
+            {
+                Status = ChipStatus.I2C_NG,
+                Color = new SolidColorBrush(Colors.White), // 白
+                Description = "I2C状态异常"
+            });
+            StatusTips.Add(new StatusTip
+            {
+                Status = ChipStatus.AOI_LINE_NG,
+                Color = new SolidColorBrush(Colors.Olive), // 橄榄
+                Description = "线缺陷检测NG"
+            });
+            StatusTips.Add(new StatusTip
+            {
+                Status = ChipStatus.IVL_TESTING,
+                Color = new SolidColorBrush(Colors.LightYellow), // 浅黄
+                Description = "IVL正在检测"
+            });
+            StatusTips.Add(new StatusTip
+            {
+                Status = ChipStatus.IVL_COMPLETED,
+                Color = new SolidColorBrush(Colors.LightGreen), // 浅绿
+                Description = "IVL检测完成"
+            });
+            // 可继续添加其他状态...
+        }
+        #endregion
+
         // 1. 新增：芯片选中事件（供上层ViewModel订阅）
         public event EventHandler<ChipViewModel> ChipSelected;
 
@@ -420,6 +501,16 @@ namespace ChipMapping.ViewModels
             get => _tdCount;
             set => SetProperty(ref _tdCount, value);
         }
+
+        // 新增：良率转发属性（绑定到UI）
+        private string _yieldInfo = "0/0 (0.00%)";
+        public string YieldInfo
+        {
+            get => _yieldInfo;
+            set => SetProperty(ref _yieldInfo, value);
+        }
+
+
         // 计算画布大小
         public double CanvasWidth { get; private set; } = 1000;
         public double CanvasHeight { get; private set; } = 1000;

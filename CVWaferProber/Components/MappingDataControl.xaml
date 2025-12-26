@@ -233,7 +233,7 @@
         BorderThickness="0">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="6.05*" />
+                <RowDefinition Height="6.5*" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="5*" />
             </Grid.RowDefinitions>

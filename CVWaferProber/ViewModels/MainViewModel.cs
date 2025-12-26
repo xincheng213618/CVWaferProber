@@ -1491,6 +1491,7 @@ namespace CVWaferProber.ViewModels
         {
             CustomMappingVM.DisabledInput = IsProcessing = false;
             EnableBtn(true);
+            CalculateYieldBySerialNumber(); // 自动同步到CustomMappingVM.YieldInfo
         }
         /*
         private async Task DoAsyncStartTestingDie(DieViewModel die,bool isEnd = true)
@@ -1817,44 +1818,61 @@ namespace CVWaferProber.ViewModels
         }
 
         #region 计算良率
+        // 良率核心属性
         private string _yieldInfo = "0/0 (0.00%)";
-        /// <summary>
-        /// 良率信息（成功数/已测试数 + 良率百分比）
-        /// </summary>
         public string YieldInfo
         {
             get => _yieldInfo;
-            set => SetProperty(ref _yieldInfo, value);
+            set
+            {
+                if (_yieldInfo != value)
+                {
+                    _yieldInfo = value;
+                    OnPropertyChanged(nameof(YieldInfo));
+                    // 同步到CustomMappingVM，供ChipMappingControl绑定
+                    CustomMappingVM.YieldInfo = value;
+                }
+            }
         }
-
         // 新增：基于序列号统计良率的核心方法
         public void CalculateYieldBySerialNumber()
         {
-            if (TestResults == null || !TestResults.Any())
+            try
             {
-                YieldInfo = "0/0 (0.00%)";
-                return;
-            }
+                if (TestResults == null || !TestResults.Any())
+                {
+                    YieldInfo = "0/0 (0.00%)";
+                    return;
+                }
 
-            // 1. 筛选已测试芯片：SerialNumber 不为空/空字符串
-            var testedDices = TestResults.Where(d => !string.IsNullOrEmpty(d.SerialNumber)).ToList();
-            if (!testedDices.Any())
+                // 筛选已测试芯片（序列号非空）
+                var testedDices = TestResults.Where(d => !string.IsNullOrWhiteSpace(d.SerialNumber)).ToList();
+                if (!testedDices.Any())
+                {
+                    YieldInfo = "0/0 (0.00%)";
+                    return;
+                }
+
+                // 统计成功数
+                int successCount = testedDices.Count(d =>
+                    d.Status == ChipStatus.OK ||
+                    d.Status == ChipStatus.IVL_COMPLETED ||
+                    d.Status == ChipStatus.EQE_COMPLETED);
+
+                // 计算良率
+                double yieldRate = (double)successCount / testedDices.Count * 100;
+                YieldInfo = $"{successCount}/{testedDices.Count} ({yieldRate:F2}%)";
+
+
+                //// 手动同步（兜底）
+                //CustomMappingVM.YieldInfo = YieldInfo;
+                //CustomMappingVM.OnPropertyChanged(nameof(CustomMappingVM.YieldInfo));
+            }
+            catch (Exception ex)
             {
-                YieldInfo = "0/0 (0.00%)";
-                return;
+                logger.Error("良率计算异常", ex);
+                YieldInfo = "计算异常";
             }
-
-            // 2. 统计已测试芯片中的成功数（根据业务定义成功状态）
-            int successCount = testedDices.Count(d =>
-                d.Status == ChipStatus.OK ||
-                d.Status == ChipStatus.IVL_COMPLETED||
-                d.Status == ChipStatus.EQE_COMPLETED); // 可扩展其他成功状态
-
-            // 3. 计算良率
-            double yieldRate = (double)successCount / testedDices.Count * 100;
-
-            // 4. 格式化显示：成功数/已测试数 (百分比)
-            YieldInfo = $"{successCount}/{testedDices.Count} ({yieldRate:F2}%)";
         }
         #endregion
 

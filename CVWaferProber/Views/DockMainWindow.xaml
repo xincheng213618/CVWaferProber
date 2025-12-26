@@ -170,7 +170,9 @@
                                         Title="{DynamicResource Dock.Layout.Title.Mapping}"
                                         AutoHideMinWidth="20"
                                         AutoHideWidth="300"
+                                        CanAutoHide="False"
                                         CanClose="False"
+                                        CanDockAsTabbedDocument="False"
                                         CanHide="True">
                                         <!--  绑定Grid的Visibility  -->
                                         <DockPanel x:Name="PanelMapping">
@@ -194,7 +196,9 @@
                                         x:Name="AnchorableCamera"
                                         Title="AOI"
                                         AutoHideMinHeight="100"
+                                        CanAutoHide="False"
                                         CanClose="False"
+                                        CanDockAsTabbedDocument="False"
                                         CanHide="True">
                                         <DockPanel x:Name="PanelCamera" Grid.Row="0">
                                             <cvimg:CVCamImagerCtrl x:Name="MyImageControl" DataContext="{Binding CustomImageVM}" />
@@ -203,7 +207,9 @@
                                     <avalon:LayoutAnchorable
                                         x:Name="AnchorableSP"
                                         Title="{DynamicResource Dock.Layout.Title.SP}"
+                                        CanAutoHide="False"
                                         CanClose="False"
+                                        CanDockAsTabbedDocument="False"
                                         CanHide="True">
                                         <DockPanel x:Name="PanelSP" Grid.Row="1">
                                             <cvsp:CVSpectrumAnalyzer x:Name="spaly" DataContext="{Binding CustomIVLVM}" />
@@ -212,7 +218,9 @@
                                     <avalon:LayoutAnchorable
                                         x:Name="AnchorableVAM"
                                         Title="VAM"
+                                        CanAutoHide="False"
                                         CanClose="False"
+                                        CanDockAsTabbedDocument="False"
                                         CanHide="True">
                                         <DockPanel x:Name="PanelVAM" Grid.Row="1">
                                             <cvvam:CVVAMAnalyzer x:Name="MyVAM" />
@@ -222,7 +230,9 @@
                                         x:Name="AnchorableLog"
                                         Title="{DynamicResource Dock.Layout.Title.Log}"
                                         AutoHideMinHeight="150"
+                                        CanAutoHide="False"
                                         CanClose="False"
+                                        CanDockAsTabbedDocument="False"
                                         CanHide="True">
                                         <TextBox
                                             x:Name="LogTextBox"
@@ -254,7 +264,7 @@
 
         <StatusBar Grid.Row="2">
             <StatusBarItem>
-                <TextBlock x:Name="tbConnectionStatus" Text="状态: 未连接"/>
+                <TextBlock x:Name="tbConnectionStatus" Text="状态: 未连接" />
             </StatusBarItem>
         </StatusBar>
     </Grid>
