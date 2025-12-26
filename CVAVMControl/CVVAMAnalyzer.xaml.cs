@@ -430,7 +430,7 @@ namespace CVAVMControl
             Scalar yellowColor = new Scalar(0, 255, 255); // 基础黄色
             Scalar greenColor = new Scalar(255, 0, 255);   // 选中→紫色
             int yellowLineWidth = 10;
-            int selectedLineWidth = 20; // 选中绿线宽（新增15）
+            int selectedLineWidth = 30; // 选中绿线宽（新增15）
 
             // 获取按钮当前显示的文本（匹配动态资源）
             string currentBtnText = btnSwitchChart.Content.ToString();
