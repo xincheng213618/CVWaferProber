@@ -49,6 +49,12 @@
     <Reference Include="CVMysqlLib">
       <HintPath>..\DLL\CVMysqlLib.dll</HintPath>
     </Reference>
+    <Reference Include="WaferComm.Client">
+      <HintPath>..\DLL\WaferComm.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="WaferComm.Core">
+      <HintPath>..\DLL\WaferComm.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>

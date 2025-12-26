@@ -429,7 +429,7 @@ namespace CVWaferProber.ViewModels
 
         private void OpenProberDeviceDebug(object obj)
         {
-            ProberDebugWindow newWindow = new ProberDebugWindow();
+            DevProberDebugWindow newWindow = new DevProberDebugWindow();
             newWindow.Show();
         }
 

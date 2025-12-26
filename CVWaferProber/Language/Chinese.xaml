@@ -143,6 +143,7 @@
     <!--  设备调试相关  -->
     <sys:String x:Key="Menu.DeviceDebug">设备(D)</sys:String>
     <sys:String x:Key="Menu.ProberDeviceDebug">机台调试</sys:String>
+    <sys:String x:Key="ProberDebugControl.ConnCfg">连接设置</sys:String>
 
     <!--  VAM相关  -->
     <sys:String x:Key="VAM.OpenCVCIEFile">打开CVCIE文件</sys:String>

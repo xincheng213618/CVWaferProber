@@ -15,11 +15,11 @@ using System.Windows.Shapes;
 namespace CVWaferProber.Views
 {
     /// <summary>
-    /// ProberDebugWindow.xaml 的交互逻辑
+    /// DevProberDebugWindow.xaml 的交互逻辑
     /// </summary>
-    public partial class ProberDebugWindow : Window
+    public partial class DevProberDebugWindow : Window
     {
-        public ProberDebugWindow()
+        public DevProberDebugWindow()
         {
             InitializeComponent();
         }
