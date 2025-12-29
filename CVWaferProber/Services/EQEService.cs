@@ -1,15 +1,7 @@
 ﻿using CVWaferProber.Core.Models.Enums;
-using CVWaferProber.Utils;
 using CVWaferProber.ViewModels;
 using CVWPFSpectrometerCtrl.ViewModels;
-using log4net;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using static CVWaferProber.Utils.AutoExportHelper;
 
 namespace CVWaferProber.Services
 {
@@ -24,10 +16,10 @@ namespace CVWaferProber.Services
         // EQE无需相机启用标记，移除IsEQECameraEnabled
 
         // EQE专属VM（对应IVL的CustomIVLVM）
-        private CVSpectrumViewModel CustomEQEVM { get; set; }
+        private CVEQEViewModel CustomEQEVM { get; set; }
 
         // 构造函数：完全复刻IVL，仅替换VM名称
-        public EQEService(CVSpectrumViewModel customEQEVM, RCRestService rcService) : base(rcService)
+        public EQEService(CVEQEViewModel customEQEVM, RCRestService rcService) : base(rcService)
         {
             this.CustomEQEVM = customEQEVM;
         }
@@ -90,7 +82,7 @@ namespace CVWaferProber.Services
         {
             CustomEQEVM.ClearResult();
             // EQE仅需SerialNumber加载数据
-            CustomEQEVM.LoadSpectrumData(dieViewModel.SerialNumber);
+            CustomEQEVM.LoadEQEData(dieViewModel.SerialNumber);
         }
 
         // 重写基类方法
@@ -104,7 +96,7 @@ namespace CVWaferProber.Services
         {
             EQEResultDisplay(dieViewModel);
             CustomEQEVM.ClearResult();
-            CustomEQEVM.LoadSpectrumData(dieViewModel.SerialNumber);
+            CustomEQEVM.LoadEQEData(dieViewModel.SerialNumber);
             return ChipStatus.EQE_COMPLETED; // 替换为EQE完成状态
         }
 
