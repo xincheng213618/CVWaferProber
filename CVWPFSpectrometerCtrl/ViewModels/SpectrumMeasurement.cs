@@ -1,8 +1,5 @@
 ﻿using CVWaferProber.Core.ViewModels;
-using CVWPFSpectrumControl.Models;
 using OxyPlot;
-using System.Drawing;
-using System.Windows;
 
 namespace CVWPFSpectrometerCtrl.ViewModels
 {

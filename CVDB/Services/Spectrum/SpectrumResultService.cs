@@ -9,6 +9,10 @@ namespace CVDB.Services.Spectrum
         {
             return MysqlControler.GetInstance().Sql.Select<VScgdMeasureResultSpectrometer>().Where(a => a.DeviceCode == deviceCode && a.BatchCode == serialNumber).ToList();
         }
+        public static List<VScgdMeasureResultEqe> LoadEQEResultByBatchCode(string deviceCode, string serialNumber)
+        {
+            return MysqlControler.GetInstance().Sql.Select<VScgdMeasureResultEqe>().Where(a => a.DeviceCode == deviceCode && a.BatchCode == serialNumber).ToList();
+        }
         // 新增方法：根据设备编码，获取所有有效的序列号（BatchCode）
         public static List<string> GetAllBatchCodesByDeviceCode(string deviceCode)
         {

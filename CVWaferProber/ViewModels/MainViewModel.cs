@@ -42,6 +42,7 @@ namespace CVWaferProber.ViewModels
         public CVCamImagerViewModel? CustomImageVM { get; set; }
         //public CVCameraImageViewModel? CustomImageVM { get; set; }
         public CVSpectrumViewModel? CustomIVLVM { get; set; }
+        public CVEQEViewModel? CustomEQEVM { get; set; }
 
         private GSWMProcessor _wmProcessor;
 
@@ -275,6 +276,7 @@ namespace CVWaferProber.ViewModels
         private DispatcherTimer? _simAutoTestTimer;
         private RCRestService rcModel;
         private IVLService ivlService;
+        private EQEService eqeService;
         private AOIService aoiService;
         //private AlgResultModel algResultModel;
         /// <summary>
@@ -415,6 +417,9 @@ namespace CVWaferProber.ViewModels
 
             aoiService = new AOIService(CustomImageVM, rcModel);
             aoiService.TestingCompleted += OnTestingCompleted;
+            //
+            eqeService = new EQEService(CustomEQEVM, rcModel);
+            eqeService.TestingCompleted += OnTestingCompleted;
 
             SubscribeItems_AOI(TestResults);
             SubscribeItems_IVL(TestResults);
@@ -1470,7 +1475,7 @@ namespace CVWaferProber.ViewModels
                     }
                     else if (SelectedWPFlow.FlowType == CVWaferProberFlowType.EQE)
                     {
-                        //eqeService.StartTestingEQE(Timestamp, die, _selectedWPFlow);
+                        eqeService.StartTestingEQE(Timestamp, die, _selectedWPFlow);
                     }
                     else
                     {
