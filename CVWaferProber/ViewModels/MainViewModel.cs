@@ -382,6 +382,7 @@ namespace CVWaferProber.ViewModels
 
             //  打开Summary导出配置窗口
             OpenSummaryConfigCommand = new RelayCommand(OpenSummaryConfig);
+            SysFlowCfgCommand = new RelayCommand(SysFlowCfg);
 
             // 新增：初始化筛选集合为全部数据
             FilteredTestResults = new ObservableCollection<DieViewModel>(TestResults);
@@ -433,6 +434,12 @@ namespace CVWaferProber.ViewModels
             //IsCameraPanelVisible = Properties.Settings.Default.IsCameraPanelVisible;
             //IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
 
+        }
+
+        private void SysFlowCfg(object obj)
+        {
+            SysFlowCfgWindow cfgWindow = new SysFlowCfgWindow();
+            cfgWindow.Show();
         }
 
         private void OpenProberDeviceDebug(object obj)
@@ -1087,7 +1094,7 @@ namespace CVWaferProber.ViewModels
         private void LoadBuzWPFlows()
         {
             rcModel.RcRegist();
-            List<TScgdBuzProductDetail> flows = WaferProberDBService.LoadFlows();
+            List<TScgdBuzProductDetail> flows = WaferProberDBService.LoadBuzFlows();
             WPFlows.Clear();
             if (flows != null && flows.Count > 0)
             {
@@ -1907,6 +1914,7 @@ namespace CVWaferProber.ViewModels
         /// 打开Summary导出配置窗口命令
         /// </summary>
         public ICommand OpenSummaryConfigCommand { get; }
+        public ICommand SysFlowCfgCommand { get; }
 
         /// <summary>
         /// 初始化列配置（严格匹配DieViewModel的属性）

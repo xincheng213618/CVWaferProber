@@ -691,7 +691,7 @@
                                                 <CheckBox
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
-                                                    IsChecked="{Binding IsVAMEnabled, Mode=TwoWay, UpdateSourceTrigger=Property Changed}"
+                                                    IsChecked="{Binding IsVAMEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                     IsHitTestVisible="True"
                                                     Style="{StaticResource CellCheckBoxStyle}" />
                                             </DataTemplate>
