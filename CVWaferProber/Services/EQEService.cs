@@ -46,35 +46,35 @@ namespace CVWaferProber.Services
             Task task = RunFlowAsync(_selectedWPFlow, dieViewModel);
 
             // 初始化刷新定时器
-            System.Timers.Timer refreshTimer = new System.Timers.Timer(350)
-            {
-                AutoReset = true,
-                Enabled = true
-            };
+            //System.Timers.Timer refreshTimer = new System.Timers.Timer(350)
+            //{
+            //    AutoReset = true,
+            //    Enabled = true
+            //};
 
-            // 定时器回调：复刻IVL的UI线程调用逻辑，仅替换EQEResultDisplay
-            refreshTimer.Elapsed += (sender, e) =>
-            {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    try
-                    {
-                        EQEResultDisplay(_currentDieVM);
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.Warn("定时器刷新EQE图表失败", ex);
-                    }
-                });
-            };
+            //// 定时器回调：复刻IVL的UI线程调用逻辑，仅替换EQEResultDisplay
+            //refreshTimer.Elapsed += (sender, e) =>
+            //{
+            //    Application.Current.Dispatcher.Invoke(() =>
+            //    {
+            //        try
+            //        {
+            //            EQEResultDisplay(_currentDieVM);
+            //        }
+            //        catch (Exception ex)
+            //        {
+            //            logger.Warn("定时器刷新EQE图表失败", ex);
+            //        }
+            //    });
+            //};
 
-            // 测试结束停止定时器
-            task.ContinueWith(t =>
-            {
-                refreshTimer.Enabled = false;
-                refreshTimer.Dispose();
-                logger.Debug("EQE测试流程结束，停止刷新定时器");
-            }, TaskScheduler.FromCurrentSynchronizationContext());
+            //// 测试结束停止定时器
+            //task.ContinueWith(t =>
+            //{
+            //    refreshTimer.Enabled = false;
+            //    refreshTimer.Dispose();
+            //    logger.Debug("EQE测试流程结束，停止刷新定时器");
+            //}, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         // EQE结果展示方法：移除Camera参数，仅保留SerialNumber

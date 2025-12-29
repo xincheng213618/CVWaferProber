@@ -47,13 +47,13 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         public PlotModel OverviewILPlotModel { get; private set; } = new PlotModel();
         public PlotModel OverviewVLPlotModel { get; private set; } = new PlotModel();
 
-        private SpectrumMeasurement _selectedMeasurement;
-        private ObservableCollection<SpectrumMeasurement> _measurements;
+        private SpectrumEQEMeasurement _selectedMeasurement;
+        private ObservableCollection<SpectrumEQEMeasurement> _measurements;
         private ObservableCollection<ILMeasurement> _ILMeasurements;
         private ObservableCollection<IVMeasurement> _IVMeasurements;
         private ObservableCollection<VLMeasurement> _VLMeasurements;
         //private ObservableCollection<IVLMeasurement> _IVLMeasurements;
-        private ObservableCollection<IVLCameraMeasurement> _IVLCameraMeasurements;
+        //private ObservableCollection<IVLCameraMeasurement> _IVLCameraMeasurements;
         private ObservableCollection<SpectralData> _SpectralData;
 
         public float[] Wavelengths;
@@ -341,7 +341,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 UpdateEQEChartByShowAllState();
             }
         }
-        public SpectrumMeasurement SelectedMeasurement
+        public SpectrumEQEMeasurement SelectedMeasurement
         {
             get => _selectedMeasurement;
             set
@@ -531,7 +531,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 plotModel.InvalidatePlot(true);
             }
         }
-        public ObservableCollection<SpectrumMeasurement> Measurements
+        public ObservableCollection<SpectrumEQEMeasurement> Measurements
         {
             get => _measurements;
             set => SetProperty(ref _measurements, value);
@@ -723,11 +723,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged(nameof(IVLCameraImageSrc));
             }
         }
-        public ObservableCollection<IVLCameraMeasurement> IVLCameraMeasurements
-        {
-            get => _IVLCameraMeasurements;
-            set => SetProperty(ref _IVLCameraMeasurements, value);
-        }
+        //public ObservableCollection<IVLCameraMeasurement> IVLCameraMeasurements
+        //{
+        //    get => _IVLCameraMeasurements;
+        //    set => SetProperty(ref _IVLCameraMeasurements, value);
+        //}
         #endregion IVLCamera
 
         #region Tab
@@ -775,7 +775,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             {
                 Wavelengths[i] = 380 + i / 10.0f;
             }
-            Measurements = new ObservableCollection<SpectrumMeasurement>();
+            Measurements = new ObservableCollection<SpectrumEQEMeasurement>();
             SpectralGridItems = new ObservableCollection<SpectralGridItem>(); // 初始化右侧DataGrid数据源
             InitializePlotModel();
             InitializeIVPlotModel();
@@ -783,7 +783,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             InitializeVLPlotModel();
             // 新增：初始化EQE图表
             InitializeEQEPlotModel();
-            InitializeIVLCameraModel();
+            //InitializeIVLCameraModel();
             BtnResetStatus = new RelayCommand(IVResetStatus);
             #region 导出EQE CSV
             EQEExportCommand = new RelayCommand(() =>
@@ -1682,7 +1682,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
 
         // ---------- 辅助方法：计算单条测量的整体EQE（需替换为真实业务逻辑） ----------
-        private void ExportEQEToCsv(string fileName, ObservableCollection<SpectrumMeasurement> measurements, float[]? wavelengths)
+        private void ExportEQEToCsv(string fileName, ObservableCollection<SpectrumEQEMeasurement> measurements, float[]? wavelengths)
         {
             if (measurements == null || !measurements.Any() || wavelengths == null || wavelengths.Length == 0)
             {
@@ -1826,7 +1826,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
         }
 
-        private double CalculateEQEValue(SpectrumMeasurement measurement)
+        private double CalculateEQEValue(SpectrumEQEMeasurement measurement)
         {
             // 示例：这里需要你根据实际的EQE公式实现（比如结合光谱强度、波长、电流等）
             // 以下是占位逻辑，需替换为真实计算
@@ -1955,7 +1955,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
         #region 光谱
         // 导出CSV的方法（参数：保存路径、Measurements数据列表、波长数组）
-        private void ExportToCsv(string fileName, ObservableCollection<SpectrumMeasurement> measurements, float[]? wavelengths, float fPlambda = 1.0f)
+        private void ExportToCsv(string fileName, ObservableCollection<SpectrumEQEMeasurement> measurements, float[]? wavelengths, float fPlambda = 1.0f)
         {
             if (measurements == null || !measurements.Any() || wavelengths == null || wavelengths.Length == 0)
             {
@@ -2579,14 +2579,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
         private static readonly ILog log = LogManager.GetLogger(nameof(CVSpectrumAnalyzer));
 
-        private void InitializeIVLCameraModel()
-        {
-            IVLCameraViewModel viewModel = new IVLCameraViewModel();
-            IVLCamera_viewModel = viewModel;
-            IVLCameraMeasurements = viewModel.Measurements;
+        //private void InitializeIVLCameraModel()
+        //{
+        //    IVLCameraViewModel viewModel = new IVLCameraViewModel();
+        //    IVLCamera_viewModel = viewModel;
+        //    IVLCameraMeasurements = viewModel.Measurements;
 
-            IVLCamera_viewModel.PropertyChanged += OnIVLCameraPropertyChanged;
-        }
+        //    IVLCamera_viewModel.PropertyChanged += OnIVLCameraPropertyChanged;
+        //}
 
 
 
@@ -2783,21 +2783,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             IVLCamera_viewModel.Clear();
             IVLCameraImageSrc = null;
         }
-        public void LoadData(string serialNumber, bool isIVLCameraEnabled)
-        {
-            //CurrentSerialNumber = serialNumber; // 保存当前SerialNumber
-            if (string.IsNullOrWhiteSpace(serialNumber))
-            {
-                ClearAllDisplays(); // 清空所有图像和数据
-                return;
-            }
-            Clear();
-            if (string.IsNullOrEmpty(serialNumber)) return;
-            if (isIVLCameraEnabled) LoadCameraData(serialNumber);
-            else LoadEQEData(serialNumber);
-        }
 
-        private void ClearAllDisplays()
+        public void ClearAllDisplays()
         {
             // 清空图表
             PlotModel.Series.Clear();
@@ -2825,7 +2812,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             ILMeasurements.Clear();
             IVMeasurements.Clear();
             VLMeasurements.Clear();
-            IVLCameraMeasurements.Clear();
+            //IVLCameraMeasurements.Clear();
             SpectralGridItems?.Clear();
             PlotModel.Series.Clear();
             // 新增：清空EQE图表
@@ -2926,15 +2913,13 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             foreach (var result in results)
             {
                
-                var measurement = new SpectrumMeasurement(n++)
+                var measurement = new SpectrumEQEMeasurement(n++)
                 {
                     Timestamp = result.CreateDate,
                     Meas_Id = result.BatchCode,
                     Voltage = (float)result.VResult,
                     Current = (float)result.IResult,
                     Luminance = (float)result.FPh / 1,
-
-                    
 
                     IP = Math.Round((decimal)(result.FIp / 65535 * 100), 2).ToString() + "%",
 
@@ -2953,6 +2938,12 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     Intensities = GetIntensitiesFromFileOrOriginal(result),
                     Wavelengths = Wavelengths,
                     fPlambda = (float)result.FPlambda,
+                    //
+                    EQE = (double)result.Eqe,
+                    LuminousFlux = (float)result.LuminousFlux,
+                    RadiantFlux = (float)result.RadiantFlux,
+                    LuminousEfficacy = (double)result.LuminousEfficacy,
+                    //
                     RowLineColor = ConvertToOxyColor(SpectralLineColor)
                 };
                 double sum1 = 0, sum2 = 0;
@@ -2986,12 +2977,12 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             // 触发自动导出
             //AutoExportData();
         }
-        public SpectrumMeasurement GetSpectrumData(string serialNumber)
-        {
-            // 逻辑：根据serialNumber获取对应的光谱数据（与LoadData中的数据加载逻辑一致）
-            var targetMeasurement = Measurements.FirstOrDefault(m => m.Meas_Id == serialNumber);
-            return targetMeasurement ?? new SpectrumMeasurement(0); // 找不到则返回空对象
-        }
+        //public SpectrumMeasurement GetSpectrumData(string serialNumber)
+        //{
+        //    // 逻辑：根据serialNumber获取对应的光谱数据（与LoadData中的数据加载逻辑一致）
+        //    var targetMeasurement = Measurements.FirstOrDefault(m => m.Meas_Id == serialNumber);
+        //    return targetMeasurement ?? new SpectrumMeasurement(0); // 找不到则返回空对象
+        //}
         /// <summary>
         /// 优先从FPLFileName指定的文件读取Intensities数据，失败则使用原始result.FPL
         /// </summary>
@@ -3176,7 +3167,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
         }
 
-        private void UpdateSpectralGridData(SpectrumMeasurement measurement)
+        private void UpdateSpectralGridData(SpectrumEQEMeasurement measurement)
         {
             if (string.IsNullOrWhiteSpace(measurement?.Meas_Id) || measurement == null)
             {

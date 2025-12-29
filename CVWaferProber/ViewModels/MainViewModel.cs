@@ -16,7 +16,6 @@ using CVWaferProber.WinMsg;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
 using Microsoft.Win32;
-using MySql.Data.MySqlClient.X.XDevAPI.Common;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -25,11 +24,8 @@ using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Threading;
-
-using static FreeSql.Internal.GlobalFilter;
 
 
 namespace CVWaferProber.ViewModels
@@ -1222,6 +1218,7 @@ namespace CVWaferProber.ViewModels
                 //CustomImageVM?.ClearImageResult();
                 //CustomImageVM?.LoadImageResult(dieViewModel.chipViewModel.ChipData, dieViewModel.SerialNumber);
             }
+            eqeService.EQEResultDisplay(dieViewModel);
             // 新增：计算良率
             CalculateYieldBySerialNumber();
             //Task.Factory.StartNew(() => CustomImageVM?.LoadImageResult(dieViewModel.chipViewModel.ChipData, dieViewModel.SerialNumber));
