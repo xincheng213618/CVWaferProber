@@ -40,7 +40,8 @@ namespace CVWaferProber.Views
         private CVSpectrumAnalyzer? _spAnalyzer; // 对应XAML中的spaly
         private TabControl? _spInnerTabControl;  // spaly内的innerTabControl
                                                  // 1. 红框第一项：切换到SP内层面板索引0（光谱）
-        
+                                                 // 暴露MappingDataControl
+       
         public DockMainWindow()
         {
             InitializeComponent();

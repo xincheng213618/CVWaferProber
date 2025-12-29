@@ -651,7 +651,7 @@ namespace ChipMapping.ViewModels
                 var Wid = dataRange.MaxPosX - dataRange.MinPosX;
                 var Hei = dataRange.MaxPosY - dataRange.MinPosY;
 
-                // 创建屏幕（假设为800x600像素）
+                // 创建屏幕
                 System.Drawing.Size screenSize = new System.Drawing.Size(_screenWidth-10, _screenHeight-10);
 
                 // 定义数学坐标系范围（x从-10到10，y从-5到5）

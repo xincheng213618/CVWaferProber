@@ -123,6 +123,14 @@
                     Header="{DynamicResource Menu.ProberDeviceDebug}"
                     InputGestureText="Alt+U" />
             </MenuItem>
+            <!--  新增：顶级“导出”菜单  -->
+            <MenuItem Header="导出配置(E)" InputGestureText="Alt+E">
+                <MenuItem
+                    x:Name="MenuSummaryConfig"
+                    Command="{Binding OpenSummaryConfigCommand}"
+                    Header="Summary导出配置"
+                    InputGestureText="Alt+S" />
+            </MenuItem>
             <!--  帮助菜单  -->
             <MenuItem Header="{DynamicResource Menu.Help}" InputGestureText="Alt+H">
                 <MenuItem
@@ -173,6 +181,7 @@
                                         CanAutoHide="False"
                                         CanClose="False"
                                         CanDockAsTabbedDocument="False"
+                                        CanFloat="False"
                                         CanHide="True">
                                         <!--  绑定Grid的Visibility  -->
                                         <DockPanel x:Name="PanelMapping">
@@ -199,6 +208,7 @@
                                         CanAutoHide="False"
                                         CanClose="False"
                                         CanDockAsTabbedDocument="False"
+                                        CanFloat="False"
                                         CanHide="True">
                                         <DockPanel x:Name="PanelCamera" Grid.Row="0">
                                             <cvimg:CVCamImagerCtrl x:Name="MyImageControl" DataContext="{Binding CustomImageVM}" />
@@ -210,6 +220,7 @@
                                         CanAutoHide="False"
                                         CanClose="False"
                                         CanDockAsTabbedDocument="False"
+                                        CanFloat="False"
                                         CanHide="True">
                                         <DockPanel x:Name="PanelSP" Grid.Row="1">
                                             <cvsp:CVSpectrumAnalyzer x:Name="spaly" DataContext="{Binding CustomIVLVM}" />
@@ -221,6 +232,7 @@
                                         CanAutoHide="False"
                                         CanClose="False"
                                         CanDockAsTabbedDocument="False"
+                                        CanFloat="False"
                                         CanHide="True">
                                         <DockPanel x:Name="PanelVAM" Grid.Row="1">
                                             <cvvam:CVVAMAnalyzer x:Name="MyVAM" />
@@ -233,6 +245,7 @@
                                         CanAutoHide="False"
                                         CanClose="False"
                                         CanDockAsTabbedDocument="False"
+                                        CanFloat="False"
                                         CanHide="True">
                                         <TextBox
                                             x:Name="LogTextBox"

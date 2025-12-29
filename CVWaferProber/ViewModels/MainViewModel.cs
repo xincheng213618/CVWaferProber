@@ -3,7 +3,6 @@ using AvalonDock.Layout;
 using ChipMapping.Models;
 using ChipMapping.ViewModels;
 using ColorVision.Core.Entities;
-using ConoscopeDemo;
 using CVAVMControl;
 using CVDB.Services.Buz;
 using CVWaferProber.Components;
@@ -17,6 +16,7 @@ using CVWaferProber.WinMsg;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
 using Microsoft.Win32;
+using MySql.Data.MySqlClient.X.XDevAPI.Common;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -24,6 +24,7 @@ using System.IO;
 using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -311,6 +312,7 @@ namespace CVWaferProber.ViewModels
         //private int _overTimefRestapi = 30; //S
         public MainViewModel()
         {
+           
             Instance = this;
             _selectedItem = null;
             _selectedFlow = null;
@@ -378,6 +380,11 @@ namespace CVWaferProber.ViewModels
             InvertSelectIVLCommand = new RelayCommand(ExecuteInvertSelectIVL);
             InvertSelectEQECommand = new RelayCommand(ExecuteInvertSelectEQE);
             InvertSelectVAMCommand = new RelayCommand(ExecuteInvertSelectVAM);
+
+
+            //  打开Summary导出配置窗口
+            OpenSummaryConfigCommand = new RelayCommand(OpenSummaryConfig);
+
             // 新增：初始化筛选集合为全部数据
             FilteredTestResults = new ObservableCollection<DieViewModel>(TestResults);
 
@@ -408,7 +415,7 @@ namespace CVWaferProber.ViewModels
             LoadBuzWPFlows();
 
             InitMQTT();
-
+            InitColumnConfigs();
             ivlService = new IVLService(CustomIVLVM, rcModel);
             ivlService.ProberId = ProberId;
             ivlService.TestingCompleted += OnTestingCompleted;
@@ -1492,6 +1499,8 @@ namespace CVWaferProber.ViewModels
             CustomMappingVM.DisabledInput = IsProcessing = false;
             EnableBtn(true);
             CalculateYieldBySerialNumber(); // 自动同步到CustomMappingVM.YieldInfo
+                                            // 测试完成后自动导出Summary结果
+            AutoExportSummaryResult();
         }
         /*
         private async Task DoAsyncStartTestingDie(DieViewModel die,bool isEnd = true)
@@ -1876,5 +1885,305 @@ namespace CVWaferProber.ViewModels
         }
         #endregion
 
+        #region Summary导出配置相关
+        /// <summary>
+        /// DataGrid实例（用于动态生成列）
+        /// </summary>
+        private DataGrid _dataGrid1;
+
+        /// <summary>
+        /// 所有列配置（含默认列+可选列）
+        /// </summary>
+        private List<ColumnConfig> _allColumnConfigs;
+
+        /// <summary>
+        /// 当前选中的列配置（用于动态生成DataGrid列）
+        /// </summary>
+        public ObservableCollection<ColumnConfig> SelectedColumnConfigs { get; set; }
+
+        /// <summary>
+        /// 打开Summary导出配置窗口命令
+        /// </summary>
+        public ICommand OpenSummaryConfigCommand { get; }
+
+        /// <summary>
+        /// 初始化列配置（严格匹配DieViewModel的属性）
+        /// </summary>
+        private void InitColumnConfigs()
+        {
+            // 初始化所有列配置（默认列设为不可选，其他为可选）
+            _allColumnConfigs = new List<ColumnConfig>
+            {
+                // 默认必选列（不可取消）
+                new ColumnConfig
+                {
+                    ColumnHeader = "序号",
+                    ColumnBindingPath = "Id",
+                    IsSelected = true,
+                    IsOptional = false,
+                    ColumnType = ColumnType.Text
+                },
+                new ColumnConfig
+                {
+                    ColumnHeader = "行",
+                    ColumnBindingPath = "MapY",
+                    IsSelected = true,
+                    IsOptional = false,
+                    ColumnType = ColumnType.Text
+                },
+                new ColumnConfig
+                {
+                    ColumnHeader = "列",
+                    ColumnBindingPath = "MapX",
+                    IsSelected = true,
+                    IsOptional = false,
+                    ColumnType = ColumnType.Text
+                },
+                // 可选列（严格匹配DieViewModel的属性名）
+                new ColumnConfig
+                {
+                    ColumnHeader = "AOI",
+                    ColumnBindingPath = "IsAOIEnabled",
+                    IsSelected = false,
+                    IsOptional = true,
+                    ColumnType = ColumnType.CheckBox
+                },
+                new ColumnConfig
+                {
+                    ColumnHeader = "IVL",
+                    ColumnBindingPath = "IsIVLEnabled",
+                    IsSelected = false,
+                    IsOptional = true,
+                    ColumnType = ColumnType.CheckBox
+                },
+                new ColumnConfig
+                {
+                    ColumnHeader = "EQE",
+                    ColumnBindingPath = "IsEQEEnabled",
+                    IsSelected = false,
+                    IsOptional = true,
+                    ColumnType = ColumnType.CheckBox
+                },
+                new ColumnConfig
+                {
+                    ColumnHeader = "VAM",
+                    ColumnBindingPath = "IsVAMEnabled",
+                    IsSelected = false,
+                    IsOptional = true,
+                    ColumnType = ColumnType.CheckBox
+                },
+                new ColumnConfig
+                {
+                    ColumnHeader = "序列号",
+                    ColumnBindingPath = "SerialNumber",
+                    IsSelected = false,
+                    IsOptional = true,
+                    ColumnType = ColumnType.Text
+                },
+                new ColumnConfig
+                {
+                    ColumnHeader = "测试状态",
+                    ColumnBindingPath = "DisplayStatus",
+                    IsSelected = false,
+                    IsOptional = true,
+                    ColumnType = ColumnType.Text
+                },
+                new ColumnConfig
+                {
+                    ColumnHeader = "均匀性",
+                    ColumnBindingPath = "DataValue",
+                    IsSelected = false,
+                    IsOptional = true,
+                    ColumnType = ColumnType.Text
+                },
+                new ColumnConfig
+                {
+                    ColumnHeader = "开始测试时间",
+                    ColumnBindingPath = "StartTestTime",
+                    IsSelected = false,
+                    IsOptional = true,
+                    ColumnType = ColumnType.Text
+                },
+                new ColumnConfig
+                {
+                    ColumnHeader = "结束测试时间",
+                    ColumnBindingPath = "EndTestTime",
+                    IsSelected = false,
+                    IsOptional = true,
+                    ColumnType = ColumnType.Text
+                },
+                new ColumnConfig
+                {
+                    ColumnHeader = "总耗时",
+                    ColumnBindingPath = "TotalTime",
+                    IsSelected = false,
+                    IsOptional = true,
+                    ColumnType = ColumnType.Text
+                }
+            };
+
+            // 初始化选中列（默认只选必选列）
+            SelectedColumnConfigs = new ObservableCollection<ColumnConfig>(
+                _allColumnConfigs.Where(c => c.IsSelected));
+        }
+
+        /// <summary>
+        /// 打开Summary导出配置窗口
+        /// </summary>
+        private void OpenSummaryConfig()
+        {
+            var configWindow = new SummaryConfigWindow(_allColumnConfigs);
+            if (configWindow.ShowDialog() == true)
+            {
+                // 更新选中列配置
+                SelectedColumnConfigs.Clear();
+                foreach (var config in configWindow.SelectedColumns)
+                {
+                    SelectedColumnConfigs.Add(config);
+                    // 同步更新_allColumnConfigs的选中状态（下次打开窗口保留选择）
+                    var targetConfig = _allColumnConfigs.First(c => c.ColumnBindingPath == config.ColumnBindingPath);
+                    targetConfig.IsSelected = config.IsSelected;
+                }
+                // 刷新DataGrid列
+                UpdateDataGridColumns();
+            }
+        }
+
+        /// <summary>
+        /// 动态更新DataGrid列（适配DieViewModel的属性类型）
+        /// </summary>
+        public void UpdateDataGridColumns()
+        {
+            if (_dataGrid1 == null || SelectedColumnConfigs.Count == 0) return;
+
+            // 清空原有列
+            _dataGrid1.Columns.Clear();
+
+            // 按配置生成列
+            foreach (var config in SelectedColumnConfigs)
+            {
+                if (config.ColumnType == ColumnType.CheckBox)
+                {
+                    // CheckBox列（AOI/IVL/EQE/VAM）
+                    var templateColumn = new DataGridTemplateColumn
+                    {
+                        Header = config.ColumnHeader
+                    };
+                    var checkBoxFactory = new FrameworkElementFactory(typeof(CheckBox));
+                    checkBoxFactory.SetBinding(CheckBox.IsCheckedProperty, new Binding(config.ColumnBindingPath)
+                    {
+                        Mode = BindingMode.TwoWay,
+                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                    });
+                    checkBoxFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+                    checkBoxFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
+                    templateColumn.CellTemplate = new DataTemplate { VisualTree = checkBoxFactory };
+                    _dataGrid1.Columns.Add(templateColumn);
+                }
+                else
+                {
+                    // 文本列（适配可空类型：uint?/int?/DateTime?）
+                    _dataGrid1.Columns.Add(new DataGridTextColumn
+                    {
+                        Header = config.ColumnHeader,
+                        Binding = new Binding(config.ColumnBindingPath)
+                        {
+                            TargetNullValue = "", // 空值显示为空字符串
+                            StringFormat = config.ColumnBindingPath.Contains("Time") ? "yyyy-MM-dd HH:mm:ss" : null // 时间列格式化
+                        }
+                    });
+                }
+            }
+
+            // 保留行样式（状态颜色）
+            var rowStyle = _dataGrid1.RowStyle ?? _dataGrid1.FindResource(typeof(DataGridRow)) as Style;
+            if (rowStyle != null)
+            {
+                _dataGrid1.RowStyle = rowStyle;
+            }
+        }
+
+        /// <summary>
+        /// 自动导出Summary结果（适配DieViewModel的属性）
+        /// </summary>
+        private void AutoExportSummaryResult()
+        {
+            try
+            {
+                if (TestResults == null || !TestResults.Any())
+                {
+                    logger.Info("无测试结果，跳过Summary导出");
+                    return;
+                }
+
+                var savePath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                    $"Summary_Result_{DateTime.Now:yyyyMMddHHmmss}.csv");
+
+                // 写入CSV（处理中文+可空类型）
+                using (var writer = new StreamWriter(savePath, false, System.Text.Encoding.UTF8))
+                {
+                    // 写入表头
+                    var headers = SelectedColumnConfigs.Select(c => c.ColumnHeader).ToList();
+                    writer.WriteLine(string.Join(",", headers));
+
+                    // 写入数据行（遍历DieViewModel列表）
+                    foreach (var die in TestResults)
+                    {
+                        var rowData = new List<string>();
+                        foreach (var config in SelectedColumnConfigs)
+                        {
+                            // 获取DieViewModel的属性值（处理可空类型）
+                            var prop = die.GetType().GetProperty(config.ColumnBindingPath);
+                            if (prop == null)
+                            {
+                                rowData.Add("");
+                                continue;
+                            }
+
+                            var value = prop.GetValue(die);
+                            if (value == null || value == DBNull.Value)
+                            {
+                                rowData.Add("");
+                            }
+                            else if (value is bool boolValue)
+                            {
+                                rowData.Add(boolValue ? "是" : "否");
+                            }
+                            else if (value is DateTime dateTimeValue)
+                            {
+                                rowData.Add(dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss"));
+                            }
+                            else
+                            {
+                                // 处理数字/字符串类型
+                                rowData.Add(value.ToString());
+                            }
+                        }
+                        // 写入行（处理逗号转义）
+                        writer.WriteLine(string.Join(",", rowData.Select(d => d.Contains(",") ? $"\"{d}\"" : d)));
+                    }
+                }
+
+                logger.Info($"Summary结果已自动导出：{savePath}");
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    MessageBox.Show($"Summary结果已导出至：{savePath}", "导出成功",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                });
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Summary结果导出失败", ex);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    MessageBox.Show($"导出失败：{ex.Message}", "错误",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                });
+            }
+        }
+
+       
+        #endregion
     }
 }
