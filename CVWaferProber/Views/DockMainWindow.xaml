@@ -123,6 +123,14 @@
                     Header="{DynamicResource Menu.ProberDeviceDebug}"
                     InputGestureText="Alt+U" />
             </MenuItem>
+            <!--  新增：顶级“导出”菜单  -->
+            <MenuItem Header="导出配置(E)" InputGestureText="Alt+E">
+                <MenuItem
+                    x:Name="MenuSummaryConfig"
+                    Command="{Binding OpenSummaryConfigCommand}"
+                    Header="Summary导出配置"
+                    InputGestureText="Alt+S" />
+            </MenuItem>
             <!--  帮助菜单  -->
             <MenuItem Header="{DynamicResource Menu.Help}" InputGestureText="Alt+H">
                 <MenuItem
@@ -170,7 +178,10 @@
                                         Title="{DynamicResource Dock.Layout.Title.Mapping}"
                                         AutoHideMinWidth="20"
                                         AutoHideWidth="300"
+                                        CanAutoHide="False"
                                         CanClose="False"
+                                        CanDockAsTabbedDocument="False"
+                                        CanFloat="False"
                                         CanHide="True">
                                         <!--  绑定Grid的Visibility  -->
                                         <DockPanel x:Name="PanelMapping">
@@ -194,7 +205,10 @@
                                         x:Name="AnchorableCamera"
                                         Title="AOI"
                                         AutoHideMinHeight="100"
+                                        CanAutoHide="False"
                                         CanClose="False"
+                                        CanDockAsTabbedDocument="False"
+                                        CanFloat="False"
                                         CanHide="True">
                                         <DockPanel x:Name="PanelCamera" Grid.Row="0">
                                             <cvimg:CVCamImagerCtrl x:Name="MyImageControl" DataContext="{Binding CustomImageVM}" />
@@ -203,7 +217,10 @@
                                     <avalon:LayoutAnchorable
                                         x:Name="AnchorableSP"
                                         Title="{DynamicResource Dock.Layout.Title.SP}"
+                                        CanAutoHide="False"
                                         CanClose="False"
+                                        CanDockAsTabbedDocument="False"
+                                        CanFloat="False"
                                         CanHide="True">
                                         <DockPanel x:Name="PanelSP" Grid.Row="1">
                                             <cvsp:CVSpectrumAnalyzer x:Name="spaly" DataContext="{Binding CustomIVLVM}" />
@@ -212,7 +229,10 @@
                                     <avalon:LayoutAnchorable
                                         x:Name="AnchorableVAM"
                                         Title="VAM"
+                                        CanAutoHide="False"
                                         CanClose="False"
+                                        CanDockAsTabbedDocument="False"
+                                        CanFloat="False"
                                         CanHide="True">
                                         <DockPanel x:Name="PanelVAM" Grid.Row="1">
                                             <cvvam:CVVAMAnalyzer x:Name="MyVAM" />
@@ -222,7 +242,10 @@
                                         x:Name="AnchorableLog"
                                         Title="{DynamicResource Dock.Layout.Title.Log}"
                                         AutoHideMinHeight="150"
+                                        CanAutoHide="False"
                                         CanClose="False"
+                                        CanDockAsTabbedDocument="False"
+                                        CanFloat="False"
                                         CanHide="True">
                                         <TextBox
                                             x:Name="LogTextBox"
@@ -254,7 +277,7 @@
 
         <StatusBar Grid.Row="2">
             <StatusBarItem>
-                <TextBlock x:Name="tbConnectionStatus" Text="状态: 未连接"/>
+                <TextBlock x:Name="tbConnectionStatus" Text="状态: 未连接" />
             </StatusBarItem>
         </StatusBar>
     </Grid>

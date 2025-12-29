@@ -233,7 +233,7 @@
         BorderThickness="0">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="6.05*" />
+                <RowDefinition Height="6.5*" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="5*" />
             </Grid.RowDefinitions>
@@ -415,7 +415,7 @@
                                                     BorderThickness="0"
                                                     Command="{Binding SearchCommand}"
                                                     Content="{DynamicResource BtnSearch}" />
-                                                
+
                                             </StackPanel>
                                         </StackPanel>
                                         <DockPanel Height="30" Margin="5,5">
@@ -534,6 +534,7 @@
                                     <DataGridTextColumn Binding="{Binding Id}" Header="{DynamicResource GridHeader.No}" />
                                     <DataGridTextColumn Binding="{Binding MapY}" Header="{DynamicResource Maping.GridHeader.Row}" />
                                     <DataGridTextColumn Binding="{Binding MapX}" Header="{DynamicResource Maping.GridHeader.Col}" />
+
                                     <!--  1. AOI列（全选/反选改为按钮）  -->
                                     <DataGridTemplateColumn>
                                         <DataGridTemplateColumn.HeaderTemplate>
@@ -546,12 +547,12 @@
                                                         FontWeight="Bold"
                                                         Text="AOI" />
                                                     <StackPanel Orientation="Horizontal">
+
                                                         <!--  全选按钮  -->
                                                         <CheckBox
                                                             x:Name="selectAllCheckBox"
                                                             VerticalAlignment="Center"
                                                             IsChecked="{Binding DataContext.SelectAllAOI, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
-
                                                         <!--  反选按钮  -->
                                                         <Button
                                                             Command="{Binding DataContext.InvertSelectAOICommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
@@ -574,7 +575,9 @@
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
 
+
                                     <!--  2. IVL列（全选/反选改为按钮）  -->
+
                                     <DataGridTemplateColumn>
                                         <DataGridTemplateColumn.HeaderTemplate>
                                             <DataTemplate>
@@ -586,7 +589,9 @@
                                                         FontWeight="Bold"
                                                         Text="IVL" />
                                                     <StackPanel Orientation="Horizontal">
+
                                                         <!--  全选按钮  -->
+
                                                         <CheckBox
                                                             x:Name="selectAllCheckBox"
                                                             VerticalAlignment="Center"
@@ -612,7 +617,9 @@
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
 
+
                                     <!--  3. EQE列（全选/反选改为按钮）  -->
+
                                     <DataGridTemplateColumn>
                                         <DataGridTemplateColumn.HeaderTemplate>
                                             <DataTemplate>
@@ -624,7 +631,9 @@
                                                         FontWeight="Bold"
                                                         Text="EQE" />
                                                     <StackPanel Orientation="Horizontal">
+
                                                         <!--  全选按钮  -->
+
                                                         <CheckBox
                                                             x:Name="selectAllCheckBox"
                                                             VerticalAlignment="Center"
@@ -649,7 +658,9 @@
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
 
+
                                     <!--  4. VAM列（全选/反选改为按钮）  -->
+
                                     <DataGridTemplateColumn>
                                         <DataGridTemplateColumn.HeaderTemplate>
                                             <DataTemplate>
@@ -661,6 +672,7 @@
                                                         FontWeight="Bold"
                                                         Text="VAM" />
                                                     <StackPanel Orientation="Horizontal">
+
                                                         <!--  全选按钮  -->
                                                         <CheckBox
                                                             x:Name="selectAllCheckBox"
@@ -679,7 +691,7 @@
                                                 <CheckBox
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
-                                                    IsChecked="{Binding IsVAMEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                    IsChecked="{Binding IsVAMEnabled, Mode=TwoWay, UpdateSourceTrigger=Property Changed}"
                                                     IsHitTestVisible="True"
                                                     Style="{StaticResource CellCheckBoxStyle}" />
                                             </DataTemplate>

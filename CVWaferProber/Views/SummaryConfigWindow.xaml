@@ -1,0 +1,83 @@
+﻿<Window
+    x:Class="CVWaferProber.Views.SummaryConfigWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:CVWaferProber.Converters"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="SummaryConfigWindow"
+    Width="800"
+    Height="450"
+    mc:Ignorable="d">
+    <Window.Resources>
+        <local:BooleanToColorConverter x:Key="BooleanToColorConverter" />
+    </Window.Resources>
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!--  列选择列表  -->
+        <ListBox
+            x:Name="ColumnListBox"
+            Margin="0,0,0,10"
+            SelectionMode="Multiple">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel
+                        Height="30"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                        <CheckBox
+                            Width="20"
+                            VerticalAlignment="Center"
+                            IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                            IsEnabled="{Binding IsOptional}" />
+                        <TextBlock
+                            Margin="10,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="14"
+                            Foreground="{Binding IsOptional, Converter={StaticResource BooleanToColorConverter}}"
+                            Text="{Binding ColumnHeader}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!--  确认按钮  -->
+        <Button
+            Grid.Row="1"
+            Width="100"
+            Height="35"
+            HorizontalAlignment="Right"
+            Background="#FF0078D7"
+            BorderThickness="0"
+            Click="ConfirmButton_Click"
+            Content="确定"
+            Cursor="Hand"
+            Foreground="White">
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#FF005FB8" />
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter Property="Background" Value="#FF00479E" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Button.Style>
+        </Button>
+    </Grid>
+</Window>

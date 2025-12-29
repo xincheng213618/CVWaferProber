@@ -147,12 +147,17 @@
     <Grid Background="White" Cursor="{Binding EnabledInput, Converter={StaticResource BoolToCursorConverter}}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="8.5*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="1.5*" />
+        </Grid.ColumnDefinitions>
+
         <!--  工具栏  -->
-        <ToolBar Grid.Row="0">
+        <ToolBar Grid.Row="0" Grid.ColumnSpan="3">
             <!--<Button Content="刷新" Command="{Binding RefreshCommand}"/>
             <Separator/>-->
 
@@ -226,11 +231,9 @@
             <TextBlock
                 Margin="2,0"
                 VerticalAlignment="Center"
-                Text="良率:" />
-            <TextBox
-                Width="80"
-                IsEnabled="False"
-                Text="{Binding DataContext.YieldInfo, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                Text="Yield:" />
+            <TextBox IsEnabled="False" Text="{Binding YieldInfo}" />
+
             <!--
             <TextBlock Text="间距:" VerticalAlignment="Center" Margin="5,0"/>
             <TextBlock Text="水平:" VerticalAlignment="Center" Margin="2,0"/>
@@ -258,12 +261,12 @@
         </ToolBar>
 
 
-        <!--  主画布区域  -->
-        <Grid Grid.RowSpan="2" Margin="0,26,0,0">
+        <!--  主画布区域 Grid.ColumnSpan="2"  -->
+        <Grid Grid.Row="1" Margin="0,0,0,0">
             <ScrollViewer
                 Background="White"
                 BorderBrush="#FFCCCCCC"
-                BorderThickness="0,1,0,0"
+                BorderThickness="0,1"
                 HorizontalScrollBarVisibility="Auto"
                 VerticalScrollBarVisibility="Auto">
                 <Canvas
@@ -302,6 +305,7 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </Canvas>
+
             </ScrollViewer>
 
             <!--  详细信息面板  -->
@@ -340,8 +344,54 @@
             </StatusBarItem>
 
         </StatusBar>-->
-
-
+        <GridSplitter
+            Grid.Row="1"
+            Grid.Column="1"
+            Width="2"
+            HorizontalAlignment="Stretch"
+            Background="Transparent"
+            ShowsPreview="True" />
+        <Grid Grid.Row="1" Grid.Column="2">
+            <Border
+                Margin="5,2,5,2"
+                Background="White"
+                BorderBrush="#FFCCCCCC"
+                BorderThickness="1"
+                CornerRadius="4">
+                <StackPanel>
+                    <!--  标题  -->
+                    <TextBlock
+                        Margin="5,5,5,2"
+                        FontSize="12"
+                        FontWeight="Bold"
+                        Text="状态说明" />
+                    <!--  分隔线  -->
+                    <Rectangle
+                        Height="1"
+                        Margin="0,2,0,2"
+                        Fill="#FFE0E0E0" />
+                    <!--  状态列表：循环绑定ChipStatus的状态+颜色+说明  -->
+                    <ItemsControl ItemsSource="{Binding StatusTips}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="5,2" Orientation="Horizontal">
+                                    <!--  颜色方块  -->
+                                    <Rectangle
+                                        Width="12"
+                                        Height="12"
+                                        Margin="0,0,5,0"
+                                        Fill="{Binding Color}"
+                                        Stroke="#FFCCCCCC"
+                                        StrokeThickness="1" />
+                                    <!--  状态说明  -->
+                                    <TextBlock FontSize="11" Text="{Binding Description}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </Grid>
 
 
     </Grid>
