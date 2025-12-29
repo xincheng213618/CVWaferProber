@@ -547,10 +547,9 @@
                                                         FontWeight="Bold"
                                                         Text="AOI" />
                                                     <StackPanel Orientation="Horizontal">
-
                                                         <!--  全选按钮  -->
                                                         <CheckBox
-                                                            x:Name="selectAllCheckBox"
+                                                            x:Name="selectAllCheckBox_AOI"
                                                             VerticalAlignment="Center"
                                                             IsChecked="{Binding DataContext.SelectAllAOI, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                         <!--  反选按钮  -->
@@ -593,7 +592,7 @@
                                                         <!--  全选按钮  -->
 
                                                         <CheckBox
-                                                            x:Name="selectAllCheckBox"
+                                                            x:Name="selectAllCheckBox_IVL"
                                                             VerticalAlignment="Center"
                                                             IsChecked="{Binding DataContext.SelectAllIVL, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                         <Button
@@ -635,7 +634,7 @@
                                                         <!--  全选按钮  -->
 
                                                         <CheckBox
-                                                            x:Name="selectAllCheckBox"
+                                                            x:Name="selectAllCheckBox_EQE"
                                                             VerticalAlignment="Center"
                                                             IsChecked="{Binding DataContext.SelectAllEQE, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                         <Button
@@ -675,7 +674,7 @@
 
                                                         <!--  全选按钮  -->
                                                         <CheckBox
-                                                            x:Name="selectAllCheckBox"
+                                                            x:Name="selectAllCheckBox_VAM"
                                                             VerticalAlignment="Center"
                                                             IsChecked="{Binding DataContext.SelectAllVAM, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                         <Button
@@ -691,7 +690,7 @@
                                                 <CheckBox
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
-                                                    IsChecked="{Binding IsVAMEnabled, Mode=TwoWay, UpdateSourceTrigger=Property Changed}"
+                                                    IsChecked="{Binding IsVAMEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                     IsHitTestVisible="True"
                                                     Style="{StaticResource CellCheckBoxStyle}" />
                                             </DataTemplate>

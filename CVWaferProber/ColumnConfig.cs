@@ -41,7 +41,6 @@ namespace CVWaferProber
     /// </summary>
     public enum ColumnKey
     {
-        None,
         AOI,
         IVL,
         EQE,
