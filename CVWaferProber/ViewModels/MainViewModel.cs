@@ -2273,6 +2273,7 @@ namespace CVWaferProber.ViewModels
         public ICommand InvertSelectIVLCommand { get; }
         public ICommand InvertSelectEQECommand { get; }
         public ICommand InvertSelectVAMCommand { get; }
+        public ICommand SysFlowCfgCommand { get; }
         public ObservableCollection<DieViewModel> TestResults { get; } = new ObservableCollection<DieViewModel>();
         public RangeEnabledObservableCollection<FlowViewModel> FlowItems { get; } = new RangeEnabledObservableCollection<FlowViewModel>();
         public ObservableCollection<WPFlowViewModel> WPFlows { get; } = new ObservableCollection<WPFlowViewModel>();
