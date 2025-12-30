@@ -38,7 +38,7 @@ namespace CVAVMControl
 
         private System.Windows.Point center;
         private int imageRadius;
-        private double MaxAngle = 80; // Default max angle
+        private double MaxAngle = 60; // Default max angle
         private double ConoscopeCoefficient = 0.02645; // Pixels per degree
 
         private int displayAngle = 120; // Default display angle
@@ -294,7 +294,7 @@ namespace CVAVMControl
         /// <param name="bgColor">背景颜色（默认黑色半透明）</param>
         /// <param name="fontScale">字体缩放（默认0.8）</param>
         /// <param name="thickness">文字粗细（默认2）</param>
-        private void DrawAngleLabel(Mat mat, OpenCvSharp.Point pos, string text, Scalar? textColor = null, Scalar? bgColor = null, double fontScale = 0.8, int thickness = 10)
+        private void DrawAngleLabel(Mat mat, OpenCvSharp.Point pos, string text, Scalar? textColor = null, Scalar? bgColor = null, double fontScale = 0.8, int thickness = 15)
         {
             Scalar txtColor = textColor ?? new Scalar(0, 0, 0); // 默认白色
             //Scalar backgroundColor = bgColor ?? new Scalar(0, 0, 0, 128); // 黑色半透明
@@ -435,7 +435,8 @@ namespace CVAVMControl
         private void BtnAddAngle_Diameter_Click(object sender, RoutedEventArgs e)
         {
             AddAngleToComboBox(cbDisplayAngle, txtAddAngle.Text);
-            txtAddAngle.Text = string.Empty;
+            txtAddAngle.Text = string.Empty;// 新增：添加后立即刷新显示
+            UpdateDisplay();
         }
 
         // 直径线面板 - 删除角度
@@ -443,12 +444,14 @@ namespace CVAVMControl
         {
             DeleteAngleFromComboBox(cbDisplayAngle, txtDeleteAngle.Text);
             txtDeleteAngle.Text = string.Empty;
+            UpdateDisplay();
         }
         // R圆面板 - 添加角度
         private void BtnAddAngle_RCircle_Click(object sender, RoutedEventArgs e)
         {
             AddAngleToComboBox(cbDisplayRadius, txtAddAngle1.Text);
-            txtAddAngle1.Text = string.Empty;
+            txtAddAngle1.Text = string.Empty;  // 新增：删除后立即刷新显示
+            UpdateDisplay();
         }
 
         // R圆面板 - 删除角度
@@ -456,11 +459,11 @@ namespace CVAVMControl
         {
             DeleteAngleFromComboBox(cbDisplayRadius, txtDeleteAngle1.Text);
             txtDeleteAngle1.Text = string.Empty;
+            UpdateDisplay();
         }
         #endregion
         private void UpdateDisplay()
         {
-            // Get the selected channel
             Mat? selectedMat = GetSelectedChannelMat(displayChannel);
             if (selectedMat == null || selectedMat.Empty())
                 return;
@@ -474,159 +477,184 @@ namespace CVAVMControl
             Cv2.ApplyColorMap(mat8U, colorMat, ColormapTypes.Jet);
             normalizedMat.Dispose();
             mat8U.Dispose();
-            // ========== 画角度显示线 ==========
-            // 基础参数
-            OpenCvSharp.Point centerPoint = new OpenCvSharp.Point((int)center.X, (int)center.Y);
-            float maxRadius = (float)(MaxAngle / ConoscopeCoefficient); // 图像半径
 
-            // 1. 绘制同心圆（黄色细环线）
-            Scalar circleColor = new Scalar(0, 255, 255);
-            int circleLineWidth = 10;
+            // ========== 基础参数（核心修改：动态计算图像实际有效半径） ==========
+            OpenCvSharp.Point centerPoint = new OpenCvSharp.Point(
+                colorMat.Width / 2,  // 图像中心X（动态取图像宽度的一半）
+                colorMat.Height / 2  // 图像中心Y（动态取图像高度的一半）
+            );
+            // 动态计算“图像实际有效半径”：取图像宽/高的较小值的一半（确保圆环在图像内）
+            float imageActualRadius = Math.Min(colorMat.Width, colorMat.Height) / 2f;
+            // 动态计算“角度系数”：让最大圆环的半径刚好等于图像实际有效半径
+            double dynamicConoscopeCoefficient = imageActualRadius / MaxAngle;
+
+
+            // ========== 1. 绘制背景同心圆（均匀包裹图像） ==========
+            Scalar bgCircleColor = new Scalar(0, 255, 255); // 黄色
+            int bgCircleLineWidth = 10;
             int circleCount = 6; // 固定6条圆环
-            double circleIntervalAngle = MaxAngle / circleCount;
+                                 // 均匀分布：最大半径 = 图像实际有效半径，按6条均分
+            float bgCircleInterval = imageActualRadius / circleCount;
 
-            // 循环绘制6条同心圆（半径对应 10°、20°...60°）
             for (int i = 1; i <= circleCount; i++)
             {
-                // 计算当前圆环对应的角度 → 转换为像素半径
-                float currentAngle = (float)(i * circleIntervalAngle);
-                float circleRadius = (float)(currentAngle / ConoscopeCoefficient);
-                if (currentAngle > MaxAngle) break;
-                // 绘制圆环
-                Cv2.Circle(colorMat, centerPoint, (int)circleRadius, circleColor, circleLineWidth);
+                // 直接用图像像素半径（不再依赖MaxAngle换算）
+                float circleRadius = i * bgCircleInterval;
+                Cv2.Circle(
+                    colorMat,
+                    centerPoint,
+                    (int)circleRadius,
+                    bgCircleColor,
+                    bgCircleLineWidth,
+                    LineTypes.AntiAlias // 抗锯齿
+                );
             }
 
-            // 2. 核心逻辑：根据按钮文本切换绘制的下拉框黄线
-            Scalar yellowColor = new Scalar(0, 255, 255); // 基础黄色
-            Scalar greenColor = new Scalar(255, 0, 255);   // 选中→紫色
-            int yellowLineWidth = 10;
-            int selectedLineWidth = 30; // 选中绿线宽（新增15）
 
-            // 获取按钮当前显示的文本（匹配动态资源）
+            // ========== 2. 直径线/R圆模式的绘制逻辑（同步修改半径计算） ==========
+            Scalar yellowColor = new Scalar(0, 255, 255);
+            Scalar purpleColor = new Scalar(255, 0, 255);
+            int yellowLineWidth = 15;
+            int purpleLineWidth = 30;
+            int yellowCircleWidth = 15;
+            int purpleCircleWidth = 30;
+
             string currentBtnText = btnSwitchChart.Content.ToString();
             string rCircleTitle = FindResource("Plot.Title.RCircle").ToString();
             string diameterTitle = FindResource("Plot.Title.DiameterLine").ToString();
-             if (currentBtnText == rCircleTitle)
+
+
+            // 直径线模式：直线端点匹配图像边缘
+            if (currentBtnText == rCircleTitle)
             {
-                // 按钮显示R圆标题：绘制cbDisplayAngle的所有黄线
                 List<double> angleValues = GetAllComboBoxValues(cbDisplayAngle);
                 foreach (double angle in angleValues)
                 {
                     double radian = -angle * Math.PI / 180.0;
+                    // 直线端点取图像实际有效半径（确保直线贯穿图像）
                     OpenCvSharp.Point startPoint = new OpenCvSharp.Point(
-                        (int)(centerPoint.X - maxRadius * Math.Cos(radian)),
-                        (int)(centerPoint.Y - maxRadius * Math.Sin(radian))
+                        (int)(centerPoint.X - imageActualRadius * Math.Cos(radian)),
+                        (int)(centerPoint.Y - imageActualRadius * Math.Sin(radian))
                     );
                     OpenCvSharp.Point endPoint = new OpenCvSharp.Point(
-                        (int)(centerPoint.X + maxRadius * Math.Cos(radian)),
-                        (int)(centerPoint.Y + maxRadius * Math.Sin(radian))
+                        (int)(centerPoint.X + imageActualRadius * Math.Cos(radian)),
+                        (int)(centerPoint.Y + imageActualRadius * Math.Sin(radian))
                     );
-                    // 关键：判断当前角度是否为选中状态，设置颜色
-                    // 关键：同时判断颜色和线宽
-                    bool isSelected = angle == _selectedAngle;
-                    Scalar lineColor = isSelected ? greenColor : yellowColor;
-                    int lineWidth = isSelected ? selectedLineWidth : yellowLineWidth;
-                    Cv2.Line(colorMat, startPoint, endPoint, lineColor, lineWidth);
-                    // 添加半径角度备注（标注在终点外侧）
+                    Cv2.Line(colorMat, startPoint, endPoint, yellowColor, yellowLineWidth, LineTypes.AntiAlias);
+
+                    // 备注位置
                     OpenCvSharp.Point labelPos = new OpenCvSharp.Point(
                         (int)(endPoint.X + 15 * Math.Cos(radian)),
                         (int)(endPoint.Y + 15 * Math.Sin(radian))
                     );
-                   
-                    DrawAngleLabel(colorMat, labelPos, $"{angle}(R)", new Scalar(0, 255, 255), fontScale: 7);
+                    DrawAngleLabel(colorMat, labelPos, $"{angle}(A)", yellowColor, fontScale: 7);
                 }
-            }
-            else if (currentBtnText == diameterTitle)
-            {
-                // 按钮显示直径线标题：绘制cbDisplayRadius的所有黄线
-                List<double> radiusValues = GetAllComboBoxValues(cbDisplayRadius);
-                foreach (double angle in radiusValues)
+
+                // 选中项高亮
+                if (_selectedAngle != -1)
                 {
-                    double radian = angle * Math.PI / 180.0;
+                    double radian = -_selectedAngle * Math.PI / 180.0;
                     OpenCvSharp.Point startPoint = new OpenCvSharp.Point(
-                        (int)(centerPoint.X - maxRadius * Math.Cos(radian)),
-                        (int)(centerPoint.Y - maxRadius * Math.Sin(radian))
+                        (int)(centerPoint.X - imageActualRadius * Math.Cos(radian)),
+                        (int)(centerPoint.Y - imageActualRadius * Math.Sin(radian))
                     );
                     OpenCvSharp.Point endPoint = new OpenCvSharp.Point(
-                        (int)(centerPoint.X + maxRadius * Math.Cos(radian)),
-                        (int)(centerPoint.Y + maxRadius * Math.Sin(radian))
+                        (int)(centerPoint.X + imageActualRadius * Math.Cos(radian)),
+                        (int)(centerPoint.Y + imageActualRadius * Math.Sin(radian))
                     );
-                    // 关键：同时判断颜色和线宽
-                    bool isSelected = angle == _selectedRadius;
-                    Scalar lineColor = isSelected ? greenColor : yellowColor;
-                    int lineWidth = isSelected ? selectedLineWidth : yellowLineWidth;
+                    Cv2.Line(colorMat, startPoint, endPoint, purpleColor, purpleLineWidth, LineTypes.AntiAlias);
 
-                    Cv2.Line(colorMat, startPoint, endPoint, lineColor, lineWidth);
-                    // 添加角度备注（标注在终点外侧）
                     OpenCvSharp.Point labelPos = new OpenCvSharp.Point(
                         (int)(endPoint.X + 15 * Math.Cos(radian)),
                         (int)(endPoint.Y + 15 * Math.Sin(radian))
                     );
-                    DrawAngleLabel(colorMat, labelPos, $"{angle}(A)", new Scalar(0, 255, 255), fontScale: 7);
+                    DrawAngleLabel(colorMat, labelPos, $"{_selectedAngle}(A)", purpleColor, fontScale: 7);
                 }
-
-            
-           
             }
 
-            // 3. 红色主角度线（X/Y轴，贯穿整张图）
+
+            // R圆模式：圆环半径匹配图像实际有效区域
+            if (currentBtnText == diameterTitle)
+            {
+                List<double> radiusValues = GetAllComboBoxValues(cbDisplayRadius);
+                foreach (double radius in radiusValues)
+                {
+                    // 按“图像实际有效半径”均匀映射角度（0°→0，MaxAngle→图像实际有效半径）
+                    float radiusPixel = (float)(radius / MaxAngle * imageActualRadius);
+                    if (radiusPixel > imageActualRadius) continue; // 限制在图像内
+
+                    Cv2.Circle(
+                        colorMat,
+                        centerPoint,
+                        (int)radiusPixel,
+                        yellowColor,
+                        yellowCircleWidth,
+                        LineTypes.AntiAlias
+                    );
+
+                    // 备注位置（自适应图像边缘）
+                    OpenCvSharp.Point labelPos = new OpenCvSharp.Point(
+                        (int)(centerPoint.X + radiusPixel + 20),
+                        (int)centerPoint.Y
+                    );
+                    if (labelPos.X > colorMat.Width - 100)
+                    {
+                        labelPos.X = (int)(centerPoint.X - radiusPixel - 100);
+                    }
+                    DrawAngleLabel(colorMat, labelPos, $"{radius}(R)", yellowColor, fontScale: 7);
+                }
+
+                // 选中项高亮
+                if (_selectedRadius != -1)
+                {
+                    float radiusPixel = (float)(_selectedRadius / MaxAngle * imageActualRadius);
+                    if (radiusPixel > imageActualRadius) return;
+
+                    Cv2.Circle(
+                        colorMat,
+                        centerPoint,
+                        (int)radiusPixel,
+                        purpleColor,
+                        purpleCircleWidth,
+                        LineTypes.AntiAlias
+                    );
+
+                    OpenCvSharp.Point labelPos = new OpenCvSharp.Point(
+                        (int)(centerPoint.X + radiusPixel + 20),
+                        (int)centerPoint.Y
+                    );
+                    if (labelPos.X > colorMat.Width - 100)
+                    {
+                        labelPos.X = (int)(centerPoint.X - radiusPixel - 100);
+                    }
+                    DrawAngleLabel(colorMat, labelPos, $"{_selectedRadius}(R)", purpleColor, fontScale: 7);
+                }
+            }
+
+
+            // ========== 绘制XY轴（贯穿图像） ==========
             Scalar redColor = new Scalar(0, 0, 255);
-            int redLineWidth = 12;
-            // X轴（水平贯穿：左边缘→右边缘，经过中心点）
-            OpenCvSharp.Point xAxisStart = new OpenCvSharp.Point(0, (int)centerPoint.Y);
-            OpenCvSharp.Point xAxisEnd = new OpenCvSharp.Point(colorMat.Width, (int)centerPoint.Y);
-            Cv2.Line(colorMat, xAxisStart, xAxisEnd, redColor, redLineWidth);
-            // Y轴（垂直贯穿：上边缘→下边缘，经过中心点）
-            OpenCvSharp.Point yAxisStart = new OpenCvSharp.Point((int)centerPoint.X, 0);
-            OpenCvSharp.Point yAxisEnd = new OpenCvSharp.Point((int)centerPoint.X, colorMat.Height);
-            Cv2.Line(colorMat, yAxisStart, yAxisEnd, redColor, redLineWidth);
-            // 4. 保留参数框
-            // ========== 参数框 ==========
-            // 原始参数框：宽200，高120 → 放大3倍：宽600，高360
-            //int boxWidth = 700;  // 原1400 * 0.5
-            //int boxHeight = 360; // 原720 * 0.5
-            //                     // 调整位置：内边距同步缩小，避免超出图像（根据图像宽度自适应）
-            //int boxX = Math.Max(20, colorMat.Width - boxWidth - 20); // 原40 → 20
-            //int boxY = 20;                                          // 原40 → 20
+            int redLineWidth = 20;
+            OpenCvSharp.Point xAxisStart = new OpenCvSharp.Point(0, centerPoint.Y);
+            OpenCvSharp.Point xAxisEnd = new OpenCvSharp.Point(colorMat.Width, centerPoint.Y);
+            Cv2.Line(colorMat, xAxisStart, xAxisEnd, redColor, redLineWidth, LineTypes.AntiAlias);
 
-            //// 绘制白色半透明背景框
-            //Mat roi = colorMat[new OpenCvSharp.Rect(boxX, boxY, boxWidth, boxHeight)];
-            //roi.SetTo(new Scalar(255, 255, 255, 0.8));
-            //// 边框粗细缩小0.5倍（原12 → 6）
-            //Cv2.Rectangle(colorMat, new OpenCvSharp.Rect(boxX, boxY, boxWidth, boxHeight), new Scalar(0, 0, 0), 6);
+            OpenCvSharp.Point yAxisStart = new OpenCvSharp.Point(centerPoint.X, 0);
+            OpenCvSharp.Point yAxisEnd = new OpenCvSharp.Point(centerPoint.X, colorMat.Height);
+            Cv2.Line(colorMat, yAxisStart, yAxisEnd, redColor, redLineWidth, LineTypes.AntiAlias);
 
-            //// 字体/行间距同步缩小0.5倍（回到原3倍放大效果）
-            //int textY = boxY + 80;   // 文字起始位置（原160 → 80）
-            //int textStep = 75;       // 行间距（原150 → 75）
-            //double fontScale = 2.1;  // 字体大小（原4.2 → 2.1）
-            //int fontThickness = 6;   // 文字粗细（原12 → 6）
-            //int textPadding = 40;    // 文字内边距（原80 → 40）
 
-            //// 绘制参数文字（缩小0.5倍后比例协调）
-            //Cv2.PutText(colorMat, $"MaxAngle: {MaxAngle}°", new OpenCvSharp.Point(boxX + textPadding, textY),
-            //            (int)HersheyFonts.HersheySimplex, fontScale, new Scalar(0, 0, 0), fontThickness);
-            //Cv2.PutText(colorMat, $"Coeff: {ConoscopeCoefficient:F4}", new OpenCvSharp.Point(boxX + textPadding, textY + textStep),
-            //            (int)HersheyFonts.HersheySimplex, fontScale, new Scalar(0, 0, 0), fontThickness);
-            //Cv2.PutText(colorMat, $"DisplayAngle: {displayAngle}°", new OpenCvSharp.Point(boxX + textPadding, textY + 2 * textStep),
-            //            (int)HersheyFonts.HersheySimplex, fontScale, new Scalar(0, 0, 0), fontThickness);
-            //Cv2.PutText(colorMat, $"DisplayRadius: {displayRadius}°", new OpenCvSharp.Point(boxX + textPadding, textY + 3 * textStep),
-            //            (int)HersheyFonts.HersheySimplex, fontScale, new Scalar(0, 0, 0), fontThickness);
-            // ========== 绘制结束 ==========
-
+            // ========== 更新显示 ==========
             pseudoColorMat = colorMat;
             WriteableBitmap writeableBitmap = pseudoColorMat.ToWriteableBitmap();
             imgDisplay.Source = writeableBitmap;
 
-            // ========== 新增：记录图片自然尺寸 ==========
             _imgNaturalWidth = writeableBitmap.PixelWidth;
             _imgNaturalHeight = writeableBitmap.PixelHeight;
-            // ========== 新增：重置缩放 ==========
             ResetImageScale();
             PlotDiameterLineChart();
             PlotRCircleChart();
         }
-
-
         /// <summary>
         /// 辅助方法：读取ComboBox中所有ComboBoxItem的Tag值（转为double）
         /// </summary>
@@ -1607,7 +1635,8 @@ namespace CVAVMControl
                 paramPanelDiameter.Visibility = Visibility.Visible;
                 paramPanelRCircle.Visibility = Visibility.Collapsed;
             }
-
+            _selectedAngle = -1;
+            _selectedRadius = -1;
             // 切换后刷新显示，重新绘制对应黄线
             if (YMat != null && !YMat.Empty())
             {

@@ -1022,7 +1022,6 @@
                 </StackPanel>
                 <!--  图表区域  -->
                 <oxy:PlotView
-                    x:Name="plotView1"
                     Grid.Row="2"
                     Grid.ColumnSpan="4"
                     Margin="5,29,5,0"
