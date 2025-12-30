@@ -325,6 +325,7 @@ namespace CVWaferProber.ViewModels
             CustomMappingVM.ChipSelected += OnChipSelected;
             CustomImageVM = new CVCamImagerViewModel();
             CustomIVLVM = new CVSpectrumViewModel();
+            CustomEQEVM = new CVEQEViewModel();
             //
             // 初始化重置布局命令
             SearchCommand = new RelayCommand(ExecuteSearch);

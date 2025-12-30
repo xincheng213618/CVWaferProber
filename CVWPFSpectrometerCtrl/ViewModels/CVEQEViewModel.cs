@@ -62,7 +62,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private ILViewModel IL_viewModel;
         private IVViewModel IV_viewModel;
         private VLViewModel VL_viewModel;
-        private IVLCameraViewModel IVLCamera_viewModel;
+        //private IVLCameraViewModel IVLCamera_viewModel;
 
         private SpectrumControl _spectralCtrl;
 
@@ -703,32 +703,32 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             get => _VLPlotModel;
             set => SetProperty(ref _VLPlotModel, value);
         }
-        #region IVLCamera
-        public IVLCameraMeasurement SelectedCameraMeasurement
-        {
-            get => IVLCamera_viewModel.SelectedMeasurement;
-            set
-            {
-                IVLCamera_viewModel.SelectedMeasurement = value;
-                OnPropertyChanged(nameof(SelectedCameraMeasurement));
-            }
-        }
+        //#region IVLCamera
+        //public IVLCameraMeasurement SelectedCameraMeasurement
+        //{
+        //    get => IVLCamera_viewModel.SelectedMeasurement;
+        //    set
+        //    {
+        //        IVLCamera_viewModel.SelectedMeasurement = value;
+        //        OnPropertyChanged(nameof(SelectedCameraMeasurement));
+        //    }
+        //}
 
-        public BitmapSource IVLCameraImageSrc
-        {
-            get => IVLCamera_viewModel.ImageSrc;
-            set
-            {
-                IVLCamera_viewModel.ImageSrc = value;
-                OnPropertyChanged(nameof(IVLCameraImageSrc));
-            }
-        }
+        //public BitmapSource IVLCameraImageSrc
+        //{
+        //    get => IVLCamera_viewModel.ImageSrc;
+        //    set
+        //    {
+        //        IVLCamera_viewModel.ImageSrc = value;
+        //        OnPropertyChanged(nameof(IVLCameraImageSrc));
+        //    }
+        //}
         //public ObservableCollection<IVLCameraMeasurement> IVLCameraMeasurements
         //{
         //    get => _IVLCameraMeasurements;
         //    set => SetProperty(ref _IVLCameraMeasurements, value);
         //}
-        #endregion IVLCamera
+        //#endregion IVLCamera
 
         #region Tab
         private TabType _selectedTab;
@@ -770,8 +770,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         public CVEQEViewModel()
         {
             // 提前初始化波长数组
-            Wavelengths = new float[10000];
-            for (int i = 0; i < 10000; i++)
+            Wavelengths = new float[4001];
+            for (int i = 0; i < 4001; i++)
             {
                 Wavelengths[i] = 380 + i / 10.0f;
             }
@@ -1391,8 +1391,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             EQEPlotModel.Axes.Add(xAxis);
             EQEPlotModel.Axes.Add(yAxis);
-            Wavelengths = new float[10000];
-            for (int i = 0; i < 10000; i++)
+            Wavelengths = new float[4001];
+            for (int i = 0; i < 4001; i++)
             {
                 Wavelengths[i] = 380 + i / 10.0f;
             }
@@ -2591,13 +2591,13 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
 
 
-        private void OnIVLCameraPropertyChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(IVLCameraViewModel.ImageSrc))
-            {
-                OnPropertyChanged(nameof(IVLCameraImageSrc));
-            }
-        }
+        //private void OnIVLCameraPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        //{
+        //    if (e.PropertyName == nameof(IVLCameraViewModel.ImageSrc))
+        //    {
+        //        OnPropertyChanged(nameof(IVLCameraImageSrc));
+        //    }
+        //}
 
 
         //电压/电流
@@ -2658,8 +2658,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             PlotModel.Axes.Add(xAxis);
             PlotModel.Axes.Add(yAxis);
 
-            Wavelengths = new float[10000];
-            for (int i = 0; i < 10000; i++)
+            Wavelengths = new float[4001];
+            for (int i = 0; i < 4001; i++)
             {
                 Wavelengths[i] = 380 + i / 10.0f;
             }
@@ -2780,8 +2780,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             IL_viewModel.Clear();
             IV_viewModel.Clear();
             VL_viewModel.Clear();
-            IVLCamera_viewModel.Clear();
-            IVLCameraImageSrc = null;
+            //IVLCamera_viewModel.Clear();
+            //IVLCameraImageSrc = null;
         }
 
         public void ClearAllDisplays()
@@ -2821,15 +2821,15 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             IL_viewModel.Clear();
             IV_viewModel.Clear();
             VL_viewModel.Clear();
-            IVLCamera_viewModel.Clear();
-            IVLCameraImageSrc = null;
+            //IVLCamera_viewModel.Clear();
+            //IVLCameraImageSrc = null;
 
             // 清空选中状态
             SelectedMeasurement = null;
-            SelectedCameraMeasurement = null;
+            //SelectedCameraMeasurement = null;
 
             // 清空IVLCamera图像
-            IVLCameraImageSrc = null;
+            //IVLCameraImageSrc = null;
 
             // 清空ScottPlot控件
             if (PlotControl != null)
@@ -2883,7 +2883,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             IL_viewModel.LoadData(lv_results, il_results);
             IV_viewModel.LoadData(serialNumber);
             VL_viewModel.LoadData(lv_results, il_results);
-            IVLCamera_viewModel.LoadData(lv_results, il_results);
+            //IVLCamera_viewModel.LoadData(lv_results, il_results);
             InitializeOverviewSeries();
 
             // 触发自动导出
@@ -3136,10 +3136,10 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             ClearAllDisplays();
         }
 
-        public void UpdateImage()
-        {
-            OnPropertyChanged(nameof(IVLCameraImageSrc));
-        }
+        //public void UpdateImage()
+        //{
+        //    OnPropertyChanged(nameof(IVLCameraImageSrc));
+        //}
 
         public void SetSpectrumCtrl(SpectrumControl spectralCtrl)
         {
