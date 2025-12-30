@@ -70,23 +70,103 @@ namespace CVAVMControl
             ERR_JSON = -3         // JSON格式异常
         }
 
-        // 导入VAM计算接口（DLL函数）
-        [DllImport("CV_algorithm.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        private static extern AliResult CV_Ali_calcVam(
-            IntPtr handle,                // 句柄（设为IntPtr.Zero即可）
-            int w,                        // 图片宽度
-            int h,                        // 图片高度
-            int bpp,                      // 图片位数（8/16）
-            int channels,                 // 通道数（1，因为传入单通道XYZ）
-            IntPtr data,                  // BGR图片指针（可为IntPtr.Zero，用XYZ数据计算）
-            IntPtr pXYZ,                  // XYZ数据指针（格式：XXX...YYY...ZZZ）
-            [MarshalAs(UnmanagedType.LPStr)] string staticJson, // 静态参数JSON
-            [MarshalAs(UnmanagedType.LPStr)] StringBuilder result, // 输出结果JSON
-            ref int resultLength,         // 结果JSON长度（传入缓冲区大小，输出实际长度）
-            ref int dstBpp,               // 输出图像位数（无需则设为-1）
-            ref int dstChannel,           // 输出图像通道数（无需则忽略）
-            IntPtr dstData                // 输出图像指针（无需则设为IntPtr.Zero）
+        // 1. 定义DLL返回状态枚举（替换原有AliResult）
+        private enum CV_AliResType
+        {
+            SUCCESS = 1,          // 完全成功
+            FAILED = 0,           // 失败
+            PART_SUCCESS = 2,     // 部分成功
+            ERR_LENGTH = -1,      // 内存长度不够
+            ERR_FILE = -2,        // 存文件失败
+            ERR_JSON = -3         // JSON格式异常
+        }
+
+        // 2. 新增ImageData结构（匹配DLL定义）
+        private class ImageData
+        {
+            public int _w;
+            public int _h;
+            public int _bpp;
+            public int _channels;
+            public byte[] data;
+        }
+
+        // 3. 重新导入DLL方法（适配StdCall+字节数组参数）
+        private const string LIBRARY_CV_Ali = "CV_algorithm.dll";
+        [DllImport(LIBRARY_CV_Ali, EntryPoint = "CV_Ali_calcVam",
+            CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
+        private static extern CV_AliResType CV_Ali_calcVam(
+            IntPtr handle,
+            int w,
+            int h,
+            int bpp,
+            int channels,
+            byte[] data,          // 替换IntPtr为byte[]（BGR图片数据）
+            byte[] xyz,           // 替换IntPtr为byte[]（XYZ数据）
+            string staticJson,    // 移除MarshalAs，StdCall默认适配
+            StringBuilder result, // 移除MarshalAs
+            ref int resultLength,
+            ref int dstBpp,
+            ref int dstChannel,
+            byte[] dstData        // 替换IntPtr为byte[]（输出图像数据）
         );
+
+        // 4. 新增封装调用方法（适配ImageData入参）
+        private CV_AliResType CallCV_Ali_calcVam(ImageData i, ImageData xyz, string paramJson, out string result, out ImageData showImage)
+        {
+            // 初始化输出图像
+            showImage = new ImageData
+            {
+                _w = i._w,
+                _h = i._h,
+                _bpp = 16,
+                _channels = 3,
+                data = new byte[i._w * i._h * 3 * (16 / 8)] // 16位3通道初始化
+            };
+
+            // 初始化结果缓冲区
+            int resultLength = 2048000; // 2MB缓冲区
+            StringBuilder bf = new StringBuilder(resultLength);
+            CV_AliResType res = CV_Ali_calcVam(
+                IntPtr.Zero,
+                xyz._w,
+                xyz._h,
+                i._bpp,
+                xyz._channels,
+                i.data,       // BGR图片数据（无则传null）
+                xyz.data,     // XYZ数据
+                paramJson,    // 静态参数JSON
+                bf,
+                ref resultLength,
+                ref showImage._bpp,
+                ref showImage._channels,
+                showImage.data
+            );
+
+            // 处理缓冲区长度不足的情况
+            if (res == CV_AliResType.ERR_LENGTH)
+            {
+                bf = new StringBuilder(resultLength);
+                res = CV_Ali_calcVam(
+                    IntPtr.Zero,
+                    xyz._w,
+                    xyz._h,
+                    i._bpp,
+                    xyz._channels,
+                    i.data,
+                    xyz.data,
+                    paramJson,
+                    bf,
+                    ref resultLength,
+                    ref showImage._bpp,
+                    ref showImage._channels,
+                    showImage.data
+                );
+            }
+
+            result = bf.ToString();
+            return res;
+        }
 
         // 2. 定义接口返回结果的JSON序列化模型（匹配DLL输出格式）
         private class VamResultRoot
@@ -333,43 +413,77 @@ namespace CVAVMControl
         #endregion
         #region 通用角度添加/删除逻辑（支持不同ComboBox）
         /// <summary>
+        /// 判断当前是否为R圆模式
+        /// </summary>
+        private bool IsRCircleMode()
+        {
+            string currentBtnText = btnSwitchChart.Content.ToString();
+            string rCircleTitle = FindResource("Plot.Title.RCircle").ToString();
+            string diameterTitle = FindResource("Plot.Title.DiameterLine").ToString();
+            // R圆模式：按钮显示直径线标题（与原有切换逻辑一致）
+            return currentBtnText == diameterTitle;
+        }
+        /// <summary>
         /// 通用添加角度方法（支持任意ComboBox）
         /// </summary>
         /// <param name="targetComboBox">目标下拉框（如cbDisplayAngle/cbDisplayRadius）</param>
         /// <param name="inputAngleText">输入的角度文本</param>
         private void AddAngleToComboBox(ComboBox targetComboBox, string inputAngleText)
         {
-            // 1. 输入校验
+            
+            if (string.IsNullOrWhiteSpace(inputAngleText))
+            {
+                MessageBox.Show("输入的角度不能为空", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                
+            }
+
+            // 1. 输入校验（兼容整数/负数）
             if (!int.TryParse(inputAngleText.Trim(), out int newAngle))
             {
                 MessageBox.Show("请输入有效的整数角度", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
-            if (newAngle < 0 || newAngle > 360)
+
+            // 2. 区分模式校验角度范围
+            bool isRCircle = IsRCircleMode();
+            if (isRCircle)
             {
-                MessageBox.Show("角度范围应为0-360°", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
+                // R圆模式：-60° ~ 60°
+                if (newAngle < -60 || newAngle > 60)
+                {
+                    MessageBox.Show("角度范围应为-60°~60°", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+            }
+            else
+            {
+                // 直径线模式：0° ~ 360°（保留原规则）
+                if (newAngle < 0 || newAngle > 360)
+                {
+                    MessageBox.Show("角度范围应为0°~360°", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
             }
 
-            // 2. 检查是否已存在
+            // 3. 检查是否已存在
             if (IsAngleExistsInComboBox(targetComboBox, newAngle))
             {
                 MessageBox.Show("角度已存在", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
-            // 3. 添加到目标ComboBox
+            // 4. 添加到目标ComboBox（R圆模式保留负号显示）
             ComboBoxItem newItem = new ComboBoxItem
             {
-                Content = $"{newAngle}°",
+                Content = $"{newAngle}°", // 负角度会显示为 "-60°"，无需额外处理
                 Tag = newAngle.ToString()
             };
             targetComboBox.Items.Add(newItem);
 
-            // 4. 自动选中新项
+            // 5. 自动选中新项
             targetComboBox.SelectedItem = newItem;
 
-            // 5. 刷新显示
+            // 6. 刷新显示
             if (IsMatSafe(YMat)) UpdateDisplay();
         }
 
@@ -380,14 +494,14 @@ namespace CVAVMControl
         /// <param name="inputAngleText">输入的角度文本</param>
         private void DeleteAngleFromComboBox(ComboBox targetComboBox, string inputAngleText)
         {
-            // 1. 输入校验
+            // 1. 输入校验（兼容负数）
             if (!int.TryParse(inputAngleText.Trim(), out int delAngle))
             {
-                MessageBox.Show("请输入有效的整数角度", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("请输入有效的整数角度（支持负数）", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
-            // 2. 查找目标项
+            // 2. 查找目标项（负角度已兼容，无需修改）
             ComboBoxItem targetItem = null;
             foreach (ComboBoxItem item in targetComboBox.Items)
             {
@@ -401,7 +515,9 @@ namespace CVAVMControl
             // 3. 处理删除
             if (targetItem == null)
             {
-                MessageBox.Show("找不到相应数据", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                bool isRCircle = IsRCircleMode();
+                string tipText = isRCircle ? "找不到该角度（范围-60°~60°）" : "找不到该角度（范围0°~360°）";
+                MessageBox.Show(tipText, "提示", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -1294,110 +1410,119 @@ namespace CVAVMControl
         {
             try
             {
-                // 校验基础数据
-                if (XMat == null || YMat == null || ZMat == null || XMat.Empty() || YMat.Empty() || ZMat.Empty())
+                // 步骤1：基础校验
+                if (!IsMatSafe(XMat) || !IsMatSafe(YMat) || !IsMatSafe(ZMat))
+                {
+                    log.Error("XYZ Mat 为空或已释放");
                     return false;
+                }
+                if (center.X == 0 && center.Y == 0)
+                {
+                    log.Error("图像中心未初始化（未加载CVCIE文件）");
+                    return false;
+                }
 
-                // 步骤1：准备输入参数
+                // 步骤2：获取图像基础参数（修复BPP计算）
                 int imgWidth = YMat.Width;
                 int imgHeight = YMat.Height;
-                int bpp = YMat.Depth() switch // 根据Mat深度获取位数
+                int bpp = YMat.Depth() switch
                 {
                     MatType.CV_8U => 8,
                     MatType.CV_16U => 16,
                     MatType.CV_32F => 32,
-                    _ => 16 // 默认16位
+                    _ => 16
                 };
-                int channels = 1; // 单通道（XYZ合并为一维数组）
+                int elementSize = bpp / 8; // 单个通道像素的字节数
 
-                // 步骤2：构建XYZ数据指针（格式：XXX...YYY...ZZZ）
-                int pixelCount = imgWidth * imgHeight;
-                int elementSize = bpp / 8; // 每个像素的字节数（8位=1字节，16位=2字节，32位=4字节）
-                int totalSize = pixelCount * elementSize * 3; // X+Y+Z总字节数
-                IntPtr pXYZ = Marshal.AllocHGlobal(totalSize); // 分配非托管内存
+                // 步骤3：修复XYZ数据拼接（核心）
+                byte[] xyzData = MergeXYZToInterleaved(XMat, YMat, ZMat); // 调用新的拼接方法
 
-                try
+                // 步骤4：构建XYZ的ImageData（匹配DLL入参）
+                ImageData xyzImageData = new ImageData
                 {
-                    // 转换X通道
-                    float[] xData = new float[XMat.Rows * XMat.Cols];
-                    Marshal.Copy(XMat.Data, xData, 0, xData.Length);
-                    Marshal.Copy(xData, 0, pXYZ, xData.Length * sizeof(float));
+                    _w = imgWidth,
+                    _h = imgHeight,
+                    _bpp = bpp,
+                    _channels = 3, // 关键：XYZ是3通道（交叉存储）
+                    data = xyzData
+                };
 
-                    // 转换Y通道（偏移X通道的内存长度）
-                    float[] yData = new float[YMat.Rows * YMat.Cols];
-                    Marshal.Copy(YMat.Data, yData, 0, yData.Length);
-                    Marshal.Copy(yData, 0, new IntPtr(pXYZ.ToInt64() + xData.Length * sizeof(float)), yData.Length * sizeof(float));
-
-                    // 转换Z通道（偏移X+Y通道的内存长度）
-                    float[] zData = new float[ZMat.Rows * ZMat.Cols];
-                    Marshal.Copy(ZMat.Data, zData, 0, zData.Length);
-                    Marshal.Copy(zData, 0, new IntPtr(pXYZ.ToInt64() + (xData.Length + yData.Length) * sizeof(float)), zData.Length * sizeof(float));
-                    // 步骤3：构建静态参数JSON（匹配DLL要求）
-                    string staticJson = JsonConvert.SerializeObject(new
-                    {
-                        debugCfg = new
-                        {
-                            Debug = false,
-                            debugPath = "Result\\",
-                            debugImgResize = 2
-                        },
-                        azimuthalAngle = -targetAngle, // 直径线方位角（选中的角度）
-                        polar_RHO = 60.0,            // 线条视角（默认60，可调整）
-                        polar_Angle = 60.0,          // 圆环视角（直径线用不到，默认60）
-                        pixelToAngle = ConoscopeCoefficient, // 像素角度系数（与原有一致）
-                        pointNumLine = 100,          // 线条取样点数量（DLL默认100）
-                        pointNumCircle = 60,         // 圆环取样点数量（用不到）
-                        center = new { x = center.X, y = center.Y } // 光学中心（与原有一致）
-                    });
-
-                    // 步骤4：准备结果缓冲区（设置足够大的容量，避免内存不足）
-                    int resultBufferSize = 1024 * 1024; // 1MB缓冲区（足够存储结果）
-                    StringBuilder resultJson = new StringBuilder(resultBufferSize);
-                    int resultLength = resultBufferSize;
-                    int dstBpp = -1; // 不获取输出图像，设为-1
-                    int dstChannel = 0;
-
-                    // 步骤5：调用DLL接口
-                    AliResult callResult = CV_Ali_calcVam(
-                        IntPtr.Zero,  // 句柄无需设置
-                        imgWidth,
-                        imgHeight,
-                        bpp,
-                        channels,
-                        IntPtr.Zero,  // 不传入BGR图片，用XYZ计算
-                        pXYZ,
-                        staticJson,
-                        resultJson,
-                        ref resultLength,
-                        ref dstBpp,
-                        ref dstChannel,
-                        IntPtr.Zero   // 不获取输出图像
-                    );
-
-                    // 步骤6：处理调用结果
-                    if (callResult != AliResult.SUCCESS && callResult != AliResult.PART_SUCCESS)
-                    {
-                        log.Error($"DLL调用失败，错误码：{callResult}");
-                        return false;
-                    }
-
-                    // 步骤7：解析JSON结果
-                    VamResultRoot vamResult = JsonConvert.DeserializeObject<VamResultRoot>(resultJson.ToString().Trim('\0'));
-                    if (vamResult?.result?.line?.Data == null || vamResult.result.line.Data.Count == 0)
-                    {
-                        log.Error("DLL返回的直径线数据为空");
-                        return false;
-                    }
-
-                    // 步骤8：更新直径线图表（替换原有本地计算数据）
-                    UpdateDiameterLineChartFromDll(vamResult.result.line.Data);
-                    return true;
-                }
-                finally
+                // 步骤5：构建空的BGR ImageData（无BGR数据时传null）
+                ImageData bgrImageData = new ImageData
                 {
-                    // 释放非托管内存（必须执行，避免内存泄漏）
-                    Marshal.FreeHGlobal(pXYZ);
+                    _w = imgWidth,
+                    _h = imgHeight,
+                    _bpp = bpp,
+                    _channels = 3,
+                    data = null
+                };
+
+                // 步骤6：修复JSON参数（修正角度符号+添加通道）
+                string staticJson = JsonConvert.SerializeObject(new
+                {
+                    debugCfg = new
+                    {
+                        Debug = false,
+                        debugPath = "Result\\",
+                        debugImgResize = 2
+                    },
+                    azimuthalAngle = targetAngle, // 修复：去掉负号，匹配DLL预期
+                    polar_RHO = 60.0,
+                    polar_Angle = 60.0,
+                    pixelToAngle = ConoscopeCoefficient,
+                    pointNumLine = 100,
+                    pointNumCircle = 60, // 还原为60，避免DLL数组越界
+                    center = new { x = center.X, y = center.Y },
+                    displayChannel = displayChannel.ToString() // 新增：传递选中通道
+                });
+
+                // 步骤7：打印参数日志（调试用）
+                log.Info($"DLL调用参数：targetAngle={targetAngle}, center=({center.X},{center.Y}), bpp={bpp}, imgSize=({imgWidth}x{imgHeight})");
+                log.Info($"JSON参数：{staticJson}");
+
+                // 步骤8：调用DLL封装方法
+                string resultJson;
+                ImageData showImage;
+                CV_AliResType callResult = CallCV_Ali_calcVam(
+                    bgrImageData,
+                    xyzImageData,
+                    staticJson,
+                    out resultJson,
+                    out showImage
+                );
+
+                // 步骤9：处理DLL返回结果
+                if (callResult != CV_AliResType.SUCCESS && callResult != CV_AliResType.PART_SUCCESS)
+                {
+                    log.Error($"DLL调用失败，错误码：{callResult}");
+                    return false;
                 }
+
+                // 步骤10：清理showImage内存（避免泄漏）
+                if (showImage.data != null)
+                {
+                    Array.Clear(showImage.data, 0, showImage.data.Length);
+                    showImage.data = null;
+                }
+
+                // 步骤11：解析JSON（清理空字符）
+                string cleanResultJson = resultJson.Trim('\0').Trim();
+                if (string.IsNullOrEmpty(cleanResultJson))
+                {
+                    log.Error("DLL返回空JSON");
+                    return false;
+                }
+
+                VamResultRoot vamResult = JsonConvert.DeserializeObject<VamResultRoot>(cleanResultJson);
+                if (vamResult?.result?.line?.Data == null || vamResult.result.line.Data.Count == 0)
+                {
+                    log.Error("DLL返回的直径线数据为空");
+                    return false;
+                }
+
+                // 步骤12：更新图表
+                UpdateDiameterLineChartFromDll(vamResult.result.line.Data);
+                return true;
             }
             catch (Exception ex)
             {
@@ -1414,11 +1539,19 @@ namespace CVAVMControl
         {
             try
             {
-                // 校验基础数据
-                if (XMat == null || YMat == null || ZMat == null || XMat.Empty() || YMat.Empty() || ZMat.Empty())
+                // 步骤1：基础校验（同直径线）
+                if (!IsMatSafe(XMat) || !IsMatSafe(YMat) || !IsMatSafe(ZMat))
+                {
+                    log.Error("XYZ Mat 为空或已释放");
                     return false;
+                }
+                if (center.X == 0 && center.Y == 0)
+                {
+                    log.Error("图像中心未初始化（未加载CVCIE文件）");
+                    return false;
+                }
 
-                // 步骤1：准备输入参数（与直径线一致）
+                // 步骤2：获取图像参数（同直径线）
                 int imgWidth = YMat.Width;
                 int imgHeight = YMat.Height;
                 int bpp = YMat.Depth() switch
@@ -1426,96 +1559,89 @@ namespace CVAVMControl
                     MatType.CV_8U => 8,
                     MatType.CV_16U => 16,
                     MatType.CV_32F => 32,
-                    _ => 16 // 默认16位
+                    _ => 16
                 };
-                int channels = 1;
-                int pixelCount = imgWidth * imgHeight;
                 int elementSize = bpp / 8;
-                int totalSize = pixelCount * elementSize * 3;
-                IntPtr pXYZ = Marshal.AllocHGlobal(totalSize);
 
-                try
+                // 步骤3：调用修复后的XYZ拼接方法
+                byte[] xyzData = MergeXYZToInterleaved(XMat, YMat, ZMat);
+
+                // 步骤4：构建ImageData（同直径线）
+                ImageData xyzImageData = new ImageData
                 {
-                   
-                    // 转换X通道
-                    float[] xData = new float[XMat.Rows * XMat.Cols];
-                    Marshal.Copy(XMat.Data, xData, 0, xData.Length);
-                    Marshal.Copy(xData, 0, pXYZ, xData.Length * sizeof(float));
-
-                    // 转换Y通道（偏移X通道的内存长度）
-                    float[] yData = new float[YMat.Rows * YMat.Cols];
-                    Marshal.Copy(YMat.Data, yData, 0, yData.Length);
-                    Marshal.Copy(yData, 0, new IntPtr(pXYZ.ToInt64() + xData.Length * sizeof(float)), yData.Length * sizeof(float));
-
-                    // 转换Z通道（偏移X+Y通道的内存长度）
-                    float[] zData = new float[ZMat.Rows * ZMat.Cols];
-                    Marshal.Copy(ZMat.Data, zData, 0, zData.Length);
-                    Marshal.Copy(zData, 0, new IntPtr(pXYZ.ToInt64() + (xData.Length + yData.Length) * sizeof(float)), zData.Length * sizeof(float));
-
-                    // 步骤2：构建静态参数JSON（重点修改polar_Angle为目标半径）
-                    string staticJson = JsonConvert.SerializeObject(new
-                    {
-                        debugCfg = new
-                        {
-                            Debug = false,
-                            debugPath = "Result\\",
-                            debugImgResize = 2
-                        },
-                        azimuthalAngle = 0.0,        // 线条方位角（R圆用不到，默认0）
-                        polar_RHO = 60.0,            // 线条视角（用不到）
-                        polar_Angle = targetRadius,  // 圆环视角（选中的R圆半径角度）
-                        pixelToAngle = ConoscopeCoefficient,
-                        pointNumLine = 100,          // 线条取样点（用不到）
-                        pointNumCircle = 360,        // 圆环取样点（360个，覆盖0-360°）
-                        center = new { x = center.X, y = center.Y }
-                    });
-
-                    // 步骤3：准备结果缓冲区
-                    int resultBufferSize = 1024 * 1024;
-                    StringBuilder resultJson = new StringBuilder(resultBufferSize);
-                    int resultLength = resultBufferSize;
-                    int dstBpp = -1;
-                    int dstChannel = 0;
-
-                    // 步骤4：调用DLL接口
-                    AliResult callResult = CV_Ali_calcVam(
-                        IntPtr.Zero,
-                        imgWidth,
-                        imgHeight,
-                        bpp,
-                        channels,
-                        IntPtr.Zero,
-                        pXYZ,
-                        staticJson,
-                        resultJson,
-                        ref resultLength,
-                        ref dstBpp,
-                        ref dstChannel,
-                        IntPtr.Zero
-                    );
-
-                    if (callResult != AliResult.SUCCESS && callResult != AliResult.PART_SUCCESS)
-                    {
-                        log.Error($"DLL调用失败，错误码：{callResult}");
-                        return false;
-                    }
-
-                    // 步骤5：解析JSON结果
-                    VamResultRoot vamResult = JsonConvert.DeserializeObject<VamResultRoot>(resultJson.ToString().Trim('\0'));
-                    if (vamResult?.result?.circle?.Data == null || vamResult.result.circle.Data.Count == 0)
-                    {
-                        log.Error("DLL返回的R圆数据为空");
-                        return false;
-                    }
-
-                    // 步骤6：更新R圆图表
-                    UpdateRCircleChartFromDll(vamResult.result.circle.Data);
-                    return true;
-                }
-                finally
+                    _w = imgWidth,
+                    _h = imgHeight,
+                    _bpp = bpp,
+                    _channels = 3,
+                    data = xyzData
+                };
+                ImageData bgrImageData = new ImageData
                 {
-                    Marshal.FreeHGlobal(pXYZ); // 释放内存
+                    _w = imgWidth,
+                    _h = imgHeight,
+                    _bpp = bpp,
+                    _channels = 3,
+                    data = null
+                };
+
+                // 步骤5：修复R圆的JSON参数
+                string staticJson = JsonConvert.SerializeObject(new
+                {
+                    debugCfg = new
+                    {
+                        Debug = false,
+                        debugPath = "Result\\",
+                        debugImgResize = 2
+                    },
+                    azimuthalAngle = 0.0, // R圆无需方位角
+                    polar_RHO = targetRadius, // R圆的极径为目标半径
+                    polar_Angle = 0.0,
+                    pixelToAngle = ConoscopeCoefficient,
+                    pointNumLine = 100,
+                    pointNumCircle = 60, // 还原为60
+                    center = new { x = center.X, y = center.Y },
+                    displayChannel = displayChannel.ToString()
+                });
+
+                // 步骤6：调用DLL（同直径线）
+                string resultJson;
+                ImageData showImage;
+                CV_AliResType callResult = CallCV_Ali_calcVam(
+                    bgrImageData,
+                    xyzImageData,
+                    staticJson,
+                    out resultJson,
+                    out showImage
+                );
+
+                // 步骤7：处理结果（同直径线）
+                if (callResult != CV_AliResType.SUCCESS && callResult != CV_AliResType.PART_SUCCESS)
+                {
+                    log.Error($"DLL调用失败，错误码：{callResult}");
+                    return false;
                 }
+                if (showImage.data != null)
+                {
+                    Array.Clear(showImage.data, 0, showImage.data.Length);
+                    showImage.data = null;
+                }
+
+                string cleanResultJson = resultJson.Trim('\0').Trim();
+                if (string.IsNullOrEmpty(cleanResultJson))
+                {
+                    log.Error("DLL返回空JSON");
+                    return false;
+                }
+
+                VamResultRoot vamResult = JsonConvert.DeserializeObject<VamResultRoot>(cleanResultJson);
+                if (vamResult?.result?.circle?.Data == null || vamResult.result.circle.Data.Count == 0)
+                {
+                    log.Error("DLL返回的R圆数据为空");
+                    return false;
+                }
+
+                UpdateRCircleChartFromDll(vamResult.result.circle.Data);
+                return true;
             }
             catch (Exception ex)
             {
@@ -1523,6 +1649,57 @@ namespace CVAVMControl
                 return false;
             }
         }
+        #endregion
+
+        #region
+        // 正确的XYZ数据拼接（X0Y0Z0 X1Y1Z1... 格式）
+        private byte[] MergeXYZToInterleaved(Mat XMat, Mat YMat, Mat ZMat)
+        {
+            if (XMat.Empty() || YMat.Empty() || ZMat.Empty())
+                throw new ArgumentException("XYZ Mat cannot be empty");
+            if (XMat.Size() != YMat.Size() || YMat.Size() != ZMat.Size())
+                throw new ArgumentException("XYZ Mat size mismatch");
+
+            int width = XMat.Width;
+            int height = XMat.Height;
+            int pixelCount = width * height;
+            int elementSize = XMat.ElemSize1(); // 每个通道的字节数（如32F=4字节）
+
+            byte[] xyzData = new byte[pixelCount * elementSize * 3];
+            int offset = 0;
+
+            // 逐像素交叉存储：X→Y→Z
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    // 读取单个像素的XYZ值（按实际类型读取）
+                    byte[] xBytes = GetPixelBytes(XMat, x, y);
+                    byte[] yBytes = GetPixelBytes(YMat, x, y);
+                    byte[] zBytes = GetPixelBytes(ZMat, x, y);
+
+                    // 交叉拷贝到XYZ数组
+                    Buffer.BlockCopy(xBytes, 0, xyzData, offset, elementSize);
+                    offset += elementSize;
+                    Buffer.BlockCopy(yBytes, 0, xyzData, offset, elementSize);
+                    offset += elementSize;
+                    Buffer.BlockCopy(zBytes, 0, xyzData, offset, elementSize);
+                    offset += elementSize;
+                }
+            }
+            return xyzData;
+        }
+
+        // 辅助方法：读取单个像素的字节数组（适配不同Mat类型）
+        private byte[] GetPixelBytes(Mat mat, int x, int y)
+        {
+            int elementSize = mat.ElemSize1();
+            byte[] bytes = new byte[elementSize];
+            IntPtr pixelPtr = mat.Ptr(y, x); // 获取单个像素的指针
+            Marshal.Copy(pixelPtr, bytes, 0, elementSize);
+            return bytes;
+        }
+
         #endregion
         #region 实现图表更新方法（从 DLL 结果刷新）
         /// <summary>
@@ -1625,6 +1802,7 @@ namespace CVAVMControl
                 chartPanelRCircle.Visibility = Visibility.Visible;
                 paramPanelDiameter.Visibility = Visibility.Collapsed;
                 paramPanelRCircle.Visibility = Visibility.Visible;
+
             }
             else
             {
