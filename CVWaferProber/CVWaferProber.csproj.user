@@ -30,6 +30,9 @@
     <Compile Update="Views\SummaryConfigWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Views\SysFlowCfgWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Views\TestWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -60,6 +63,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Views\DevProberDebugWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\SysFlowCfgWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Views\TestWindow.xaml">

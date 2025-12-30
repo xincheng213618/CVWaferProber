@@ -14,7 +14,7 @@ namespace CVWaferProber.Utils
     public class AutoExportHelper
     {
         private static readonly ILog _logger = LogManager.GetLogger(typeof(AutoExportHelper));
-        private const string _basePath = @"F:\Projects"; // 根目录
+        private const string _basePath = @"D:\CVTest"; // 根目录
         private static readonly string[] _categories = { "AOI", "IVL", "EQE", "VAM" }; // 分类文件夹
 
 

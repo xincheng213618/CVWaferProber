@@ -54,15 +54,19 @@
             </MenuItem>
 
             -->
-            <!--  操作菜单  -->
-            <!--
-            <MenuItem Header="操作(O)" InputGestureText="Alt+O">
-                <MenuItem Header="开始测试" Command="{Binding StartTestCommand}" />
-                <MenuItem Header="暂停测试" Command="{Binding PauseTestCommand}" />
+            <!--  系统菜单  -->
+            <MenuItem Header="系统(S)" InputGestureText="Alt+S">
+                <MenuItem Header="系统流程配置" Command="{Binding SysFlowCfgCommand}" />
+                <MenuItem
+                    x:Name="MenuSummaryConfig"
+                    Command="{Binding OpenSummaryConfigCommand}"
+                    Header="Summary导出配置"
+                    InputGestureText="Alt+S" />
+                <!--<MenuItem Header="暂停测试" Command="{Binding PauseTestCommand}" />
                 <MenuItem Header="停止测试" Command="{Binding StopTestCommand}" />
                 <Separator />
-                <MenuItem Header="校准设备" Command="{Binding CalibrateDeviceCommand}" />
-            </MenuItem>-->
+                <MenuItem Header="校准设备" Command="{Binding CalibrateDeviceCommand}" />-->
+            </MenuItem>
 
             <!--  视图菜单（控制面板显示/隐藏）  -->
             <MenuItem x:Name="MenuView" Header="{DynamicResource Menu.View}">
@@ -124,13 +128,13 @@
                     InputGestureText="Alt+U" />
             </MenuItem>
             <!--  新增：顶级“导出”菜单  -->
-            <MenuItem Header="导出配置(E)" InputGestureText="Alt+E">
+            <!--<MenuItem Header="导出配置(E)" InputGestureText="Alt+E">
                 <MenuItem
                     x:Name="MenuSummaryConfig"
                     Command="{Binding OpenSummaryConfigCommand}"
                     Header="Summary导出配置"
                     InputGestureText="Alt+S" />
-            </MenuItem>
+            </MenuItem>-->
             <!--  帮助菜单  -->
             <MenuItem Header="{DynamicResource Menu.Help}" InputGestureText="Alt+H">
                 <MenuItem

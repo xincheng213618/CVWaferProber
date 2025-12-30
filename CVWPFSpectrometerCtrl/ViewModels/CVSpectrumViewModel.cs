@@ -1,7 +1,6 @@
 ﻿using ColorVision.Core.Entities;
 using CVCommCore;
 using CVDB.Services.Algorithm;
-using CVDB.Services.SMU;
 using CVDB.Services.Spectrum;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.ViewModels;
@@ -9,30 +8,20 @@ using CVWPFSpectrometerCtrl.Models;
 using CVWPFSpectrumControl;
 using CVWPFSpectrumControl.Models;
 using log4net;
-using Microsoft.Win32;
 using Newtonsoft.Json;
 using OxyPlot;
 using OxyPlot.Annotations;
 using OxyPlot.Axes;
 using OxyPlot.Series;
-using OxyPlot.Wpf;
-using ScottPlot.Colormaps;
-using ScottPlot.Panels;
 using ScottPlot.WPF;
-using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics.Metrics;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using static FreeSql.Internal.GlobalFilter;
-using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace CVWPFSpectrometerCtrl.ViewModels
 {

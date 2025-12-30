@@ -16,7 +16,6 @@ using CVWaferProber.WinMsg;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
 using Microsoft.Win32;
-using MySql.Data.MySqlClient.X.XDevAPI.Common;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -25,11 +24,8 @@ using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Threading;
-
-using static FreeSql.Internal.GlobalFilter;
 
 
 namespace CVWaferProber.ViewModels
@@ -2668,9 +2664,11 @@ namespace CVWaferProber.ViewModels
             CustomMappingVM.ChipSelected += OnChipSelected;
             CustomImageVM = new CVCamImagerViewModel();
             CustomIVLVM = new CVSpectrumViewModel();
-
-            // 初始化命令
+            CustomEQEVM = new CVEQEViewModel();
+            //
+            // 初始化重置布局命令
             SearchCommand = new RelayCommand(ExecuteSearch);
+           
             OpenVEyeWindowCommand = new RelayCommand(OpenVEyeWindow);
             RefreshStatusCommand = new RelayCommand(RefreshStatus);
             OpenMappingFileCommand = new RelayCommand(OpenMappingFile);
@@ -2710,6 +2708,9 @@ namespace CVWaferProber.ViewModels
             TestResults.CollectionChanged += IVLItems_CollectionChanged;
             TestResults.CollectionChanged += EQEItems_CollectionChanged;
             TestResults.CollectionChanged += VAMItems_CollectionChanged;
+            //  打开Summary导出配置窗口
+            OpenSummaryConfigCommand = new RelayCommand(OpenSummaryConfig);
+            SysFlowCfgCommand = new RelayCommand(SysFlowCfg);
 
             // 初始化筛选集合
             FilteredTestResults = new ObservableCollection<DieViewModel>(TestResults);
@@ -2754,6 +2755,17 @@ namespace CVWaferProber.ViewModels
             SubscribeItems_IVL(TestResults);
             SubscribeItems_EQE(TestResults);
             SubscribeItems_VAM(TestResults);
+            // 加载上次保存的面板状态（需先在Settings中配置）
+            //IsMappingPanelVisible = Properties.Settings.Default.IsMappingPanelVisible;
+            //IsCameraPanelVisible = Properties.Settings.Default.IsCameraPanelVisible;
+            //IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
+
+        }
+
+        private void SysFlowCfg(object obj)
+        {
+            SysFlowCfgWindow cfgWindow = new SysFlowCfgWindow();
+            cfgWindow.Show();
         }
 
         #region 核心方法实现（修复+新增）
@@ -3397,7 +3409,7 @@ namespace CVWaferProber.ViewModels
         private void LoadBuzWPFlows()
         {
             rcModel.RcRegist();
-            List<TScgdBuzProductDetail> flows = WaferProberDBService.LoadFlows();
+            List<TScgdBuzProductDetail> flows = WaferProberDBService.LoadBuzFlows();
             WPFlows.Clear();
             if (flows != null && flows.Count > 0)
             {
@@ -3525,6 +3537,8 @@ namespace CVWaferProber.ViewModels
             {
                 aoiService.AOIResultDisplay(dieViewModel);
             }
+            eqeService.EQEResultDisplay(dieViewModel);
+            // 新增：计算良率
             CalculateYieldBySerialNumber();
         }
 

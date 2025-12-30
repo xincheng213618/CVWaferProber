@@ -1,0 +1,252 @@
+﻿<Window x:Class="CVWaferProber.Views.SysFlowCfgWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CVWaferProber.Views"
+        mc:Ignorable="d"
+        WindowStyle="None"
+        WindowStartupLocation="CenterScreen"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        ResizeMode="CanResizeWithGrip"
+        Title="" Height="450" Width="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 标题区域 -->
+        <Border Grid.Row="0" Background="#2D2D30" Padding="10">
+            <StackPanel>
+                <TextBlock Text="系统Flow配置管理" 
+                           FontSize="16" 
+                           FontWeight="Bold" 
+                           Foreground="White"/>
+                <TextBlock Text="配置系统的各项参数和选项" 
+                           FontSize="12" 
+                           Foreground="#CCCCCC" 
+                           Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- DataGrid 区域 -->
+        <Border Grid.Row="1" Margin="10" BorderBrush="#CCCCCC" BorderThickness="1">
+            <DataGrid x:Name="configDataGrid"
+                      ItemsSource="{Binding ConfigItems}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      CanUserResizeRows="False"
+                      SelectionMode="Single"
+                      SelectionUnit="FullRow"
+                      GridLinesVisibility="Horizontal"
+                      HeadersVisibility="Column"
+                      HorizontalGridLinesBrush="#EEEEEE"
+                      VerticalGridLinesBrush="Transparent"
+                      BorderBrush="Transparent"
+                      Background="White"
+                      LoadingRow="ConfigDataGrid_LoadingRow">
+
+                <DataGrid.Columns>
+                    <!-- 序号列 -->
+                    <!--<DataGridTextColumn Header="序号" 
+                                        Binding="{Binding No}"
+                                        Width="60"
+                                        IsReadOnly="True">
+                        <DataGridTextColumn.HeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="Background" Value="#F5F5F5"/>
+                            </Style>
+                        </DataGridTextColumn.HeaderStyle>
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Padding" Value="5"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>-->
+                    <!-- 序号列 -->
+                    <DataGridTemplateColumn Header="No." Width="Auto" IsReadOnly="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType={x:Type DataGridRow}}, Path=Header}" 
+                                       HorizontalAlignment="Center" 
+                                       VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <!-- 名称列 -->
+                    <DataGridTextColumn Header="名称" 
+                                        Binding="{Binding DisplayName}"
+                                        Width="200"
+                                        IsReadOnly="True">
+                        <DataGridTextColumn.HeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="Background" Value="#F5F5F5"/>
+                            </Style>
+                        </DataGridTextColumn.HeaderStyle>
+                    </DataGridTextColumn>
+
+                    <!-- 类型列 -->
+                    <DataGridTextColumn Header="类型" 
+                                        Binding="{Binding ValueType}"
+                                        Width="150"
+                                        IsReadOnly="True">
+                        <DataGridTextColumn.HeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="Background" Value="#F5F5F5"/>
+                            </Style>
+                        </DataGridTextColumn.HeaderStyle>
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Padding" Value="5"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- ComboBox 选择列 -->
+                    <DataGridTemplateColumn Header="选择配置值" 
+                                            Width="*">
+                        <DataGridTemplateColumn.HeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="Background" Value="#F5F5F5"/>
+                            </Style>
+                        </DataGridTemplateColumn.HeaderStyle>
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <ComboBox ItemsSource="{Binding AvailableOptions}"
+                                          SelectedItem="{Binding SelectedValue, Mode=TwoWay}"
+                                          HorizontalAlignment="Stretch"
+                                          DisplayMemberPath="DisplayName" 
+                                          SelectedValuePath="Value"
+                                          Margin="5,2"
+                                          VerticalAlignment="Center">
+                                    <ComboBox.Style>
+                                        <Style TargetType="ComboBox">
+                                            <Setter Property="BorderBrush" Value="#CCCCCC"/>
+                                            <Setter Property="Background" Value="White"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="BorderBrush" Value="#0078D4"/>
+                                                </Trigger>
+                                                <Trigger Property="IsFocused" Value="True">
+                                                    <Setter Property="BorderBrush" Value="#0078D4"/>
+                                                    <Setter Property="BorderThickness" Value="2"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ComboBox.Style>
+                                </ComboBox>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+
+                <!-- DataGrid 样式 -->
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow">
+                        <Setter Property="Background" Value="White"/>
+                        <Setter Property="Height" Value="35"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#F0F8FF"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#E3F2FD"/>
+                                <Setter Property="BorderBrush" Value="#2196F3"/>
+                                <Setter Property="BorderThickness" Value="0,1,0,1"/>
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="AlternationIndex" Value="0"/>
+                                    <Condition Property="IsSelected" Value="False"/>
+                                    <Condition Property="IsMouseOver" Value="False"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Background" Value="#FAFAFA"/>
+                            </MultiTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
+
+                <!-- 交替行背景色 -->
+                <DataGrid.AlternatingRowBackground>
+                    <SolidColorBrush Color="#FAFAFA" Opacity="0.5"/>
+                </DataGrid.AlternatingRowBackground>
+            </DataGrid>
+        </Border>
+
+        <!-- 底部按钮区域 -->
+        <Border Grid.Row="2" Background="#F5F5F5" Padding="10">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="保存配置" 
+                        Width="100" 
+                        Height="30" 
+                        Margin="5,0"
+                        Background="#0078D4"
+                        Foreground="White"
+                        FontWeight="Bold"
+                        Click="SaveButton_Click">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#106EBE"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <Button Content="重置" 
+                        Width="80" 
+                        Height="30" 
+                        Margin="5,0"
+                        Background="#6C757D"
+                        Foreground="White"
+                        Click="ResetButton_Click">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#5A6268"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <Button Content="关闭" 
+                        Width="80" 
+                        Height="30" 
+                        Margin="5,0"
+                        Background="#DC3545"
+                        Foreground="White"
+                        Click="CloseButton_Click">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#C82333"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
