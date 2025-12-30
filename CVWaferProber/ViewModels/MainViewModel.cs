@@ -2501,7 +2501,7 @@ namespace CVWaferProber.ViewModels
         public ICommand OpenSummaryConfigCommand { get; }
         #endregion
 
-        #region 三态全选属性（修复版）
+        #region 三态全选属性
         // AOI三态全选
         private bool? _selectAllAOI = false;
         public bool? SelectAllAOI
@@ -2825,7 +2825,70 @@ namespace CVWaferProber.ViewModels
                     IsOptional = true,
                     ColumnType = ColumnType.Text,
                     ColumnKey = ColumnKey.Other
-                }
+                },
+                new ColumnConfig
+                {
+                    ColumnHeader = "Current(mA)",
+                    ColumnBindingPath = "Voltage",
+                    IsSelected = false,
+                    IsOptional = true,
+                    ColumnType = ColumnType.Text,
+                    ColumnKey = ColumnKey.Other
+                },
+                new ColumnConfig
+                {
+                    ColumnHeader = "Dominant Wavelength",
+                    ColumnBindingPath = "FinalClass",
+                    IsSelected = false,
+                    IsOptional = true,
+                    ColumnType = ColumnType.Text,
+                    ColumnKey = ColumnKey.Other
+                },
+                new ColumnConfig
+                {
+                    ColumnHeader = "Temperature(℃)",
+                    ColumnBindingPath = "AOIGradeLevel",
+                    IsSelected = false,
+                    IsOptional = true,
+                    ColumnType = ColumnType.Text,
+                    ColumnKey = ColumnKey.Other
+                },
+                new ColumnConfig
+                {
+                    ColumnHeader = "Pixel Logic",
+                    ColumnBindingPath = "BlackPattern",
+                    IsSelected = false,
+                    IsOptional = true,
+                    ColumnType = ColumnType.Text,
+                    ColumnKey = ColumnKey.Other
+                },
+                new ColumnConfig
+                {
+                    ColumnHeader = "Pin Pressure",
+                    ColumnBindingPath = "Luminance",
+                    IsSelected = false,
+                    IsOptional = true,
+                    ColumnType = ColumnType.Text,
+                    ColumnKey = ColumnKey.Other
+                },  
+                new ColumnConfig
+                {
+                    ColumnHeader = "TouchDown Counts",
+                    ColumnBindingPath = "Voltage",
+                    IsSelected = false,
+                    IsOptional = true,
+                    ColumnType = ColumnType.Text,
+                    ColumnKey = ColumnKey.Other
+                },
+                new ColumnConfig
+                {
+                    ColumnHeader = "Probing Card SN",
+                    ColumnBindingPath = "Voltage",
+                    IsSelected = false,
+                    IsOptional = true,
+                    ColumnType = ColumnType.Text,
+                    ColumnKey = ColumnKey.Other
+                },
             };
 
             // 初始化选中的动态列（默认不选）
@@ -2899,7 +2962,7 @@ namespace CVWaferProber.ViewModels
             }
         }
 
-        // ========== 三态全选状态更新（修复版） ==========
+        #region 三态全选状态更新
         private void UpdateSelectAllAOIState()
         {
             if (TestResults == null || TestResults.Count == 0)
@@ -3000,7 +3063,8 @@ namespace CVWaferProber.ViewModels
             }
         }
 
-        // ========== 反选方法（添加刷新） ==========
+        #endregion
+        #region 反选方法（添加刷新） 
         private void ExecuteInvertSelectAOI(object obj)
         {
             foreach (var item in TestResults)
@@ -3041,7 +3105,9 @@ namespace CVWaferProber.ViewModels
             UpdateSelectAllVAMState();
         }
 
-        // ========== 良率计算（修复版） ==========
+        #endregion
+
+        #region 良率计算
         public void CalculateYieldBySerialNumber()
         {
             try
@@ -3073,8 +3139,10 @@ namespace CVWaferProber.ViewModels
                 YieldInfo = "计算异常";
             }
         }
+        #endregion
 
-        // ========== 自动导出Summary（适配静态+动态列） ==========
+        #region 自动导出Summary（适配静态+动态列）
+
         private void AutoExportSummaryResult()
         {
             try
@@ -3085,8 +3153,19 @@ namespace CVWaferProber.ViewModels
                     return;
                 }
 
+                //固定导出根路径为 F:/Project
+                string exportRootPath = @"F:/Project";
+
+                // 自动创建目录（如果不存在）
+                if (!Directory.Exists(exportRootPath))
+                {
+                    Directory.CreateDirectory(exportRootPath);
+                    logger.Info($"已自动创建导出目录：{exportRootPath}");
+                }
+
+                // 拼接最终保存路径（目录 + 带时间戳的文件名）
                 var savePath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                    exportRootPath,
                     $"Summary_Result_{DateTime.Now:yyyyMMddHHmmss}.csv");
 
                 // 合并静态列+选中的动态列
@@ -3132,6 +3211,7 @@ namespace CVWaferProber.ViewModels
                                 rowData.Add(value.ToString());
                             }
                         }
+                        // 处理包含逗号的字段，添加双引号包裹
                         writer.WriteLine(string.Join(",", rowData.Select(d => d.Contains(",") ? $"\"{d}\"" : d)));
                     }
                 }
@@ -3155,7 +3235,9 @@ namespace CVWaferProber.ViewModels
         }
         #endregion
 
-        #region 原有方法（保留+少量修复）
+        #endregion
+
+        #region 原有方法
         private void OpenProberDeviceDebug(object obj)
         {
             DevProberDebugWindow newWindow = new DevProberDebugWindow();

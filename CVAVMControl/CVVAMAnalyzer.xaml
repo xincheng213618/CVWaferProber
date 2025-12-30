@@ -68,14 +68,15 @@
                     <Grid.Clip>
                         <RectangleGeometry x:Name="imgGridClip" />
                     </Grid.Clip>
-
+                    <!--
+                        MouseLeave="ImgDisplay_MouseLeave"
+                        MouseMove="ImgDisplay_MouseMove"
+                        MouseWheel="ImgDisplay_MouseWheel"
+                    -->
                     <Image
                         x:Name="imgDisplay"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        MouseLeave="ImgDisplay_MouseLeave"
-                        MouseMove="ImgDisplay_MouseMove"
-                        MouseWheel="ImgDisplay_MouseWheel"
                         Stretch="Uniform">
                         <Image.RenderTransform>
                             <TransformGroup>

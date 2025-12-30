@@ -34,14 +34,11 @@
                 </Grid.RowDefinitions>
 
                 <!--  顶部按钮区域  -->
-                <StackPanel
-                    Grid.Row="0"
-                    Margin="0"
-                    Orientation="Horizontal">
+                <StackPanel Grid.Row="0" Orientation="Horizontal">
                     <Button
                         x:Name="btnExport"
                         Width="80"
-                        Margin="5"
+                        Margin="5,5,5,2"
                         Command="{Binding ExportCommand}"
                         CommandParameter="{Binding SelectedTabIndex}"
                         Content="{DynamicResource Export CSV}"
@@ -111,16 +108,16 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="*" />
-                                <RowDefinition Height="7.5*" />
-                                <RowDefinition Height="2.5*" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="6*" />
+                                <RowDefinition Height="4*" />
                             </Grid.RowDefinitions>
                             <!--  顶部：颜色选择区域  -->
                             <!--  光谱子Tab的颜色选择控件  -->
                             <StackPanel
                                 Grid.Row="0"
                                 Grid.ColumnSpan="3"
-                                Margin="2"
+                                Margin="5,5,5,0"
                                 Orientation="Horizontal">
                                 <TextBlock VerticalAlignment="Center" Text="{DynamicResource Chart.LineColor}" />
                                 <ComboBox
@@ -384,13 +381,13 @@
                     <TabItem Header="IV">
                         <Grid>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="*" />
-                                <RowDefinition Height="7*" />
-                                <RowDefinition Height="2*" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="6*" />
+                                <RowDefinition Height="4*" />
                             </Grid.RowDefinitions>
                             <StackPanel
                                 Grid.Row="0"
-                                Margin="2"
+                                Margin="5,5,5,2"
                                 Orientation="Horizontal">
                                 <TextBlock VerticalAlignment="Center" Text="{DynamicResource Chart.LineColor}" />
                                 <ComboBox
@@ -531,13 +528,13 @@
                     <TabItem Header="IL">
                         <Grid>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="*" />
-                                <RowDefinition Height="7*" />
-                                <RowDefinition Height="2*" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="6*" />
+                                <RowDefinition Height="4*" />
                             </Grid.RowDefinitions>
                             <StackPanel
                                 Grid.Row="0"
-                                Margin="2"
+                                Margin="5,2,5,2"
                                 Orientation="Horizontal">
                                 <TextBlock VerticalAlignment="Center" Text="{DynamicResource Chart.LineColor}" />
                                 <ComboBox
@@ -675,14 +672,14 @@
                                 <ColumnDefinition Width="275*" />
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="*" />
-                                <RowDefinition Height="7*" />
-                                <RowDefinition Height="2*" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="6*" />
+                                <RowDefinition Height="4*" />
                             </Grid.RowDefinitions>
                             <StackPanel
                                 Grid.Row="0"
                                 Grid.ColumnSpan="2"
-                                Margin="2"
+                                Margin="5,2,5,2"
                                 Orientation="Horizontal">
                                 <TextBlock VerticalAlignment="Center" Text="{DynamicResource Chart.LineColor}" />
                                 <ComboBox
@@ -816,8 +813,8 @@
                     <TabItem Header="{DynamicResource IVLCamera}">
                         <Grid>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="8*" />
-                                <RowDefinition Height="2*" />
+                                <RowDefinition Height="6*" />
+                                <RowDefinition Height="4*" />
                             </Grid.RowDefinitions>
 
                             <!--  图像区域  -->
@@ -904,9 +901,9 @@
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="8  *" />
-                    <RowDefinition Height="2*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="6*" />
+                    <RowDefinition Height="4*" />
                 </Grid.RowDefinitions>
                 <!--  顶部按钮区域  -->
                 <StackPanel
@@ -925,7 +922,7 @@
                 <StackPanel
                     Grid.Row="1"
                     Grid.ColumnSpan="4"
-                    Margin="2,2,2,2"
+                    Margin="5,5,5,2"
                     Orientation="Horizontal">
                     <TextBlock VerticalAlignment="Center" Text="{DynamicResource Chart.LineColor}" />
                     <ComboBox

@@ -77,8 +77,7 @@ namespace CVWaferProber.ViewModels
         public string? DisplayStatus => Status.HasValue ? ChipStatusTool.GetStatusDisplay(Status.Value, IsChinese) : "Unknown";
         public DateTime? EndTestTime { get; set; }
         public DateTime? StartTestTime { get; set; }
-        /*******Final Class*******/
-        public int FinalClass { get; set; } = 1;
+       
         public string? TotalTime { get; set; }
         public ChipViewModel? chipViewModel { get; set; }
         public string? DataValue => string.Format("{0:F4}",chipViewModel?.DataValue);
@@ -184,5 +183,21 @@ namespace CVWaferProber.ViewModels
         //        }
         //    }
         //}
+        #region 动态属性
+        public string LightOnStatus { get; set; } = "na";
+        public string RegisterPixels { get; set; } = "na";
+        public string FinalClass { get; set; } = "na"; // 最终等级
+        public string AOIGradeLevel { get; set; } = "na";
+        public string BlackPattern { get; set; } = "na";
+        public string Temperature { get; set; } = "na";
+        public string PixelLogic { get; set; } = "na";
+        //public string MeasurePin { get; set; } = "na";
+        public string Pressure { get; set; } = "na";
+        public int TouchDownCounts { get; set; } = 0;
+        public string ProbingCardSN { get; set; } = "na";
+       
+
+
+        #endregion
     }
 }
