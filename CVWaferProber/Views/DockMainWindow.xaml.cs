@@ -1,4 +1,5 @@
 ﻿using AvalonDock.Layout;
+using CVAVMControl;
 using CVWaferProber.Components;
 using CVWaferProber.Log;
 using CVWaferProber.ViewModels;
@@ -65,6 +66,8 @@ namespace CVWaferProber.Views
                         _spInnerTabControl = _spAnalyzer.FindName("innerTabControl") as TabControl;
                     }
                 };
+
+                mainVm.VamAnalyzer = MyVAM;
             }
         }
 

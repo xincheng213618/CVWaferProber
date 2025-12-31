@@ -1,19 +1,11 @@
-﻿using CVDB.Services.Buz;
-using System;
-using System.Collections.Generic;
+﻿using ColorVision.Core.Entities;
+using CVDB.Services.Buz;
+using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace CVWaferProber.Views
 {
@@ -71,35 +63,44 @@ namespace CVWaferProber.Views
         }
         private void LoadConfigData()
         {
-            ConfigItems = new ObservableCollection<FlowConfigItem>();
-
+            if (ConfigItems == null) ConfigItems = new ObservableCollection<FlowConfigItem>();
+            ConfigItems.Clear();
+            List<TScgdBuzProductDetail> buz_flows = WaferProberDBService.LoadBuzFlows();
+            if (buz_flows == null || buz_flows.Count == 0)
+            {
+                return;
+            }
             var flows = WaferProberDBService.LoadAllFlows();
             // 模拟数据 - 假设有不同类型的配置项
-            var optionTrueFalse = new ObservableCollection<ConfigOption>();
+            var flowAll = new ObservableCollection<ConfigOption>();
+            var option_emp = new ConfigOption() { DisplayName = "空", Value = null };
+            flowAll.Add(option_emp);
             foreach (var flow in flows)
             {
                 var option = new ConfigOption() {  DisplayName = flow.Name , Value = flow.Name };
-                optionTrueFalse.Add(option);
+                flowAll.Add(option);
             }
-            // 添加配置项
-            ConfigItems.Add(new FlowConfigItem
-            {
-                DisplayName = "AOI",
-                ValueType = "AOI",
-                AvailableOptions = optionTrueFalse,
-                SelectedValue = optionTrueFalse[0] // 默认选择第一个
-            });
 
-            ConfigItems.Add(new FlowConfigItem
+            foreach (var flow in buz_flows)
             {
-                DisplayName = "IVL",
-                ValueType = "IVL",
-                AvailableOptions = optionTrueFalse,
-                SelectedValue = optionTrueFalse[0] // 默认选择"中"
-            });
-
-            // ... 可以添加更多配置项
+                var option = string.IsNullOrEmpty(flow.Name)
+                    ? flowAll[0]
+                    : flowAll.FirstOrDefault(item => item.DisplayName == flow.Name) ?? flowAll[0];
+                FlowTimeoutCfg flowTimeoutCfg = new FlowTimeoutCfg();
+                if (string.IsNullOrEmpty(flow.CfgJson)) flowTimeoutCfg.Timeout = 120;
+                else flowTimeoutCfg = JsonConvert.DeserializeObject<FlowTimeoutCfg>(flow.CfgJson);
+                ConfigItems.Add(new FlowConfigItem
+                {
+                    Id = flow.Id,
+                    DisplayName = flow.Code,
+                    ValueType = flow.Code,
+                    Timeout = flowTimeoutCfg.Timeout,
+                    AvailableOptions = flowAll,
+                    SelectedValue = option
+                });
+            }
         }
+
         // 处理行加载事件，设置行号（序号）
         private void ConfigDataGrid_LoadingRow(object sender, DataGridRowEventArgs e)
         {
@@ -108,6 +109,14 @@ namespace CVWaferProber.Views
         }
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
+            foreach (var item in ConfigItems)
+            {
+                TScgdBuzProductDetail buzProductDetail = WaferProberDBService.GetBuzDetail(item.Id);
+                buzProductDetail.Name = item.SelectedValue.Value;
+                buzProductDetail.CfgJson = JsonConvert.SerializeObject(new FlowTimeoutCfg() { Timeout = item.Timeout });
+                WaferProberDBService.UpdateBuzDetail(buzProductDetail);
+            }
+            MessageBox.Show("Save Completed");
         }
         private void ResetButton_Click(object sender, RoutedEventArgs e)
         {
@@ -117,11 +126,13 @@ namespace CVWaferProber.Views
             if (result == MessageBoxResult.Yes)
             {
                 InitializeData();
+                LoadConfigData();
             }
         }
 
         private void InitializeData()
         {
+            WaferProberDBService.InitBuzWaferProber_10001();
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
@@ -129,12 +140,17 @@ namespace CVWaferProber.Views
             this.Close();
         }
     }
-
+    public struct FlowTimeoutCfg
+    {
+        public int Timeout;
+    }
     // 配置项数据模型
     public class FlowConfigItem : INotifyPropertyChanged
     {
+        public int Id { get; set; }
         public string DisplayName { get; set; }
         public string ValueType { get; set; }
+        public int Timeout { get; set; }
         public ObservableCollection<ConfigOption> AvailableOptions { get; set; }
 
         private ConfigOption _selectedValue;

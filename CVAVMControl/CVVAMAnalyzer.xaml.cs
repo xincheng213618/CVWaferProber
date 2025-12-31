@@ -2100,6 +2100,11 @@ namespace CVAVMControl
                 imgGridClip.Rect = new System.Windows.Rect(0, 0, imgGrid.ActualWidth, imgGrid.ActualHeight);
             }
         }
+
+        public void ResultDisplay(string cieFileName)
+        {
+            ProcessCVCIEFile(cieFileName);
+        }
         #endregion
     }
 }

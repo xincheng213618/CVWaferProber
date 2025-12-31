@@ -37,5 +37,57 @@ namespace CVDB.Services.Buz
 
             return null;
         }
+
+        public static void InitBuzWaferProber_10001()
+        {
+            var master = MysqlControler.GetInstance().Sql.Select<TScgdBuzProductMaster>().Where(a => a.BuzType == 10001 && a.IsEnable == 1 && a.IsDelete == 0).ToOne();
+            if (master == null)
+            {
+                master = new TScgdBuzProductMaster() { BuzType = 10001, Code = "WaferProber.Flow", Name = "晶圆探针台流程", IsEnable = 1, IsDelete = 0 };
+                long id = MysqlControler.GetInstance().Sql.Insert(master).ExecuteIdentity();
+                if (id > 0)
+                {
+                    master.Id = (int)id;
+                }
+            }
+            if (master.Id > 0)
+            {
+                List<string> listType = new List<string> { "Flow.AOI", "Flow.IVL.SP", "Flow.IVL.Camera", "Flow.EQE", "Flow.VAM" };
+                var buzDetails = MysqlControler.GetInstance().Sql.Select<TScgdBuzProductDetail>().Where(a => a.Pid == master.Id).ToList();
+                if (buzDetails == null || buzDetails.Count == 0)
+                {
+                    foreach (var item in listType)
+                    {
+                        TScgdBuzProductDetail buzProductDetail = new TScgdBuzProductDetail() { Pid = master.Id, Code = item, CfgJson= "{\"Timeout\": 120}" };
+                        MysqlControler.GetInstance().Sql.Insert(buzProductDetail).ExecuteAffrows();
+                    }
+                }
+                else
+                {
+                    foreach (var buzProductDetail in buzDetails)
+                    {
+                        listType.Remove(buzProductDetail.Code);
+                        buzProductDetail.Name = null;
+                        buzProductDetail.CfgJson = "{\"Timeout\": 120}";
+                        MysqlControler.GetInstance().Sql.Update<TScgdBuzProductDetail>().SetSource(buzProductDetail).ExecuteAffrows();
+                    }
+                    foreach (var item in listType)
+                    {
+                        TScgdBuzProductDetail buzProductDetail = new TScgdBuzProductDetail() { Pid = master.Id, Code = item, CfgJson = "{\"Timeout\": 120}" };
+                        MysqlControler.GetInstance().Sql.Insert(buzProductDetail).ExecuteAffrows();
+                    }
+                }
+            }
+        }
+
+        public static TScgdBuzProductDetail GetBuzDetail(int id)
+        {
+            return MysqlControler.GetInstance().Sql.Select<TScgdBuzProductDetail>().Where(a => a.Id == id).ToOne();
+        }
+
+        public static void UpdateBuzDetail(TScgdBuzProductDetail buzProductDetail)
+        {
+            MysqlControler.GetInstance().Sql.Update<TScgdBuzProductDetail>().SetSource(buzProductDetail).ExecuteAffrows();
+        }
     }
 }
