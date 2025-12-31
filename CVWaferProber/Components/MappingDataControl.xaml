@@ -699,10 +699,10 @@
                                     <DataGridTextColumn Binding="{Binding SerialNumber, Mode=TwoWay}" Header="{DynamicResource Maping.GridHeader.SerialNumber}" />
                                     <DataGridTextColumn Binding="{Binding DisplayStatus, Mode=OneWay}" Header="{DynamicResource Maping.GridHeader.TestStatus}" IsReadOnly="True"/>
                                     <DataGridTextColumn Binding="{Binding DataValue, Mode=OneWay}" Header="{DynamicResource Maping.GridHeader.Uniformity}" IsReadOnly="True"/>
-                                    <DataGridTextColumn Binding="{Binding StartTestTime}" Header="{DynamicResource Maping.GridHeader.StartTestTime}" />
-                                    <DataGridTextColumn Binding="{Binding EndTestTime}" Header="{DynamicResource Maping.GridHeader.EndTestTime}" />
+                                    <DataGridTextColumn Binding="{Binding StartTestTime, Mode=OneWay}" Header="{DynamicResource Maping.GridHeader.StartTestTime}" IsReadOnly="True"/>
+                                    <DataGridTextColumn Binding="{Binding EndTestTime, Mode=OneWay}" Header="{DynamicResource Maping.GridHeader.EndTestTime}" IsReadOnly="True"/>
 
-                                    <DataGridTextColumn Binding="{Binding TotalTime}" Header="{DynamicResource Maping.GridHeader.TotalTime}" />
+                                    <DataGridTextColumn Binding="{Binding TotalTime, Mode=OneWay}" Header="{DynamicResource Maping.GridHeader.TotalTime}" IsReadOnly="True"/>
                                 </DataGrid.Columns>
 
                                 <DataGrid.RowStyle>
