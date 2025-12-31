@@ -21,4 +21,9 @@ namespace CVWaferProber.Core.Events
 
         public string ResultFileName {  get; set; }
     }
+
+    public class VAMFlowStartingEvent : BaseEvent
+    {
+
+    }
 }

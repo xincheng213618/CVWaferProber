@@ -220,10 +220,15 @@ namespace CVAVMControl
         {
             this.EventAggregator = eventAggregator == null ? CVWPEventAggregatorInstance.Instance : eventAggregator;
             this.EventAggregator.Subscribe<VAMFlowCompletedEvent>(OnFlowCompleted);
+            //this.EventAggregator.Subscribe<VAMFlowStartingEvent>(OnFlowStarting);
+            this.EventAggregator.Subscribe<ResultGUIClearEvent>(OnResultGUIClear);
         }
+
         private void UnInitializeEvents()
         {
             this.EventAggregator?.Unsubscribe<VAMFlowCompletedEvent>(OnFlowCompleted);
+            //this.EventAggregator?.Unsubscribe<VAMFlowStartingEvent>(OnFlowStarting);
+            this.EventAggregator?.Unsubscribe<ResultGUIClearEvent>(OnResultGUIClear);
         }
 
         private void OnFlowCompleted(VAMFlowCompletedEvent @event)
@@ -232,6 +237,14 @@ namespace CVAVMControl
             {
                 ProcessCVCIEFile(@event.ResultFileName);
             }
+        }
+        private void OnFlowStarting(VAMFlowStartingEvent @event)
+        {
+            ResetDataWithoutDispose();
+        }
+        private void OnResultGUIClear(ResultGUIClearEvent @event)
+        {
+            ResetDataWithoutDispose();
         }
 
 
@@ -1026,6 +1039,8 @@ namespace CVAVMControl
             displayRadius = 40;
             wpfPlotDiameterLine.Plot.Clear();
             wpfPlotRCircle.Plot.Clear();
+            wpfPlotDiameterLine.Refresh();
+            wpfPlotRCircle.Refresh();
             imgDisplay.Source = null;
         }
         public void UpdateVAMParams(double maxAngle, double conoscopeCoefficient)
@@ -2123,11 +2138,6 @@ namespace CVAVMControl
             {
                 imgGridClip.Rect = new System.Windows.Rect(0, 0, imgGrid.ActualWidth, imgGrid.ActualHeight);
             }
-        }
-
-        public void ResultDisplay(string cieFileName)
-        {
-            ProcessCVCIEFile(cieFileName);
         }
         #endregion
     }

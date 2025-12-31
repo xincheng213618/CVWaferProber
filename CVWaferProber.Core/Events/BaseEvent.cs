@@ -10,4 +10,9 @@ namespace CVWaferProber.Core.Events
     {
         public DateTime Timestamp { get; } = DateTime.Now;
     }
+
+    public class ResultGUIClearEvent : BaseEvent
+    {
+
+    }
 }

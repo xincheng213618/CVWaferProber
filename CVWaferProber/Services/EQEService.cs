@@ -95,8 +95,8 @@ namespace CVWaferProber.Services
         protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
         {
             EQEResultDisplay(dieViewModel);
-            CustomEQEVM.ClearResult();
-            CustomEQEVM.LoadEQEData(dieViewModel.SerialNumber);
+            //CustomEQEVM.ClearResult();
+            //CustomEQEVM.LoadEQEData(dieViewModel.SerialNumber);
             return ChipStatus.EQE_COMPLETED; // 替换为EQE完成状态
         }
 

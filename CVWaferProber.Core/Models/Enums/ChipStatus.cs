@@ -30,6 +30,8 @@ namespace CVWaferProber.Core.Models.Enums
         IVL_COMPLETED,
         EQE_TESTING,
         EQE_COMPLETED,
+        VAM_TESTING,
+        VAM_COMPLETED,
         //失败
         FAILED,
         //超时

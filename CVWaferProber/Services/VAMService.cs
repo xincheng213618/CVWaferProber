@@ -1,13 +1,9 @@
-﻿using CVAVMControl;
+﻿using ChipMapping.Models.HZCC;
+using CVDB.Services.Algorithm;
+using CVDB.Services.Image;
 using CVWaferProber.Core.Events;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WaferComm.Core;
 
 namespace CVWaferProber.Services
 {
@@ -19,23 +15,48 @@ namespace CVWaferProber.Services
 
         protected override ChipStatus GetResultStatus(string serialNumber)
         {
-            return ChipStatus.OK;
+            return ChipStatus.FAILED;
         }
-        protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
+        protected override ChipStatus FlowResultDisplay(ViewModels.DieViewModel dieViewModel)
         {
-            string cieFileName = GetFlowResult(dieViewModel);
-            EventAggregator?.Publish(new VAMFlowCompletedEvent(cieFileName));
-            return ChipStatus.OK;
+            //string cieFileName = "D:\\work\\img\\test_ND0.cvcie";
+            //EventAggregator?.Publish(new VAMFlowCompletedEvent(cieFileName));
+
+            var results = ImageResultService.LoadResultByBatchCode(dieViewModel.SerialNumber);
+            if (results != null && results.Count == 1)
+            {
+                var result = results[0];
+                if (result.ResultCode.HasValue && result.ResultCode.Value == 0)
+                {
+                    string cieFileName = result.FileUrl;
+                    cieFileName = "D:\\work\\img\\test_ND0.cvcie";
+                    EventAggregator?.Publish(new VAMFlowCompletedEvent(cieFileName));
+                }
+            }
+            return ChipStatus.VAM_COMPLETED;
         }
 
-        private string GetFlowResult(DieViewModel dieViewModel)
+        public void StartTestingVAM(string timestamp, ViewModels.DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow)
         {
-            return string.Empty;
-        }
+            string sn = BuildFlowSN(dieViewModel, timestamp);
+            dieViewModel.SerialNumber = sn;
+            //
+            EventAggregator?.Publish(new VAMFlowStartingEvent());
 
-        public void StartTestingVAM(string timestamp, DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow)
-        {
+            dieViewModel.ChangeStatus(ChipStatus.VAM_TESTING);
             Task task = RunFlowAsync(_selectedWPFlow, dieViewModel);
+        }
+
+        public void VAMResultDisplay(ViewModels.DieViewModel dieViewModel)
+        {
+            if (!string.IsNullOrEmpty(dieViewModel.SerialNumber))
+            {
+                FlowResultDisplay(dieViewModel);
+            }
+            else
+            {
+                EventAggregator?.Publish(new ResultGUIClearEvent());
+            }
         }
     }
 }

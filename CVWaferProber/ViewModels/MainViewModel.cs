@@ -2524,7 +2524,7 @@ namespace CVWaferProber.ViewModels
                                 item.IsAOIEnabled = value.Value;
                             }
                             // 强制刷新DataGrid
-                            _dataGrid?.Items.Refresh();
+                            //_dataGrid?.Items.Refresh();
                         }
                         finally
                         {
@@ -2557,7 +2557,7 @@ namespace CVWaferProber.ViewModels
                             {
                                 item.IsIVLEnabled = value.Value;
                             }
-                            _dataGrid?.Items.Refresh();
+                            //_dataGrid?.Items.Refresh();
                         }
                         finally
                         {
@@ -2590,7 +2590,7 @@ namespace CVWaferProber.ViewModels
                             {
                                 item.IsEQEEnabled = value.Value;
                             }
-                            _dataGrid?.Items.Refresh();
+                            //_dataGrid?.Items.Refresh();
                         }
                         finally
                         {
@@ -3592,6 +3592,7 @@ namespace CVWaferProber.ViewModels
                 aoiService.AOIResultDisplay(dieViewModel);
            // }
             eqeService.EQEResultDisplay(dieViewModel);
+            vamService.VAMResultDisplay(dieViewModel);
             // 新增：计算良率
             CalculateYieldBySerialNumber();
         }
@@ -3709,8 +3710,9 @@ namespace CVWaferProber.ViewModels
                     {
                         eqeService.StartTestingEQE(Timestamp, die, _selectedWPFlow);
                     }
-                    else
+                    else if (SelectedWPFlow.FlowType == CVWaferProberFlowType.VAM)
                     {
+                        vamService.StartTestingVAM(Timestamp, die, _selectedWPFlow);
                     }
                 }
                 else
