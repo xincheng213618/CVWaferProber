@@ -59,16 +59,16 @@ namespace CVAVMControl
         // 记录当前选中的半径（R圆面板用）
         private int _selectedRadius = -1;
 
-        // 接口返回状态枚举（与DLL定义一致）
-        private enum AliResult
-        {
-            SUCCESS = 1,          // 完全成功
-            FAILED = 0,           // 失败
-            PART_SUCCESS = 2,     // 部分成功
-            ERR_LENGTH = -1,      // 内存长度不够
-            ERR_FILE = -2,        // 存文件失败
-            ERR_JSON = -3         // JSON格式异常
-        }
+        //// 接口返回状态枚举（与DLL定义一致）
+        //private enum AliResult
+        //{
+        //    SUCCESS = 1,          // 完全成功
+        //    FAILED = 0,           // 失败
+        //    PART_SUCCESS = 2,     // 部分成功
+        //    ERR_LENGTH = -1,      // 内存长度不够
+        //    ERR_FILE = -2,        // 存文件失败
+        //    ERR_JSON = -3         // JSON格式异常
+        //}
 
         // 1. 定义DLL返回状态枚举（替换原有AliResult）
         private enum CV_AliResType
