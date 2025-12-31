@@ -52,26 +52,29 @@ namespace CVDB.Services.Buz
             }
             if (master.Id > 0)
             {
+                List<string> listType = new List<string> { "Flow.AOI", "Flow.IVL.SP", "Flow.IVL.Camera", "Flow.EQE", "Flow.VAM" };
                 var buzDetails = MysqlControler.GetInstance().Sql.Select<TScgdBuzProductDetail>().Where(a => a.Pid == master.Id).ToList();
                 if (buzDetails == null || buzDetails.Count == 0)
                 {
-                    TScgdBuzProductDetail buzProductDetail = new TScgdBuzProductDetail() { Pid = master.Id, Code= "Flow.AOI" };
-                    MysqlControler.GetInstance().Sql.Insert(buzProductDetail).ExecuteAffrows();
-                    buzProductDetail = new TScgdBuzProductDetail() { Pid = master.Id, Code = "Flow.IVL.SP" };
-                    MysqlControler.GetInstance().Sql.Insert(buzProductDetail).ExecuteAffrows();
-                    buzProductDetail = new TScgdBuzProductDetail() { Pid = master.Id, Code = "Flow.IVL.Camera" };
-                    MysqlControler.GetInstance().Sql.Insert(buzProductDetail).ExecuteAffrows();
-                    buzProductDetail = new TScgdBuzProductDetail() { Pid = master.Id, Code = "Flow.EQE" };
-                    MysqlControler.GetInstance().Sql.Insert(buzProductDetail).ExecuteAffrows();
-                    buzProductDetail = new TScgdBuzProductDetail() { Pid = master.Id, Code = "Flow.VAM" };
-                    MysqlControler.GetInstance().Sql.Insert(buzProductDetail).ExecuteAffrows();
+                    foreach (var item in listType)
+                    {
+                        TScgdBuzProductDetail buzProductDetail = new TScgdBuzProductDetail() { Pid = master.Id, Code = item, CfgJson= "{\"Timeout\": 120}" };
+                        MysqlControler.GetInstance().Sql.Insert(buzProductDetail).ExecuteAffrows();
+                    }
                 }
                 else
                 {
                     foreach (var buzProductDetail in buzDetails)
                     {
+                        listType.Remove(buzProductDetail.Code);
                         buzProductDetail.Name = null;
+                        buzProductDetail.CfgJson = "{\"Timeout\": 120}";
                         MysqlControler.GetInstance().Sql.Update<TScgdBuzProductDetail>().SetSource(buzProductDetail).ExecuteAffrows();
+                    }
+                    foreach (var item in listType)
+                    {
+                        TScgdBuzProductDetail buzProductDetail = new TScgdBuzProductDetail() { Pid = master.Id, Code = item, CfgJson = "{\"Timeout\": 120}" };
+                        MysqlControler.GetInstance().Sql.Insert(buzProductDetail).ExecuteAffrows();
                     }
                 }
             }

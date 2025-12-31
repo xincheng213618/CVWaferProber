@@ -1,5 +1,6 @@
 ﻿using ColorVision.Core.Entities;
 using CVDB.Services.Buz;
+using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
@@ -85,12 +86,15 @@ namespace CVWaferProber.Views
                 var option = string.IsNullOrEmpty(flow.Name)
                     ? flowAll[0]
                     : flowAll.FirstOrDefault(item => item.DisplayName == flow.Name) ?? flowAll[0];
-
+                FlowTimeoutCfg flowTimeoutCfg = new FlowTimeoutCfg();
+                if (string.IsNullOrEmpty(flow.CfgJson)) flowTimeoutCfg.Timeout = 120;
+                else flowTimeoutCfg = JsonConvert.DeserializeObject<FlowTimeoutCfg>(flow.CfgJson);
                 ConfigItems.Add(new FlowConfigItem
                 {
                     Id = flow.Id,
                     DisplayName = flow.Code,
                     ValueType = flow.Code,
+                    Timeout = flowTimeoutCfg.Timeout,
                     AvailableOptions = flowAll,
                     SelectedValue = option
                 });
@@ -109,6 +113,7 @@ namespace CVWaferProber.Views
             {
                 TScgdBuzProductDetail buzProductDetail = WaferProberDBService.GetBuzDetail(item.Id);
                 buzProductDetail.Name = item.SelectedValue.Value;
+                buzProductDetail.CfgJson = JsonConvert.SerializeObject(new FlowTimeoutCfg() { Timeout = item.Timeout });
                 WaferProberDBService.UpdateBuzDetail(buzProductDetail);
             }
             MessageBox.Show("Save Completed");
@@ -135,13 +140,17 @@ namespace CVWaferProber.Views
             this.Close();
         }
     }
-
+    public struct FlowTimeoutCfg
+    {
+        public int Timeout;
+    }
     // 配置项数据模型
     public class FlowConfigItem : INotifyPropertyChanged
     {
         public int Id { get; set; }
         public string DisplayName { get; set; }
         public string ValueType { get; set; }
+        public int Timeout { get; set; }
         public ObservableCollection<ConfigOption> AvailableOptions { get; set; }
 
         private ConfigOption _selectedValue;

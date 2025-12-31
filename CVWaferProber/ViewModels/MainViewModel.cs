@@ -5,7 +5,6 @@ using ChipMapping.ViewModels;
 using ColorVision.Core.Entities;
 using CVAVMControl;
 using CVDB.Services.Buz;
-using CVWaferProber.Components;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
 using CVWaferProber.MQTT;
@@ -2187,7 +2186,7 @@ namespace CVWaferProber.ViewModels
 
     //    #endregion
     //}
- 
+
     public class MainViewModel : ViewModelBase
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(MainViewModel));
@@ -2422,6 +2421,15 @@ namespace CVWaferProber.ViewModels
         private IVLService ivlService;
         private EQEService eqeService;
         private AOIService aoiService;
+        private VAMService vamService;
+
+        private CVVAMAnalyzer? _vamAnalyzer;
+        public CVVAMAnalyzer? VamAnalyzer { get => _vamAnalyzer;  set
+            {
+                _vamAnalyzer = vamService.VamAnalyzer = value;
+            }
+        } // 对应XAML中的spaly
+
         /// <summary>
         /// false 外部控件关联触发
         /// </summary>

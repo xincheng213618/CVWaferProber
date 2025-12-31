@@ -112,6 +112,25 @@
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
+                    
+                    <!-- 超时列 -->
+                    <DataGridTextColumn Header="超时" 
+                                        Binding="{Binding Timeout}"
+                                        Width="150"
+                                        IsReadOnly="False">
+                        <DataGridTextColumn.HeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="Background" Value="#F5F5F5"/>
+                            </Style>
+                        </DataGridTextColumn.HeaderStyle>
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Padding" Value="5"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
                     <!-- ComboBox 选择列 -->
                     <DataGridTemplateColumn Header="选择配置值" 
