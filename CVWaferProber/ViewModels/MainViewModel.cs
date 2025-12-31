@@ -3590,14 +3590,14 @@ namespace CVWaferProber.ViewModels
                 CustomIVLVM.ClearResult();
                 CustomImageVM?.ClearImageResult();
             }
-            if (dieViewModel.Status == ChipStatus.IVL_TESTING || dieViewModel.Status == ChipStatus.IVL_COMPLETED)
-            {
+           // if (dieViewModel.Status == ChipStatus.IVL_TESTING || dieViewModel.Status == ChipStatus.IVL_COMPLETED)
+           // {
                 ivlService.IVLResultDisplay(dieViewModel);
-            }
-            else
-            {
+            //
+           // else
+           // {
                 aoiService.AOIResultDisplay(dieViewModel);
-            }
+           // }
             eqeService.EQEResultDisplay(dieViewModel);
             // 新增：计算良率
             CalculateYieldBySerialNumber();
