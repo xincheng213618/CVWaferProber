@@ -14,7 +14,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CVWaferProber.Core\CVWaferProber.Core.csproj" />
     <ProjectReference Include="..\VAMdemo\ConoscopeDemo.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="WaferComm.Core">
+      <HintPath>..\DLL\WaferComm.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
 ﻿using CVAVMControl;
+using CVWaferProber.Core.Events;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
 using System;
@@ -6,12 +7,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WaferComm.Core;
 
 namespace CVWaferProber.Services
 {
     public class VAMService : BaseSerivce
     {
-        public VAMService(RCRestService rcService) : base(rcService)
+        public VAMService(RCRestService rcService, IEventAggregator? eventAggregator = null) : base(rcService, eventAggregator)
         {
         }
 
@@ -25,6 +27,7 @@ namespace CVWaferProber.Services
         {
             string cieFileName = GetFlowResult(dieViewModel);
             VamAnalyzer?.ResultDisplay(cieFileName);
+            EventAggregator?.Publish(new FlowCompletedEvent(dieViewModel));
             return ChipStatus.OK;
         }
 

@@ -15,6 +15,7 @@ using CVWaferProber.WinMsg;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
 using Microsoft.Win32;
+using OxyPlot;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -25,6 +26,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Threading;
+using WaferComm.Core;
 
 
 namespace CVWaferProber.ViewModels
@@ -2424,7 +2426,7 @@ namespace CVWaferProber.ViewModels
         private VAMService vamService;
 
         private CVVAMAnalyzer? _vamAnalyzer;
-        public CVVAMAnalyzer? VamAnalyzer { get => _vamAnalyzer;  set
+        public CVVAMAnalyzer? VamAnalyzer { get => _vamAnalyzer; set
             {
                 _vamAnalyzer = vamService.VamAnalyzer = value;
             }
@@ -2487,7 +2489,7 @@ namespace CVWaferProber.ViewModels
             new ColumnConfig { ColumnHeader = "开始时间", ColumnBindingPath = "StartTestTime", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
             new ColumnConfig { ColumnHeader = "结束时间", ColumnBindingPath = "EndTestTime", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
             new ColumnConfig { ColumnHeader = "总用时", ColumnBindingPath = "TotalTime", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
-          
+
         };
 
         /// <summary>
@@ -2657,7 +2659,17 @@ namespace CVWaferProber.ViewModels
             }
         }
         #endregion
-
+        private enum LogType
+        {
+            Debug,
+            Info,
+            //Send,
+            //Receive,
+            //Success,
+            Warning,
+            Error
+        }
+        public IEventAggregator? EventAggregator;
         public MainViewModel()
         {
             Instance = this;
@@ -2677,7 +2689,7 @@ namespace CVWaferProber.ViewModels
             //
             // 初始化重置布局命令
             SearchCommand = new RelayCommand(ExecuteSearch);
-           
+
             OpenVEyeWindowCommand = new RelayCommand(OpenVEyeWindow);
             RefreshStatusCommand = new RelayCommand(RefreshStatus);
             OpenMappingFileCommand = new RelayCommand(OpenMappingFile);
@@ -2746,6 +2758,8 @@ namespace CVWaferProber.ViewModels
             Snowflake.Instance.SnowflakesInit(1, 1);
             InitializeSimAutoTestTimer();
 
+            InitializeEvents();
+
             LoadMappingFileFromCsv();
             LoadBuzWPFlows();
             InitMQTT();
@@ -2760,6 +2774,9 @@ namespace CVWaferProber.ViewModels
             eqeService = new EQEService(CustomEQEVM, rcModel);
             eqeService.TestingCompleted += OnTestingCompleted;
 
+            vamService = new VAMService(rcModel);
+            vamService.TestingCompleted += OnTestingCompleted;
+
             SubscribeItems_AOI(TestResults);
             SubscribeItems_IVL(TestResults);
             SubscribeItems_EQE(TestResults);
@@ -2769,6 +2786,41 @@ namespace CVWaferProber.ViewModels
             //IsCameraPanelVisible = Properties.Settings.Default.IsCameraPanelVisible;
             //IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
 
+        }
+        private void InitializeEvents()
+        {
+            try
+            {
+                // 创建事件聚合器
+                 EventAggregator = new EventAggregator();
+                // 订阅事件
+                //eventAggregator.Subscribe<CommandSentEvent>(OnCommandSent);
+            }
+            catch (Exception ex)
+            {
+                AddLog($"Initialize failed: {ex.Message}", LogType.Error);
+            }
+        }
+
+        private void AddLog(string message, LogType typeLog = LogType.Info)
+        {
+            switch (typeLog)
+            {
+                case LogType.Info:
+                    if (logger.IsInfoEnabled) logger.Info(message);
+                    break;
+                case LogType.Debug:
+                    if (logger.IsDebugEnabled) logger.Debug(message);
+                    break;
+                case LogType.Warning:
+                    if (logger.IsWarnEnabled) logger.Warn(message);
+                    break;
+                case LogType.Error:
+                    if (logger.IsErrorEnabled) logger.Error(message);
+                    break;
+                default:
+                    break;
+            }
         }
 
         private void SysFlowCfg(object obj)
