@@ -1,4 +1,6 @@
-﻿using CVWaferProber.Core.Models.Enums;
+﻿using CVDB.Services.Spectrum;
+using CVWaferProber.Core.Events;
+using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
 using CVWPFSpectrometerCtrl.ViewModels;
 using System.Windows;
@@ -80,9 +82,19 @@ namespace CVWaferProber.Services
         // EQE结果展示方法：移除Camera参数，仅保留SerialNumber
         public void EQEResultDisplay(DieViewModel dieViewModel)
         {
-            CustomEQEVM.ClearResult();
-            // EQE仅需SerialNumber加载数据
-            CustomEQEVM.LoadEQEData(dieViewModel.SerialNumber);
+            if (string.IsNullOrEmpty(dieViewModel.SerialNumber))
+            {
+                CustomEQEVM.ClearResult();
+                //EventAggregator?.Publish(new EQEResultGUIClearEvent());
+                return;
+            }
+            else
+            {
+                FlowResultDisplay(dieViewModel);
+            }
+            //CustomEQEVM.ClearResult();
+            //// EQE仅需SerialNumber加载数据
+            //CustomEQEVM.LoadEQEData(dieViewModel.SerialNumber);
         }
 
         // 重写基类方法
@@ -94,7 +106,11 @@ namespace CVWaferProber.Services
         // 核心流程结果展示：移除Camera相关参数，替换为EQE逻辑
         protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
         {
-            EQEResultDisplay(dieViewModel);
+            var results = SpectrumResultService.LoadEQEResultByBatchCode(dieViewModel.SerialNumber);
+            CustomEQEVM.ClearResult();
+            CustomEQEVM.LoadEQEData(results);
+            //EventAggregator?.Publish(new EQEFlowCompletedEvent(results));
+            //EQEResultDisplay(dieViewModel);
             //CustomEQEVM.ClearResult();
             //CustomEQEVM.LoadEQEData(dieViewModel.SerialNumber);
             return ChipStatus.EQE_COMPLETED; // 替换为EQE完成状态

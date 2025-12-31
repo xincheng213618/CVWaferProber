@@ -2,6 +2,7 @@
 using CVCommCore;
 using CVDB.Services.Algorithm;
 using CVDB.Services.Spectrum;
+using CVWaferProber.Core.Events;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.ViewModels;
 using CVWPFSpectrometerCtrl.Models;
@@ -22,6 +23,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using WaferComm.Core;
 
 namespace CVWPFSpectrometerCtrl.ViewModels
 {
@@ -883,6 +885,24 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             // 初始化总览图（关键步骤）
             InitializeOverviewPlotModels();
 
+            InitializeEvents();
+        }
+
+        private void InitializeEvents()
+        {
+            IEventAggregator eventAggregator = CVWPEventAggregatorInstance.Instance;
+            eventAggregator.Subscribe<EQEFlowCompletedEvent>(OnFlowCompleted);
+            eventAggregator.Subscribe<EQEResultGUIClearEvent>(OnResultGUIClear);
+        }
+
+        private void OnResultGUIClear(EQEResultGUIClearEvent @event)
+        {
+           ClearResult();
+        }
+
+        private void OnFlowCompleted(EQEFlowCompletedEvent @event)
+        {
+            LoadEQEData(@event.Results);
         }
 
 
@@ -2895,14 +2915,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 return ""; // 空数组返回空字符串
             return string.Join(",", array); // 用逗号拼接元素
         }
-        public void LoadEQEData(string serialNumber)
+        public void LoadEQEData(List<VScgdMeasureResultEqe> results)
         {
-            if (string.IsNullOrWhiteSpace(serialNumber))
-            {
-                ClearAllDisplays();
-                return;
-            }
-            var results = SpectrumResultService.LoadEQEResultByBatchCode(DeviceCode, serialNumber);
             if (results == null || results.Count == 0) return;
 
             //IL_viewModel.LoadData(results);
@@ -2912,7 +2926,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             int n = 1;
             foreach (var result in results)
             {
-               
+
                 var measurement = new SpectrumEQEMeasurement(n++)
                 {
                     Timestamp = result.CreateDate,
@@ -2976,6 +2990,16 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             InitializeOverviewSeries();
             // 触发自动导出
             //AutoExportData();
+        }
+        public void LoadEQEData(string serialNumber)
+        {
+            if (string.IsNullOrWhiteSpace(serialNumber))
+            {
+                ClearAllDisplays();
+                return;
+            }
+            var results = SpectrumResultService.LoadEQEResultByBatchCode(DeviceCode, serialNumber);
+            LoadEQEData(results);
         }
         //public SpectrumMeasurement GetSpectrumData(string serialNumber)
         //{

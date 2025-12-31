@@ -21,6 +21,7 @@ namespace CVWaferProber.Services
         {
             //string cieFileName = "D:\\work\\img\\test_ND0.cvcie";
             //EventAggregator?.Publish(new VAMFlowCompletedEvent(cieFileName));
+            if (string.IsNullOrEmpty(dieViewModel.SerialNumber)) return ChipStatus.FAILED;
 
             var results = ImageResultService.LoadResultByBatchCode(dieViewModel.SerialNumber);
             if (results != null && results.Count == 1)
@@ -55,7 +56,7 @@ namespace CVWaferProber.Services
             }
             else
             {
-                EventAggregator?.Publish(new ResultGUIClearEvent());
+                EventAggregator?.Publish(new VAMResultGUIClearEvent());
             }
         }
     }

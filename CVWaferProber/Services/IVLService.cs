@@ -86,8 +86,18 @@ namespace CVWaferProber.Services
 
         public void IVLResultDisplay(DieViewModel dieViewModel)
         {
-            CustomIVLVM.ClearResult();
-            CustomIVLVM.LoadData(dieViewModel.SerialNumber, dieViewModel.IsIVLCameraEnabled);
+            if (string.IsNullOrEmpty(dieViewModel.SerialNumber))
+            {
+                CustomIVLVM?.ClearResult();
+                //EventAggregator?.Publish(new EQEResultGUIClearEvent());
+                return;
+            }
+            else
+            {
+                FlowResultDisplay(dieViewModel);
+            }
+            //CustomIVLVM.ClearResult();
+            //CustomIVLVM.LoadData(dieViewModel.SerialNumber, dieViewModel.IsIVLCameraEnabled);
         } 
 
         protected override ChipStatus GetResultStatus(string serialNumber)
@@ -97,7 +107,7 @@ namespace CVWaferProber.Services
 
         protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
         {
-            IVLResultDisplay(dieViewModel);
+            //IVLResultDisplay(dieViewModel);
             CustomIVLVM.ClearResult();
             CustomIVLVM.LoadData(dieViewModel.SerialNumber, dieViewModel.IsIVLCameraEnabled);
            

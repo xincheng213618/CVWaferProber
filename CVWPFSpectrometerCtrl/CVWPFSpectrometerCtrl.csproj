@@ -27,6 +27,9 @@
 		<Reference Include="CVCommCore">
 			<HintPath>..\DLL\CVCommCore.dll</HintPath>
 		</Reference>
+		<Reference Include="WaferComm.Core">
+		  <HintPath>..\DLL\WaferComm.Core.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 	<!-- 启用WinForm兼容，引入WindowsFormsIntegration --><!--
 	<PropertyGroup>

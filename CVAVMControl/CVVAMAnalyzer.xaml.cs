@@ -221,14 +221,14 @@ namespace CVAVMControl
             this.EventAggregator = eventAggregator == null ? CVWPEventAggregatorInstance.Instance : eventAggregator;
             this.EventAggregator.Subscribe<VAMFlowCompletedEvent>(OnFlowCompleted);
             //this.EventAggregator.Subscribe<VAMFlowStartingEvent>(OnFlowStarting);
-            this.EventAggregator.Subscribe<ResultGUIClearEvent>(OnResultGUIClear);
+            this.EventAggregator.Subscribe<VAMResultGUIClearEvent>(OnResultGUIClear);
         }
 
         private void UnInitializeEvents()
         {
             this.EventAggregator?.Unsubscribe<VAMFlowCompletedEvent>(OnFlowCompleted);
             //this.EventAggregator?.Unsubscribe<VAMFlowStartingEvent>(OnFlowStarting);
-            this.EventAggregator?.Unsubscribe<ResultGUIClearEvent>(OnResultGUIClear);
+            this.EventAggregator?.Unsubscribe<VAMResultGUIClearEvent>(OnResultGUIClear);
         }
 
         private void OnFlowCompleted(VAMFlowCompletedEvent @event)
@@ -242,7 +242,7 @@ namespace CVAVMControl
         {
             ResetDataWithoutDispose();
         }
-        private void OnResultGUIClear(ResultGUIClearEvent @event)
+        private void OnResultGUIClear(VAMResultGUIClearEvent @event)
         {
             ResetDataWithoutDispose();
         }

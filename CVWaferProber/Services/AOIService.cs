@@ -1,6 +1,7 @@
 ﻿using CVCommCore;
 using CVCommCore.CVImage;
 using CVDB.Services.Algorithm;
+using CVWaferProber.Core.Events;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
@@ -27,7 +28,9 @@ namespace CVWaferProber.Services
 
         protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
         {
-            AOIResultDisplay(dieViewModel);
+            //AOIResultDisplay(dieViewModel);
+            //EventAggregator?.Publish(new EQEFlowCompletedEvent(results));
+            LoadImageResult(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
             return ChipStatus.OK;
         }
         public void StartTestingAOI(string timestamp, DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
@@ -64,8 +67,18 @@ namespace CVWaferProber.Services
         }
         public void AOIResultDisplay(DieViewModel dieViewModel)
         {
-            CustomImageVM?.ClearImageResult();
-            LoadImageResult(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
+            if (string.IsNullOrEmpty(dieViewModel.SerialNumber))
+            {
+                CustomImageVM?.ClearImageResult();
+                //EventAggregator?.Publish(new EQEResultGUIClearEvent());
+                return;
+            }
+            else
+            {
+                FlowResultDisplay(dieViewModel);
+            }
+            //CustomImageVM?.ClearImageResult();
+            //LoadImageResult(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
         }
 
         private void AddResultImage(int id,string imgFile)
