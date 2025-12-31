@@ -25,6 +25,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Threading;
+using RelayCommand = CVWaferProber.Core.ViewModels.RelayCommand;
 
 
 namespace CVWaferProber.ViewModels
@@ -2424,7 +2425,8 @@ namespace CVWaferProber.ViewModels
         private VAMService vamService;
 
         private CVVAMAnalyzer? _vamAnalyzer;
-        public CVVAMAnalyzer? VamAnalyzer { get => _vamAnalyzer;  set
+        public CVVAMAnalyzer? VamAnalyzer
+        { get => _vamAnalyzer;  set
             {
                 _vamAnalyzer = vamService.VamAnalyzer = value;
             }
@@ -2673,8 +2675,8 @@ namespace CVWaferProber.ViewModels
             CustomMappingVM.ChipSelected += OnChipSelected;
             CustomImageVM = new CVCamImagerViewModel();
             CustomIVLVM = new CVSpectrumViewModel();
-            CustomEQEVM = new CVEQEViewModel();
-            //
+            CustomEQEVM = CVEQEViewModel.GetInstance();
+
             // 初始化重置布局命令
             SearchCommand = new RelayCommand(ExecuteSearch);
            
@@ -3532,7 +3534,7 @@ namespace CVWaferProber.ViewModels
         }
 
         private void DieResultDisplay(DieViewModel dieViewModel)
-        {
+         {
             if (string.IsNullOrEmpty(dieViewModel.SerialNumber))
             {
                 CustomIVLVM.ClearResult();

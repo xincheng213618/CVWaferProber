@@ -67,7 +67,7 @@ namespace CVWaferProber.Views
                     }
                 };
 
-                mainVm.VamAnalyzer = MyVAM;
+                //mainVm.VamAnalyzer = MyVAM;
             }
         }
 

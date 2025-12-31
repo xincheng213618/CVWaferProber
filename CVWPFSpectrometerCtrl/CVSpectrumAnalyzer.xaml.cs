@@ -18,14 +18,14 @@ namespace CVWPFSpectrometerCtrl
         private SpectralData _spectralData;
         public CVSpectrumAnalyzer()
         {
-            InitializeComponent();
-          
-            _spectralData = new SpectralData();
-            //_spectralData.GenerateSampleData(550, 50);
-            //SpectralDisplay.SpectralData = _spectralData;
 
-            //_spectralData.GenerateMultiPeakData();
-            Loaded += (s, e) =>
+            InitializeComponent();
+            EQEGrid.DataContext = CVEQEViewModel.GetInstance();
+             //_spectralData.GenerateSampleData(550, 50);
+             //SpectralDisplay.SpectralData = _spectralData;
+
+             //_spectralData.GenerateMultiPeakData();
+             Loaded += (s, e) =>
             {
                 if (this.DataContext is CVSpectrumViewModel viewModel)
                 {

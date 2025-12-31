@@ -197,6 +197,11 @@
                                 <ComboBoxItem Content="150°" Tag="150" />
                                 <ComboBoxItem Content="180°" Tag="180" />
                             </ComboBox>
+                            <Button
+                                Margin="5,0,5,0"
+                                Padding="10,2"
+                                Click="BtnDeleteAngle_Diameter_Click"
+                                Content="删除" />
                         </StackPanel>
                         <StackPanel Margin="5,0,5,10" Orientation="Horizontal">
                             <TextBlock
@@ -205,7 +210,7 @@
                                 Text="{DynamicResource VAM.DisplayChannel}" />
                             <ComboBox
                                 x:Name="cbDisplayChannel"
-                                Width="100"
+                                Width="151"
                                 SelectedIndex="1"
                                 SelectionChanged="CbDisplayChannel_SelectionChanged">
                                 <ComboBoxItem Content="{DynamicResource VAM.XChannel}" Tag="X" />
@@ -220,6 +225,7 @@
                                 Text="添加角度:" />
                             <TextBox
                                 x:Name="txtAddAngle"
+                                Width="100"
                                 Height="18"
                                 MinWidth="60"
                                 Margin="0,0,5,0"
@@ -230,23 +236,7 @@
                                 Click="BtnAddAngle_Diameter_Click"
                                 Content="添加" />
                         </StackPanel>
-                        <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
-                            <TextBlock
-                                Margin="5,0,5,0"
-                                VerticalAlignment="Center"
-                                Text="删除角度:" />
-                            <TextBox
-                                x:Name="txtDeleteAngle"
-                                Height="18"
-                                MinWidth="60"
-                                Margin="0,0,5,0"
-                                VerticalAlignment="Center" />
-                            <Button
-                                Margin="0,0,5,0"
-                                Padding="10,2"
-                                Click="BtnDeleteAngle_Diameter_Click"
-                                Content="删除" />
-                        </StackPanel>
+
                         <!--  导出直径线CSV按钮  -->
                         <Button
                             x:Name="btnExportDiameter"
@@ -275,6 +265,11 @@
                                 <ComboBoxItem Content="60°" Tag="60" />
 
                             </ComboBox>
+                            <Button
+                                Margin="5,0,5,0"
+                                Padding="10,2"
+                                Click="BtnDeleteAngle_RCircle_Click"
+                                Content="删除" />
                         </StackPanel>
                         <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
                             <TextBlock
@@ -286,30 +281,14 @@
                                 Height="18"
                                 MinWidth="60"
                                 Margin="0,0,5,0"
-                                VerticalAlignment="Center" />
+                                VerticalAlignment="Center" Width="100"/>
                             <Button
                                 Margin="0,0,5,0"
                                 Padding="10,2"
                                 Click="BtnAddAngle_RCircle_Click"
                                 Content="添加" />
                         </StackPanel>
-                        <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
-                            <TextBlock
-                                Margin="5,0,5,0"
-                                VerticalAlignment="Center"
-                                Text="删除角度:" />
-                            <TextBox
-                                x:Name="txtDeleteAngle1"
-                                Height="18"
-                                MinWidth="60"
-                                Margin="0,0,5,0"
-                                VerticalAlignment="Center" />
-                            <Button
-                                Margin="0,0,5,0"
-                                Padding="10,2"
-                                Click="BtnDeleteAngle_RCircle_Click"
-                                Content="删除" />
-                        </StackPanel>
+                       
                         <!--  导出R圆CSV按钮  -->
                         <Button
                             x:Name="btnExportCircle"

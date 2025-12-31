@@ -1,52 +1,48 @@
-﻿using CVWaferProber.Core.ViewModels;
+﻿using ColorVision.Core.Entities;
+using CVCommCore;
+using CVDB.Services.Spectrum;
+using CVWaferProber.Core.ViewModels;
 using CVWPFSpectrometerCtrl.Models;
 using CVWPFSpectrumControl;
+using CVWPFSpectrumControl.Models;
+using log4net;
+using Newtonsoft.Json;
 using OxyPlot;
 using OxyPlot.Annotations;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 using ScottPlot.WPF;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace CVWPFSpectrometerCtrl.ViewModels
 {
-    public class BaseSpectrumViewModel : ViewModelBase
+    /// <summary>
+    /// 光谱/EQE通用基类，封装公共逻辑
+    /// </summary>
+    public abstract class BaseSpectrumViewModel : ViewModelBase
     {
-        #region 公共属性
+        #region 公共字段/属性
+        protected readonly ILog _log = LogManager.GetLogger(typeof(BaseSpectrumViewModel));
         protected readonly double _overviewSpectralXMin = 360;
         protected readonly double _overviewSpectralXMax = 800;
+
+        // 通用轴配置
         protected PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = 350, DefaultMax = 800, DefaultMaxRange = 500 };
         protected PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 1.0f, DefaultMaxRange = 1.1f };
 
-        // 基础图表
-        private PlotModel _plotModel;
-        public PlotModel PlotModel
-        {
-            get => _plotModel;
-            set => SetProperty(ref _plotModel, value);
-        }
+        // 公共图表模型（总览图）
+        public PlotModel OverviewSpectralPlotModel { get; private set; } = new PlotModel();
+        public PlotModel OverviewIVPlotModel { get; private set; } = new PlotModel();
+        public PlotModel OverviewILPlotModel { get; private set; } = new PlotModel();
+        public PlotModel OverviewVLPlotModel { get; private set; } = new PlotModel();
 
-        // 总览图
-        public PlotModel OverviewSpectralPlotModel { get; protected set; } = new PlotModel();
-        public PlotModel OverviewIVPlotModel { get; protected set; } = new PlotModel();
-        public PlotModel OverviewILPlotModel { get; protected set; } = new PlotModel();
-        public PlotModel OverviewVLPlotModel { get; protected set; } = new PlotModel();
-
-        // 数据集合
-        public ObservableCollection<SpectralGridItem> SpectralGridItems { get; set; } = new ObservableCollection<SpectralGridItem>();
-        public float[] Wavelengths { get; protected set; }
-        public WpfPlot PlotControl { get; set; }
-        public string DeviceCode { get; set; } = "DEV.Spectrum.Default";
-
-        // 公共配置
+        // 公共选中状态/显示控制
         private bool _isShowAllData;
         public bool IsShowAllData
         {
@@ -78,102 +74,96 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
         }
 
-        // 线条颜色
-        private SolidColorBrush _spectralLineColor = new SolidColorBrush(Colors.Red);
-        public SolidColorBrush SpectralLineColor
+        // 右侧DataGrid数据源
+        private ObservableCollection<SpectralGridItem> _spectralGridItems;
+        public ObservableCollection<SpectralGridItem> SpectralGridItems
         {
-            get => _spectralLineColor;
-            set
-            {
-                if (_spectralLineColor != value)
-                {
-                    _spectralLineColor = value;
-                    OnPropertyChanged(nameof(SpectralLineColor));
-                    OxyColor newOxyColor = ConvertToOxyColor(value);
-                    UpdateLineColor(newOxyColor);
-                }
-            }
+            get => _spectralGridItems;
+            set => SetProperty(ref _spectralGridItems, value);
         }
 
-        // 选中的测量数据（泛型适配光谱/EQE）
-        private object _selectedMeasurement;
-        public object SelectedMeasurement
+        // 颜色配置（通用转换逻辑）
+        protected OxyColor ConvertToOxyColor(SolidColorBrush brush)
         {
-            get => _selectedMeasurement;
-            set
-            {
-                if (SetProperty(ref _selectedMeasurement, value))
-                {
-                    OnPropertyChanged(nameof(SelectedMeasurement));
-                    OnSelectedMeasurementChanged(value);
-                }
-            }
+            if (brush == null) return OxyColors.Blue;
+            return OxyColor.FromArgb(brush.Color.A, brush.Color.R, brush.Color.G, brush.Color.B);
         }
 
-        // 缓存
-        protected Dictionary<int, LineSeries> _spectralSeriesCache = new Dictionary<int, LineSeries>();
+        // 命令
+        public ICommand ExportCommand { get; protected set; }
+        public ICommand BtnResetStatus { get; protected set; }
+
+        // 子ViewModel（IV/IL/VL）
+        protected ILViewModel IL_viewModel;
+        protected IVViewModel IV_viewModel;
+        protected VLViewModel VL_viewModel;
+
+        public PlotModel IVPlotModel { get; protected set; }
+        public PlotModel ILPlotModel { get; protected set; }
+        public PlotModel VLPlotModel { get; protected set; }
+        // 控件引用
+        protected WpfPlot _plotControl;
+        public WpfPlot PlotControl
+        {
+            get => _plotControl;
+            set => SetProperty(ref _plotControl, value);
+        }
+
         protected SpectrumControl _spectralCtrl;
+        public float[] Wavelengths { get; protected set; }
+
+        // 缓存（通用）
+        protected Dictionary<int, LineSeries> _seriesCache = new Dictionary<int, LineSeries>();
+
+        // 抽象属性（子类实现）
+        public abstract PlotModel PlotModel { get; set; }
+        public abstract object SelectedMeasurement { get; set; }
+        public abstract ObservableCollection<IVMeasurement> IVMeasurements { get; set; }
+        public abstract ObservableCollection<ILMeasurement> ILMeasurements { get; set; }
+        public abstract ObservableCollection<VLMeasurement> VLMeasurements { get; set; }
         #endregion
 
-        #region 构造函数 & 初始化
-        public BaseSpectrumViewModel()
+        protected BaseSpectrumViewModel()
         {
-            // 初始化波长数组
+            // 初始化通用波长数组
             Wavelengths = new float[4001];
             for (int i = 0; i < 4001; i++)
             {
                 Wavelengths[i] = 380 + i / 10.0f;
             }
 
-            // 初始化基础图表
-            InitializePlotModel();
+            // 初始化通用命令
+            BtnResetStatus = new RelayCommand(IVResetStatus);
+            SpectralGridItems = new ObservableCollection<SpectralGridItem>();
+
+            // 初始化IV/IL/VL子ViewModel
+            InitializeIVPlotModel();
+            InitializeILPlotModel();
+            InitializeVLPlotModel();
+
+            // 初始化总览图
             InitializeOverviewPlotModels();
         }
 
-        // 初始化基础光谱图表
-        protected virtual void InitializePlotModel()
-        {
-            PlotModel = new PlotModel
-            {
-                Title = (string)Application.Current.FindResource("Sp.SpectralCurve"),
-                TitleFontSize = 14
-            };
-
-            // X轴（波长）
-            var xAxis = new LinearAxis
-            {
-                Position = AxisPosition.Bottom,
-                Title = (string)Application.Current.FindResource("Sp.Wavelength"),
-                MajorGridlineStyle = LineStyle.Solid,
-                MinorGridlineStyle = LineStyle.Dot,
-            };
-            AxisCfg(xAxis, AxisX);
-
-            // Y轴（强度/EQE值）
-            var yAxis = new LinearAxis
-            {
-                Position = AxisPosition.Left,
-                Title = (string)Application.Current.FindResource("Sp.Spectral"),
-                MajorGridlineStyle = LineStyle.Solid,
-                MinorGridlineStyle = LineStyle.Dot,
-            };
-            AxisCfg(yAxis, AxisY);
-
-            PlotModel.Axes.Add(xAxis);
-            PlotModel.Axes.Add(yAxis);
-        }
-
-        // 初始化总览图
+        #region 公共方法（子类可重写）
+        /// <summary>
+        /// 初始化总览图（通用逻辑）
+        /// </summary>
         protected void InitializeOverviewPlotModels()
         {
-            string spectralTitle = (string)Application.Current.FindResource("Sp.Spectral");
+            string spectralTitle = (string)System.Windows.Application.Current.FindResource("Sp.Spectral");
             OverviewSpectralPlotModel = ClonePlotModel(PlotModel, spectralTitle);
-            OverviewIVPlotModel = ClonePlotModel(new PlotModel(), "IV");
-            OverviewILPlotModel = ClonePlotModel(new PlotModel(), "IL");
-            OverviewVLPlotModel = ClonePlotModel(new PlotModel(), "VL");
+            OverviewIVPlotModel = ClonePlotModel(IVPlotModel, "IV");
+            OverviewILPlotModel = ClonePlotModel(ILPlotModel, "IL");
+            OverviewVLPlotModel = ClonePlotModel(VLPlotModel, "VL");
+
+            InitializeOverviewSeries();
+            NotifyOverviewPlotChanged();
         }
-         
-        // 克隆图表配置（通用方法）
+
+        /// <summary>
+        /// 克隆PlotModel（通用轴配置）
+        /// </summary>
         protected PlotModel ClonePlotModel(PlotModel sourceModel, string title)
         {
             var targetModel = new PlotModel
@@ -200,8 +190,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         IsPanEnabled = false
                     };
 
-                    // 总览图X轴固定范围
-                    if (title.Contains("光谱") && clonedAxis.Position == AxisPosition.Bottom)
+                    // 光谱总览图锁定X轴
+                    if ((title == (string)System.Windows.Application.Current.FindResource("Sp.Spectral") || title == "光谱")
+                        && clonedAxis.Position == AxisPosition.Bottom)
                     {
                         clonedAxis.Minimum = _overviewSpectralXMin;
                         clonedAxis.Maximum = _overviewSpectralXMax;
@@ -212,58 +203,12 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     targetModel.Axes.Add(clonedAxis);
                 }
             }
-
             return targetModel;
         }
-        #endregion
 
-        #region 公共方法（数据处理/图表更新）
-        // 更新线条颜色（子类可重写）
-        protected virtual void UpdateLineColor(OxyColor newColor)
-        {
-            if (IsShowAllData && SelectedMeasurement != null)
-            {
-                UpdateSelectedCurveColor(newColor);
-            }
-            else
-            {
-                UpdateAllMeasurementsLineColor(newColor);
-                UpdateSeriesColor(PlotModel, newColor);
-            }
-        }
-
-        // 更新选中曲线颜色
-        protected void UpdateSelectedCurveColor(OxyColor newColor)
-        {
-            if (SelectedMeasurement is SpectrumMeasurement meas && _spectralSeriesCache.TryGetValue(meas.No, out LineSeries series))
-            {
-                series.Color = newColor;
-                series.MarkerFill = newColor;
-                series.MarkerStroke = newColor;
-                PlotModel.InvalidatePlot(true);
-            }
-        }
-
-        // 更新所有曲线颜色
-        protected virtual void UpdateAllMeasurementsLineColor(OxyColor newColor)
-        {
-            // 子类实现具体逻辑
-        }
-
-        // 更新图表系列颜色
-        protected void UpdateSeriesColor(PlotModel plotModel, OxyColor color)
-        {
-            if (plotModel?.Series == null) return;
-            foreach (var series in plotModel.Series.OfType<LineSeries>())
-            {
-                series.Color = color;
-                series.MarkerFill = color;
-                series.MarkerStroke = color;
-            }
-            plotModel.InvalidatePlot(true);
-        }
-
-        // 刷新所有图表
+        /// <summary>
+        /// 刷新所有图表
+        /// </summary>
         public void RefreshAllPlots()
         {
             PlotModel?.InvalidatePlot(true);
@@ -271,150 +216,15 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             OverviewIVPlotModel?.InvalidatePlot(true);
             OverviewILPlotModel?.InvalidatePlot(true);
             OverviewVLPlotModel?.InvalidatePlot(true);
+
             OnPropertyChanged(nameof(PlotModel));
+            OnPropertyChanged(nameof(OverviewSpectralPlotModel));
             PlotControl?.Refresh();
         }
 
-        // 清空所有数据/图表
-        public virtual void ClearAllDisplays()
-        {
-            // 清空图表
-            PlotModel.Series.Clear();
-            PlotModel.Annotations.Clear();
-            ResetAxisToDefault();
-            PlotModel.InvalidatePlot(true);
-
-            // 清空总览图
-            OverviewSpectralPlotModel.Series.Clear();
-            OverviewIVPlotModel.Series.Clear();
-            OverviewILPlotModel.Series.Clear();
-            OverviewVLPlotModel.Series.Clear();
-
-            // 清空数据
-            SpectralGridItems.Clear();
-            _spectralSeriesCache.Clear();
-            SelectedMeasurement = null;
-
-            // 刷新
-            RefreshAllPlots();
-        }
-
-        // 更新右侧DataGrid数据
-        protected virtual void UpdateSpectralGridData(object measurement)
-        {
-            // 子类实现具体数据转换
-        }
-
-        // 选中数据变化时的回调（子类重写）
-        protected virtual void OnSelectedMeasurementChanged(object selectedItem)
-        {
-            if (IsShowAllData)
-            {
-                UpdateSelectedCurveHighlight();
-            }
-            else
-            {
-                ResetAndUpdateChart();
-            }
-
-            if (IsShowSpectralDetail && selectedItem != null)
-            {
-                UpdateSpectralGridData(selectedItem);
-            }
-        }
-
-        // 重置图表并更新
-        protected virtual void ResetAndUpdateChart()
-        {
-            ResetPlotView();
-            if (SelectedMeasurement != null)
-            {
-                UpdateChartFromSelectedMeasurement();
-            }
-            else
-            {
-                ShowEmptyChartMessage();
-            }
-        }
-
-        // 绘制选中数据到图表
-        protected virtual void UpdateChartFromSelectedMeasurement()
-        {
-            // 子类实现具体绘制逻辑
-        }
-
-        // 显示空图表提示
-        protected void ShowEmptyChartMessage()
-        {
-            var annotation = new TextAnnotation
-            {
-                Text = "请选择测量数据以显示曲线",
-                TextPosition = new DataPoint((AxisX.DefaultMin + AxisX.DefaultMax) / 2, 50),
-                TextColor = OxyColors.Gray,
-                FontSize = 16,
-                TextHorizontalAlignment = OxyPlot.HorizontalAlignment.Center,
-                TextVerticalAlignment = OxyPlot.VerticalAlignment.Middle
-            };
-            PlotModel.Annotations.Add(annotation);
-            PlotModel.InvalidatePlot(true);
-        }
-
-        // 转换WPF颜色到OxyColor
-        protected OxyColor ConvertToOxyColor(SolidColorBrush brush)
-        {
-            if (brush == null) return OxyColors.Blue;
-            return OxyColor.FromArgb(brush.Color.A, brush.Color.R, brush.Color.G, brush.Color.B);
-        }
-
-        // CSV导出公共方法
-        protected void ExportToCsv(string fileName, List<string> headers, List<List<string>> rows)
-        {
-            try
-            {
-                var csv = new StringBuilder();
-                csv.AppendLine(string.Join(",", headers));
-                foreach (var row in rows)
-                {
-                    csv.AppendLine(string.Join(",", row.Select(EscapeCsvValue)));
-                }
-                File.WriteAllText(fileName, csv.ToString(), Encoding.UTF8);
-                MessageBox.Show($"数据已导出至：\n{fileName}", "导出成功");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"导出失败：{ex.Message}", "错误");
-            }
-        }
-
-        // CSV值转义
-        protected string EscapeCsvValue(string value)
-        {
-            if (string.IsNullOrEmpty(value)) return "";
-            if (value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r'))
-            {
-                return $"\"{value.Replace("\"", "\"\"")}\"";
-            }
-            return value;
-        }
-        #endregion
-
-        #region 辅助方法
-        protected void AxisCfg(LinearAxis axis, PlotAxesCfg axisCfg)
-        {
-            axis.Minimum = axisCfg.DefaultMin;
-            axis.Maximum = axisCfg.DefaultMax;
-            axis.MaximumRange = axisCfg.DefaultMaxRange;
-            axis.ExtraGridlines = null;
-        }
-
-        protected void ResetAxisToDefault()
-        {
-            var xAxis = PlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Bottom) as LinearAxis;
-            var yAxis = PlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Left) as LinearAxis;
-            if (xAxis != null) AxisCfg(xAxis, AxisX);
-            if (yAxis != null) AxisCfg(yAxis, AxisY);
-        }
-
+        /// <summary>
+        /// 重置图表视图（通用）
+        /// </summary>
         protected void ResetPlotView()
         {
             PlotModel.Series.Clear();
@@ -423,24 +233,189 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             PlotModel.InvalidatePlot(true);
         }
 
-        protected virtual void UpdateChartByShowAllState()
+        /// <summary>
+        /// 重置轴到默认值
+        /// </summary>
+        protected void ResetAxisToDefault()
         {
-            // 子类实现具体逻辑
+            var xAxis = PlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Bottom) as LinearAxis;
+            var yAxis = PlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Left) as LinearAxis;
+
+            if (xAxis != null) AxisCfg(xAxis, AxisX);
+            if (yAxis != null) AxisCfg(yAxis, AxisY);
         }
 
-        protected virtual void UpdateSelectedCurveHighlight()
+        /// <summary>
+        /// 轴配置（通用）
+        /// </summary>
+        protected void AxisCfg(LinearAxis axis, PlotAxesCfg axisCfg)
         {
-            // 子类实现高亮逻辑
+            axis.Minimum = axisCfg.DefaultMin;
+            axis.Maximum = axisCfg.DefaultMax;
+            axis.MaximumRange = axisCfg.DefaultMaxRange;
+            axis.ExtraGridlines = null;
         }
+
+        /// <summary>
+        /// 显示空图表提示（通用）
+        /// </summary>
+        protected void ShowEmptyChartMessage()
+        {
+            var textAnnotation = new TextAnnotation
+            {
+                Text = "请选择测量数据以显示曲线",
+                TextPosition = new DataPoint((AxisX.DefaultMin + AxisX.DefaultMax) / 2, (AxisY.DefaultMin + AxisY.DefaultMax) / 2),
+                TextColor = OxyColors.Gray,
+                FontSize = 16,
+                TextHorizontalAlignment = OxyPlot.HorizontalAlignment.Center,
+                TextVerticalAlignment = OxyPlot.VerticalAlignment.Middle
+            };
+
+            PlotModel.Annotations.Add(textAnnotation);
+            PlotModel.InvalidatePlot(true);
+        }
+
+        /// <summary>
+        /// 刷新总览图轴范围（通用）
+        /// </summary>
+        protected void RefreshAxisRange(PlotModel plotModel)
+        {
+            foreach (var axis in plotModel.Axes)
+            {
+                if (axis is LinearAxis linearAxis)
+                {
+                    linearAxis.Minimum = double.NaN;
+                    linearAxis.Maximum = double.NaN;
+                }
+            }
+
+            plotModel.InvalidatePlot(true);
+
+            foreach (var axis in plotModel.Axes)
+            {
+                if (axis is LinearAxis linearAxis && !double.IsNaN(linearAxis.ActualMinimum) && !double.IsNaN(linearAxis.ActualMaximum))
+                {
+                    double range = linearAxis.ActualMaximum - linearAxis.ActualMinimum;
+                    double margin = range * 0.05;
+                    linearAxis.Minimum = linearAxis.ActualMinimum - margin;
+                    linearAxis.Maximum = linearAxis.ActualMaximum + margin;
+                }
+            }
+
+            plotModel.InvalidatePlot(true);
+        }
+
+        /// <summary>
+        /// CSV值转义（通用）
+        /// </summary>
+        protected static string EscapeCsvValue(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return "";
+            if (value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r'))
+            {
+                return $"\"{value.Replace("\"", "\"\"")}\"";
+            }
+            return value;
+        }
+
+        /// <summary>
+        /// 初始化IV PlotModel（通用）
+        /// </summary>
+        protected void InitializeIVPlotModel()
+        {
+            IV_viewModel = new IVViewModel();
+            IVPlotModel = IV_viewModel.PlotModel;
+            IVMeasurements = IV_viewModel.Measurements;
+        }
+
+        /// <summary>
+        /// 初始化IL PlotModel（通用）
+        /// </summary>
+        protected void InitializeILPlotModel()
+        {
+            IL_viewModel = new ILViewModel();
+            ILPlotModel = IL_viewModel.PlotModel;
+            ILMeasurements = IL_viewModel.Measurements;
+        }
+
+        /// <summary>
+        /// 初始化VL PlotModel（通用）
+        /// </summary>
+        protected void InitializeVLPlotModel()
+        {
+            VL_viewModel = new VLViewModel();
+            VLMeasurements = VL_viewModel.Measurements;
+            VLPlotModel = VL_viewModel.PlotModel;
+        }
+
+        /// <summary>
+        /// 重置IV状态（通用）
+        /// </summary>
+        protected void IVResetStatus(object obj)
+        {
+            OverviewIVPlotModel?.InvalidatePlot(true);
+        }
+
+        /// <summary>
+        /// 通知总览图属性变更
+        /// </summary>
+        protected void NotifyOverviewPlotChanged()
+        {
+            OnPropertyChanged(nameof(OverviewSpectralPlotModel));
+            OnPropertyChanged(nameof(OverviewIVPlotModel));
+            OnPropertyChanged(nameof(OverviewILPlotModel));
+            OnPropertyChanged(nameof(OverviewVLPlotModel));
+        }
+
         #endregion
 
-        // 光谱详情Grid模型（共用）
+        #region 抽象方法（子类必须实现）
+        /// <summary>
+        /// 根据显示所有数据的状态更新图表
+        /// </summary>
+        protected abstract void UpdateChartByShowAllState();
+
+        /// <summary>
+        /// 初始化主图表（光谱/EQE各自实现）
+        /// </summary>
+        protected abstract void InitializePlotModel();
+
+        /// <summary>
+        /// 初始化总览图数据系列
+        /// </summary>
+        public abstract void InitializeOverviewSeries();
+
+        /// <summary>
+        /// 加载数据（光谱/EQE不同数据源）
+        /// </summary>
+        /// <param name="serialNumber">批次号</param>
+        public abstract void LoadData(string serialNumber);
+
+        /// <summary>
+        /// 清空所有显示
+        /// </summary>
+        public abstract void ClearAllDisplays();
+
+        /// <summary>
+        /// 更新右侧DataGrid数据
+        /// </summary>
+        /// <param name="measurement">选中的测量数据</param>
+        protected abstract void UpdateSpectralGridData(object measurement);
+
+        /// <summary>
+        /// 导出CSV（光谱/EQE不同数据结构）
+        /// </summary>
+        /// <param name="fileName">文件路径</param>
+        protected abstract void ExportToCsv(string fileName);
+        #endregion
+
+        #region 嵌套类
         public class SpectralGridItem
         {
             public double Wavelength { get; set; }
             public float RelativeSpectrum { get; set; }
             public float AbsoluteSpectrum { get; set; }
         }
+        #endregion
     }
-
 }

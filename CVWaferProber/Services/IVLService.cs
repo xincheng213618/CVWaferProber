@@ -64,7 +64,7 @@ namespace CVWaferProber.Services
                         // 循环调用刷新方法（每次都会加载最新数据）
                         IVLResultDisplay(_currentDieVM);
                         // 新增：加载光谱数据（供后续生成CSV）
-                        _currentSpectrumData = CustomIVLVM.GetSpectrumData(dieViewModel.SerialNumber);
+                       // _currentSpectrumData = CustomIVLVM.GetSpectrumData(dieViewModel.SerialNumber);
                     }
                     catch (Exception ex)
                     {

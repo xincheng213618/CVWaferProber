@@ -890,8 +890,7 @@
         <!--  EQE选项卡  -->
         <TabItem Header="EQE">
             <!--  EQE内容区域（绑定共享数据源）  -->
-            <Grid>
-
+            <Grid x:Name="EQEGrid">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="41*" />
                     <ColumnDefinition Width="383*" />

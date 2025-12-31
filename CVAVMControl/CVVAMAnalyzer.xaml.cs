@@ -482,6 +482,162 @@ namespace CVAVMControl
         /// </summary>
         /// <param name="targetComboBox">目标下拉框（如cbDisplayAngle/cbDisplayRadius）</param>
         /// <param name="inputAngleText">输入的角度文本</param>
+        //private void DeleteAngleFromComboBox(ComboBox targetComboBox)
+        //{
+        //    // 1. 校验是否有选中项
+        //    if (targetComboBox.SelectedItem == null)
+        //    {
+        //        MessageBox.Show("请选择对应角度", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+        //        return;
+        //    }
+
+        //    // 2. 获取选中项的角度值
+        //    if (!(targetComboBox.SelectedItem is ComboBoxItem selectedItem) ||
+        //        !int.TryParse(selectedItem.Tag?.ToString(), out int delAngle))
+        //    {
+        //        MessageBox.Show("选中项无效", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+        //        return;
+        //    }
+
+        //    // 3. 弹出确认提示
+        //    MessageBoxResult result = MessageBox.Show(
+        //        $"是否确认删除 {delAngle}°？",
+        //        "确认删除",
+        //        MessageBoxButton.YesNo,
+        //        MessageBoxImage.Question
+        //    );
+        //    if (result != MessageBoxResult.Yes)
+        //    {
+        //        return; // 点击“否”，不操作
+        //    }
+
+        //    // 4. 删除选中项
+        //    targetComboBox.Items.Remove(selectedItem);
+
+        //    // 5. 自动选中第一个项（若还有项）
+        //    if (targetComboBox.Items.Count > 0)
+        //    {
+        //        targetComboBox.SelectedIndex = 0;
+        //    }
+        //    else
+        //    {
+        //        // 若下拉框为空，重置选中状态
+        //        _selectedAngle = -1;
+        //        _selectedRadius = -1;
+        //    }
+
+        //    // 6. 刷新显示
+        //    if (IsMatSafe(YMat)) UpdateDisplay();
+        //}
+        // 新增：标记是否正在执行删除操作（屏蔽DLL调用）
+        private void DeleteAngleFromComboBox(ComboBox targetComboBox)
+        {
+            _isDeletingAngle = true;
+            try
+            {
+                if (targetComboBox.SelectedItem == null)
+                {
+                    MessageBox.Show("请先从下拉框中选择要删除的角度", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                if (!(targetComboBox.SelectedItem is ComboBoxItem selectedItem) ||
+                    !int.TryParse(selectedItem.Tag?.ToString(), out int delAngle))
+                {
+                    MessageBox.Show("选中的角度项无效，请重新选择", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                bool isRCircle = IsRCircleMode();
+                string modeName = isRCircle ? "R圆" : "直径线";
+
+                MessageBoxResult result = MessageBox.Show(
+                    $"确认删除{modeName}模式下 {delAngle}° 的角度吗？",
+                    "删除确认",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question
+                );
+                if (result != MessageBoxResult.Yes)
+                {
+                    return;
+                }
+
+                // ========== 关键修复1：删除项后强制重置选中状态 ==========
+                targetComboBox.Items.Remove(selectedItem);
+                targetComboBox.SelectedItem = null; // 清空选中项
+                targetComboBox.UpdateLayout(); // 强制刷新UI
+
+                // ========== 关键修复2：重置全局选中状态（避免绘制已删除的选中项） ==========
+                if (isRCircle)
+                {
+                    _selectedRadius = -1; // 清空选中半径，避免高亮已删除的圆环
+                    displayRadius = -1;
+                }
+                else
+                {
+                    _selectedAngle = -1;
+                    displayAngle = -1;
+                }
+
+                // 自动选中第一个项（仅UI层面）
+                if (targetComboBox.Items.Count > 0)
+                {
+                    targetComboBox.SelectedIndex = 0;
+                    // 同步更新全局状态（仅选中有效项）
+                    if (isRCircle && targetComboBox.SelectedItem is ComboBoxItem newSelItem &&
+                        int.TryParse(newSelItem.Tag?.ToString(), out int newRadius))
+                    {
+                        _selectedRadius = newRadius;
+                        displayRadius = newRadius;
+                    }
+                    else if (!isRCircle && targetComboBox.SelectedItem is ComboBoxItem newSelItem1 &&
+                        int.TryParse(newSelItem1.Tag?.ToString(), out int newAngle))
+                    {
+                        _selectedAngle = newAngle;
+                        displayAngle = newAngle;
+                    }
+                }
+                else
+                {
+                    // 删空时添加默认项
+                    int defaultAngle = isRCircle ? 40 : 120;
+                    ComboBoxItem defaultItem = new ComboBoxItem
+                    {
+                        Content = $"{defaultAngle}°",
+                        Tag = defaultAngle.ToString()
+                    };
+                    targetComboBox.Items.Add(defaultItem);
+                    targetComboBox.SelectedIndex = 0;
+                    if (isRCircle)
+                    {
+                        _selectedRadius = defaultAngle;
+                        displayRadius = defaultAngle;
+                    }
+                    else
+                    {
+                        _selectedAngle = defaultAngle;
+                        displayAngle = defaultAngle;
+                    }
+                    MessageBox.Show($"{modeName}下拉框已空，自动填充默认角度：{defaultAngle}°", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+
+                // ========== 关键修复3：强制刷新显示（立即重绘画布） ==========
+                Application.Current.Dispatcher.Invoke(DispatcherPriority.Render, () =>
+                {
+                    if (IsMatSafe(YMat))
+                    {
+                        UpdateDisplay();
+                    }
+                });
+
+                log.Info($"[{modeName}] 成功删除角度：{delAngle}°，当前剩余角度数：{targetComboBox.Items.Count}");
+            }
+            finally
+            {
+                _isDeletingAngle = false;
+            }
+        }
+        private bool _isDeletingAngle = false;
         private void DeleteAngleFromComboBox(ComboBox targetComboBox, string inputAngleText)
         {
             // 1. 输入校验（兼容负数）
@@ -512,16 +668,15 @@ namespace CVAVMControl
             }
 
             targetComboBox.Items.Remove(targetItem);
-            // 自动选中第一个项（可选）
+            // 自动选中第一个项
             if (targetComboBox.SelectedItem == targetItem && targetComboBox.Items.Count > 0)
             {
-                targetComboBox.SelectedIndex = 0;
+                targetComboBox.SelectedIndex = 1;
             }
 
             // 4. 刷新显示
             if (IsMatSafe(YMat)) UpdateDisplay();
         }
-
         /// <summary>
         /// 检查目标ComboBox中是否存在指定角度
         /// </summary>
@@ -540,16 +695,18 @@ namespace CVAVMControl
         // 直径线面板 - 添加角度
         private void BtnAddAngle_Diameter_Click(object sender, RoutedEventArgs e)
         {
+            // 直接传入目标下拉框，无需输入框
             AddAngleToComboBox(cbDisplayAngle, txtAddAngle.Text);
-            txtAddAngle.Text = string.Empty;// 新增：添加后立即刷新显示
+         
+           
             UpdateDisplay();
         }
 
         // 直径线面板 - 删除角度
         private void BtnDeleteAngle_Diameter_Click(object sender, RoutedEventArgs e)
         {
-            DeleteAngleFromComboBox(cbDisplayAngle, txtDeleteAngle.Text);
-            txtDeleteAngle.Text = string.Empty;
+            DeleteAngleFromComboBox(cbDisplayAngle);
+           
             UpdateDisplay();
         }
         // R圆面板 - 添加角度
@@ -563,8 +720,9 @@ namespace CVAVMControl
         // R圆面板 - 删除角度
         private void BtnDeleteAngle_RCircle_Click(object sender, RoutedEventArgs e)
         {
-            DeleteAngleFromComboBox(cbDisplayRadius, txtDeleteAngle1.Text);
-            txtDeleteAngle1.Text = string.Empty;
+            //DeleteAngleFromComboBox(cbDisplayRadius,txtDeleteAngle1.Text);
+            DeleteAngleFromComboBox(cbDisplayRadius);
+            //txtDeleteAngle1.Text = string.Empty;
             UpdateDisplay();
         }
         #endregion
@@ -682,12 +840,15 @@ namespace CVAVMControl
             // R圆模式：圆环半径匹配图像实际有效区域
             if (currentBtnText == diameterTitle)
             {
+                // 强制刷新下拉框并读取最新值列表
+                cbDisplayRadius.UpdateLayout();
                 List<double> radiusValues = GetAllComboBoxValues(cbDisplayRadius);
+
+                // 绘制所有当前有效的R圆角度（已删除的不会出现在列表中）
                 foreach (double radius in radiusValues)
                 {
-                    // 按“图像实际有效半径”均匀映射角度（0°→0，MaxAngle→图像实际有效半径）
-                    float radiusPixel = (float)(radius / MaxAngle * imageActualRadius);
-                    if (radiusPixel > imageActualRadius) continue; // 限制在图像内
+                    float radiusPixel = (float)(Math.Abs(radius) / MaxAngle * imageActualRadius);
+                    if (radiusPixel > imageActualRadius) continue;
 
                     Cv2.Circle(
                         colorMat,
@@ -698,11 +859,8 @@ namespace CVAVMControl
                         LineTypes.AntiAlias
                     );
 
-                    // 备注位置（自适应图像边缘）
-                    OpenCvSharp.Point labelPos = new OpenCvSharp.Point(
-                        (int)(centerPoint.X + radiusPixel + 20),
-                        (int)centerPoint.Y
-                    );
+                    // 绘制角度标签（保留原有逻辑）
+                    OpenCvSharp.Point labelPos = new OpenCvSharp.Point((int)(centerPoint.X + radiusPixel + 20), (int)centerPoint.Y);
                     if (labelPos.X > colorMat.Width - 100)
                     {
                         labelPos.X = (int)(centerPoint.X - radiusPixel - 100);
@@ -710,10 +868,10 @@ namespace CVAVMControl
                     DrawAngleLabel(colorMat, labelPos, $"{radius}(R)", yellowColor, fontScale: 7);
                 }
 
-                // 选中项高亮
-                if (_selectedRadius != -1)
+                // 选中项高亮（仅绘制当前选中的有效半径）
+                if (_selectedRadius != -1 && radiusValues.Contains(_selectedRadius))
                 {
-                    float radiusPixel = (float)(_selectedRadius / MaxAngle * imageActualRadius);
+                    float radiusPixel = (float)(Math.Abs(_selectedRadius) / MaxAngle * imageActualRadius);
                     if (radiusPixel > imageActualRadius) return;
 
                     Cv2.Circle(
@@ -725,10 +883,7 @@ namespace CVAVMControl
                         LineTypes.AntiAlias
                     );
 
-                    OpenCvSharp.Point labelPos = new OpenCvSharp.Point(
-                        (int)(centerPoint.X + radiusPixel + 20),
-                        (int)centerPoint.Y
-                    );
+                    OpenCvSharp.Point labelPos = new OpenCvSharp.Point((int)(centerPoint.X + radiusPixel + 20), (int)centerPoint.Y);
                     if (labelPos.X > colorMat.Width - 100)
                     {
                         labelPos.X = (int)(centerPoint.X - radiusPixel - 100);
@@ -736,6 +891,7 @@ namespace CVAVMControl
                     DrawAngleLabel(colorMat, labelPos, $"{_selectedRadius}(R)", purpleColor, fontScale: 7);
                 }
             }
+
 
 
             // ========== 绘制XY轴（贯穿图像） ==========
@@ -1294,33 +1450,32 @@ namespace CVAVMControl
             //    }
             //} 
             // 步骤1：首次加载（启动时）直接标记为非首次，不执行后续逻辑
+            if (_isDeletingAngle) return; // 删除过程中跳过
             if (_isFirstLoad)
             {
                 _isFirstLoad = false;
                 return;
             }
 
-            // 步骤2：用户主动切换时才检查数据
             if (cbDisplayAngle.SelectedItem is ComboBoxItem item && item.Tag is string angleStr)
             {
                 if (int.TryParse(angleStr, out int angle))
                 {
                     displayAngle = angle;
-                    _selectedAngle = angle; // 更新“选中角度”
-                    _selectedRadius = -1; // 切换面板时重置另一面板的选中状态
+                    _selectedAngle = angle;
+                    _selectedRadius = -1;
 
                     if (IsMatSafe(YMat))
                     {
-                        // 调用DLL接口获取直径线数据，再更新图表
                         bool dllCallSuccess = CallVamDllForDiameterLine(angle);
                         if (dllCallSuccess)
                         {
-                            UpdateDisplay(); // 刷新图像上的角度线
+                            UpdateDisplay();
                         }
                         else
                         {
                             MessageBox.Show("VAM接口调用失败，使用本地计算数据", "提示");
-                            UpdateDisplay(); // 降级使用原有本地计算逻辑
+                            UpdateDisplay();
                         }
                     }
                     else
@@ -1365,26 +1520,33 @@ namespace CVAVMControl
             //        if (IsMatSafe(YMat)) UpdateDisplay();
             //    }
             //}
+            // 删除过程中跳过所有逻辑（避免触发DLL调用）
+            if (_isDeletingAngle) return;
+
             if (cbDisplayRadius.SelectedItem is ComboBoxItem item && item.Tag is string radiusStr)
             {
                 if (int.TryParse(radiusStr, out int radius))
                 {
+                    if (radius < -60 || radius > 60)
+                    {
+                        MessageBox.Show("R圆半径角度需在-60~60之间（支持负数）", "提示");
+                        return;
+                    }
                     displayRadius = radius;
-                    _selectedRadius = radius; // 更新“选中半径”
-                    _selectedAngle = -1; // 切换面板时重置另一面板的选中状态
+                    _selectedRadius = radius;
+                    _selectedAngle = -1;
 
                     if (IsMatSafe(YMat))
                     {
-                        // 调用DLL接口获取R圆数据，再更新图表
                         bool dllCallSuccess = CallVamDllForRCircle(radius);
                         if (dllCallSuccess)
                         {
-                            UpdateDisplay(); // 刷新图像上的半径线
+                            UpdateDisplay();
                         }
                         else
                         {
                             MessageBox.Show("VAM接口调用失败，使用本地计算数据", "提示");
-                            UpdateDisplay(); // 降级使用原有本地计算逻辑
+                            UpdateDisplay();
                         }
                     }
                 }

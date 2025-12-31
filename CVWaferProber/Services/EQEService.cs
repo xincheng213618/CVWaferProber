@@ -34,7 +34,7 @@ namespace CVWaferProber.Services
             // 标记EQE测试中（替换IVL的状态枚举）
             dieViewModel.ChangeStatus(ChipStatus.EQE_TESTING);
             // 清空EQE结果
-            CustomEQEVM.ClearResult();
+            CustomEQEVM.ClearAllDisplays();
 
             // EQE固定切换到Spectrum Tab
             //CustomEQEVM.SelectedTab = CVWPFSpectrometerCtrl.Models.TabType.Spectrum;
@@ -80,7 +80,7 @@ namespace CVWaferProber.Services
         // EQE结果展示方法：移除Camera参数，仅保留SerialNumber
         public void EQEResultDisplay(DieViewModel dieViewModel)
         {
-            CustomEQEVM.ClearResult();
+            CustomEQEVM.ClearAllDisplays();
             // EQE仅需SerialNumber加载数据
             CustomEQEVM.LoadEQEData(dieViewModel.SerialNumber);
         }
@@ -95,7 +95,7 @@ namespace CVWaferProber.Services
         protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
         {
             EQEResultDisplay(dieViewModel);
-            CustomEQEVM.ClearResult();
+            CustomEQEVM.ClearAllDisplays();
             CustomEQEVM.LoadEQEData(dieViewModel.SerialNumber);
             return ChipStatus.EQE_COMPLETED; // 替换为EQE完成状态
         }
