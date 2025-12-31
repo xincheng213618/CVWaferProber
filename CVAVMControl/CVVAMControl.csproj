@@ -19,6 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="CVCommCore">
+      <HintPath>..\DLL\CVCommCore.dll</HintPath>
+    </Reference>
     <Reference Include="WaferComm.Core">
       <HintPath>..\DLL\WaferComm.Core.dll</HintPath>
     </Reference>

@@ -2425,13 +2425,6 @@ namespace CVWaferProber.ViewModels
         private AOIService aoiService;
         private VAMService vamService;
 
-        private CVVAMAnalyzer? _vamAnalyzer;
-        public CVVAMAnalyzer? VamAnalyzer { get => _vamAnalyzer; set
-            {
-                _vamAnalyzer = vamService.VamAnalyzer = value;
-            }
-        } // 对应XAML中的spaly
-
         /// <summary>
         /// false 外部控件关联触发
         /// </summary>

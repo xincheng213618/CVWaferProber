@@ -13,11 +13,9 @@ namespace CVWaferProber.Services
 {
     public class VAMService : BaseSerivce
     {
-        public VAMService(RCRestService rcService, IEventAggregator? eventAggregator = null) : base(rcService, eventAggregator)
+        public VAMService(RCRestService rcService) : base(rcService, CVWPEventAggregatorInstance.Instance)
         {
         }
-
-        public CVVAMAnalyzer? VamAnalyzer { get; set; }
 
         protected override ChipStatus GetResultStatus(string serialNumber)
         {
@@ -26,8 +24,7 @@ namespace CVWaferProber.Services
         protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
         {
             string cieFileName = GetFlowResult(dieViewModel);
-            VamAnalyzer?.ResultDisplay(cieFileName);
-            EventAggregator?.Publish(new FlowCompletedEvent(dieViewModel));
+            EventAggregator?.Publish(new VAMFlowCompletedEvent(cieFileName));
             return ChipStatus.OK;
         }
 

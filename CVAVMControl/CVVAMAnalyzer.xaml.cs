@@ -211,23 +211,29 @@ namespace CVAVMControl
                     _resourceCleanTimer.Stop();
                 }
             };
-            //InitializeEvents();
+            InitializeEvents();
 
             //this.Unloaded += CVVAMAnalyzer_Unloaded;
         }
 
-        public void InitializeEvents(IEventAggregator eventAggregator)
+        private void InitializeEvents(IEventAggregator? eventAggregator = null)
         {
-            this.EventAggregator = eventAggregator;
-            this.EventAggregator.Subscribe<FlowCompletedEvent>(OnFlowCompleted);
+            this.EventAggregator = eventAggregator == null ? CVWPEventAggregatorInstance.Instance : eventAggregator;
+            this.EventAggregator.Subscribe<VAMFlowCompletedEvent>(OnFlowCompleted);
         }
-        public void UnInitializeEvents()
+        private void UnInitializeEvents()
         {
-            this.EventAggregator?.Unsubscribe<FlowCompletedEvent>(OnFlowCompleted);
+            this.EventAggregator?.Unsubscribe<VAMFlowCompletedEvent>(OnFlowCompleted);
         }
-        private void OnFlowCompleted(FlowCompletedEvent @event)
+
+        private void OnFlowCompleted(VAMFlowCompletedEvent @event)
         {
+            if (!string.IsNullOrEmpty(@event.ResultFileName) && System.IO.File.Exists(@event.ResultFileName))
+            {
+                ProcessCVCIEFile(@event.ResultFileName);
+            }
         }
+
 
         //private void CVVAMAnalyzer_Unloaded(object sender, RoutedEventArgs e)
         //{

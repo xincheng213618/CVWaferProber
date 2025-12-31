@@ -66,9 +66,6 @@ namespace CVWaferProber.Views
                         _spInnerTabControl = _spAnalyzer.FindName("innerTabControl") as TabControl;
                     }
                 };
-
-                MyVAM.InitializeEvents(mainVm.EventAggregator);
-                mainVm.VamAnalyzer = MyVAM;
             }
         }
 
