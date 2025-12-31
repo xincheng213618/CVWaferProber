@@ -531,9 +531,9 @@
                                 SelectionUnit="FullRow"
                                 VerticalScrollBarVisibility="Auto">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Binding="{Binding Id}" Header="{DynamicResource GridHeader.No}" />
-                                    <DataGridTextColumn Binding="{Binding MapY}" Header="{DynamicResource Maping.GridHeader.Row}" />
-                                    <DataGridTextColumn Binding="{Binding MapX}" Header="{DynamicResource Maping.GridHeader.Col}" />
+                                    <DataGridTextColumn Binding="{Binding Id, Mode=OneWay}" Header="{DynamicResource GridHeader.No}" IsReadOnly="True"/>
+                                    <DataGridTextColumn Binding="{Binding MapY, Mode=OneWay}" Header="{DynamicResource Maping.GridHeader.Row}" IsReadOnly="True"/>
+                                    <DataGridTextColumn Binding="{Binding MapX, Mode=OneWay}" Header="{DynamicResource Maping.GridHeader.Col}" IsReadOnly="True"/>
 
                                     <!--  1. AOI列（全选/反选改为按钮）  -->
                                     <DataGridTemplateColumn>
@@ -697,8 +697,8 @@
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridTextColumn Binding="{Binding SerialNumber, Mode=TwoWay}" Header="{DynamicResource Maping.GridHeader.SerialNumber}" />
-                                    <DataGridTextColumn Binding="{Binding DisplayStatus}" Header="{DynamicResource Maping.GridHeader.TestStatus}" />
-                                    <DataGridTextColumn Binding="{Binding DataValue}" Header="{DynamicResource Maping.GridHeader.Uniformity}" />
+                                    <DataGridTextColumn Binding="{Binding DisplayStatus, Mode=OneWay}" Header="{DynamicResource Maping.GridHeader.TestStatus}" IsReadOnly="True"/>
+                                    <DataGridTextColumn Binding="{Binding DataValue, Mode=OneWay}" Header="{DynamicResource Maping.GridHeader.Uniformity}" IsReadOnly="True"/>
                                     <DataGridTextColumn Binding="{Binding StartTestTime}" Header="{DynamicResource Maping.GridHeader.StartTestTime}" />
                                     <DataGridTextColumn Binding="{Binding EndTestTime}" Header="{DynamicResource Maping.GridHeader.EndTestTime}" />
 
