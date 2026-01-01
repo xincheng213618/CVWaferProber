@@ -17,7 +17,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\CVDB\CVDB.csproj" />
 		<ProjectReference Include="..\CVWaferProber.Core\CVWaferProber.Core.csproj" />
-		<ProjectReference Include="..\CVWPFSpectrumControl\CVWPFSpectrumControl.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

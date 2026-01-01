@@ -1,18 +1,13 @@
 ﻿using CVWaferProber.Core.ViewModels;
 using CVWPFSpectrometerCtrl.Models;
-using CVWPFSpectrumControl;
 using OxyPlot;
 using OxyPlot.Annotations;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 using ScottPlot.WPF;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 
@@ -112,7 +107,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
         // 缓存
         protected Dictionary<int, LineSeries> _spectralSeriesCache = new Dictionary<int, LineSeries>();
-        protected SpectrumControl _spectralCtrl;
+        //protected SpectrumControl _spectralCtrl;
         #endregion
 
         #region 构造函数 & 初始化

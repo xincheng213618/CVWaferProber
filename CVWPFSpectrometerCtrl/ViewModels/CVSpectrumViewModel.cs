@@ -5,8 +5,6 @@ using CVDB.Services.Spectrum;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.ViewModels;
 using CVWPFSpectrometerCtrl.Models;
-using CVWPFSpectrumControl;
-using CVWPFSpectrumControl.Models;
 using log4net;
 using Newtonsoft.Json;
 using OxyPlot;
@@ -64,7 +62,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private VLViewModel VL_viewModel;
         private IVLCameraViewModel IVLCamera_viewModel;
 
-        private SpectrumControl _spectralCtrl;
+        //private SpectrumControl _spectralCtrl;
 
         private WpfPlot _plotControl;
         // 新增：EQE曲线缓存
@@ -2767,11 +2765,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             PlotModel.Series.Add(lineSeries);
             PlotModel.InvalidatePlot(true);
             //
-            if (_spectralCtrl != null)
-            {
-                _spectralCtrl.SpectralData.SetData(SelectedMeasurement.Wavelengths, SelectedMeasurement.Intensities);
-                _spectralCtrl.InvalidateVisual();
-            }
+            //if (_spectralCtrl != null)
+            //{
+            //    _spectralCtrl.SpectralData.SetData(SelectedMeasurement.Wavelengths, SelectedMeasurement.Intensities);
+            //    _spectralCtrl.InvalidateVisual();
+            //}
         }
         private void Clear()
         {
@@ -2852,11 +2850,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
 
             // 清空SpectrumControl
-            if (_spectralCtrl != null)
-            {
-                _spectralCtrl.SpectralData.SetData(new float[0], new float[0]);
-                _spectralCtrl.InvalidateVisual();
-            }
+            //if (_spectralCtrl != null)
+            //{
+            //    _spectralCtrl.SpectralData.SetData(new float[0], new float[0]);
+            //    _spectralCtrl.InvalidateVisual();
+            //}
             // 新增：清空EQE曲线缓存
             _eqeSeriesCache.Clear();
         }
@@ -2967,11 +2965,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             if (Measurements.Any())
             {
                 SelectedMeasurement = Measurements.First();
-                if (_spectralCtrl != null)
-                {
-                    _spectralCtrl.SpectralData.SetData(Wavelengths, SelectedMeasurement.Intensities);
-                    _spectralCtrl.InvalidateVisual();
-                }
+                //if (_spectralCtrl != null)
+                //{
+                //    _spectralCtrl.SpectralData.SetData(Wavelengths, SelectedMeasurement.Intensities);
+                //    _spectralCtrl.InvalidateVisual();
+                //}
                 // 新增：加载EQE数据
                 UpdateEQEChartFromSelectedMeasurement();
             }
@@ -3148,10 +3146,10 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             OnPropertyChanged(nameof(IVLCameraImageSrc));
         }
 
-        public void SetSpectrumCtrl(SpectrumControl spectralCtrl)
-        {
-            this._spectralCtrl = spectralCtrl;
-        }
+        //public void SetSpectrumCtrl(SpectrumControl spectralCtrl)
+        //{
+        //    this._spectralCtrl = spectralCtrl;
+        //}
         // 新增：控制右侧DataGrid显示/隐藏的勾选状态
         private bool _isShowSpectralDetail;
         public bool IsShowSpectralDetail

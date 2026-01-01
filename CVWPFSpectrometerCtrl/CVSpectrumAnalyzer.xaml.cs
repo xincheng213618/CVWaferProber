@@ -1,10 +1,7 @@
-﻿using CVWPFSpectrometerCtrl.ViewModels;
-using CVWPFSpectrumControl.Models;
+﻿using CVWPFSpectrometerCtrl.Models;
+using CVWPFSpectrometerCtrl.ViewModels;
 using OxyPlot.Wpf;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Media;
 
 
 namespace CVWPFSpectrometerCtrl
