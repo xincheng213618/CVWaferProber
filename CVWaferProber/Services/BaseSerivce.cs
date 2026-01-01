@@ -103,7 +103,6 @@
 //}
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.Restful.DTO;
-using CVWaferProber.Utils;
 using CVWaferProber.ViewModels;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
@@ -129,6 +128,13 @@ namespace CVWaferProber.Services
             this.EventAggregator = eventAggregator;
         }
 
+        public void StartTesting(string timestamp, DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
+        {
+            string sn = BuildFlowSN(dieViewModel, timestamp);
+            dieViewModel.SerialNumber = sn;
+            StartTesting(dieViewModel, _selectedWPFlow, isEnd);
+        }
+        public abstract void StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true);
         protected async Task RunFlowAsync(WPFlowViewModel _selectedWPFlow, DieViewModel dieViewModel, bool isEnd = true)
         {
             try
@@ -239,5 +245,7 @@ namespace CVWaferProber.Services
         {
             TestingCompleted?.Invoke(this, EventArgs.Empty);
         }
+
+        public abstract void ResultDisplay(DieViewModel dieViewModel);
     }
 } 

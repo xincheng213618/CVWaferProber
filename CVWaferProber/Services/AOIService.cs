@@ -1,7 +1,6 @@
 ﻿using CVCommCore;
 using CVCommCore.CVImage;
 using CVDB.Services.Algorithm;
-using CVWaferProber.Core.Events;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
@@ -33,15 +32,12 @@ namespace CVWaferProber.Services
             LoadImageResult(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
             return ChipStatus.OK;
         }
-        public void StartTestingAOI(string timestamp, DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
+        public override void StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
         {
-            string sn = BuildFlowSN(dieViewModel, timestamp);
-            dieViewModel.SerialNumber = sn;
             dieViewModel.ChangeStatus(ChipStatus.TESTING);
             CustomImageVM?.ClearImageResult();
             Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, isEnd);
         }
-
         private ChipStatus GetDieResultStatus(string serialNumber)
         {
             ChipStatus status = ChipStatus.FAILED;
@@ -65,7 +61,7 @@ namespace CVWaferProber.Services
             }
             return status;
         }
-        public void AOIResultDisplay(DieViewModel dieViewModel)
+        public override void ResultDisplay(DieViewModel dieViewModel)
         {
             if (string.IsNullOrEmpty(dieViewModel.SerialNumber))
             {

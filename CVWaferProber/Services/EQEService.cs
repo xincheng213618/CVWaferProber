@@ -1,9 +1,7 @@
 ﻿using CVDB.Services.Spectrum;
-using CVWaferProber.Core.Events;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
 using CVWPFSpectrometerCtrl.ViewModels;
-using System.Windows;
 
 namespace CVWaferProber.Services
 {
@@ -27,12 +25,8 @@ namespace CVWaferProber.Services
         }
 
         // 核心测试启动方法：移除所有Camera相关逻辑，保留IVL核心流程
-        public void StartTestingEQE(string timestamp, DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow)
+        public override void StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
         {
-            // 完全复用IVL的SN构建逻辑
-            string sn = BuildFlowSN(dieViewModel, timestamp);
-            dieViewModel.SerialNumber = sn;
-
             // 标记EQE测试中（替换IVL的状态枚举）
             dieViewModel.ChangeStatus(ChipStatus.EQE_TESTING);
             // 清空EQE结果
@@ -45,42 +39,10 @@ namespace CVWaferProber.Services
             _currentDieVM = dieViewModel;
 
             // 启动测试异步任务
-            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel);
-
-            // 初始化刷新定时器
-            //System.Timers.Timer refreshTimer = new System.Timers.Timer(350)
-            //{
-            //    AutoReset = true,
-            //    Enabled = true
-            //};
-
-            //// 定时器回调：复刻IVL的UI线程调用逻辑，仅替换EQEResultDisplay
-            //refreshTimer.Elapsed += (sender, e) =>
-            //{
-            //    Application.Current.Dispatcher.Invoke(() =>
-            //    {
-            //        try
-            //        {
-            //            EQEResultDisplay(_currentDieVM);
-            //        }
-            //        catch (Exception ex)
-            //        {
-            //            logger.Warn("定时器刷新EQE图表失败", ex);
-            //        }
-            //    });
-            //};
-
-            //// 测试结束停止定时器
-            //task.ContinueWith(t =>
-            //{
-            //    refreshTimer.Enabled = false;
-            //    refreshTimer.Dispose();
-            //    logger.Debug("EQE测试流程结束，停止刷新定时器");
-            //}, TaskScheduler.FromCurrentSynchronizationContext());
+            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, isEnd);
         }
-
         // EQE结果展示方法：移除Camera参数，仅保留SerialNumber
-        public void EQEResultDisplay(DieViewModel dieViewModel)
+        public override void ResultDisplay(DieViewModel dieViewModel)
         {
             if (string.IsNullOrEmpty(dieViewModel.SerialNumber))
             {

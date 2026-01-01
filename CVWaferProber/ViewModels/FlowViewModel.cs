@@ -81,6 +81,7 @@ namespace CVWaferProber.ViewModels
     public enum CVWaferProberFlowType
     {
         AOI,
+        IVL,
         IVL_SP,
         IVL_Camera,
         EQE,

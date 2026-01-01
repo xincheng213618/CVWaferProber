@@ -29,11 +29,8 @@ namespace CVWaferProber.Services
             AutoExportHelper.InitFolders();
         }
 
-        public void StartTestingIVL(string timestamp, DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow)
+        public override void StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
         {
-            string sn = BuildFlowSN(dieViewModel, timestamp);
-            dieViewModel.SerialNumber = sn;
-
             dieViewModel.ChangeStatus(ChipStatus.IVL_TESTING);
             CustomIVLVM.ClearResult();
 
@@ -62,7 +59,7 @@ namespace CVWaferProber.Services
                     try
                     {
                         // 循环调用刷新方法（每次都会加载最新数据）
-                        IVLResultDisplay(_currentDieVM);
+                        ResultDisplay(_currentDieVM);
                         // 新增：加载光谱数据（供后续生成CSV）
                         _currentSpectrumData = CustomIVLVM.GetSpectrumData(dieViewModel.SerialNumber);
                     }
@@ -82,9 +79,7 @@ namespace CVWaferProber.Services
             }, TaskScheduler.FromCurrentSynchronizationContext());
 
         }
-
-
-        public void IVLResultDisplay(DieViewModel dieViewModel)
+        public override void ResultDisplay(DieViewModel dieViewModel)
         {
             if (string.IsNullOrEmpty(dieViewModel.SerialNumber))
             {

@@ -1,6 +1,4 @@
-﻿using ChipMapping.Models.HZCC;
-using CVDB.Services.Algorithm;
-using CVDB.Services.Image;
+﻿using CVDB.Services.Image;
 using CVWaferProber.Core.Events;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
@@ -17,7 +15,7 @@ namespace CVWaferProber.Services
         {
             return ChipStatus.FAILED;
         }
-        protected override ChipStatus FlowResultDisplay(ViewModels.DieViewModel dieViewModel)
+        protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
         {
             //string cieFileName = "D:\\work\\img\\test_ND0.cvcie";
             //EventAggregator?.Publish(new VAMFlowCompletedEvent(cieFileName));
@@ -37,18 +35,7 @@ namespace CVWaferProber.Services
             return ChipStatus.VAM_COMPLETED;
         }
 
-        public void StartTestingVAM(string timestamp, ViewModels.DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow)
-        {
-            string sn = BuildFlowSN(dieViewModel, timestamp);
-            dieViewModel.SerialNumber = sn;
-            //
-            EventAggregator?.Publish(new VAMFlowStartingEvent());
-
-            dieViewModel.ChangeStatus(ChipStatus.VAM_TESTING);
-            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel);
-        }
-
-        public void VAMResultDisplay(ViewModels.DieViewModel dieViewModel)
+        public override void ResultDisplay(DieViewModel dieViewModel)
         {
             if (!string.IsNullOrEmpty(dieViewModel.SerialNumber))
             {
@@ -58,6 +45,15 @@ namespace CVWaferProber.Services
             {
                 EventAggregator?.Publish(new VAMResultGUIClearEvent());
             }
+        }
+
+        public override void StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
+        {
+            //
+            EventAggregator?.Publish(new VAMFlowStartingEvent());
+
+            dieViewModel.ChangeStatus(ChipStatus.VAM_TESTING);
+            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, isEnd);
         }
     }
 }
