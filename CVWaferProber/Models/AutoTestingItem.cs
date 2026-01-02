@@ -27,5 +27,12 @@ namespace CVWaferProber.Models
 
             return (pre, next);
         }
+
+        public DieViewModel? GetCurrentDieVM()
+        {
+            if (IsEnd) return null;
+            else if (CurTestingIndex > 0) return TestingDieVMList[CurTestingIndex - 1];
+            else return null;
+        }
     }
 }

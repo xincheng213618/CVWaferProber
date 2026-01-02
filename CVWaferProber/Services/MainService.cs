@@ -5,6 +5,7 @@ using CVWaferProber.ViewModels;
 using CVWaferProber.WinMsg;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
+using System.Threading;
 using WaferComm.Client;
 using WaferComm.Core;
 using WaferComm.StateMachine;
@@ -23,7 +24,7 @@ namespace CVWaferProber.Services
         private MappingService mappingService;
         private GSWMProcessor? _wmProcessor;
         private IWaferProberClient? _clientProber;
-        private ProberStateMachine _proberState;
+        private IStateMachine _proberState;
         private readonly Dictionary<CVWaferProberFlowType, BaseSerivce> flowServices =
             new Dictionary<CVWaferProberFlowType, BaseSerivce>();
         private AutoTestingItem? autoTestingItem;
@@ -32,6 +33,8 @@ namespace CVWaferProber.Services
         {
             mappingService = new MappingService();
             mappingService.ChipSelected += MappingService_ChipSelected;
+
+            InitializeClientProber();
         }
 
         private void MappingService_ChipSelected(object? sender, ChipViewModel e)
@@ -64,7 +67,7 @@ namespace CVWaferProber.Services
 
         public void Startup(string ip, int port)
         {
-            InitializeClientProber("127.0.0.1",8898);
+            _clientProber?.ConnectAsync(ip, port).Wait();
         }
         public void InitializeService(string proberId, RCRestService rcService)
         {
@@ -90,12 +93,11 @@ namespace CVWaferProber.Services
             vamService.TestingCompleted += OnTestingCompleted;
             vamService.AutoTestingNextCompleted += OnAutoTestingNextCompleted;
         }
-        private void InitializeClientProber(string ip,int port)
+        private void InitializeClientProber()
         {
             this._clientProber = new WaferProberTCPClient();
             var eventAggregator = _clientProber.EventAggregator;
             eventAggregator.Subscribe<ConnectionStateChangedEvent>(OnClientProberStateChanged);
-            _clientProber.ConnectAsync(ip, port).Wait();
 
             ProberStateMachine proberState = new ProberStateMachine(eventAggregator, _clientProber);
             _proberState = proberState;
@@ -105,8 +107,22 @@ namespace CVWaferProber.Services
 
         private void OnProberStateUpdated(StateUpdatedEvent @event)
         {
-            logger.InfoFormat("StateUpdated => {0}/{1}", @event.Status.ToString(),_proberState.CurrentState);
-            
+            logger.InfoFormat("StateUpdated => {0}", @event.Status.ToString());
+            if (autoTestingItem != null)
+            {
+                var dieVM = autoTestingItem.GetCurrentDieVM();
+                dieVM.MStatus = @event.Status.MotionStatus;
+                if (dieVM != null && @event.Status.MotionStatus == MotionStatus.MotionComplete)
+                {
+                    var axis = dieVM.ToMapAxis();
+                    string x = @event.Status.CurrentPosition.CurrentX;
+                    string y = @event.Status.CurrentPosition.CurrentY;
+                    if(axis.x == x && axis.y == y)
+                    {
+                        logger.InfoFormat("Move Absolute Pos => {0}", @event.Status.CurrentPosition.ToString());
+                    }
+                }
+            }
         }
 
         private void OnClientProberStateChanged(ConnectionStateChangedEvent @event)
@@ -224,12 +240,14 @@ namespace CVWaferProber.Services
                 if (_clientProber.IsConnected)
                 {
                     var absAxis = die.ToMapAxis();
+                    die.MStatus = MotionStatus.MovingAbsolute;
                     _clientProber?.MoveAbsoluteAsync(absAxis.y, absAxis.x);
-                    var task = WaitingMoveAsync(absAxis.y, absAxis.x);
+                    var task = WaitingMotionMoveAsync(die);
                     task?.Wait();
                     if (task.Result) DoDieFlowExec(_selectedWPFlow, die, isEnd);
                     else
                     {
+                        die.ChangeStatus(Core.Models.Enums.ChipStatus.FAILED);
                         if (logger.IsErrorEnabled) logger.ErrorFormat("Prober client Move Absolute failed => {0}", absAxis.ToString());
                         TestingCompleted?.Invoke(this, new EventArgs());
                     }
@@ -247,18 +265,82 @@ namespace CVWaferProber.Services
             }
         }
 
+        private async Task<bool> WaitingMotionMoveAsync2(DieViewModel dieVM, CancellationToken cancellationToken = default)
+        {
+            for (int i = 0; i < 60; i++)
+            {
+                if (dieVM.MStatus == MotionStatus.MotionComplete) return true;
+                else if (dieVM.MStatus == MotionStatus.MotionFailed) return false;
+                else if (dieVM.MStatus == MotionStatus.MotionTimeout) return false;
+                await Task.Delay(500, cancellationToken).ConfigureAwait(false);
+            }
+            return false;
+        }
+        private async Task<bool> WaitingMotionMoveAsync(DieViewModel dieVM, CancellationToken cancellationToken = default)
+        {
+            const int checkInterval = 10;
+            const int maxChecks = 3000;
+            using var semaphore = new SemaphoreSlim(1, 1);
+
+            // 启动一个后台任务轮询状态
+            var pollingTask = Task.Run(async () =>
+            {
+                for (int i = 0; i < maxChecks; i++)
+                {
+                    await semaphore.WaitAsync().ConfigureAwait(false);
+                    try
+                    {
+                        var status = dieVM.MStatus;
+                        if (status == MotionStatus.MotionComplete ||
+                            status == MotionStatus.MotionFailed ||
+                            status == MotionStatus.MotionTimeout)
+                        {
+                            return status;
+                        }
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+
+                    await Task.Delay(checkInterval, cancellationToken).ConfigureAwait(false);
+                }
+                return MotionStatus.MotionTimeout;
+            }, cancellationToken);
+
+            try
+            {
+                var finalStatus = await pollingTask.ConfigureAwait(false);
+                return finalStatus == MotionStatus.MotionComplete;
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+        }
+
         private async Task<bool> WaitingMoveAsync(string y, string x, CancellationToken cancellationToken = default)
         {
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 30; i++)
             {
                 var status = _proberState.GetStatus();
-                if (logger.IsInfoEnabled) logger.InfoFormat("{0}x{1}", status.CurrentPosition.CurrentY, status.CurrentPosition.CurrentX);
-                bool isOk = (status.CurrentPosition.CurrentY == y) && (status.CurrentPosition.CurrentX == x);
-                if (isOk)
+                if (logger.IsInfoEnabled) logger.InfoFormat("CurrentPosition = {0}x{1}", status.CurrentPosition.CurrentY, status.CurrentPosition.CurrentX);
+                if (status.CurrentMotionCommand != null)
                 {
-                    return true;
+                    if (status.CurrentMotionCommand.Success)
+                    {
+                        bool isOk = (status.CurrentPosition.CurrentY == y) && (status.CurrentPosition.CurrentX == x);
+                        if (isOk)
+                        {
+                            return true;
+                        }
+                    }
+                    await Task.Delay(1000, cancellationToken).ConfigureAwait(false);
                 }
-                await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+                else
+                {
+                    break;
+                }
             }
 
             return false;

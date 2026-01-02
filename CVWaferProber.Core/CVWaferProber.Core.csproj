@@ -16,14 +16,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\WaferProberClient\WaferComm.Client\WaferComm.Client.csproj" />
+    <ProjectReference Include="..\..\WaferProberClient\WaferComm.Core\WaferComm.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="CV.DBEntities">
       <HintPath>..\DLL\CV.DBEntities.dll</HintPath>
     </Reference>
     <Reference Include="CVCommCore">
       <HintPath>..\DLL\CVCommCore.dll</HintPath>
-    </Reference>
-    <Reference Include="WaferComm.Core">
-      <HintPath>..\DLL\WaferComm.Core.dll</HintPath>
     </Reference>
   </ItemGroup>
 

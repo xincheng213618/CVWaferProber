@@ -5,6 +5,7 @@ using CVWaferProber.Core.ViewModels;
 using CVWaferProber.Utils;
 using ScottPlot.Plottables;
 using System.Windows;
+using WaferComm.StateMachine;
 
 namespace CVWaferProber.ViewModels
 {
@@ -77,7 +78,7 @@ namespace CVWaferProber.ViewModels
         public string? DisplayStatus => Status.HasValue ? ChipStatusTool.GetStatusDisplay(Status.Value, IsChinese) : "Unknown";
         public DateTime? EndTestTime { get; set; }
         public DateTime? StartTestTime { get; set; }
-       
+        public MotionStatus MStatus { get; set; }
         public string? TotalTime { get; set; }
         public ChipViewModel? chipViewModel { get; set; }
         public string? DataValue => string.Format("{0:F4}",chipViewModel?.DataValue);

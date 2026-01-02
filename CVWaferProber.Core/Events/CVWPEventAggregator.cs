@@ -1,4 +1,5 @@
 ﻿using CVCommCore;
+using WaferComm.Client;
 using WaferComm.Core;
 
 namespace CVWaferProber.Core.Events

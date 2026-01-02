@@ -11,6 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\WaferProberClient\WaferComm.Client\WaferComm.Client.csproj" />
+    <ProjectReference Include="..\..\WaferProberClient\WaferComm.Core\WaferComm.Core.csproj" />
+    <ProjectReference Include="..\..\WaferProberClient\WaferComm.Processors\WaferComm.Processors.csproj" />
+    <ProjectReference Include="..\..\WaferProberClient\WaferComm.StateMachine\WaferComm.StateMachine.csproj" />
     <ProjectReference Include="..\ChipMapping\ChipMapping.csproj" />
     <ProjectReference Include="..\CVAVMControl\CVVAMControl.csproj" />
     <ProjectReference Include="..\CVDB\CVDB.csproj" />
@@ -48,18 +52,6 @@
     </Reference>
     <Reference Include="CVMysqlLib">
       <HintPath>..\DLL\CVMysqlLib.dll</HintPath>
-    </Reference>
-    <Reference Include="WaferComm.Client">
-      <HintPath>..\DLL\WaferComm.Client.dll</HintPath>
-    </Reference>
-    <Reference Include="WaferComm.Core">
-      <HintPath>..\DLL\WaferComm.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="WaferComm.Processors">
-      <HintPath>..\DLL\WaferComm.Processors.dll</HintPath>
-    </Reference>
-    <Reference Include="WaferComm.StateMachine">
-      <HintPath>..\DLL\WaferComm.StateMachine.dll</HintPath>
     </Reference>
   </ItemGroup>
 
