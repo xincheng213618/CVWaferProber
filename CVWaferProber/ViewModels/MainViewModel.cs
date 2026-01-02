@@ -6,6 +6,7 @@ using ColorVision.Core.Entities;
 using CVDB.Services.Buz;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
+using CVWaferProber.Models;
 using CVWaferProber.MQTT;
 using CVWaferProber.Services;
 using CVWaferProber.Utils;
@@ -62,6 +63,23 @@ namespace CVWaferProber.ViewModels
                 }
             }
         }
+        private ConnectionInfo _connectionInfo;
+        public ConnectionInfo ConnectionInfo
+        {
+            get => _connectionInfo;
+            //set
+            //{
+            //    if (_connectionInfo != value)
+            //    {
+            //        SetProperty(ref _connectionInfo, value);
+            //    }
+            //}
+        }
+        private ConnectionInfo _rcConnectionInfo;
+        public ConnectionInfo RcConnectionInfo
+        {
+            get => _rcConnectionInfo;
+        }
 
         private WPFlowViewModel? _selectedWPFlow;
         public WPFlowViewModel? SelectedWPFlow
@@ -71,8 +89,7 @@ namespace CVWaferProber.ViewModels
             {
                 if (_selectedWPFlow != value)
                 {
-                    _selectedWPFlow = value;
-                    OnPropertyChanged();
+                    SetProperty(ref _selectedWPFlow, value);
                     ActivateCorrespondingPanel();
                 }
             }
@@ -109,6 +126,12 @@ namespace CVWaferProber.ViewModels
         public ICommand InvertSelectEQECommand { get; }
         public ICommand InvertSelectVAMCommand { get; }
         public ICommand SysFlowCfgCommand { get; }
+        //
+        public ICommand ShowConnectionSettingsCommand { get; }
+        public ICommand ShowRCConnectionSettingsCommand { get; }
+        /// <summary>
+        /// 
+        /// </summary>
         public ObservableCollection<DieViewModel> TestResults { get; } = new ObservableCollection<DieViewModel>();
         public RangeEnabledObservableCollection<FlowViewModel> FlowItems { get; } = new RangeEnabledObservableCollection<FlowViewModel>();
         public ObservableCollection<WPFlowViewModel> WPFlows { get; } = new ObservableCollection<WPFlowViewModel>();
@@ -265,8 +288,7 @@ namespace CVWaferProber.ViewModels
             get => _selectedItem;
             set
             {
-                _selectedItem = value;
-                OnPropertyChanged(nameof(SelectedItem));
+                SetProperty(ref _selectedItem, value);
                 ManScrollToItem(SelectedItem);
                 OnSelectedChanged(value);
             }
@@ -491,6 +513,7 @@ namespace CVWaferProber.ViewModels
             _isIVLCameraEnabled = false;
             _isAutoSN = true;
             rcService = new RCRestService();
+            _rcConnectionInfo = rcService.ConnectionInfo;
             //
             InitializeMainServive();
             //
@@ -540,6 +563,9 @@ namespace CVWaferProber.ViewModels
             OpenSummaryConfigCommand = new RelayCommand(OpenSummaryConfig);
             SysFlowCfgCommand = new RelayCommand(SysFlowCfg);
 
+            ShowConnectionSettingsCommand = new RelayCommand(ShowConnectionSettings);
+            ShowRCConnectionSettingsCommand = new RelayCommand(ShowRcConnectionSettings);
+
             // 初始化筛选集合
             FilteredTestResults = new ObservableCollection<DieViewModel>(TestResults);
             TestResults.CollectionChanged += (s, e) =>
@@ -580,12 +606,40 @@ namespace CVWaferProber.ViewModels
             //IsMappingPanelVisible = Properties.Settings.Default.IsMappingPanelVisible;
             //IsCameraPanelVisible = Properties.Settings.Default.IsCameraPanelVisible;
             //IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
-
         }
+
+        private void ShowRcConnectionSettings(object obj)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var window = new ConnectionSettingsWindow
+                {
+                    DataContext = new RcConnectionSettingsViewModel(rcService),
+                    Owner = Application.Current.MainWindow
+                };
+
+                window.ShowDialog();
+            });
+        }
+        private void ShowConnectionSettings(object obj)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var window = new ConnectionSettingsWindow
+                {
+                    DataContext = new ConnectionSettingsViewModel(mainService.ProberClient, _connectionInfo),
+                    Owner = Application.Current.MainWindow
+                };
+
+                window.ShowDialog();
+            });
+        }
+
         private void InitializeMainServive()
         {
             mainService = MainService.Instance;
-            mainService.InitializeService(ProberId, rcService);
+            _connectionInfo = mainService.ConnectionInfo;
+            mainService.InitializeService(ProberId, rcService, _connectionInfo);
             //
             mainService.TestingCompleted += OnTestingCompleted;
             mainService.AutoTestingNext += OnOneDieTestingNext;
@@ -595,6 +649,12 @@ namespace CVWaferProber.ViewModels
             CustomImageVM = mainService.GetAOIVM();
             CustomIVLVM = mainService.GetIVLVM();
             CustomEQEVM = mainService.GetEQEVM();
+
+            Task.Factory.StartNew(async () =>
+            {
+                await Task.Delay(2000);
+                MainService.Instance.Startup();
+            });
         }
         private void InitializeEvents()
         {
@@ -1787,7 +1847,7 @@ namespace CVWaferProber.ViewModels
         }
 
         #region AOI 全选/部分选中事件
-        private void AOIItems_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void AOIItems_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.NewItems != null)
             {
@@ -1818,7 +1878,7 @@ namespace CVWaferProber.ViewModels
             }
         }
 
-        private void AOI_Item_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void AOI_Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(DieViewModel.IsAOIEnabled) && !_isUpdatingFromHeader_AOI)
             {
@@ -1828,7 +1888,7 @@ namespace CVWaferProber.ViewModels
         #endregion
 
         #region IVL 全选/部分选中事件
-        private void IVLItems_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void IVLItems_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.NewItems != null)
             {
@@ -1859,7 +1919,7 @@ namespace CVWaferProber.ViewModels
             }
         }
 
-        private void IVL_Item_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void IVL_Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(DieViewModel.IsIVLEnabled) && !_isUpdatingFromHeader_IVL)
             {
@@ -1869,7 +1929,7 @@ namespace CVWaferProber.ViewModels
         #endregion
 
         #region EQE 全选/部分选中事件
-        private void EQEItems_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void EQEItems_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.NewItems != null)
             {
@@ -1900,7 +1960,7 @@ namespace CVWaferProber.ViewModels
             }
         }
 
-        private void EQE_Item_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void EQE_Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(DieViewModel.IsEQEEnabled) && !_isUpdatingFromHeader_EQE)
             {
@@ -1910,7 +1970,7 @@ namespace CVWaferProber.ViewModels
         #endregion
 
         #region VAM 全选/部分选中事件
-        private void VAMItems_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void VAMItems_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.NewItems != null)
             {
@@ -1941,7 +2001,7 @@ namespace CVWaferProber.ViewModels
             }
         }
 
-        private void VAM_Item_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void VAM_Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(DieViewModel.IsVAMEnabled) && !_isUpdatingFromHeader_VAM)
             {

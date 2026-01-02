@@ -5,7 +5,6 @@ using CVWaferProber.ViewModels;
 using CVWaferProber.WinMsg;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
-using System.Threading;
 using WaferComm.Client;
 using WaferComm.Core;
 using WaferComm.StateMachine;
@@ -28,6 +27,7 @@ namespace CVWaferProber.Services
         private readonly Dictionary<CVWaferProberFlowType, BaseSerivce> flowServices =
             new Dictionary<CVWaferProberFlowType, BaseSerivce>();
         private AutoTestingItem? autoTestingItem;
+        private ConnectionInfo? _connectionInfo;
 
         private MainService()
         {
@@ -39,7 +39,7 @@ namespace CVWaferProber.Services
 
         private void MappingService_ChipSelected(object? sender, ChipViewModel e)
         {
-            ChipSelected?.Invoke(this,e);
+            ChipSelected?.Invoke(this, e);
         }
         public CVSpectrumViewModel? GetIVLVM()
         {
@@ -65,13 +65,20 @@ namespace CVWaferProber.Services
             return null;
         }
 
+        public IWaferProberClient? ProberClient { get => _clientProber; }
+        public ConnectionInfo? ConnectionInfo { get => _connectionInfo; }
         public void Startup(string ip, int port)
         {
             _clientProber?.ConnectAsync(ip, port).Wait();
         }
-        public void InitializeService(string proberId, RCRestService rcService)
+        public void Startup()
+        {
+            Startup(_connectionInfo.ServerIP, _connectionInfo.Port);
+        }
+        public void InitializeService(string proberId, RCRestService rcService, ConnectionInfo connectionInfo)
         {
             this.ProberId = proberId;
+            this._connectionInfo = connectionInfo;
             //
             BaseSerivce ivlService = new IVLService(proberId, mappingService.CustomVM, rcService);
             flowServices[CVWaferProberFlowType.IVL] = ivlService;
@@ -95,6 +102,7 @@ namespace CVWaferProber.Services
         }
         private void InitializeClientProber()
         {
+            this._connectionInfo = new ConnectionInfo() { ServerIP = "127.0.0.1", Port = 8898 };
             this._clientProber = new WaferProberTCPClient();
             var eventAggregator = _clientProber.EventAggregator;
             eventAggregator.Subscribe<ConnectionStateChangedEvent>(OnClientProberStateChanged);
@@ -130,6 +138,7 @@ namespace CVWaferProber.Services
         private void OnClientProberStateChanged(ConnectionStateChangedEvent @event)
         {
             logger.InfoFormat("ConnectionStateChanged => {0}:{1}, IsConnected={2}", @event.ServerIp, @event.Port, @event.IsConnected);
+            _connectionInfo?.SetConnected(@event.IsConnected);
         }
 
         /// <summary>

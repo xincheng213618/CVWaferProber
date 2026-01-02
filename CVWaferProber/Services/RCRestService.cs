@@ -1,6 +1,9 @@
 ﻿using CVWaferProber.Core.Restful;
 using CVWaferProber.Core.Restful.DTO;
+using CVWaferProber.Models;
 using Newtonsoft.Json;
+using WaferComm.Client;
+using WaferComm.Core;
 
 namespace CVWaferProber.Services
 {
@@ -11,16 +14,29 @@ namespace CVWaferProber.Services
         private CVRestfulHelper restful = new CVRestfulHelper();
         private RespDataRegDTO? RegDTO;
         private const int MaxRetryCount = 2; // 注册/接口调用最大重试次数
-
+        private EventAggregator eventAggregator;
+        public RCRestService()
+        {
+            ConnectionInfo = new ConnectionInfo("Registed", "UnRegisted") { ServerIP = "127.0.0.1", Port = 8080 };
+            eventAggregator = new EventAggregator();
+        }
+        public void Subscribe<TEvent>(Action<TEvent> handler) where TEvent : class
+        {
+            eventAggregator.Subscribe(handler);
+        }     
+        public void Unsubscribe<TEvent>(Action<TEvent> handler) where TEvent : class
+        {
+            eventAggregator.Unsubscribe(handler);
+        }
+        public ConnectionInfo ConnectionInfo { get; private set; }
         /// <summary>
         /// 确保已注册（未注册则自动触发注册）
         /// </summary>
         /// <returns>注册是否success</returns>
-        private bool EnsureRegistered()
+        public bool EnsureRegistered()
         {
             // 已注册且Token有效（简单判断，可根据实际Token过期规则优化）
-            if (RegDTO != null && !string.IsNullOrEmpty(RegDTO.Token?.AccessToken))
-                return true;
+            if (IsRegistered) return true;
 
             // 未注册，执行注册（最多重试2次）
             for (int i = 0; i < MaxRetryCount; i++)
@@ -28,25 +44,41 @@ namespace CVWaferProber.Services
                 logger.InfoFormat("开始第{0}次注册...", i + 1);
                 if (RcRegist())
                 {
-                    logger.Info("注册success");
+                    logger.Info("Regist success");
                     return true;
                 }
                 logger.WarnFormat("第{0}次注册failed，等待1秒后重试...", i + 1);
                 System.Threading.Thread.Sleep(1000); // 重试间隔1秒
             }
 
-            logger.Error("注册failed，已达到最大重试次数");
+            logger.Error("Regist failed，已达到最大重试次数");
             return false;
         }
 
+        public bool IsRegistered => (RegDTO != null && !string.IsNullOrEmpty(RegDTO.Token?.AccessToken));
+
+        public bool RcUnRegist()
+        {
+            RegDTO = null;
+            restful.RcUnRegist(ConnectionInfo.ServerIP, ConnectionInfo.Port);
+            PublishStatus(ConnectionStatus.Disconnected);
+            return true;
+        }
+
+        private void PublishStatus(ConnectionStatus status)
+        {
+            ConnectionInfo.SetConnected(status == ConnectionStatus.Connected);
+            eventAggregator.Publish(new ConnectionStateChangedEvent(ConnectionInfo.IsConnected, ConnectionInfo.ServerIP, ConnectionInfo.Port));
+        }
         public bool RcRegist()
         {
             try
             {
-                var contentResp = restful.RcRegist();
+                var contentResp = restful.RcRegist(ConnectionInfo.ServerIP, ConnectionInfo.Port);
                 if (string.IsNullOrEmpty(contentResp))
                 {
-                    logger.Error("注册failed：接口返回空内容");
+                    logger.Error("Regist failed：接口返回空内容");
+                    PublishStatus(ConnectionStatus.Disconnected);
                     return false;
                 }
 
@@ -54,23 +86,27 @@ namespace CVWaferProber.Services
                 var respData = JsonConvert.DeserializeObject<RespDTO<RespDataRegDTO>>(contentResp);
                 if (respData == null)
                 {
-                    logger.ErrorFormat("注册failed：返回内容无法反序列化 => {0}", contentResp);
+                    logger.ErrorFormat("Regist failed：返回内容无法反序列化 => {0}", contentResp);
+                    PublishStatus(ConnectionStatus.Disconnected);
                     return false;
                 }
 
                 if (respData.IsSuccess && respData.Data != null && !string.IsNullOrEmpty(respData.Data.Token?.AccessToken))
                 {
                     RegDTO = respData.Data;
-                    logger.InfoFormat("注册success => {0}", JsonConvert.SerializeObject(RegDTO, Formatting.Indented));
+                    PublishStatus(ConnectionStatus.Connected);
+                    logger.InfoFormat("Regist success => {0}", JsonConvert.SerializeObject(RegDTO, Formatting.Indented));
                     return true;
                 }
 
-                logger.ErrorFormat("注册failed：{0} => {1}", respData.Message, contentResp);
+                logger.ErrorFormat("Regist failed：{0} => {1}", respData.Message, contentResp);
+                PublishStatus(ConnectionStatus.Disconnected);
                 return false;
             }
             catch (Exception ex)
             {
                 logger.Error("注册过程异常", ex);
+                PublishStatus(ConnectionStatus.Disconnected);
                 return false;
             }
             /*var contentResp = restful.RcRegist();
@@ -94,8 +130,7 @@ namespace CVWaferProber.Services
         public List<RespDataFlowTempDTO>? RcLoadFlows()
         {
             // 先确保已注册
-            if (!EnsureRegistered())
-                return null;
+            if (!EnsureRegistered()) return null;
 
             try
             {

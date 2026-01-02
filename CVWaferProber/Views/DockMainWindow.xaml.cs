@@ -59,11 +59,6 @@ namespace CVWaferProber.Views
                     }
                 };
             }
-
-            Task.Factory.StartNew(async () => {
-                await Task.Delay(2000);
-                MainService.Instance.Startup("127.0.0.1", 8898);
-            });
         }
 
         

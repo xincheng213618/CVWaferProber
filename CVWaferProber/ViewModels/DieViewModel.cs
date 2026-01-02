@@ -3,7 +3,6 @@ using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
 using CVWaferProber.Utils;
-using ScottPlot.Plottables;
 using System.Windows;
 using WaferComm.StateMachine;
 
