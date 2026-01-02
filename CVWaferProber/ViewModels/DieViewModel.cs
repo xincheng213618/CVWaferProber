@@ -2,9 +2,9 @@
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
-using System.Collections.ObjectModel;
+using CVWaferProber.Utils;
+using ScottPlot.Plottables;
 using System.Windows;
-using System.Windows.Input;
 
 namespace CVWaferProber.ViewModels
 {
@@ -120,6 +120,15 @@ namespace CVWaferProber.ViewModels
             FirePropertyChanged();
         }
 
+        public void TestingReady(string proberId,string timestamp)
+        {
+            this.EndTestTime = null;
+            this.SerialNumber = SNBuilder.Build(proberId, timestamp, this);
+            this.StartTestTime = null;
+            this.TotalTime = null;
+            this.chipViewModel?.SetStatus(ChipStatus.WAITING);
+            FirePropertyChanged();
+        }
         public void UnSelected()
         {
             if (chipViewModel != null) chipViewModel.IsSelected = false;
@@ -147,42 +156,14 @@ namespace CVWaferProber.ViewModels
             OnPropertyChanged(nameof(TotalTime));
             OnPropertyChanged(nameof(DataValue));
         }
-        //private void BtnAssignToColumn_Click(object sender, RoutedEventArgs e)
-        //{
-        //    // 1. 验证输入非空
-        //    var assignValue = (string)Application.Current.FindResource(BtnSearch).Text.Trim();
-        //    if (string.IsNullOrWhiteSpace(assignValue))
-        //    {
-        //        MessageBox.Show("请输入要赋给整列的值！");
-        //        return;
-        //    }
 
-        //    // 2. 遍历所有行，赋值给目标列的绑定属性（Department）
-        //    foreach (var emp in _employeeList)
-        //    {
-        //        emp.Department = assignValue; // 赋值后自动刷新UI
-        //    }
+        public (string x, string y) ToMapAxis()
+        {
+            string x = string.Format("{0}{1:D3}", this.MapX >= 0 ? "+" : "", this.MapX);
+            string y = string.Format("{0}{1:D3}", this.MapY >= 0 ? "+" : "", this.MapY);
+            return (x, y);
+        }
 
-        //    // 3. 反馈结果
-        //    MessageBox.Show($"已成功将「{assignValue}」赋给所有 {_employeeList.Count} 行的「部门」列！");
-        //    txtColumnValue.Clear();
-        //}
-        //private bool _isSelected;
-        ///// <summary>
-        ///// 标记当前芯片是否被选中（用于表格高亮）
-        ///// </summary>
-        //public bool IsSelected
-        //{
-        //    get => _isSelected;
-        //    set
-        //    {
-        //        if (_isSelected != value)
-        //        {
-        //            _isSelected = value;
-        //            OnPropertyChanged(nameof(IsSelected)); // 确保继承了INotifyPropertyChanged
-        //        }
-        //    }
-        //}
         #region 动态属性
         public string LightOnStatus { get; set; } = "na";
         public string RegisterPixels { get; set; } = "na";

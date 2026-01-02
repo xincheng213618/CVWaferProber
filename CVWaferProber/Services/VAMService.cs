@@ -54,6 +54,7 @@ namespace CVWaferProber.Services
 
             dieViewModel.ChangeStatus(ChipStatus.VAM_TESTING);
             Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, isEnd);
+
         }
     }
 }

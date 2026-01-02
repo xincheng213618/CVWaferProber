@@ -39,8 +39,6 @@ namespace ChipMapping.ViewModels
         private int _screenWidth = 640;
         private int _screenHeight = 480;
        
-        private bool selfClick = true;
-
         private ChipViewModel? _selectedChip;
         private string _chipDetails = "请点击芯片查看详细信息";
 
@@ -271,7 +269,6 @@ namespace ChipMapping.ViewModels
         {
             if (!DisabledInput)
             {
-                selfClick = true;
                 // 查找点击位置附近的芯片
                 var clickedChip = FindChipAtPosition(clickPosition);
                 SelectedChip = clickedChip;

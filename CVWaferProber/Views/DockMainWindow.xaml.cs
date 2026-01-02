@@ -1,22 +1,14 @@
-﻿using AvalonDock.Layout;
-using CVAVMControl;
-using CVWaferProber.Components;
-using CVWaferProber.Log;
+﻿using CVWaferProber.Log;
+using CVWaferProber.Services;
 using CVWaferProber.ViewModels;
-using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl;
-using CVWPFSpectrometerCtrl.Models;
-using CVWPFSpectrometerCtrl.ViewModels;
 using log4net;
 using log4net.Config;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using System.Windows.Interop;
 using System.Windows.Media;
 
 namespace CVWaferProber.Views
@@ -67,6 +59,11 @@ namespace CVWaferProber.Views
                     }
                 };
             }
+
+            Task.Factory.StartNew(async () => {
+                await Task.Delay(2000);
+                MainService.Instance.Startup("127.0.0.1", 8898);
+            });
         }
 
         

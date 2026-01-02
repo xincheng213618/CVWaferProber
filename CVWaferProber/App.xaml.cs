@@ -1,4 +1,6 @@
-﻿using log4net;
+﻿using CVWaferProber.Services;
+using CVWaferProber.ViewModels;
+using log4net;
 using log4net.Config;
 using System.Reflection;
 using System.Windows;
@@ -30,6 +32,7 @@ namespace CVWaferProber
             log.Info("Application starting...");
 
             base.OnStartup(e);
+
             // 初始化语言（读取Settings中的默认语言）
             AppSettingsManager.InitializeLanguage();
             // 1. 定义DataGrid行的样式（覆盖选中状态）

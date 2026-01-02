@@ -157,27 +157,8 @@ namespace CVWaferProber.Services
             return null;*/
         }
 
-        public RespDataRunFlowDTO RcRunFlowById(int fid, string serialNumber)
+        public RespDataRunFlowDTO? RcRunFlowById(int fid, string serialNumber)
         {
-            //if (RegDTO != null)
-            //{
-            //    var contentResp = restful.RcRunFlow(fid, serialNumber, RegDTO.Token.AccessToken);
-            //    if (!string.IsNullOrEmpty(contentResp))
-            //    {
-            //        RespDTO<RespDataRunFlowDTO>? respData = JsonConvert.DeserializeObject<RespDTO<RespDataRunFlowDTO>>(contentResp);
-            //        if (respData != null && (respData.IsSuccess || respData.IsProcessing))
-            //        {
-            //            if (logger.IsInfoEnabled) logger.InfoFormat("RunFlow is Pending => {0}", JsonConvert.SerializeObject(respData.Data));
-            //            return respData.Data;
-            //        }
-            //    }
-            //    if (logger.IsErrorEnabled) logger.ErrorFormat("RunFlow failed => {0}", contentResp);
-            //}
-            //else
-            //{
-            //    if (logger.IsErrorEnabled) logger.ErrorFormat("Rc UnRegist.");
-            //}
-            //return null;
             if (!EnsureRegistered())
                 return null;
 
@@ -219,29 +200,10 @@ namespace CVWaferProber.Services
                 return null;
             }
         }
-        public RespDataRunFlowDTO RcRunFlowByName(string fname, string serialNumber)
+        public bool RcRunFlowByName(string fname, string serialNumber)
         {
-            //if (RegDTO != null)
-            //{
-            //    var contentResp = restful.RcRunFlow(fname, serialNumber, RegDTO.Token.AccessToken);
-            //    if (!string.IsNullOrEmpty(contentResp))
-            //    {
-            //        RespDTO<RespDataRunFlowDTO>? respData = JsonConvert.DeserializeObject<RespDTO<RespDataRunFlowDTO>>(contentResp);
-            //        if (respData != null && (respData.IsSuccess || respData.IsProcessing))
-            //        {
-            //            if (logger.IsInfoEnabled) logger.InfoFormat("RunFlow is Pending => {0}", JsonConvert.SerializeObject(respData.Data));
-            //            return respData.Data;
-            //        }
-            //    }
-            //    if (logger.IsErrorEnabled) logger.ErrorFormat("RunFlow failed => {0}", contentResp);
-            //}
-            //else
-            //{
-            //    if (logger.IsErrorEnabled) logger.ErrorFormat("Rc UnRegist.");
-            //}
-            //return null;
             if (!EnsureRegistered())
-                return null;
+                return false;
 
             try
             {
@@ -249,36 +211,36 @@ namespace CVWaferProber.Services
                 if (string.IsNullOrEmpty(contentResp))
                 {
                     logger.ErrorFormat("执行流程（名称：{0}）失败：接口返回空内容", fname);
-                    return null;
+                    return false;
                 }
 
                 var respData = JsonConvert.DeserializeObject<RespDTO<RespDataRunFlowDTO>>(contentResp);
                 if (respData == null)
                 {
                     logger.ErrorFormat("执行流程（名称：{0}）失败：返回内容无法反序列化 => {1}", fname, contentResp);
-                    return null;
+                    return false;
                 }
 
                 if (respData.IsSuccess || respData.IsProcessing)
                 {
-                    logger.InfoFormat("执行流程（名称：{0}）成功，状态：{1}", fname, respData.IsProcessing ? "处理中" : "成功");
-                    return respData.Data;
+                    logger.InfoFormat("执行流程（名称={0},sn={1}） 成功，状态：{2}", fname, serialNumber, respData.IsProcessing ? "处理中" : "成功");
+                    return true;
                 }
 
                 if (IsTokenExpired(respData.Message))
                 {
                     logger.Warn("Token已过期，重新注册后重试...");
                     RegDTO = null;
-                    return EnsureRegistered() ? RcRunFlowByName(fname, serialNumber) : null;
+                    return EnsureRegistered() ? RcRunFlowByName(fname, serialNumber) : false;
                 }
 
                 logger.ErrorFormat("执行流程（名称：{0}）失败：{1} => {2}", fname, respData.Message, contentResp);
-                return null;
+                return false;
             }
             catch (Exception ex)
             {
                 logger.ErrorFormat("执行流程（名称：{0}）过程异常", fname, ex);
-                return null;
+                return false;
             }
         }
 

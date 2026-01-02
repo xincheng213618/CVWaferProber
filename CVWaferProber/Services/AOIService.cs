@@ -13,11 +13,14 @@ namespace CVWaferProber.Services
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(AOIService));
 
-        public CVCamImagerViewModel CustomImageVM { get; set; }
+        public CVCamImagerViewModel CustomImageVM { get; private set; }
 
-        public AOIService(CVCamImagerViewModel customImageVM ,RCRestService rcService) : base(rcService)
+        public AOIService(CVCamImagerViewModel customImageVM, RCRestService rcService) : base(rcService)
         {
             this.CustomImageVM = customImageVM;
+        }
+        public AOIService(RCRestService rcService) : this(new CVCamImagerViewModel(),rcService)
+        {
         }
 
         protected override ChipStatus GetResultStatus(string serialNumber)

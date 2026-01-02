@@ -16,12 +16,15 @@ namespace CVWaferProber.Services
         // EQE无需相机启用标记，移除IsEQECameraEnabled
 
         // EQE专属VM（对应IVL的CustomIVLVM）
-        private CVEQEViewModel CustomEQEVM { get; set; }
+        public CVEQEViewModel CustomEQEVM { get; private set; }
 
         // 构造函数：完全复刻IVL，仅替换VM名称
         public EQEService(CVEQEViewModel customEQEVM, RCRestService rcService) : base(rcService)
         {
             this.CustomEQEVM = customEQEVM;
+        }
+        public EQEService(RCRestService rcService) : this(new CVEQEViewModel(),rcService)
+        {
         }
 
         // 核心测试启动方法：移除所有Camera相关逻辑，保留IVL核心流程
@@ -79,9 +82,9 @@ namespace CVWaferProber.Services
         }
 
         // 重写结束测试方法：与IVL完全一致
-        protected override void EndTesting()
+        protected override void DoEndTesting()
         {
-            base.EndTesting(); // 调用基类触发TestingCompleted事件
+            base.DoEndTesting(); // 调用基类触发TestingCompleted事件
         }
     }
 }

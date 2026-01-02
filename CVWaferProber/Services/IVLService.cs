@@ -11,22 +11,25 @@ namespace CVWaferProber.Services
 
     public class IVLService : BaseSerivce
     {
-
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(IVLService));
         // 缓存当前测试的DieViewModel（供定时器回调使用）
         private DieViewModel _currentDieVM;
-        private ChipMappingControlViewModel ChipMappingControlViewModel;
-        
-        public bool IsIVLCameraEnabled { get; set; }
+        private ChipMappingControlViewModel _chipMappingControlViewModel;
         //
-        private CVSpectrumViewModel CustomIVLVM { get; set; }
         // 存储当前测试的光谱数据（供生成CSV使用）
         private SpectrumMeasurement _currentSpectrumData;
-        public IVLService(CVSpectrumViewModel customIVLVM, RCRestService rcService) : base(rcService)
+        public bool IsIVLCameraEnabled { get; set; }
+        public CVSpectrumViewModel CustomIVLVM { get; private set; }
+        public IVLService(CVSpectrumViewModel customIVLVM, ChipMappingControlViewModel chipMappingControlViewModel, RCRestService rcService) : base(rcService)
         {
             this.CustomIVLVM = customIVLVM;
+            this._chipMappingControlViewModel = chipMappingControlViewModel;
             // 初始化导出文件夹（确保目录存在）
             AutoExportHelper.InitFolders();
+        }
+        public IVLService(string proberId, ChipMappingControlViewModel chipMappingControlViewModel, RCRestService rcService) : this(new CVSpectrumViewModel(), chipMappingControlViewModel, rcService)
+        {
+            this.ProberId = proberId;
         }
 
         public override void StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
@@ -42,7 +45,7 @@ namespace CVWaferProber.Services
             // 缓存当前DieViewModel（定时器回调中需要用到）
             _currentDieVM = dieViewModel;
             //System.Timers.Timer timer = new System.Timers.Timer(1000);
-            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel);
+            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, isEnd);
             // 初始化并启动定时器（1秒调用一次IVLResultDisplay）
             System.Timers.Timer refreshTimer = new System.Timers.Timer(350)
             {
@@ -153,7 +156,7 @@ namespace CVWaferProber.Services
                                  $"{_currentSpectrumData.fPur:F4}," +
                                  $"{_currentSpectrumData.PeakWavelength:F2}," +
                                  $"{_currentSpectrumData.FHW:F1}," +
-                                 $"{ChipMappingControlViewModel.Temperatures:F1}";
+                                 $"{_chipMappingControlViewModel.Temperatures:F1}";
                     csvRows.AppendLine(row);
                 }
                 else
@@ -190,22 +193,22 @@ namespace CVWaferProber.Services
                 /*            */
                 AOIGradeLevel = "na",
                 BlackPatterns = "na",
-                Temperature = ChipMappingControlViewModel.Temperatures.ToString() ?? "na",
+                Temperature = _chipMappingControlViewModel.Temperatures.ToString() ?? "na",
                 PixelLogic = "na",
                 MeasurePin = "na",
-                Pressure = ChipMappingControlViewModel.Pressure ?? "na",
-                TouchDownCounts = ChipMappingControlViewModel.TDCount != 0? ChipMappingControlViewModel.TDCount: 0,
-                ProbingCardID = ChipMappingControlViewModel.SN ?? "na",
+                Pressure = _chipMappingControlViewModel.Pressure ?? "na",
+                TouchDownCounts = _chipMappingControlViewModel.TDCount != 0? _chipMappingControlViewModel.TDCount: 0,
+                ProbingCardID = _chipMappingControlViewModel.SN ?? "na",
             };
         }
 
         /// <summary>
         /// 重写基类EndTesting（确保流程结束时停止定时器）
         /// </summary>
-        protected override void EndTesting()
+        protected override void DoEndTesting()
         {
 
-            base.EndTesting(); // 调用基类触发TestingCompleted事件
+            base.DoEndTesting(); // 调用基类触发TestingCompleted事件
         }
 
         // 仅暴露“生成CSV内容”的方法（不执行文件写入，只返回内容）
@@ -239,7 +242,7 @@ namespace CVWaferProber.Services
                                  $"{_currentSpectrumData.fPur:F4}," +
                                  $"{_currentSpectrumData.PeakWavelength:F2}," +
                                  $"{_currentSpectrumData.FHW:F1}," +
-                                 $"{ChipMappingControlViewModel.Temperatures:F1}";
+                                 $"{_chipMappingControlViewModel.Temperatures:F1}";
                 dataRows.Add(row);
             }
             return dataRows;

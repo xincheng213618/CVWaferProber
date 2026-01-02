@@ -55,6 +55,12 @@
     <Reference Include="WaferComm.Core">
       <HintPath>..\DLL\WaferComm.Core.dll</HintPath>
     </Reference>
+    <Reference Include="WaferComm.Processors">
+      <HintPath>..\DLL\WaferComm.Processors.dll</HintPath>
+    </Reference>
+    <Reference Include="WaferComm.StateMachine">
+      <HintPath>..\DLL\WaferComm.StateMachine.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
