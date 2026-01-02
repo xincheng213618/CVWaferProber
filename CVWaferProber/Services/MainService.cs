@@ -107,22 +107,24 @@ namespace CVWaferProber.Services
 
         private void OnProberStateUpdated(StateUpdatedEvent @event)
         {
-            logger.InfoFormat("StateUpdated => {0}", @event.Status.ToString());
-            if (autoTestingItem != null)
+            if (logger.IsInfoEnabled) logger.InfoFormat("StateUpdated => {0}", @event.Status.ToString());
+
+            var dieVM = autoTestingItem?.GetCurrentDieVM();
+            if (dieVM == null)
             {
-                var dieVM = autoTestingItem.GetCurrentDieVM();
-                dieVM.MStatus = @event.Status.MotionStatus;
-                if (dieVM != null && @event.Status.MotionStatus == MotionStatus.MotionComplete)
-                {
-                    var axis = dieVM.ToMapAxis();
-                    string x = @event.Status.CurrentPosition.CurrentX;
-                    string y = @event.Status.CurrentPosition.CurrentY;
-                    if(axis.x == x && axis.y == y)
-                    {
-                        logger.InfoFormat("Move Absolute Pos => {0}", @event.Status.CurrentPosition.ToString());
-                    }
-                }
+                return;
             }
+            dieVM.MStatus = @event.Status.MotionStatus;
+            //if (@event.Status.MotionStatus == MotionStatus.MotionComplete)
+            //{
+            //    var axis = dieVM.ToMapAxis();
+            //    string x = @event.Status.CurrentPosition.CurrentX;
+            //    string y = @event.Status.CurrentPosition.CurrentY;
+            //    if (axis.x == x && axis.y == y)
+            //    {
+            //        if (logger.IsInfoEnabled) logger.InfoFormat("Move Absolute Pos => {0}", @event.Status.CurrentPosition.ToString());
+            //    }
+            //}
         }
 
         private void OnClientProberStateChanged(ConnectionStateChangedEvent @event)
