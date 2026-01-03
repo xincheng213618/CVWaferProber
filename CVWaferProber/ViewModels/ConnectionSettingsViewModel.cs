@@ -12,7 +12,6 @@ namespace CVWaferProber.ViewModels
         private readonly ConnectionInfo ConnectionInfo;
         private readonly IWaferProberClient? _proberClient;
 
-        //private string _serverIP = "127.0.0.1";
         public string ServerIP
         {
             get => ConnectionInfo.ServerIP;
@@ -22,7 +21,6 @@ namespace CVWaferProber.ViewModels
             }
         }
 
-        //private int _port = 8080;
         public int Port
         {
             get => ConnectionInfo.Port;

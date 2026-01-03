@@ -17,16 +17,410 @@
         <GroupBox Grid.Row="0" Header="{DynamicResource ProberDebugControl.ConnCfg}" Margin="10,10,10,5">
             <StackPanel Orientation="Horizontal" Margin="5">
                 <TextBlock Text="Addr IP:" VerticalAlignment="Center" Margin="5,0"/>
-                <TextBox x:Name="txtIp" Text="{Binding SvrIP}" Width="120" Margin="5,0"/>
+                <TextBox Text="{Binding ServerIP, Mode=TwoWay}" IsEnabled="{Binding CanConnect}" Width="120" Margin="5,0"/>
 
                 <TextBlock Text="Port:" VerticalAlignment="Center" Margin="10,0,5,0"/>
-                <TextBox x:Name="txtPort" Text="{Binding SvrPort}" Width="80" Margin="5,0"/>
+                <TextBox Text="{Binding Port,Mode=TwoWay}" IsEnabled="{Binding CanConnect}" Width="80" Margin="5,0"/>
 
-                <Button x:Name="btnConnect" Content="Connect" Width="80" Margin="20,0,5,0"   Command="{Binding DevProberConnectCommand}"/>
-                <Button x:Name="btnDisconnect" Content="Disconnect" Width="80" Margin="5,0" IsEnabled="False"  Command="{Binding DevProberDisconnectCommand}"/>
+                <Button x:Name="btnConnect" Content="Connect" Width="80" Margin="20,0,5,0" Command="{Binding DevProberConnectCommand}"/>
+                <Button x:Name="btnDisconnect" Content="Disconnect" Width="80" Margin="5,0" Command="{Binding DevProberDisconnectCommand}"/>
 
-                <TextBlock x:Name="tbStatus" Text="Disconnected" Foreground="Red" Margin="20,0" VerticalAlignment="Center"/>
+                <!--<TextBlock x:Name="tbStatus" Text="{Binding ConnectionStatusText}" Foreground="Red" Margin="20,0" VerticalAlignment="Center"/>-->
             </StackPanel>
         </GroupBox>
+        <!-- 状态区域 -->
+        <TabControl Grid.Row="1">
+            <TabItem Header="机台状态">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="5">
+                        <!-- 状态显示区域 -->
+                        <GroupBox Header="机台状态" Margin="10,5,10,5">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- 左侧状态信息 -->
+                                    <StackPanel Grid.Column="0" Margin="5">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock x:Name="tbCurrentState" Text="当前状态: 未连接" FontWeight="Bold" FontSize="14" Margin="0,0,10,5"/>
+                                            <TextBlock x:Name="tbStateDuration" Text="持续时间: 0秒" Foreground="Gray" VerticalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <TextBlock x:Name="tbWaferInfo" Text="晶圆: 无 | 批次: 无" Margin="0,5"/>
+                                        <TextBlock x:Name="tbMechanicalNo" Text="机台编号: 无" Margin="0,5"/>
+                                        <!-- 
+                                        <TextBlock x:Name="tbTestProgress" Text="测试进度: 0/0 (0.0%)" Margin="0,2"/>
+                                        <TextBlock x:Name="tbTemperature" Text="温度: 0.0℃ | 加热器: 正常" Margin="0,2"/> 
+                                        -->
+                                    </StackPanel>
+
+                                    <!-- 右侧状态信息 -->
+                                    <StackPanel Grid.Column="1" Margin="5">
+                                        <!--<TextBlock x:Name="tbMechanicalStatus" Text="Z轴: 未知 | 探针: Up | 运动: 停止" Margin="0,5"/>-->
+                                        <TextBlock x:Name="tbHeartbeat" Text="心跳: 正常 | 最后: --:--:--" Margin="0,2"/>
+                                        <TextBlock x:Name="tbErrorInfo" Text="" Foreground="Red" Margin="0,2" 
+                           Visibility="Collapsed"/>
+
+                                        <!-- 状态控制按钮 -->
+                                        <WrapPanel Margin="0,10,0,0">
+                                            <Button Content="手动状态更新" Width="100" Margin="0,0,5,0" Command="{Binding ManualStatusUpdateCommand}"/>
+                                            <!--<Button Content="重置状态机" Width="80" Margin="5,0" Command="{Binding ResetStateMachineCommand}"/>-->
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="运动状态">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="5">
+                        <!-- 运动状态信息 -->
+                        <GroupBox Header="运动状态" Margin="10,5,10,5">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- 左侧：当前运动状态 -->
+                                    <StackPanel Grid.Column="0" Margin="5">
+                                        <TextBlock x:Name="tbMotionStatus" Text="运动状态: 空闲" 
+                           FontWeight="Bold" FontSize="14" Margin="0,0,0,5"/>
+
+                                        <TextBlock x:Name="tbCurrentMotion" Text="当前指令: 无" Margin="0,2"/>
+                                        <TextBlock x:Name="tbMotionDuration" Text="运行时间: 0秒" Margin="0,2"/>
+                                        <TextBlock x:Name="tbTargetPosition" Text="目标位置: Y-- X--" Margin="0,2"/>
+                                        <TextBlock x:Name="tbMotionProgress" Text="进度: --" Margin="0,2"/>
+                                    </StackPanel>
+
+                                    <!-- 右侧：坐标和Z轴状态 -->
+                                    <StackPanel Grid.Column="1" Margin="5">
+                                        <TextBlock x:Name="tbCurrentPosition" Text="当前位置: Y-- X--" Margin="0,2"/>
+                                        <TextBlock x:Name="tbZAxisStatus" Text="Z轴状态: 未知" Margin="0,2"/>
+
+                                        <Separator Margin="0,10,0,5"/>
+
+                                        <!-- 运动统计 -->
+                                        <TextBlock x:Name="tbMotionStats" Text="统计: 总计 0, 成功 0, 失败 0" Margin="0,2"/>
+                                        <TextBlock x:Name="tbSuccessRate" Text="成功率: 0%" Margin="0,2"/>
+                                        <TextBlock x:Name="tbAvgMotionTime" Text="平均耗时: 0秒" Margin="0,2"/>
+
+                                        <!-- 控制按钮 -->
+                                        <WrapPanel Margin="0,10,0,0">
+                                            <Button x:Name="btnResetMotion" Content="重置运动监控" Width="120" Margin="0,0,5,0" Command="{Binding ResetMotionCommand}"/>
+                                            <Button x:Name="btnGetPosition" Content="获取当前位置" Width="100" Command="{Binding GetPositionCommand}"/>
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- 运动历史记录 -->
+                                <Expander Header="最近运动记录" Margin="0,10,0,0">
+                                    <DataGrid x:Name="dgMotionHistory" AutoGenerateColumns="False" 
+                      IsReadOnly="True" Height="150" Margin="5">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="指令" Binding="{Binding CommandType}" Width="80"/>
+                                            <DataGridTextColumn Header="目标Y" Binding="{Binding TargetY}" Width="60"/>
+                                            <DataGridTextColumn Header="目标X" Binding="{Binding TargetX}" Width="60"/>
+                                            <DataGridTextColumn Header="开始时间" Binding="{Binding StartTime, StringFormat=HH:mm:ss}" Width="80"/>
+                                            <DataGridTextColumn Header="耗时(秒)" Binding="{Binding Duration.TotalSeconds, StringFormat=F2}" Width="70"/>
+                                            <DataGridTextColumn Header="状态" Binding="{Binding Success}" Width="60">
+                                                <DataGridTextColumn.CellStyle>
+                                                    <Style TargetType="DataGridCell">
+                                                        <Setter Property="Foreground" Value="Green"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Success}" Value="False">
+                                                                <Setter Property="Foreground" Value="Red"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </DataGridTextColumn.CellStyle>
+                                            </DataGridTextColumn>
+                                            <DataGridTextColumn Header="错误信息" Binding="{Binding ErrorMessage}" Width="*"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Expander>
+                            </StackPanel>
+                        </GroupBox>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="加热吸盘状态">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="5">
+                        <!-- 加热吸盘状态显示 -->
+                        <GroupBox Header="加热吸盘状态" Margin="10,5,10,5">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- 左侧：温度信息 -->
+                                    <StackPanel Grid.Column="0" Margin="5">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock x:Name="tbCurrentTemp" Text="当前温度: -- ℃" 
+                               FontWeight="Bold" FontSize="14" Margin="0,0,10,5"/>
+                                            <TextBlock x:Name="tbSetTemp" Text="设定温度: -- ℃" 
+                               Foreground="Gray" VerticalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <TextBlock x:Name="tbHeaterStatus" Text="加热器状态: 未知" Margin="0,2"/>
+                                        <!-- 
+                                        <TextBlock x:Name="tbTempTolerance" Text="温度容差: ±0.5℃" Margin="0,2"/> 
+                                        <TextBlock x:Name="tbTempTrend" Text="温度趋势: == ℃/min" Margin="0,2"/>
+                                        <TextBlock x:Name="tbTempStability" Text="温度稳定性: ==" Margin="0,2"/> 
+                                        -->
+                                    </StackPanel>
+
+                                    <!-- 右侧：状态和控制 -->
+                                    <StackPanel Grid.Column="1" Margin="5">
+                                        <TextBlock x:Name="tbHeaterAvailability" Text="加热器: 不可用" Margin="0,2"/>
+                                        <TextBlock x:Name="tbLastTempUpdate" Text="最后更新: --" Margin="0,2"/>
+                                        <TextBlock x:Name="tbUptime" Text="运行时间: 0:00:00" Margin="0,2"/>
+                                        <TextBlock x:Name="tbFaultCount" Text="故障次数: 0" Margin="0,2"/>
+
+                                        <Separator Margin="0,10,0,5"/>
+
+                                        <!-- 温度控制 -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                            <TextBlock Text="设定温度:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                            <TextBox x:Name="txtSetTemperature" Text="25.0" Width="60" Margin="0,0,5,0"/>
+                                            <Button x:Name="btnSetTemperature" Content="设置" Width="60" Command="{Binding SetTemperatureCommand}"/>
+                                        </StackPanel>
+
+                                        <WrapPanel Margin="0,5,0,0">
+                                            <Button x:Name="btnGetHeaterStatus" Content="查询状态" Width="80" Margin="0,0,5,0" Command="{Binding GetHeaterStatusCommand}"/>
+                                            <Button x:Name="btnGetCurrentTemp" Content="查询温度" Width="80"  Margin="5,0" Command="{Binding GetCurrentTempCommand}"/>
+                                            <Button x:Name="btnResetHeaterStats" Content="重置统计" Width="80" Margin="5,0" Command="{Binding ResetHeaterStatsCommand}"/>
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- 温度历史图表 -->
+                                <Expander Header="温度历史" Margin="0,10,0,0">
+                                    <StackPanel>
+                                        <Canvas x:Name="canvasTempChart" Height="150" Background="White" Margin="5">
+                                            <!-- 温度图表将通过代码绘制 -->
+                                        </Canvas>
+                                        <TextBlock x:Name="tbTempStats" Text="统计: 最小 --℃, 最大 --℃, 平均 --℃" 
+                           HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                                    </StackPanel>
+                                </Expander>
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+        <!-- 主内容区域 -->
+        <Grid Grid.Row="2" Margin="10,5,10,5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <!-- 左侧：指令发送区域 -->
+            <TabControl Grid.Column="0" Margin="0,0,5,0">
+                <!--<TabItem Header="基本指令">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="5">
+                            --><!-- 机台编号 --><!--
+                            <GroupBox Header="机台编号指令" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="发送：$B#" Margin="5,5,5,2"/>
+                                    <TextBlock Text="接收：$BS1000#" Margin="5,0,5,5"/>
+                                    <Button Content="发送机台编号指令" Margin="5" Click="SendBasicCommand_Click" Tag="B"/>
+                                </StackPanel>
+                            </GroupBox>
+
+                            --><!-- 晶圆ID --><!--
+                            <GroupBox Header="晶圆ID指令" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="发送：$b#" Margin="5,5,5,2"/>
+                                    <TextBlock Text="接收：$bWafer01#" Margin="5,0,5,5"/>
+                                    <Button Content="发送晶圆ID指令" Margin="5" Click="SendBasicCommand_Click" Tag="b"/>
+                                </StackPanel>
+                            </GroupBox>
+
+                            --><!-- 第一颗测试位置 --><!--
+                            <GroupBox Header="第一颗测试位置" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="发送：$q#" Margin="5,5,5,2"/>
+                                    <TextBlock Text="接收：$qY001X001#" Margin="5,0,5,5"/>
+                                    <Button Content="发送第一颗测试位置指令" Margin="5" Click="SendBasicCommand_Click" Tag="q"/>
+                                </StackPanel>
+                            </GroupBox>
+
+                            --><!-- 批次号 --><!--
+                            <GroupBox Header="批次号指令" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="发送：$V#" Margin="5,5,5,2"/>
+                                    <TextBlock Text="接收：$VLot12#" Margin="5,0,5,5"/>
+                                    <Button Content="发送批次号指令" Margin="5" Click="SendBasicCommand_Click" Tag="V"/>
+                                </StackPanel>
+                            </GroupBox>
+
+                            --><!-- 当前测试坐标 --><!--
+                            <GroupBox Header="当前测试坐标" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="发送：$Q#" Margin="5,5,5,2"/>
+                                    <TextBlock Text="接收：$QY001X001#" Margin="5,0,5,5"/>
+                                    <Button Content="发送当前测试坐标指令" Margin="5" Click="SendBasicCommand_Click" Tag="Q"/>
+                                </StackPanel>
+                            </GroupBox>
+                            --><!-- Wafer信息 --><!--
+                            <GroupBox Header="Wafer信息" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="发送：$ku#" Margin="5,5,5,2"/>
+                                    <Button Content="获取Wafer信息" Margin="5" Click="SendBasicCommand_Click" Tag="ku"/>
+                                </StackPanel>
+                            </GroupBox>
+
+                            --><!-- 总测试晶粒数 --><!--
+                            <GroupBox Header="总测试晶粒数" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="发送：$Y#" Margin="5,5,5,2"/>
+                                    <TextBlock Text="接收：$Y01000#" Margin="5,0,5,5"/>
+                                    <Button Content="发送总测试晶粒数指令" Margin="5" Click="SendBasicCommand_Click" Tag="Y"/>
+                                </StackPanel>
+                            </GroupBox>
+
+                            --><!-- 探针压力 --><!--
+                            <GroupBox Header="探针压力" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="发送：$QP#" Margin="5,5,5,2"/>
+                                    <TextBlock Text="接收：$QP024.1,024.2,024.3,024.4#" Margin="5,0,5,5"/>
+                                    <Button Content="查询探针压力" Margin="5" Click="SendBasicCommand_Click" Tag="QP"/>
+                                </StackPanel>
+                            </GroupBox>
+
+                            --><!-- 查询指令 --><!--
+                            <GroupBox Header="查询指令" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="发送：$A#" Margin="5,5,5,2"/>
+                                    <Button Content="发送查询指令" Margin="5" Click="SendBasicCommand_Click" Tag="A"/>
+                                </StackPanel>
+                            </GroupBox>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>-->
+
+                <TabItem Header="运动控制指令">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="5">
+                            <!-- 起测确认 -->
+                            <GroupBox Header="Z轴Up状态(扎针)/起测确认" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="发送：$Z#" Margin="5,5,5,2"/>
+                                    <TextBlock Text="接收：67(扎针状态) 或 76(失败)" Margin="5,0,5,5"/>
+                                    <Button Content="发送起测确认指令" Margin="5" Tag="Z" Command="{Binding SendBasicCommand}"
+                                            CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
+                                </StackPanel>
+                            </GroupBox>
+
+                            <!-- Z轴状态 -->
+                            <GroupBox Header="Z轴Down状态(抬针)" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="发送：$D#" Margin="5,5,5,2"/>
+                                    <TextBlock Text="接收：68(抬针状态) 或 76(失败)" Margin="5,0,5,5"/>
+                                    <Button Content="发送Z Down状态确认" Margin="5" Tag="D" Command="{Binding SendBasicCommand}"
+                                            CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
+                                </StackPanel>
+                            </GroupBox>
+
+                            <!-- 测试完成状态 -->
+                            <GroupBox Header="测试完成状态" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="发送：$J#" Margin="5,5,5,2"/>
+                                    <TextBlock Text="接收：81(测试完成) 或 76(失败)" Margin="5,0,5,5"/>
+                                    <Button Content="发送测试完成查询" Margin="5" Tag="J" Command="{Binding SendBasicCommand}"
+                                            CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
+                                </StackPanel>
+                            </GroupBox>
+
+                            <!-- 绝对运动 -->
+                            <GroupBox Header="绝对运动" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="格式：$JY+020X-020#" Margin="5,5,5,2"/>
+                                    <StackPanel Orientation="Horizontal" Margin="5">
+                                        <TextBlock Text="Y:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                        <TextBox x:Name="txtAbsY" Text="{Binding AbsAxisY}" Width="60" Margin="0,0,10,0"/>
+                                        <TextBlock Text="X:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                        <TextBox x:Name="txtAbsX" Text="{Binding AbsAxisX}" Width="60" Margin="0,0,10,0"/>
+                                        <Button Content="发送绝对运动指令" Command="{Binding SendAbsoluteMoveCommand}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+
+                            <!-- 停止指令 -->
+                            <GroupBox Header="停止控制" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="发送：$K#" Margin="5,5,5,2"/>
+                                    <TextBlock Text="接收：90(开始停止) 85(停止完成) 91(可开始测试)" Margin="5,0,5,5"/>
+                                    <Button Content="发送停止指令" Margin="5" Tag="K" Command="{Binding SendBasicCommand}" 
+                                            CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
+                                </StackPanel>
+                            </GroupBox>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <TabItem Header="自定义指令">
+                    <StackPanel Margin="10">
+                        <GroupBox Header="自定义指令发送">
+                            <StackPanel Margin="5">
+                                <TextBlock Text="指令格式：$[指令][数据]#" Margin="0,0,0,5"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <TextBlock Text="指令内容：" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                    <TextBox x:Name="txtCustomCommand" Text="B" Width="200"/>
+                                </StackPanel>
+                                <Button Content="发送自定义指令" Width="120" Command="{Binding SendCustomCommand}"/>
+                            </StackPanel>
+                        </GroupBox>
+
+                        <GroupBox Header="指令格式说明" Margin="0,10,0,0">
+                            <TextBlock Margin="5">
+                                <Run Text="• 协议头：$"/><LineBreak/>
+                                <Run Text="• 指令字段：单字符"/><LineBreak/>
+                                <Run Text="• 数据内容：可变长度"/><LineBreak/>
+                                <Run Text="• 协议尾：#"/><LineBreak/>
+                                <LineBreak/>
+                                <Run Text="示例："/><LineBreak/>
+                                <Run Text="• 机台编号：$B# → $BS1000#"/><LineBreak/>
+                                <Run Text="• 晶圆ID：$b# → $bWafer01#"/>
+                            </TextBlock>
+                        </GroupBox>
+                    </StackPanel>
+                </TabItem>
+            </TabControl>
+
+            <!-- 右侧：通信日志区域 -->
+            <GroupBox Grid.Column="1" Header="通信日志" Margin="5,0,0,0">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5">
+                        <Button Content="清空日志" Margin="0,0,10,0" Click="ClearLog_Click"/>
+                        <CheckBox x:Name="chkAutoScroll" Content="自动滚动" IsChecked="True" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <RichTextBox x:Name="txtLog" IsReadOnly="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="12">
+                        <RichTextBox.Background>
+                            <SolidColorBrush Color="#FF1E1E1E"/>
+                        </RichTextBox.Background>
+                        <FlowDocument>
+                            <Paragraph>
+                                <Run Text="通信日志已就绪..." Foreground="LightGray"/>
+                            </Paragraph>
+                        </FlowDocument>
+                    </RichTextBox>
+                </DockPanel>
+            </GroupBox>
+        </Grid>
     </Grid>
 </UserControl>

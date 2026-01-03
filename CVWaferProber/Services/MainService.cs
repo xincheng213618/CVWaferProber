@@ -5,11 +5,9 @@ using CVWaferProber.ViewModels;
 using CVWaferProber.WinMsg;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
-using System.Threading;
 using WaferComm.Client;
 using WaferComm.Core;
 using WaferComm.StateMachine;
-using static OpenCvSharp.Stitcher;
 
 namespace CVWaferProber.Services
 {
@@ -68,6 +66,7 @@ namespace CVWaferProber.Services
         }
 
         public IWaferProberClient ProberClient { get => _clientProber; }
+        public IStateMachine StateMachine { get => _proberState; }
         public ConnectionInfo ConnectionInfo { get => _connectionInfo; }
         public void Startup(string ip, int port)
         {

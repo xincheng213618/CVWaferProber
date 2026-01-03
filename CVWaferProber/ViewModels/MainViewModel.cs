@@ -1198,8 +1198,16 @@ namespace CVWaferProber.ViewModels
         #region 原有方法
         private void OpenProberDeviceDebug(object obj)
         {
-            DevProberDebugWindow newWindow = new DevProberDebugWindow();
-            newWindow.Show();
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var window = new DevProberDebugWindow
+                {
+                    DataContext = new DevProberDebugViewModel(mainService.ProberClient, mainService.StateMachine, _connectionInfo),
+                    Owner = Application.Current.MainWindow
+                };
+
+                window.ShowDialog();
+            });
         }
 
         private void OnChipDieSelected(object sender, ChipViewModel chip)
