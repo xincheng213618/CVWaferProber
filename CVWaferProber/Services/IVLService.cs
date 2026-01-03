@@ -32,7 +32,7 @@ namespace CVWaferProber.Services
             this.ProberId = proberId;
         }
 
-        public override void StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
+        public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
         {
             dieViewModel.ChangeStatus(ChipStatus.IVL_TESTING);
             CustomIVLVM.ClearResult();
@@ -81,6 +81,7 @@ namespace CVWaferProber.Services
                 logger.Debug("测试流程结束，停止刷新定时器");
             }, TaskScheduler.FromCurrentSynchronizationContext());
 
+            return task;
         }
         public override void ResultDisplay(DieViewModel dieViewModel)
         {

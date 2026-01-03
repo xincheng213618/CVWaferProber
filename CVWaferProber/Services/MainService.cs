@@ -5,9 +5,11 @@ using CVWaferProber.ViewModels;
 using CVWaferProber.WinMsg;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
+using System.Threading;
 using WaferComm.Client;
 using WaferComm.Core;
 using WaferComm.StateMachine;
+using static OpenCvSharp.Stitcher;
 
 namespace CVWaferProber.Services
 {
@@ -22,12 +24,12 @@ namespace CVWaferProber.Services
         #endregion
         private MappingService mappingService;
         private GSWMProcessor? _wmProcessor;
-        private IWaferProberClient? _clientProber;
+        private IWaferProberClient _clientProber;
         private IStateMachine _proberState;
         private readonly Dictionary<CVWaferProberFlowType, BaseSerivce> flowServices =
             new Dictionary<CVWaferProberFlowType, BaseSerivce>();
         private AutoTestingItem? autoTestingItem;
-        private ConnectionInfo? _connectionInfo;
+        private ConnectionInfo _connectionInfo;
 
         private MainService()
         {
@@ -65,8 +67,8 @@ namespace CVWaferProber.Services
             return null;
         }
 
-        public IWaferProberClient? ProberClient { get => _clientProber; }
-        public ConnectionInfo? ConnectionInfo { get => _connectionInfo; }
+        public IWaferProberClient ProberClient { get => _clientProber; }
+        public ConnectionInfo ConnectionInfo { get => _connectionInfo; }
         public void Startup(string ip, int port)
         {
             _clientProber?.ConnectAsync(ip, port).Wait();
@@ -106,11 +108,18 @@ namespace CVWaferProber.Services
             this._clientProber = new WaferProberTCPClient();
             var eventAggregator = _clientProber.EventAggregator;
             eventAggregator.Subscribe<ConnectionStateChangedEvent>(OnClientProberStateChanged);
+            eventAggregator.Subscribe<StateTransitionEvent>(OnStateTransition);
 
             ProberStateMachine proberState = new ProberStateMachine(eventAggregator, _clientProber);
             _proberState = proberState;
             eventAggregator.Subscribe<StateUpdatedEvent>(OnProberStateUpdated);
             _proberState.StartAsync().Wait();
+        }
+
+        private void OnStateTransition(StateTransitionEvent @event)
+        {
+            if (logger.IsInfoEnabled) logger.InfoFormat("StateTransition {0} => {1}", @event.FromState.ToString(), @event.ToState.ToString());
+            if (logger.IsInfoEnabled) logger.InfoFormat("CurrentState = {0}", _proberState.CurrentState.ToString());
         }
 
         private void OnProberStateUpdated(StateUpdatedEvent @event)
@@ -146,7 +155,7 @@ namespace CVWaferProber.Services
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void OnAutoTestingNextCompleted(object sender, DieViewModel e)
+        private void OnAutoTestingNextCompleted(object? sender, DieViewModel e)
         {
             if (autoTestingItem != null) DoDieFlowExec(autoTestingItem);
             else TestingCompleted?.Invoke(this, new EventArgs());
@@ -202,12 +211,12 @@ namespace CVWaferProber.Services
             }
         }
 
-        public void DoDieFlowExec(WPFlowViewModel? _selectedWPFlow, DieViewModel die, bool isEnd = true)
+        public Task DoDieFlowExec(WPFlowViewModel? _selectedWPFlow, DieViewModel die, bool isEnd = true)
         {
             if (_selectedWPFlow == null) 
             {
                 if (logger.IsErrorEnabled) logger.ErrorFormat("No flow selected for current die");
-                return; 
+                return Task.CompletedTask; 
             }
             BaseSerivce? baseSerivce = null;
             switch (_selectedWPFlow?.FlowType)
@@ -229,7 +238,9 @@ namespace CVWaferProber.Services
                 default:
                     break;
             }
-            baseSerivce?.StartTesting(die, _selectedWPFlow, isEnd);
+            Task task = baseSerivce?.StartTesting(die, _selectedWPFlow, isEnd);
+
+            return task;
         }
         private void DoDieFlowExec(AutoTestingItem item)
         {
@@ -237,30 +248,35 @@ namespace CVWaferProber.Services
             if (dieNext.die != null)
             {
                 AutoTestingNext?.Invoke(this, (dieNext.diePre, dieNext.die));
-                Task.Factory.StartNew(() => { DoAutoDieFlowExecAsync(item.CurSelectedWPFlow, dieNext.die, item.IsEnd); });
+                Task.Factory.StartNew(async () =>
+                {
+                    await DoAutoDieFlowExecAsync(item.CurSelectedWPFlow, dieNext.die, dieNext.diePre == null, item.IsEnd);
+                });
             }
             else
             {
                 if (logger.IsWarnEnabled) logger.WarnFormat("AutoTesting is ended, pre = X:{0},Y:{1}", dieNext.diePre?.MapX, dieNext.diePre?.MapY);
             }
         }
-        private async void DoAutoDieFlowExecAsync(WPFlowViewModel? _selectedWPFlow, DieViewModel die, bool isEnd)
+        private async Task DoAutoDieFlowExecAsync(WPFlowViewModel? _selectedWPFlow, DieViewModel die, bool isFirst, bool isEnd)
         {
             if (_clientProber != null)
             {
                 if (_clientProber.IsConnected)
                 {
-                    var absAxis = die.ToMapAxis();
-                    die.MStatus = MotionStatus.MovingAbsolute;
-                    _clientProber?.MoveAbsoluteAsync(absAxis.y, absAxis.x);
-                    var task = WaitingMotionMoveAsync(die);
-                    task?.Wait();
-                    if (task.Result) DoDieFlowExec(_selectedWPFlow, die, isEnd);
+                    if (logger.IsInfoEnabled) logger.InfoFormat("Process Current Die={0}[isFirst:{1}/isEnd:{2}] => {3}", die.ToMapAxis().ToString(), isFirst, isEnd,die.SerialNumber);
+                    var isOK = await MoveAbsoluteAxisAsync(die);
+                    if (isFirst) isOK = isOK && await ZUpAsync(die);
+                    if (isOK) await DoDieFlowExec(_selectedWPFlow, die, isEnd);
                     else
                     {
                         die.ChangeStatus(Core.Models.Enums.ChipStatus.FAILED);
-                        if (logger.IsErrorEnabled) logger.ErrorFormat("Prober client Move Absolute failed => {0}", absAxis.ToString());
+                        if (logger.IsErrorEnabled) logger.Error("Prober client Move Absolute failed");
                         TestingCompleted?.Invoke(this, new EventArgs());
+                    }
+                    if (isEnd) 
+                    {
+                        isOK = await StopTestAsync();
                     }
                 }
                 else
@@ -275,17 +291,46 @@ namespace CVWaferProber.Services
                 TestingCompleted?.Invoke(this, new EventArgs());
             }
         }
-
-        private async Task<bool> WaitingMotionMoveAsync2(DieViewModel dieVM, CancellationToken cancellationToken = default)
+        private async Task<bool> StopTestAsync()
         {
-            for (int i = 0; i < 60; i++)
+            if (logger.IsInfoEnabled) logger.Info("Prober client StopTest");
+            _clientProber?.StopAsync();
+            return await WaitingStopTestAsync();
+        }
+
+        private async Task<bool> MoveAbsoluteAxisAsync(DieViewModel die)
+        {
+            var absAxis = die.ToMapAxis();
+            die.MStatus = MotionStatus.MovingAbsolute;
+            if (logger.IsInfoEnabled) logger.InfoFormat("Prober client Moving Absolute Axis => {0}", absAxis.ToString());
+            _clientProber?.MoveAbsoluteAsync(absAxis.y, absAxis.x);
+            return await WaitingMotionMoveAsync(die);
+        }  
+        private async Task<bool> ZUpAsync(DieViewModel die)
+        {
+            die.MStatus = MotionStatus.ZUpMoving;
+            if (logger.IsInfoEnabled) logger.Info("Prober client ZUp Moving");
+            _clientProber?.StartTestConfirmAsync();
+            return await WaitingZMotionAsync(die, MotionStatus.ZUp);
+        } 
+        private async Task<bool> ZDownAsync(DieViewModel die)
+        {
+            die.MStatus = MotionStatus.ZDownMoving;
+            if (logger.IsInfoEnabled) logger.Info("Prober client ZDown Moving");
+            _clientProber?.GetZDownStatusAsync();
+            return await WaitingZMotionAsync(die, MotionStatus.ZDown);
+        }
+
+        private async Task<bool> LoopWaitingMotionMoveAsync(DieViewModel dieVM, CancellationToken cancellationToken = default)
+        {
+            for (int i = 0; i < 300; i++)
             {
-                if (dieVM.MStatus == MotionStatus.MotionComplete) return true;
-                else if (dieVM.MStatus == MotionStatus.MotionFailed) return false;
-                else if (dieVM.MStatus == MotionStatus.MotionTimeout) return false;
-                await Task.Delay(500, cancellationToken).ConfigureAwait(false);
+                if (dieVM.MStatus == MotionStatus.MotionComplete) return await Task.FromResult(true);
+                else if (dieVM.MStatus == MotionStatus.MotionFailed) return await Task.FromResult(false);
+                else if (dieVM.MStatus == MotionStatus.MotionTimeout) return await Task.FromResult(false);
+                await Task.Delay(100, cancellationToken).ConfigureAwait(false);
             }
-            return false;
+            return await Task.FromResult(false);
         }
         private async Task<bool> WaitingMotionMoveAsync(DieViewModel dieVM, CancellationToken cancellationToken = default)
         {
@@ -329,32 +374,90 @@ namespace CVWaferProber.Services
                 return false;
             }
         }
-
-        private async Task<bool> WaitingMoveAsync(string y, string x, CancellationToken cancellationToken = default)
+        private async Task<bool> WaitingZMotionAsync(DieViewModel dieVM, MotionStatus statusOk, CancellationToken cancellationToken = default)
         {
-            for (int i = 0; i < 30; i++)
+            const int checkInterval = 10;
+            const int maxChecks = 3000;
+            using var semaphore = new SemaphoreSlim(1, 1);
+
+            // 启动一个后台任务轮询状态
+            var pollingTask = Task.Run(async () =>
             {
-                var status = _proberState.GetStatus();
-                if (logger.IsInfoEnabled) logger.InfoFormat("CurrentPosition = {0}x{1}", status.CurrentPosition.CurrentY, status.CurrentPosition.CurrentX);
-                if (status.CurrentMotionCommand != null)
+                for (int i = 0; i < maxChecks; i++)
                 {
-                    if (status.CurrentMotionCommand.Success)
+                    await semaphore.WaitAsync().ConfigureAwait(false);
+                    try
                     {
-                        bool isOk = (status.CurrentPosition.CurrentY == y) && (status.CurrentPosition.CurrentX == x);
-                        if (isOk)
+                        var status = dieVM.MStatus;
+                        if (status == MotionStatus.ZUp ||
+                            status == MotionStatus.ZDown ||
+                            status == MotionStatus.MotionTimeout)
                         {
-                            return true;
+                            return status;
                         }
                     }
-                    await Task.Delay(1000, cancellationToken).ConfigureAwait(false);
-                }
-                else
-                {
-                    break;
-                }
-            }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
 
-            return false;
+                    await Task.Delay(checkInterval, cancellationToken).ConfigureAwait(false);
+                }
+                return MotionStatus.MotionTimeout;
+            }, cancellationToken);
+
+            try
+            {
+                var finalStatus = await pollingTask.ConfigureAwait(false);
+                return finalStatus == statusOk;
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+        }
+
+        private async Task<bool> WaitingStopTestAsync(CancellationToken cancellationToken = default)
+        {
+            const int checkInterval = 10;
+            const int maxChecks = 3000;
+            using var semaphore = new SemaphoreSlim(1, 1);
+
+            // 启动一个后台任务轮询状态
+            var pollingTask = Task.Run(async () =>
+            {
+                for (int i = 0; i < maxChecks; i++)
+                {
+                    await semaphore.WaitAsync().ConfigureAwait(false);
+                    try
+                    {
+                        var status = MotionStatus.MotionComplete;
+                        if (status == MotionStatus.ZUp ||
+                            status == MotionStatus.ZDown ||
+                            status == MotionStatus.MotionTimeout)
+                        {
+                            return status;
+                        }
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+
+                    await Task.Delay(checkInterval, cancellationToken).ConfigureAwait(false);
+                }
+                return MotionStatus.MotionTimeout;
+            }, cancellationToken);
+
+            try
+            {
+                var finalStatus = await pollingTask.ConfigureAwait(false);
+                return finalStatus == MotionStatus.MotionComplete;
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
         }
 
         public void StartAutoTesting(WPFlowViewModel? _selectedWPFlow, List<DieViewModel> dieVMList)

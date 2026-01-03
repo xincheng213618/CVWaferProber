@@ -35,11 +35,12 @@ namespace CVWaferProber.Services
             LoadImageResult(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
             return ChipStatus.OK;
         }
-        public override void StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
+        public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
         {
             dieViewModel.ChangeStatus(ChipStatus.TESTING);
             CustomImageVM?.ClearImageResult();
             Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, isEnd);
+            return task;
         }
         private ChipStatus GetDieResultStatus(string serialNumber)
         {

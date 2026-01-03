@@ -28,13 +28,13 @@ namespace CVWaferProber.Services
             this.EventAggregator = eventAggregator;
         }
 
-        public void StartTesting(string timestamp, DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
+        public Task StartTesting(string timestamp, DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
         {
             string sn = BuildFlowSN(dieViewModel, timestamp);
             dieViewModel.SerialNumber = sn;
-            StartTesting(dieViewModel, _selectedWPFlow, isEnd);
+            return StartTesting(dieViewModel, _selectedWPFlow, isEnd);
         }
-        public abstract void StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true);
+        public abstract Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true);
         protected async Task RunFlowAsync(WPFlowViewModel _selectedWPFlow, DieViewModel dieViewModel, bool isEnd)
         {
             try
@@ -95,7 +95,7 @@ namespace CVWaferProber.Services
         protected abstract ChipStatus GetResultStatus(string serialNumber);
         protected abstract ChipStatus FlowResultDisplay(DieViewModel dieViewModel);
 
-        protected async Task<RespDataBaseFlowResultDTO> AsyncRunFlow(string fname, string sn, int timeout)
+        protected async Task<RespDataBaseFlowResultDTO?> AsyncRunFlow(string fname, string sn, int timeout)
         {
             // 优化3：使用using包裹CancellationTokenSource，确保资源释放
             using var cancellationTokenSource = timeout > 0
@@ -113,7 +113,7 @@ namespace CVWaferProber.Services
             }
             else
             {
-                return await Task.FromResult<RespDataBaseFlowResultDTO>(null);
+                return await Task.FromResult<RespDataBaseFlowResultDTO?>(null);
             }
         }
 
