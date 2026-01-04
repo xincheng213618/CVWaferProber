@@ -313,63 +313,41 @@
                 </TabItem>-->
 
                 <TabItem Header="运动控制指令">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="5">
                         <StackPanel Margin="5">
-                            <!-- 起测确认 -->
-                            <GroupBox Header="Z轴Up状态(扎针)/起测确认" Margin="0,0,0,10">
-                                <StackPanel>
-                                    <TextBlock Text="发送：$Z#" Margin="5,5,5,2"/>
-                                    <TextBlock Text="接收：67(扎针状态) 或 76(失败)" Margin="5,0,5,5"/>
-                                    <Button Content="发送起测确认指令" Margin="5" Tag="Z" Command="{Binding SendBasicCommand}"
+                            <StackPanel Margin="5" Orientation="Horizontal">
+                            <!-- Z轴Up起测确认 -->
+                            <Button Width="150" Content="扎针(ZUp)/起测[Z]" Margin="5" Tag="Z" Command="{Binding SendBasicCommand}"
                                             CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
-                                </StackPanel>
-                            </GroupBox>
-
-                            <!-- Z轴状态 -->
-                            <GroupBox Header="Z轴Down状态(抬针)" Margin="0,0,0,10">
-                                <StackPanel>
-                                    <TextBlock Text="发送：$D#" Margin="5,5,5,2"/>
-                                    <TextBlock Text="接收：68(抬针状态) 或 76(失败)" Margin="5,0,5,5"/>
-                                    <Button Content="发送Z Down状态确认" Margin="5" Tag="D" Command="{Binding SendBasicCommand}"
-                                            CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
-                                </StackPanel>
-                            </GroupBox>
-
-                            <!-- 测试完成状态 -->
-                            <GroupBox Header="测试完成状态" Margin="0,0,0,10">
-                                <StackPanel>
-                                    <TextBlock Text="发送：$J#" Margin="5,5,5,2"/>
-                                    <TextBlock Text="接收：81(测试完成) 或 76(失败)" Margin="5,0,5,5"/>
-                                    <Button Content="发送测试完成查询" Margin="5" Tag="J" Command="{Binding SendBasicCommand}"
-                                            CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
-                                </StackPanel>
-                            </GroupBox>
-
-                            <!-- 绝对运动 -->
-                            <GroupBox Header="绝对运动" Margin="0,0,0,10">
-                                <StackPanel>
-                                    <TextBlock Text="格式：$JY+020X-020#" Margin="5,5,5,2"/>
-                                    <StackPanel Orientation="Horizontal" Margin="5">
-                                        <TextBlock Text="Y:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                        <TextBox x:Name="txtAbsY" Text="{Binding AbsAxisY}" Width="60" Margin="0,0,10,0"/>
-                                        <TextBlock Text="X:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                        <TextBox x:Name="txtAbsX" Text="{Binding AbsAxisX}" Width="60" Margin="0,0,10,0"/>
-                                        <Button Content="发送绝对运动指令" Command="{Binding SendAbsoluteMoveCommand}"/>
-                                    </StackPanel>
-                                </StackPanel>
-                            </GroupBox>
-
+                            <!-- Z轴Down状态 -->
+                            <Button Width="150" Content="抬针(ZDown)[D]" Margin="5" Tag="D" Command="{Binding SendBasicCommand}"
+                                           CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
+                            </StackPanel>
+                            <StackPanel Margin="5" Orientation="Horizontal">
+                                <!-- 测试完成状态 -->
+                            <Button Width="150" Content="测试完成[J]" Margin="5" Tag="J" Command="{Binding SendBasicCommand}"
+                                           CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
                             <!-- 停止指令 -->
-                            <GroupBox Header="停止控制" Margin="0,0,0,10">
-                                <StackPanel>
-                                    <TextBlock Text="发送：$K#" Margin="5,5,5,2"/>
-                                    <TextBlock Text="接收：90(开始停止) 85(停止完成) 91(可开始测试)" Margin="5,0,5,5"/>
-                                    <Button Content="发送停止指令" Margin="5" Tag="K" Command="{Binding SendBasicCommand}" 
+                            <Button Width="150" Content="停止指令[K]" Margin="5" Tag="K" Command="{Binding SendBasicCommand}" 
                                             CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
-                                </StackPanel>
-                            </GroupBox>
+                            </StackPanel>
                         </StackPanel>
-                    </ScrollViewer>
+                    <StackPanel Margin="5">
+                        <!-- 绝对运动 -->
+                        <GroupBox Header="绝对运动" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="格式：$JY+020X-020#" Margin="5,5,5,2"/>
+                                <StackPanel Orientation="Horizontal" Margin="5">
+                                    <TextBlock Text="Y:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                    <TextBox x:Name="txtAbsY" Text="{Binding AbsAxisY}" Width="60" Margin="0,0,10,0"/>
+                                    <TextBlock Text="X:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                    <TextBox x:Name="txtAbsX" Text="{Binding AbsAxisX}" Width="60" Margin="0,0,10,0"/>
+                                    <Button Content="发送绝对运动指令" Command="{Binding SendAbsoluteMoveCommand}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>
+                    </StackPanel>
                 </TabItem>
 
                 <TabItem Header="自定义指令">

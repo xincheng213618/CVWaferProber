@@ -563,7 +563,7 @@ namespace CVWaferProber.ViewModels
             OpenSummaryConfigCommand = new RelayCommand(OpenSummaryConfig);
             SysFlowCfgCommand = new RelayCommand(SysFlowCfg);
 
-            ShowConnectionSettingsCommand = new RelayCommand(ShowConnectionSettings);
+            ShowConnectionSettingsCommand = new RelayCommand(OpenProberDeviceDebug);
             ShowRCConnectionSettingsCommand = new RelayCommand(ShowRcConnectionSettings);
 
             // 初始化筛选集合
