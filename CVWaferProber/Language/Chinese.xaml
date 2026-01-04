@@ -168,9 +168,9 @@
     <sys:String x:Key="VAM.CircumferentialAngle">圆周角度 (°)</sys:String>
     <sys:String x:Key="VAM.PixelValue">像素值</sys:String>
 
+    <!--  EQE相关  -->
 
-
-
+    <sys:String x:Key="EQE.luminous_flux">光通量</sys:String>
 
 
 

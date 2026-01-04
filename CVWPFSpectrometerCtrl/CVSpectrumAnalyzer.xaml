@@ -892,10 +892,12 @@
             <!--  EQE内容区域（绑定共享数据源）  -->
             <Grid x:Name="EQEGrid">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="41*" />
-                    <ColumnDefinition Width="383*" />
-                    <ColumnDefinition Width="334*" />
-                    <ColumnDefinition Width="334*" />
+                    <ColumnDefinition Width="16*" />
+                    <ColumnDefinition Width="93*"/>
+                    <ColumnDefinition Width="109*"/>
+                    <ColumnDefinition Width="109*" />
+                    <ColumnDefinition Width="109*" />
+                    <ColumnDefinition Width="109*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
@@ -907,7 +909,7 @@
                 <!--  顶部按钮区域  -->
                 <StackPanel
                     Grid.Row="0"
-                    Grid.ColumnSpan="2"
+                    Grid.ColumnSpan="4"
                     Orientation="Horizontal">
                     <Button
                         x:Name="btnExport1"
@@ -920,7 +922,7 @@
                 </StackPanel>
                 <StackPanel
                     Grid.Row="1"
-                    Grid.ColumnSpan="4"
+                    Grid.ColumnSpan="6"
                     Margin="5,5,5,2"
                     Orientation="Horizontal">
                     <TextBlock VerticalAlignment="Center" Text="{DynamicResource Chart.LineColor}" />
@@ -1022,7 +1024,7 @@
                 <!--  图表区域  -->
                 <oxy:PlotView
                     Grid.Row="2"
-                    Grid.ColumnSpan="4"
+                    Grid.ColumnSpan="6"
                     Margin="5,29,5,0"
                     Loaded="PlotView_Loaded"
                     Model="{Binding EQEPlotModel}" />
@@ -1032,7 +1034,7 @@
                 <DataGrid
                     x:Name="eqemeasurementsGrid"
                     Grid.Row="3"
-                    Grid.ColumnSpan="4"
+                    Grid.ColumnSpan="6"
                     Margin="5,2,5,2"
                     AutoGenerateColumns="False"
                     CanUserAddRows="False"
@@ -1072,8 +1074,16 @@
                             Header="{DynamicResource Sp.Current}" />
                         <DataGridTextColumn
                             Width="80"
-                            Binding="{Binding Luminance, StringFormat='F4'}"
-                            Header="{DynamicResource Sp.Luminance}" />
+                            Binding="{Binding LuminousFlux, StringFormat='F4'}"
+                            Header="{DynamicResource EQE.luminous_flux}" />
+                        <DataGridTextColumn
+                            Width="80"
+                            Binding="{Binding EQE, StringFormat='F4'}"
+                            Header="EQE(%)" />
+                        <DataGridTextColumn
+                            Width="80"
+                            Binding="{Binding LuminousEfficacy, StringFormat='F4'}"
+                            Header="Efficacy(lm/watt)" />
                         <DataGridTextColumn
                             Width="80"
                             Binding="{Binding CIE_x, StringFormat='F4'}"
@@ -1118,7 +1128,7 @@
                 <DataGrid
                     x:Name="WavelengthGrid1"
                     Grid.RowSpan="4"
-                    Grid.Column="4"
+                    Grid.Column="6"
                     Margin="2,2,2,2"
                     AutoGenerateColumns="False"
                     Background="#FFFFFF"

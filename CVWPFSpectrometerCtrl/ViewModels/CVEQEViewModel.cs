@@ -19,6 +19,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using static CVWPFSpectrometerCtrl.ViewModels.CVSpectrumViewModel;
 
 namespace CVWPFSpectrometerCtrl.ViewModels
 {
@@ -92,6 +93,84 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged();
                 UpdateEQEChartByShowAllState();
             }
+        }
+        // 1. 新增：绑定DataGrid选中项的属性
+        private SpectrumMeasurement _selectedEQERow;
+        public SpectrumMeasurement SelectedEQERow
+        {
+            get => _selectedEQERow;
+            set
+            {
+                if (SetProperty(ref _selectedEQERow, value))
+                {
+                    OnPropertyChanged(nameof(SelectedEQERow));
+                    if (IsShowAllEQEData)
+                    {
+                        // 显示所有数据时：置顶+高亮选中曲线
+                        UpdateEQESelectedCurveHighlight();
+                    }
+                    else
+                    {
+                        // 未显示所有数据时：清空图表，仅显示当前选中项的曲线
+                        ResetEQEPlotView(); // 先清空图表
+                        if (value != null)
+                        {
+                            DrawSingleEQECurve(value); // 仅绘制选中项的曲线
+                        }
+                        else
+                        {
+                            ShowEQEEmptyChartMessage(); // 无选中项时显示提示
+                        }
+                    }
+                }
+            }
+        }
+        // 新增：未显示所有数据时，重置EQE图表并显示单条选中曲线
+        private void ResetAndUpdateEQEChart()
+        {
+            // 完全重置EQE图表
+            ResetEQEPlotView();
+
+            if (SelectedEQERow != null)
+            {
+                // 仅绘制选中行的EQE曲线
+                UpdateEQEChartFromSelectedMeasurement();
+            }
+            else
+            {
+                // 无选中项时显示空提示
+                ShowEQEEmptyChartMessage();
+            }
+        }
+        // 新增：仅绘制单条EQE曲线的方法
+        private void DrawSingleEQECurve(SpectrumMeasurement selectedItem)
+        {
+            if (selectedItem == null) return;
+
+            // 创建当前选中项的曲线
+            var lineSeries = new LineSeries
+            {
+                Title = $"EQE-{selectedItem.No}",
+                Color = ConvertToOxyColor(EQELineColor),
+                StrokeThickness = 2.0,
+                IsVisible = true
+            };
+
+            // 填充选中项的波长+强度数据
+            for (int i = 0; i < selectedItem.Wavelengths.Length; i++)
+            {
+                if (!float.IsNaN(selectedItem.Intensities[i]) && !float.IsInfinity(selectedItem.Intensities[i]))
+                {
+                    lineSeries.Points.Add(new DataPoint(
+                        selectedItem.Wavelengths[i],
+                        selectedItem.Intensities[i]
+                    ));
+                }
+            }
+
+            // 添加到EQE图表（此时图表已被清空）
+            EQEPlotModel.Series.Add(lineSeries);
+            EQEPlotModel.InvalidatePlot(true); // 刷新图表
         }
 
         // EQE曲线颜色
@@ -219,7 +298,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     Meas_Id = result.BatchCode,
                     Voltage = (float)result.VResult,
                     Current = (float)result.IResult,
-                    Luminance = (float)result.FPh / 1,
+                    LuminousFlux= (float)result.LuminousFlux,
+                    EQE= (float)result.Eqe,
+                    LuminousEfficacy= (float)result.LuminousEfficacy,
                     IP = Math.Round((decimal)(result.FIp / 65535 * 100), 2).ToString() + "%",
                     Blue = (float)result.FBR,
                     CIE_x = (float)result.Fx,
@@ -488,7 +569,73 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             EQEPlotModel.InvalidatePlot(true);
         }
+       
+        // 右侧DataGrid数据源
+        private ObservableCollection<SpectralGridItem> _spectralGridItems;
+        public ObservableCollection<SpectralGridItem> SpectralGridItems
+        {
+            get => _spectralGridItems;
+            set => SetProperty(ref _spectralGridItems, value);
+        }
+        private bool _isShowSpectralDetail;
+        public bool IsShowSpectralDetail
+        {
+            get => _isShowSpectralDetail;
+            set
+            {
+                _isShowSpectralDetail = value;
+                OnPropertyChanged();
+                if (value && SelectedMeasurement != null)
+                {
+                    UpdateSpectralGridData(SelectedMeasurement);
+                }
+                else
+                {
+                    SpectralGridItems?.Clear();
+                }
+            }
+        }
+        private void UpdateSpectralGridData(SpectrumMeasurement measurement)
+        {
+            if (string.IsNullOrWhiteSpace(measurement?.Meas_Id) || measurement == null)
+            {
+                SpectralGridItems?.Clear();
+                return;
+            }
+            if (measurement == null || measurement.Wavelengths == null || measurement.Intensities == null)
+            {
+                SpectralGridItems?.Clear();
+                return;
+            }
 
+            var gridItems = new ObservableCollection<SpectralGridItem>();
+            int totalPoints = measurement.Wavelengths.Length;
+
+            // 遍历波长数组，每10个点取1个（步长=10）
+            for (int i = 0; i < totalPoints; i += 10)
+            {
+                // 波长值强制转换为整数（380.0→380，381.0→381）
+                int wavelengthInt = (int)measurement.Wavelengths[i];
+
+                // 只保留380~780nm范围内的有效数据
+                if (wavelengthInt < 380 || wavelengthInt > 780)
+                    continue;
+
+                // 相对光谱：负强度转为0，保留4位小数
+                float relative = measurement.Intensities[i] > 0 ? (float)Math.Round(measurement.Intensities[i], 4) : 0f;
+                // 绝对光谱：相对强度 × fPlambda，保留4位小数
+                float absolute = (float)Math.Round(relative * measurement.fPlambda, 4);
+
+                gridItems.Add(new SpectralGridItem
+                {
+                    Wavelength = wavelengthInt,
+                    RelativeSpectrum = relative,
+                    AbsoluteSpectrum = absolute
+                });
+            }
+
+            SpectralGridItems = gridItems;
+        }
         // 显示空图表提示
         private void ShowEQEEmptyChartMessage()
         {
