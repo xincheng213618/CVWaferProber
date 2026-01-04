@@ -1050,16 +1050,15 @@
 
                     <DataGrid.Columns>
                         <DataGridTextColumn
-                            Width="80"
+                            Width="50"
                             Binding="{Binding No}"
                             Header="{DynamicResource GridHeader.No}" />
-                        <DataGridTextColumn
+                        <!--<DataGridTextColumn
                             Width="80"
                             Binding="{Binding Meas_Id}"
-                            Header="{DynamicResource Sp.MeasurementBatch}" />
-
+                            Header="{DynamicResource Sp.MeasurementBatch}" />-->
                         <DataGridTextColumn
-                            Width="120"
+                            Width="130"
                             Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}"
                             Header="{DynamicResource Sp.Time}" />
                         <DataGridTextColumn
@@ -1070,6 +1069,22 @@
                             Width="80"
                             Binding="{Binding Current, StringFormat='F4'}"
                             Header="{DynamicResource Sp.Current}" />
+                        <DataGridTextColumn
+                            Width="80"
+                            Binding="{Binding EQE, StringFormat='F4'}"
+                            Header="{DynamicResource EQE.EQE}" /> 
+                        <DataGridTextColumn
+                            Width="80"
+                            Binding="{Binding LuminousFlux, StringFormat='F4'}"
+                            Header="{DynamicResource EQE.LuminousFlux}" /> 
+                        <DataGridTextColumn
+                            Width="80"
+                            Binding="{Binding RadiantFlux, StringFormat='F4'}"
+                            Header="{DynamicResource EQE.RadiantFlux}" /> 
+                         <DataGridTextColumn
+                            Width="80"
+                            Binding="{Binding LuminousEfficacy, StringFormat='F4'}"
+                            Header="{DynamicResource EQE.LuminousEfficacy}" /> 
                         <DataGridTextColumn
                             Width="80"
                             Binding="{Binding Luminance, StringFormat='F4'}"
