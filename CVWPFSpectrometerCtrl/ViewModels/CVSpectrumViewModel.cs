@@ -61,6 +61,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private IVViewModel IV_viewModel;
         private VLViewModel VL_viewModel;
         private IVLCameraViewModel IVLCamera_viewModel;
+        //
+        public CVEQEViewModel CustomEQEVM {  get; set; }
 
         //private SpectrumControl _spectralCtrl;
 

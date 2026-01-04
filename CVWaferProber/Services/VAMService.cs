@@ -17,8 +17,6 @@ namespace CVWaferProber.Services
         }
         protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
         {
-            //string cieFileName = "D:\\work\\img\\test_ND0.cvcie";
-            //EventAggregator?.Publish(new VAMFlowCompletedEvent(cieFileName));
             if (string.IsNullOrEmpty(dieViewModel.SerialNumber)) return ChipStatus.FAILED;
 
             var results = ImageResultService.LoadResultByBatchCode(dieViewModel.SerialNumber);
@@ -28,7 +26,8 @@ namespace CVWaferProber.Services
                 if (result.ResultCode.HasValue && result.ResultCode.Value == 0)
                 {
                     string cieFileName = result.FileUrl;
-                    cieFileName = "D:\\work\\img\\test_ND0.cvcie";
+                    //TODO test
+                    //cieFileName = "F:\\img\\晶圆台\\VAM\\test_ND0.cvcie";
                     EventAggregator?.Publish(new VAMFlowCompletedEvent(cieFileName));
                 }
             }

@@ -37,7 +37,7 @@ namespace CVWaferProber.ViewModels
         public ChipMappingControlViewModel? CustomMappingVM { get; set; }
         public CVCamImagerViewModel? CustomImageVM { get; set; }
         public CVSpectrumViewModel? CustomIVLVM { get; set; }
-        public CVEQEViewModel? CustomEQEVM { get; set; }
+        //public CVEQEViewModel? CustomEQEVM { get; set; }
         // AvalonDock面板引用
         public DockingManager? DockingManager { get; set; }
         public LayoutAnchorable? AnchorableCamera { get; set; }
@@ -648,7 +648,7 @@ namespace CVWaferProber.ViewModels
             CustomMappingVM = mainService.GetMappingVM();
             CustomImageVM = mainService.GetAOIVM();
             CustomIVLVM = mainService.GetIVLVM();
-            CustomEQEVM = mainService.GetEQEVM();
+            CustomIVLVM.CustomEQEVM = mainService.GetEQEVM();
 
             Task.Factory.StartNew(async () =>
             {

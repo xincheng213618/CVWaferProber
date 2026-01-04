@@ -2915,20 +2915,30 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             if (results == null || results.Count == 0) return;
 
-            //IL_viewModel.LoadData(results);
-            //IV_viewModel.LoadData(serialNumber);
-            //VL_viewModel.LoadData(results);
             //
             int n = 1;
             foreach (var result in results)
             {
-
+                SpectrumMeasureParam? param = null;
+                if(!string.IsNullOrEmpty(result.Params)) param = JsonConvert.DeserializeObject<SpectrumMeasureParam>(result.Params);
+                float voltage = 0;
+                float current = 0;
+                if(result.VResult.HasValue) voltage = result.VResult.Value;
+                else if(param!=null)
+                {
+                    voltage = Convert.ToSingle(param.SMUData.V);
+                }
+                if(result.IResult.HasValue) current = result.IResult.Value;
+                else if (param != null)
+                {
+                    current = Convert.ToSingle(param.SMUData.I);
+                }
                 var measurement = new SpectrumEQEMeasurement(n++)
                 {
                     Timestamp = result.CreateDate,
                     Meas_Id = result.BatchCode,
-                    Voltage = (float)result.VResult,
-                    Current = (float)result.IResult,
+                    Voltage = voltage,
+                    Current = current,
                     Luminance = (float)result.FPh / 1,
 
                     IP = Math.Round((decimal)(result.FIp / 65535 * 100), 2).ToString() + "%",
@@ -3377,5 +3387,20 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
         #endregion
 
+    }
+
+    public class SpectrumMeasureParam
+    {
+        /// <summary>
+        /// SMU 数据
+        /// </summary>
+        public SMUMasterResultData SMUData { get; set; }
+    }
+    public class SMUMasterResultData
+    {
+        public double V { set; get; }
+        public double I { set; get; }
+        public int MasterId { get; set; }
+        public int MasterResultType { get; set; }
     }
 }
