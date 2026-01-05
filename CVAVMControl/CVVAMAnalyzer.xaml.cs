@@ -1,5 +1,6 @@
 ﻿using ColorVision.FileIO;
 using ConoscopeDemo;
+using CVWaferProber.Core.Events;
 using log4net;
 using Microsoft.Win32;
 using Newtonsoft.Json;
@@ -22,6 +23,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using WaferComm.Core;
 
 
 namespace CVAVMControl
@@ -59,7 +61,8 @@ namespace CVAVMControl
         // 记录当前选中的半径（R圆面板用）
         private int _selectedRadius = -1;
 
-       
+        private IEventAggregator? EventAggregator;
+
         // 1. 定义DLL返回状态枚举（与DLL定义一致）
         private enum CV_AliResType
         {
@@ -208,7 +211,22 @@ namespace CVAVMControl
                     _resourceCleanTimer.Stop();
                 }
             };
+            //InitializeEvents();
+
             //this.Unloaded += CVVAMAnalyzer_Unloaded;
+        }
+
+        public void InitializeEvents(IEventAggregator eventAggregator)
+        {
+            this.EventAggregator = eventAggregator;
+            this.EventAggregator.Subscribe<FlowCompletedEvent>(OnFlowCompleted);
+        }
+        public void UnInitializeEvents()
+        {
+            this.EventAggregator?.Unsubscribe<FlowCompletedEvent>(OnFlowCompleted);
+        }
+        private void OnFlowCompleted(FlowCompletedEvent @event)
+        {
         }
 
         //private void CVVAMAnalyzer_Unloaded(object sender, RoutedEventArgs e)

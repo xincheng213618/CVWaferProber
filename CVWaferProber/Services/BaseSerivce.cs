@@ -107,6 +107,7 @@ using CVWaferProber.Utils;
 using CVWaferProber.ViewModels;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using WaferComm.Core;
 
 namespace CVWaferProber.Services
 {
@@ -115,15 +116,17 @@ namespace CVWaferProber.Services
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(BaseSerivce));
 
         protected RCRestService rcService;
+        protected readonly IEventAggregator? EventAggregator;
 
         public string ProberId { get; set; }
 
         public event EventHandler TestingCompleted;
 
-        public BaseSerivce(RCRestService rcService)
+        public BaseSerivce(RCRestService rcService, IEventAggregator? eventAggregator = null)
         {
             this.rcService = rcService;
             this.ProberId = string.Empty;
+            this.EventAggregator = eventAggregator;
         }
 
         protected async Task RunFlowAsync(WPFlowViewModel _selectedWPFlow, DieViewModel dieViewModel, bool isEnd = true)
