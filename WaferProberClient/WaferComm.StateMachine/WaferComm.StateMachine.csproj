@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PublishAot>true</PublishAot>
+    <PlatformTarget>x64</PlatformTarget>
+    <!-- 在此处固定 RID -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WaferComm.Client\WaferComm.Client.csproj" />
+    <ProjectReference Include="..\WaferComm.Core\WaferComm.Core.csproj" />
+    <ProjectReference Include="..\WaferComm.Processors\WaferComm.Processors.csproj" />
+  </ItemGroup>
+
+</Project>

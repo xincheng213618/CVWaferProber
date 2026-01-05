@@ -21,6 +21,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using WaferComm.Core;
+using static CVWPFSpectrometerCtrl.ViewModels.CVSpectrumViewModel;
 
 namespace CVWPFSpectrometerCtrl.ViewModels
 {
@@ -218,7 +219,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         #endregion
 
         #region 构造函数
-        private CVEQEViewModel()
+        public CVEQEViewModel()
         {
             // 初始化波长数组（380~780nm，步长0.1）
             Wavelengths = new float[4001];
@@ -832,10 +833,6 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
         #endregion
     }
-}
-
-    }
-
     public class SpectrumMeasureParam
     {
         /// <summary>
@@ -851,3 +848,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         public int MasterResultType { get; set; }
     }
 }
+
+    
+
+    
+

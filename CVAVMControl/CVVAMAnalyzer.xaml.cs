@@ -672,7 +672,7 @@ namespace CVAVMControl
                     }
                 });
 
-                log.Info($"[{modeName}] 成功删除角度：{delAngle}°，当前剩余角度数：{targetComboBox.Items.Count}");
+                logger.Info($"[{modeName}] 成功删除角度：{delAngle}°，当前剩余角度数：{targetComboBox.Items.Count}");
             }
             finally
             {
