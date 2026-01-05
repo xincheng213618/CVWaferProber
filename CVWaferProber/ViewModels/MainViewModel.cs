@@ -2996,8 +2996,8 @@ namespace CVWaferProber.ViewModels
                         Mode = BindingMode.TwoWay,
                         UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
                     });
-                    checkBoxFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Center);
-                    checkBoxFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
+                    checkBoxFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, System.Windows.HorizontalAlignment.Center);
+                    checkBoxFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, System.Windows.VerticalAlignment.Center);
                     templateColumn.CellTemplate = new DataTemplate { VisualTree = checkBoxFactory };
                     _dataGrid.Columns.Add(templateColumn);
                 }
