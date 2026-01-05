@@ -1837,44 +1837,7 @@ namespace CVAVMControl
         #endregion
 
         #region
-        // 正确的XYZ数据拼接（X0Y0Z0 X1Y1Z1... 格式）
-        private byte[] MergeXYZToInterleaved(Mat XMat, Mat YMat, Mat ZMat)
-        {
-            if (XMat.Empty() || YMat.Empty() || ZMat.Empty())
-                throw new ArgumentException("XYZ Mat cannot be empty");
-            if (XMat.Size() != YMat.Size() || YMat.Size() != ZMat.Size())
-                throw new ArgumentException("XYZ Mat size mismatch");
-
-            int width = XMat.Width;
-            int height = XMat.Height;
-            int pixelCount = width * height;
-            int elementSize = XMat.ElemSize1(); // 每个通道的字节数（如32F=4字节）
-
-            byte[] xyzData = new byte[pixelCount * elementSize * 3];
-            int offset = 0;
-
-            // 逐像素交叉存储：X→Y→Z
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    // 读取单个像素的XYZ值（按实际类型读取）
-                    byte[] xBytes = GetPixelBytes(XMat, x, y);
-                    byte[] yBytes = GetPixelBytes(YMat, x, y);
-                    byte[] zBytes = GetPixelBytes(ZMat, x, y);
-
-                    // 交叉拷贝到XYZ数组
-                    Buffer.BlockCopy(xBytes, 0, xyzData, offset, elementSize);
-                    offset += elementSize;
-                    Buffer.BlockCopy(yBytes, 0, xyzData, offset, elementSize);
-                    offset += elementSize;
-                    Buffer.BlockCopy(zBytes, 0, xyzData, offset, elementSize);
-                    offset += elementSize;
-                }
-            }
-            return xyzData;
-        }
-
+       
         // 辅助方法：读取单个像素的字节数组（适配不同Mat类型）
         private byte[] GetPixelBytes(Mat mat, int x, int y)
         {
