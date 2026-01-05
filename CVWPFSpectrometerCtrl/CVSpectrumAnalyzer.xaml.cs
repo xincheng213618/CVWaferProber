@@ -17,7 +17,7 @@ namespace CVWPFSpectrometerCtrl
         {
 
             InitializeComponent();
-            EQEGrid.DataContext = CVEQEViewModel.GetInstance();
+            //EQEGrid.DataContext = CVEQEViewModel.GetInstance();
              //_spectralData.GenerateSampleData(550, 50);
              //SpectralDisplay.SpectralData = _spectralData;
 

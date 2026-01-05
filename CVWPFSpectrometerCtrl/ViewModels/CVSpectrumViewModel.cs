@@ -3360,6 +3360,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 }
             }
         }
+
+        public CVEQEViewModel? CustomEQEVM { get; set; }
         #endregion
 
     }
