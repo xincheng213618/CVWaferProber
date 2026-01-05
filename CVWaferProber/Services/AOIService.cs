@@ -13,11 +13,14 @@ namespace CVWaferProber.Services
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(AOIService));
 
-        public CVCamImagerViewModel CustomImageVM { get; set; }
+        public CVCamImagerViewModel CustomImageVM { get; private set; }
 
-        public AOIService(CVCamImagerViewModel customImageVM ,RCRestService rcService) : base(rcService)
+        public AOIService(CVCamImagerViewModel customImageVM, RCRestService rcService) : base(rcService)
         {
             this.CustomImageVM = customImageVM;
+        }
+        public AOIService(RCRestService rcService) : this(new CVCamImagerViewModel(),rcService)
+        {
         }
 
         protected override ChipStatus GetResultStatus(string serialNumber)
@@ -27,18 +30,18 @@ namespace CVWaferProber.Services
 
         protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
         {
-            AOIResultDisplay(dieViewModel);
+            //AOIResultDisplay(dieViewModel);
+            //EventAggregator?.Publish(new EQEFlowCompletedEvent(results));
+            LoadImageResult(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
             return ChipStatus.OK;
         }
-        public void StartTestingAOI(string timestamp, DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
+        public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
         {
-            string sn = BuildFlowSN(dieViewModel, timestamp);
-            dieViewModel.SerialNumber = sn;
             dieViewModel.ChangeStatus(ChipStatus.TESTING);
             CustomImageVM?.ClearImageResult();
             Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, isEnd);
+            return task;
         }
-
         private ChipStatus GetDieResultStatus(string serialNumber)
         {
             ChipStatus status = ChipStatus.FAILED;
@@ -62,10 +65,20 @@ namespace CVWaferProber.Services
             }
             return status;
         }
-        public void AOIResultDisplay(DieViewModel dieViewModel)
+        public override void ResultDisplay(DieViewModel dieViewModel)
         {
-            CustomImageVM?.ClearImageResult();
-            LoadImageResult(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
+            if (string.IsNullOrEmpty(dieViewModel.SerialNumber))
+            {
+                CustomImageVM?.ClearImageResult();
+                //EventAggregator?.Publish(new EQEResultGUIClearEvent());
+                return;
+            }
+            else
+            {
+                FlowResultDisplay(dieViewModel);
+            }
+            //CustomImageVM?.ClearImageResult();
+            //LoadImageResult(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
         }
 
         private void AddResultImage(int id,string imgFile)

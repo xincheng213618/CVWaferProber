@@ -1,6 +1,8 @@
 ﻿
 using ColorVision.Core.Entities;
 using CVDB.Services.Spectrum;
+using CVWaferProber.Core.Events;
+using CVWaferProber.Core.Models;
 using CVWaferProber.Core.ViewModels;
 using CVWPFSpectrometerCtrl.Models;
 using log4net;
@@ -12,14 +14,13 @@ using OxyPlot.Series;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using static CVWPFSpectrometerCtrl.ViewModels.CVSpectrumViewModel;
+using WaferComm.Core;
 
 namespace CVWPFSpectrometerCtrl.ViewModels
 {
@@ -833,3 +834,20 @@ namespace CVWPFSpectrometerCtrl.ViewModels
     }
 }
 
+    }
+
+    public class SpectrumMeasureParam
+    {
+        /// <summary>
+        /// SMU 数据
+        /// </summary>
+        public SMUMasterResultData SMUData { get; set; }
+    }
+    public class SMUMasterResultData
+    {
+        public double V { set; get; }
+        public double I { set; get; }
+        public int MasterId { get; set; }
+        public int MasterResultType { get; set; }
+    }
+}

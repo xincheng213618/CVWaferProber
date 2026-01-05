@@ -1,6 +1,9 @@
 ﻿using CVWaferProber.Core.Restful;
 using CVWaferProber.Core.Restful.DTO;
+using CVWaferProber.Models;
 using Newtonsoft.Json;
+using WaferComm.Client;
+using WaferComm.Core;
 
 namespace CVWaferProber.Services
 {
@@ -11,16 +14,29 @@ namespace CVWaferProber.Services
         private CVRestfulHelper restful = new CVRestfulHelper();
         private RespDataRegDTO? RegDTO;
         private const int MaxRetryCount = 2; // 注册/接口调用最大重试次数
-
+        private EventAggregator eventAggregator;
+        public RCRestService()
+        {
+            ConnectionInfo = new ConnectionInfo("Registed", "UnRegisted") { ServerIP = "127.0.0.1", Port = 8080 };
+            eventAggregator = new EventAggregator();
+        }
+        public void Subscribe<TEvent>(Action<TEvent> handler) where TEvent : class
+        {
+            eventAggregator.Subscribe(handler);
+        }     
+        public void Unsubscribe<TEvent>(Action<TEvent> handler) where TEvent : class
+        {
+            eventAggregator.Unsubscribe(handler);
+        }
+        public ConnectionInfo ConnectionInfo { get; private set; }
         /// <summary>
         /// 确保已注册（未注册则自动触发注册）
         /// </summary>
-        /// <returns>注册是否成功</returns>
-        private bool EnsureRegistered()
+        /// <returns>注册是否success</returns>
+        public bool EnsureRegistered()
         {
             // 已注册且Token有效（简单判断，可根据实际Token过期规则优化）
-            if (RegDTO != null && !string.IsNullOrEmpty(RegDTO.Token?.AccessToken))
-                return true;
+            if (IsRegistered) return true;
 
             // 未注册，执行注册（最多重试2次）
             for (int i = 0; i < MaxRetryCount; i++)
@@ -28,25 +44,41 @@ namespace CVWaferProber.Services
                 logger.InfoFormat("开始第{0}次注册...", i + 1);
                 if (RcRegist())
                 {
-                    logger.Info("注册成功");
+                    logger.Info("Regist success");
                     return true;
                 }
-                logger.WarnFormat("第{0}次注册失败，等待1秒后重试...", i + 1);
+                logger.WarnFormat("第{0}次注册failed，等待1秒后重试...", i + 1);
                 System.Threading.Thread.Sleep(1000); // 重试间隔1秒
             }
 
-            logger.Error("注册失败，已达到最大重试次数");
+            logger.Error("Regist failed，已达到最大重试次数");
             return false;
         }
 
+        public bool IsRegistered => (RegDTO != null && !string.IsNullOrEmpty(RegDTO.Token?.AccessToken));
+
+        public bool RcUnRegist()
+        {
+            RegDTO = null;
+            restful.RcUnRegist(ConnectionInfo.ServerIP, ConnectionInfo.Port);
+            PublishStatus(ConnectionStatus.Disconnected);
+            return true;
+        }
+
+        private void PublishStatus(ConnectionStatus status)
+        {
+            ConnectionInfo.SetConnected(status == ConnectionStatus.Connected);
+            eventAggregator.Publish(new ConnectionStateChangedEvent(ConnectionInfo.IsConnected, ConnectionInfo.ServerIP, ConnectionInfo.Port));
+        }
         public bool RcRegist()
         {
             try
             {
-                var contentResp = restful.RcRegist();
+                var contentResp = restful.RcRegist(ConnectionInfo.ServerIP, ConnectionInfo.Port);
                 if (string.IsNullOrEmpty(contentResp))
                 {
-                    logger.Error("注册失败：接口返回空内容");
+                    logger.Error("Regist failed：接口返回空内容");
+                    PublishStatus(ConnectionStatus.Disconnected);
                     return false;
                 }
 
@@ -54,23 +86,27 @@ namespace CVWaferProber.Services
                 var respData = JsonConvert.DeserializeObject<RespDTO<RespDataRegDTO>>(contentResp);
                 if (respData == null)
                 {
-                    logger.ErrorFormat("注册失败：返回内容无法反序列化 => {0}", contentResp);
+                    logger.ErrorFormat("Regist failed：返回内容无法反序列化 => {0}", contentResp);
+                    PublishStatus(ConnectionStatus.Disconnected);
                     return false;
                 }
 
                 if (respData.IsSuccess && respData.Data != null && !string.IsNullOrEmpty(respData.Data.Token?.AccessToken))
                 {
                     RegDTO = respData.Data;
-                    logger.InfoFormat("注册成功 => {0}", JsonConvert.SerializeObject(RegDTO, Formatting.Indented));
+                    PublishStatus(ConnectionStatus.Connected);
+                    logger.InfoFormat("Regist success => {0}", JsonConvert.SerializeObject(RegDTO, Formatting.Indented));
                     return true;
                 }
 
-                logger.ErrorFormat("注册失败：{0} => {1}", respData.Message, contentResp);
+                logger.ErrorFormat("Regist failed：{0} => {1}", respData.Message, contentResp);
+                PublishStatus(ConnectionStatus.Disconnected);
                 return false;
             }
             catch (Exception ex)
             {
                 logger.Error("注册过程异常", ex);
+                PublishStatus(ConnectionStatus.Disconnected);
                 return false;
             }
             /*var contentResp = restful.RcRegist();
@@ -94,28 +130,27 @@ namespace CVWaferProber.Services
         public List<RespDataFlowTempDTO>? RcLoadFlows()
         {
             // 先确保已注册
-            if (!EnsureRegistered())
-                return null;
+            if (!EnsureRegistered()) return null;
 
             try
             {
                 var contentResp =  restful.RcLoadFlows(RegDTO!.Token.AccessToken);
                 if (string.IsNullOrEmpty(contentResp))
                 {
-                    logger.Error("加载流程失败：接口返回空内容");
+                    logger.Error("加载流程failed：接口返回空内容");
                     return null;
                 }
 
                 var respData = JsonConvert.DeserializeObject<RespDTO<List<RespDataFlowTempDTO>>>(contentResp);
                 if (respData == null)
                 {
-                    logger.ErrorFormat("加载流程失败：返回内容无法反序列化 => {0}", contentResp);
+                    logger.ErrorFormat("加载流程failed：返回内容无法反序列化 => {0}", contentResp);
                     return null;
                 }
 
                 if (respData.IsSuccess)
                 {
-                    logger.InfoFormat("加载流程成功，共{0}个流程", respData.Data?.Count ?? 0);
+                    logger.InfoFormat("加载流程success，共{0}个流程", respData.Data?.Count ?? 0);
                     return respData.Data;
                 }
 
@@ -127,7 +162,7 @@ namespace CVWaferProber.Services
                     return EnsureRegistered() ? RcLoadFlows() : null;
                 }
 
-                logger.ErrorFormat("加载流程失败：{0} => {1}", respData.Message, contentResp);
+                logger.ErrorFormat("加载流程failed：{0} => {1}", respData.Message, contentResp);
                 return null;
             }
             catch (Exception ex)
@@ -157,27 +192,8 @@ namespace CVWaferProber.Services
             return null;*/
         }
 
-        public RespDataRunFlowDTO RcRunFlowById(int fid, string serialNumber)
+        public RespDataRunFlowDTO? RcRunFlowById(int fid, string serialNumber)
         {
-            //if (RegDTO != null)
-            //{
-            //    var contentResp = restful.RcRunFlow(fid, serialNumber, RegDTO.Token.AccessToken);
-            //    if (!string.IsNullOrEmpty(contentResp))
-            //    {
-            //        RespDTO<RespDataRunFlowDTO>? respData = JsonConvert.DeserializeObject<RespDTO<RespDataRunFlowDTO>>(contentResp);
-            //        if (respData != null && (respData.IsSuccess || respData.IsProcessing))
-            //        {
-            //            if (logger.IsInfoEnabled) logger.InfoFormat("RunFlow is Pending => {0}", JsonConvert.SerializeObject(respData.Data));
-            //            return respData.Data;
-            //        }
-            //    }
-            //    if (logger.IsErrorEnabled) logger.ErrorFormat("RunFlow failed => {0}", contentResp);
-            //}
-            //else
-            //{
-            //    if (logger.IsErrorEnabled) logger.ErrorFormat("Rc UnRegist.");
-            //}
-            //return null;
             if (!EnsureRegistered())
                 return null;
 
@@ -186,20 +202,20 @@ namespace CVWaferProber.Services
                 var contentResp = restful.RcRunFlow(fid, serialNumber, RegDTO!.Token.AccessToken);
                 if (string.IsNullOrEmpty(contentResp))
                 {
-                    logger.ErrorFormat("执行流程（ID：{0}）失败：接口返回空内容", fid);
+                    logger.ErrorFormat("Execution process（ID：{0}）failed：接口返回空内容", fid);
                     return null;
                 }
 
                 var respData = JsonConvert.DeserializeObject<RespDTO<RespDataRunFlowDTO>>(contentResp);
                 if (respData == null)
                 {
-                    logger.ErrorFormat("执行流程（ID：{0}）失败：返回内容无法反序列化 => {1}", fid, contentResp);
+                    logger.ErrorFormat("Execution process（ID：{0}）failed：返回内容无法反序列化 => {1}", fid, contentResp);
                     return null;
                 }
 
                 if (respData.IsSuccess || respData.IsProcessing)
                 {
-                    logger.InfoFormat("执行流程（ID：{0}）成功，状态：{1}", fid, respData.IsProcessing ? "处理中" : "成功");
+                    logger.InfoFormat("Execution process（ID：{0}）success，状态：{1}", fid, respData.IsProcessing ? "processing" : "success");
                     return respData.Data;
                 }
 
@@ -210,124 +226,82 @@ namespace CVWaferProber.Services
                     return EnsureRegistered() ? RcRunFlowById(fid, serialNumber) : null;
                 }
 
-                logger.ErrorFormat("执行流程（ID：{0}）失败：{1} => {2}", fid, respData.Message, contentResp);
+                logger.ErrorFormat("Execution process（ID：{0}）failed：{1} => {2}", fid, respData.Message, contentResp);
                 return null;
             }
             catch (Exception ex)
             {
-                logger.ErrorFormat("执行流程（ID：{0}）过程异常", fid, ex);
+                logger.ErrorFormat("Execution process（ID：{0}）过程异常", fid, ex);
                 return null;
             }
         }
-        public RespDataRunFlowDTO RcRunFlowByName(string fname, string serialNumber)
+        public bool RcRunFlowByName(string fname, string serialNumber)
         {
-            //if (RegDTO != null)
-            //{
-            //    var contentResp = restful.RcRunFlow(fname, serialNumber, RegDTO.Token.AccessToken);
-            //    if (!string.IsNullOrEmpty(contentResp))
-            //    {
-            //        RespDTO<RespDataRunFlowDTO>? respData = JsonConvert.DeserializeObject<RespDTO<RespDataRunFlowDTO>>(contentResp);
-            //        if (respData != null && (respData.IsSuccess || respData.IsProcessing))
-            //        {
-            //            if (logger.IsInfoEnabled) logger.InfoFormat("RunFlow is Pending => {0}", JsonConvert.SerializeObject(respData.Data));
-            //            return respData.Data;
-            //        }
-            //    }
-            //    if (logger.IsErrorEnabled) logger.ErrorFormat("RunFlow failed => {0}", contentResp);
-            //}
-            //else
-            //{
-            //    if (logger.IsErrorEnabled) logger.ErrorFormat("Rc UnRegist.");
-            //}
-            //return null;
             if (!EnsureRegistered())
-                return null;
+                return false;
 
             try
             {
                 var contentResp = restful.RcRunFlow(fname, serialNumber, RegDTO!.Token.AccessToken);
                 if (string.IsNullOrEmpty(contentResp))
                 {
-                    logger.ErrorFormat("执行流程（名称：{0}）失败：接口返回空内容", fname);
-                    return null;
+                    logger.ErrorFormat("Execution process（Name：{0}）failed：接口返回空内容", fname);
+                    return false;
                 }
 
                 var respData = JsonConvert.DeserializeObject<RespDTO<RespDataRunFlowDTO>>(contentResp);
                 if (respData == null)
                 {
-                    logger.ErrorFormat("执行流程（名称：{0}）失败：返回内容无法反序列化 => {1}", fname, contentResp);
-                    return null;
+                    logger.ErrorFormat("Execution process（Name：{0}）failed：返回内容无法反序列化 => {1}", fname, contentResp);
+                    return false;
                 }
 
                 if (respData.IsSuccess || respData.IsProcessing)
                 {
-                    logger.InfoFormat("执行流程（名称：{0}）成功，状态：{1}", fname, respData.IsProcessing ? "处理中" : "成功");
-                    return respData.Data;
+                    logger.InfoFormat("Execution process（Name={0},sn={1}）completed, status：{2}", fname, serialNumber, respData.IsProcessing ? "processing" : "success");
+                    return true;
                 }
 
                 if (IsTokenExpired(respData.Message))
                 {
                     logger.Warn("Token已过期，重新注册后重试...");
                     RegDTO = null;
-                    return EnsureRegistered() ? RcRunFlowByName(fname, serialNumber) : null;
+                    return EnsureRegistered() ? RcRunFlowByName(fname, serialNumber) : false;
                 }
 
-                logger.ErrorFormat("执行流程（名称：{0}）失败：{1} => {2}", fname, respData.Message, contentResp);
-                return null;
+                logger.ErrorFormat("Execution process（Name：{0}）failed：{1} => {2}", fname, respData.Message, contentResp);
+                return false;
             }
             catch (Exception ex)
             {
-                logger.ErrorFormat("执行流程（名称：{0}）过程异常", fname, ex);
-                return null;
+                logger.ErrorFormat("Execution process（Name：{0}）过程异常", fname, ex);
+                return false;
             }
         }
 
         public RespDataFlowResultDTO<AlgResultItem>? RcGetFlowResult_POI(string serialNumber)
         {
-            //if (RegDTO != null)
-            //{
-            //    var contentResp = restful.RcGetFlowResult_POI(serialNumber, RegDTO.Token.AccessToken);
-            //    if (!string.IsNullOrEmpty(contentResp))
-            //    {
-            //        RespDTO<RespDataFlowResultDTO<AlgResultItem>>? respData = JsonConvert.DeserializeObject<RespDTO<RespDataFlowResultDTO<AlgResultItem>>>(contentResp);
-            //        if (respData != null && respData.IsSuccess)
-            //        {
-            //            if (logger.IsInfoEnabled) logger.InfoFormat("GetFlow Result ok => {0}", respData.Data.IsFinished ? "Finished" : "Pending");
-            //            //if (logger.IsDebugEnabled) logger.DebugFormat("Flow Result Data => {0}", JsonConvert.SerializeObject(respData.Data));
-            //            return respData.Data;
-            //        }
-            //    }
-            //    if (logger.IsErrorEnabled) logger.ErrorFormat("GetFlow Result failed => {0}", contentResp);
-
-            //}
-            //else
-            //{
-            //    if (logger.IsErrorEnabled) logger.ErrorFormat("Rc UnRegist.");
-            //}
-            //return null;
-
-            if (!EnsureRegistered())
-                return null;
+            if (!EnsureRegistered()) return null;
 
             try
             {
                 var contentResp = restful.RcGetFlowResult_POI(serialNumber, RegDTO!.Token.AccessToken);
                 if (string.IsNullOrEmpty(contentResp))
                 {
-                    logger.ErrorFormat("获取POI流程结果（SN：{0}）失败：接口返回空内容", serialNumber);
+                    logger.ErrorFormat("获取POI流程结果（SN：{0}）failed：接口返回空内容", serialNumber);
                     return null;
                 }
 
                 var respData = JsonConvert.DeserializeObject<RespDTO<RespDataFlowResultDTO<AlgResultItem>>>(contentResp);
                 if (respData == null)
                 {
-                    logger.ErrorFormat("获取POI流程结果（SN：{0}）失败：返回内容无法反序列化 => {1}", serialNumber, contentResp);
+                    logger.ErrorFormat("获取POI流程结果（SN：{0}）failed：返回内容无法反序列化 => {1}", serialNumber, contentResp);
                     return null;
                 }
 
                 if (respData.IsSuccess)
                 {
-                    logger.InfoFormat("获取POI流程结果（SN：{0}）成功，状态：{1}", serialNumber, (bool)(respData.Data?.IsFinished) ? "已完成" : "处理中");
+                    logger.InfoFormat("获取POI流程结果（SN：{0}）success，状态：{1}", serialNumber, (bool)(respData.Data?.IsFinished) ? "已完成" : "processing");
                     return respData.Data;
                 }
 
@@ -338,7 +312,7 @@ namespace CVWaferProber.Services
                     return EnsureRegistered() ? RcGetFlowResult_POI(serialNumber) : null;
                 }
 
-                logger.ErrorFormat("获取POI流程结果（SN：{0}）失败：{1} => {2}", serialNumber, respData.Message, contentResp);
+                logger.ErrorFormat("获取POI流程结果（SN：{0}）failed：{1} => {2}", serialNumber, respData.Message, contentResp);
                 return null;
             }
             catch (Exception ex)
@@ -348,51 +322,29 @@ namespace CVWaferProber.Services
             }
         }
 
-        public List<RespDataDTO_CIE> RcGetFlowResult_POI_Detail(string getURL)
+        public List<RespDataDTO_CIE>? RcGetFlowResult_POI_Detail(string getURL)
         {
-            //if (RegDTO != null)
-            //{
-            //    var contentResp = restful.RcGetFlowResult_POI_Detail(getURL, RegDTO.Token.AccessToken);
-            //    if (!string.IsNullOrEmpty(contentResp))
-            //    {
-            //        RespDTO<List<RespDataDTO_CIE>>? respData = JsonConvert.DeserializeObject<RespDTO<List<RespDataDTO_CIE>>>(contentResp);
-            //        if (respData != null && respData.IsSuccess)
-            //        {
-            //            if (logger.IsInfoEnabled) logger.InfoFormat("Get POI Result ok => {0}", JsonConvert.SerializeObject(respData.Data));
-            //            return respData.Data;
-            //        }
-            //    }
-            //    if (logger.IsErrorEnabled) logger.ErrorFormat("Get POI Result failed => {0}", contentResp);
-
-            //}
-            //else
-            //{
-            //    if (logger.IsErrorEnabled) logger.ErrorFormat("Rc UnRegist.");
-            //}
-            //return null;
-
-            if (!EnsureRegistered())
-                return null;
+            if (!EnsureRegistered()) return null;
 
             try
             {
                 var contentResp = restful.RcGetFlowResult_POI_Detail(getURL, RegDTO!.Token.AccessToken);
                 if (string.IsNullOrEmpty(contentResp))
                 {
-                    logger.ErrorFormat("获取POI详情（URL：{0}）失败：接口返回空内容", getURL);
+                    logger.ErrorFormat("获取POI详情（URL：{0}）failed：接口返回空内容", getURL);
                     return null;
                 }
 
                 var respData = JsonConvert.DeserializeObject<RespDTO<List<RespDataDTO_CIE>>>(contentResp);
                 if (respData == null)
                 {
-                    logger.ErrorFormat("获取POI详情（URL：{0}）失败：返回内容无法反序列化 => {1}", getURL, contentResp);
+                    logger.ErrorFormat("获取POI详情（URL：{0}）failed：返回内容无法反序列化 => {1}", getURL, contentResp);
                     return null;
                 }
 
                 if (respData.IsSuccess)
                 {
-                    logger.InfoFormat("获取POI详情（URL：{0}）成功，共{1}条数据", getURL, respData.Data?.Count ?? 0);
+                    logger.InfoFormat("获取POI详情（URL：{0}）success，共{1}条数据", getURL, respData.Data?.Count ?? 0);
                     return respData.Data;
                 }
 
@@ -403,7 +355,7 @@ namespace CVWaferProber.Services
                     return EnsureRegistered() ? RcGetFlowResult_POI_Detail(getURL) : null;
                 }
 
-                logger.ErrorFormat("获取POI详情（URL：{0}）失败：{1} => {2}", getURL, respData.Message, contentResp);
+                logger.ErrorFormat("获取POI详情（URL：{0}）failed：{1} => {2}", getURL, respData.Message, contentResp);
                 return null;
             }
             catch (Exception ex)
@@ -415,50 +367,27 @@ namespace CVWaferProber.Services
 
         public RespDataFlowResultDTO<AlgResultItem>? RcGetFlowResult_SP(string serialNumber)
         {
-            //if (RegDTO != null)
-            //{
-            //    var contentResp = restful.RcGetFlowResult_SP(serialNumber, RegDTO.Token.AccessToken);
-            //    if (!string.IsNullOrEmpty(contentResp))
-            //    {
-            //        RespDTO<RespDataFlowResultDTO<AlgResultItem>>? respData = JsonConvert.DeserializeObject<RespDTO<RespDataFlowResultDTO<AlgResultItem>>>(contentResp);
-            //        if (respData != null && respData.IsSuccess)
-            //        {
-            //            if (logger.IsInfoEnabled) logger.InfoFormat("GetFlow Result ok => {0}", JsonConvert.SerializeObject(respData.Data));
-            //            return respData.Data;
-            //        }
-            //    }
-            //    if (logger.IsErrorEnabled) logger.ErrorFormat("GetFlow Result failed => {0}", contentResp);
-
-            //}
-            //else
-            //{
-            //    if (logger.IsErrorEnabled) logger.ErrorFormat("Rc UnRegist.");
-            //}
-            //return null;
-
-
-            if (!EnsureRegistered())
-                return null;
+            if (!EnsureRegistered()) return null;
 
             try
             {
                 var contentResp = restful.RcGetFlowResult_SP(serialNumber, RegDTO!.Token.AccessToken);
                 if (string.IsNullOrEmpty(contentResp))
                 {
-                    logger.ErrorFormat("获取SP流程结果（SN：{0}）失败：接口返回空内容", serialNumber);
+                    logger.ErrorFormat("获取SP流程结果（SN：{0}）failed：接口返回空内容", serialNumber);
                     return null;
                 }
 
                 var respData = JsonConvert.DeserializeObject<RespDTO<RespDataFlowResultDTO<AlgResultItem>>>(contentResp);
                 if (respData == null)
                 {
-                    logger.ErrorFormat("获取SP流程结果（SN：{0}）失败：返回内容无法反序列化 => {1}", serialNumber, contentResp);
+                    logger.ErrorFormat("获取SP流程结果（SN：{0}）failed：返回内容无法反序列化 => {1}", serialNumber, contentResp);
                     return null;
                 }
 
                 if (respData.IsSuccess)
                 {
-                    logger.InfoFormat("获取SP流程结果（SN：{0}）成功", serialNumber);
+                    logger.InfoFormat("获取SP流程结果（SN：{0}）success", serialNumber);
                     return respData.Data;
                 }
 
@@ -469,7 +398,7 @@ namespace CVWaferProber.Services
                     return EnsureRegistered() ? RcGetFlowResult_SP(serialNumber) : null;
                 }
 
-                logger.ErrorFormat("获取SP流程结果（SN：{0}）失败：{1} => {2}", serialNumber, respData.Message, contentResp);
+                logger.ErrorFormat("获取SP流程结果（SN：{0}）failed：{1} => {2}", serialNumber, respData.Message, contentResp);
                 return null;
             }
             catch (Exception ex)
@@ -481,51 +410,27 @@ namespace CVWaferProber.Services
 
         public RespDTO<RespDataFlowResultDTO<AlgResultItem>>? RcGetFlowResult_AOI(string serialNumber)
         {
-            //if (RegDTO != null)
-            //{
-            //    var contentResp = restful.RcGetFlowResult_AOI(serialNumber, RegDTO.Token.AccessToken);
-            //    if (!string.IsNullOrEmpty(contentResp))
-            //    {
-            //        RespDTO<RespDataFlowResultDTO<AlgResultItem>>? respData = JsonConvert.DeserializeObject<RespDTO<RespDataFlowResultDTO<AlgResultItem>>>(contentResp);
-            //        if (respData != null && respData.IsSuccess)
-            //        {
-            //            if (logger.IsInfoEnabled) logger.InfoFormat("GetFlow Result ok => {0}", respData.Data.ToDisString());
-            //            if (respData.Data.IsFinished && logger.IsDebugEnabled) logger.DebugFormat("Flow Result Data => {0}", JsonConvert.SerializeObject(respData.Data, Formatting.Indented));
-            //        }
-            //        return respData;
-            //    }
-            //    if (logger.IsErrorEnabled) logger.ErrorFormat("GetFlow Result failed => {0}", contentResp);
-            //    throw new Exception("GetFlow Result failed");
-            //}
-            //else
-            //{
-            //    if (logger.IsErrorEnabled) logger.ErrorFormat("Rc UnRegist.");
-            //    throw new Exception("Rc UnRegist");
-            //}
-            //return null;
-
-            if (!EnsureRegistered())
-                return null;
+            if (!EnsureRegistered()) return null;
 
             try
             {
                 var contentResp = restful.RcGetFlowResult_AOI(serialNumber, RegDTO!.Token.AccessToken);
                 if (string.IsNullOrEmpty(contentResp))
                 {
-                    logger.ErrorFormat("获取AOI流程结果（SN：{0}）失败：接口返回空内容", serialNumber);
+                    logger.ErrorFormat("Get process result（SN：{0}）failed：接口返回空内容", serialNumber);
                     return null;
                 }
 
                 var respData = JsonConvert.DeserializeObject<RespDTO<RespDataFlowResultDTO<AlgResultItem>>>(contentResp);
                 if (respData == null)
                 {
-                    logger.ErrorFormat("获取AOI流程结果（SN：{0}）失败：返回内容无法反序列化 => {1}", serialNumber, contentResp);
+                    logger.ErrorFormat("Get process result（SN：{0}）failed：返回内容无法反序列化 => {1}", serialNumber, contentResp);
                     return null;
                 }
 
                 if (respData.IsSuccess)
                 {
-                    logger.InfoFormat("获取AOI流程结果（SN：{0}）成功，状态：{1}", serialNumber, (bool)(respData.Data?.IsFinished) ? "已完成" : "处理中");
+                    logger.InfoFormat("Get process result（SN：{0}）completed, Status：{1}", serialNumber, (bool)(respData.Data?.IsFinished) ? "Finished" : "Processing");
                 }
                 else
                 {
@@ -537,14 +442,14 @@ namespace CVWaferProber.Services
                         return EnsureRegistered() ? RcGetFlowResult_AOI(serialNumber) : null;
                     }
 
-                    logger.ErrorFormat("获取AOI流程结果（SN：{0}）失败：{1} => {2}", serialNumber, respData.Message, contentResp);
+                    logger.ErrorFormat("Get process result（SN：{0}）failed：{1} => {2}", serialNumber, respData.Message, contentResp);
                 }
 
                 return respData;
             }
             catch (Exception ex)
             {
-                logger.ErrorFormat("获取AOI流程结果（SN：{0}）过程异常", serialNumber, ex);
+                logger.ErrorFormat("Get process result（SN：{0}）过程异常", serialNumber, ex);
                 return null;
             }
         }

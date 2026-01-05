@@ -1,44 +1,59 @@
-﻿using CVAVMControl;
+﻿using CVDB.Services.Image;
 using CVWaferProber.Core.Events;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WaferComm.Core;
 
 namespace CVWaferProber.Services
 {
     public class VAMService : BaseSerivce
     {
-        public VAMService(RCRestService rcService, IEventAggregator? eventAggregator = null) : base(rcService, eventAggregator)
+        public VAMService(RCRestService rcService) : base(rcService, CVWPEventAggregatorInstance.Instance)
         {
         }
-
-        public CVVAMAnalyzer? VamAnalyzer { get; set; }
 
         protected override ChipStatus GetResultStatus(string serialNumber)
         {
-            return ChipStatus.OK;
+            return ChipStatus.FAILED;
         }
         protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
         {
-            string cieFileName = GetFlowResult(dieViewModel);
-            VamAnalyzer?.ResultDisplay(cieFileName);
-            EventAggregator?.Publish(new FlowCompletedEvent(dieViewModel));
-            return ChipStatus.OK;
+            if (string.IsNullOrEmpty(dieViewModel.SerialNumber)) return ChipStatus.FAILED;
+
+            var results = ImageResultService.LoadResultByBatchCode(dieViewModel.SerialNumber);
+            if (results != null && results.Count == 1)
+            {
+                var result = results[0];
+                if (result.ResultCode.HasValue && result.ResultCode.Value == 0)
+                {
+                    string cieFileName = result.FileUrl;
+                    //TODO test
+                    //cieFileName = "F:\\img\\晶圆台\\VAM\\test_ND0.cvcie";
+                    EventAggregator?.Publish(new VAMFlowCompletedEvent(cieFileName));
+                }
+            }
+            return ChipStatus.VAM_COMPLETED;
         }
 
-        private string GetFlowResult(DieViewModel dieViewModel)
+        public override void ResultDisplay(DieViewModel dieViewModel)
         {
-            return string.Empty;
+            if (!string.IsNullOrEmpty(dieViewModel.SerialNumber))
+            {
+                FlowResultDisplay(dieViewModel);
+            }
+            else
+            {
+                EventAggregator?.Publish(new VAMResultGUIClearEvent());
+            }
         }
 
-        public void StartTestingVAM(string timestamp, DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow)
+        public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
         {
-            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel);
+            //
+            EventAggregator?.Publish(new VAMFlowStartingEvent());
+
+            dieViewModel.ChangeStatus(ChipStatus.VAM_TESTING);
+            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, isEnd);
+            return task;
         }
     }
 }

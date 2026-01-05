@@ -1,0 +1,84 @@
+﻿using CVWaferProber.Core.ViewModels;
+
+namespace CVWaferProber.Models
+{
+    public class ConnectionInfo : ViewModelBase
+    {
+        public readonly string ConnectedMsg;
+        public readonly string DisconnectedMsg;
+        private string _serverIP = "127.0.0.1";
+        private int _port = 8898;
+        private string _serverTipInfo = "127.0.0.1:8898";
+        private ConnectionStatus _status = ConnectionStatus.Disconnected;
+        private string _statusMessage = "Disconnected";
+
+        public ConnectionInfo(string connectedMsg = "Connected", string disconnectedMsg = "Disconnected")
+        {
+            ConnectedMsg = connectedMsg;
+            DisconnectedMsg = disconnectedMsg;
+        }
+
+        public string ServerIP
+        {
+            get => _serverIP;
+            set
+            {
+                SetProperty(ref _serverIP, value);
+                this.ServerTipInfo = string.Format("{0}:{1}", _serverIP, _port);
+            }
+        }
+
+        public int Port
+        {
+            get => _port;
+            set
+            {
+                SetProperty(ref _port, value);
+                this.ServerTipInfo = string.Format("{0}:{1}", _serverIP, _port);
+            }
+        }
+
+        public ConnectionStatus Status
+        {
+            get => _status;
+            set {
+                SetProperty(ref _status, value);
+            }
+        }
+        public string ServerTipInfo 
+        {
+            get => _serverTipInfo;
+            set => SetProperty(ref _serverTipInfo, value);
+        }
+
+        public string StatusMessage
+        {
+            get => _statusMessage;
+            set => SetProperty(ref _statusMessage, value);
+        }
+
+        public bool IsConnected => this.Status == ConnectionStatus.Connected;
+        public void SetConnected(bool isConnected)
+        {
+            if (isConnected)
+            {
+                this.Status = ConnectionStatus.Connected;
+                this.StatusMessage = ConnectedMsg;
+            }
+            else
+            {
+                this.Status = ConnectionStatus.Disconnected;
+                this.StatusMessage = DisconnectedMsg;
+            }
+            this.ServerTipInfo = string.Format("{0}:{1}", _serverIP, _port);
+        }
+    }
+
+    public enum ConnectionStatus
+    {
+        Disconnected,
+        Connecting,
+        Connected,
+        Error
+    }
+}

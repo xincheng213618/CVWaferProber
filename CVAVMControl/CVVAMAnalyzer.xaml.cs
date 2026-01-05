@@ -33,6 +33,8 @@ namespace CVAVMControl
     /// </summary>
     public partial class CVVAMAnalyzer : UserControl
     {
+        private static readonly ILog logger = LogManager.GetLogger(typeof(CVVAMAnalyzer));
+
         private Mat? XMat;
         private Mat? YMat;
         private Mat? ZMat;
@@ -48,7 +50,6 @@ namespace CVAVMControl
         private int displayRadius = 40; // Default display radius angle
                                         // CVVAMAnalyzer.cs 中新增定时器
         private DispatcherTimer? _resourceCleanTimer;
-        private static readonly ILog log = LogManager.GetLogger(typeof(CVVAMAnalyzer));
         // 自定义悬浮面板（用于显示格式信息）
         private Border? _hoverInfoPanel;
         private TextBlock? _hoverInfoText;
@@ -211,23 +212,46 @@ namespace CVAVMControl
                     _resourceCleanTimer.Stop();
                 }
             };
-            //InitializeEvents();
+            InitializeEvents();
 
             //this.Unloaded += CVVAMAnalyzer_Unloaded;
         }
 
-        public void InitializeEvents(IEventAggregator eventAggregator)
+        private void InitializeEvents(IEventAggregator? eventAggregator = null)
         {
-            this.EventAggregator = eventAggregator;
-            this.EventAggregator.Subscribe<FlowCompletedEvent>(OnFlowCompleted);
+            this.EventAggregator = eventAggregator == null ? CVWPEventAggregatorInstance.Instance : eventAggregator;
+            this.EventAggregator.Subscribe<VAMFlowCompletedEvent>(OnFlowCompleted);
+            //this.EventAggregator.Subscribe<VAMFlowStartingEvent>(OnFlowStarting);
+            this.EventAggregator.Subscribe<VAMResultGUIClearEvent>(OnResultGUIClear);
         }
-        public void UnInitializeEvents()
+
+        private void UnInitializeEvents()
         {
-            this.EventAggregator?.Unsubscribe<FlowCompletedEvent>(OnFlowCompleted);
+            this.EventAggregator?.Unsubscribe<VAMFlowCompletedEvent>(OnFlowCompleted);
+            //this.EventAggregator?.Unsubscribe<VAMFlowStartingEvent>(OnFlowStarting);
+            this.EventAggregator?.Unsubscribe<VAMResultGUIClearEvent>(OnResultGUIClear);
         }
-        private void OnFlowCompleted(FlowCompletedEvent @event)
+
+        private void OnFlowCompleted(VAMFlowCompletedEvent @event)
         {
+            if (!string.IsNullOrEmpty(@event.ResultFileName) && System.IO.File.Exists(@event.ResultFileName))
+            {
+                ProcessCVCIEFile(@event.ResultFileName);
+            }
+            else
+            {
+                if (logger.IsErrorEnabled) logger.ErrorFormat("VAM result cvcie file not exist => {0}", @event.ResultFileName);
+            }
         }
+        private void OnFlowStarting(VAMFlowStartingEvent @event)
+        {
+            ResetDataWithoutDispose();
+        }
+        private void OnResultGUIClear(VAMResultGUIClearEvent @event)
+        {
+            ResetDataWithoutDispose();
+        }
+
 
         //private void CVVAMAnalyzer_Unloaded(object sender, RoutedEventArgs e)
         //{
@@ -1176,6 +1200,8 @@ namespace CVAVMControl
             displayRadius = 40;
             wpfPlotDiameterLine.Plot.Clear();
             wpfPlotRCircle.Plot.Clear();
+            wpfPlotDiameterLine.Refresh();
+            wpfPlotRCircle.Refresh();
             imgDisplay.Source = null;
         }
         public void UpdateVAMParams(double maxAngle, double conoscopeCoefficient)
@@ -1583,12 +1609,12 @@ namespace CVAVMControl
                 // 步骤1：基础校验
                 if (!IsMatSafe(XMat) || !IsMatSafe(YMat) || !IsMatSafe(ZMat))
                 {
-                    log.Error("XYZ Mat 为空或已释放");
+                    logger.Error("XYZ Mat 为空或已释放");
                     return false;
                 }
                 if (center.X == 0 && center.Y == 0)
                 {
-                    log.Error("图像中心未初始化（未加载CVCIE文件）");
+                    logger.Error("图像中心未初始化（未加载CVCIE文件）");
                     return false;
                 }
 
@@ -1647,8 +1673,8 @@ namespace CVAVMControl
                 });
 
                 // 步骤7：打印参数日志（调试用）
-                log.Info($"DLL调用参数：targetAngle={targetAngle}, center=({center.X},{center.Y}), bpp={bpp}, imgSize=({imgWidth}x{imgHeight})");
-                log.Info($"JSON参数：{staticJson}");
+                logger.Info($"DLL调用参数：targetAngle={targetAngle}, center=({center.X},{center.Y}), bpp={bpp}, imgSize=({imgWidth}x{imgHeight})");
+                logger.Info($"JSON参数：{staticJson}");
 
                 // 步骤8：调用DLL封装方法
                 string resultJson;
@@ -1664,7 +1690,7 @@ namespace CVAVMControl
                 // 步骤9：处理DLL返回结果
                 if (callResult != CV_AliResType.SUCCESS && callResult != CV_AliResType.PART_SUCCESS)
                 {
-                    log.Error($"DLL调用失败，错误码：{callResult}");
+                    logger.Error($"DLL调用失败，错误码：{callResult}");
                     return false;
                 }
 
@@ -1679,14 +1705,14 @@ namespace CVAVMControl
                 string cleanResultJson = resultJson.Trim('\0').Trim();
                 if (string.IsNullOrEmpty(cleanResultJson))
                 {
-                    log.Error("DLL返回空JSON");
+                    logger.Error("DLL返回空JSON");
                     return false;
                 }
 
                 VamResultRoot vamResult = JsonConvert.DeserializeObject<VamResultRoot>(cleanResultJson);
                 if (vamResult?.result?.line?.Data == null || vamResult.result.line.Data.Count == 0)
                 {
-                    log.Error("DLL返回的直径线数据为空");
+                    logger.Error("DLL返回的直径线数据为空");
                     return false;
                 }
 
@@ -1696,7 +1722,7 @@ namespace CVAVMControl
             }
             catch (Exception ex)
             {
-                log.Error("调用DLL获取直径线数据异常", ex);
+                logger.Error("调用DLL获取直径线数据异常", ex);
                 return false;
             }
         }
@@ -1712,12 +1738,12 @@ namespace CVAVMControl
                 // 步骤1：基础校验（同直径线）
                 if (!IsMatSafe(XMat) || !IsMatSafe(YMat) || !IsMatSafe(ZMat))
                 {
-                    log.Error("XYZ Mat 为空或已释放");
+                    logger.Error("XYZ Mat 为空或已释放");
                     return false;
                 }
                 if (center.X == 0 && center.Y == 0)
                 {
-                    log.Error("图像中心未初始化（未加载CVCIE文件）");
+                    logger.Error("图像中心未初始化（未加载CVCIE文件）");
                     return false;
                 }
 
@@ -1787,7 +1813,7 @@ namespace CVAVMControl
                 // 步骤7：处理结果（同直径线）
                 if (callResult != CV_AliResType.SUCCESS && callResult != CV_AliResType.PART_SUCCESS)
                 {
-                    log.Error($"DLL调用失败，错误码：{callResult}");
+                    logger.Error($"DLL调用失败，错误码：{callResult}");
                     return false;
                 }
                 if (showImage.data != null)
@@ -1799,14 +1825,14 @@ namespace CVAVMControl
                 string cleanResultJson = resultJson.Trim('\0').Trim();
                 if (string.IsNullOrEmpty(cleanResultJson))
                 {
-                    log.Error("DLL返回空JSON");
+                    logger.Error("DLL返回空JSON");
                     return false;
                 }
 
                 VamResultRoot vamResult = JsonConvert.DeserializeObject<VamResultRoot>(cleanResultJson);
                 if (vamResult?.result?.circle?.Data == null || vamResult.result.circle.Data.Count == 0)
                 {
-                    log.Error("DLL返回的R圆数据为空");
+                    logger.Error("DLL返回的R圆数据为空");
                     return false;
                 }
 
@@ -1815,7 +1841,7 @@ namespace CVAVMControl
             }
             catch (Exception ex)
             {
-                log.Error("调用DLL获取R圆数据异常", ex);
+                logger.Error("调用DLL获取R圆数据异常", ex);
                 return false;
             }
         }
@@ -2279,11 +2305,6 @@ namespace CVAVMControl
             {
                 imgGridClip.Rect = new System.Windows.Rect(0, 0, imgGrid.ActualWidth, imgGrid.ActualHeight);
             }
-        }
-
-        public void ResultDisplay(string cieFileName)
-        {
-            ProcessCVCIEFile(cieFileName);
         }
         #endregion
     }

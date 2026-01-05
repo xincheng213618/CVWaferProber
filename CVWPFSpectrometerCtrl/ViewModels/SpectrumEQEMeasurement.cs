@@ -221,6 +221,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged(nameof(FHW));
             }
         }
+        /// <summary>
+        /// EQE
+        /// </summary>
         public double EQE
         {
             get => _EQE;
@@ -230,6 +233,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged(nameof(EQE));
             }
         }
+        /// <summary>
+        /// 光效 (lm/W)
+        /// </summary>
         public double LuminousEfficacy
         {
             get => _LuminousEfficacy;
@@ -239,6 +245,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged(nameof(LuminousEfficacy));
             }
         }
+        /// <summary>
+        /// 辐射通量 (W)
+        /// </summary>
         public double RadiantFlux
         {
             get => _RadiantFlux;
@@ -248,6 +257,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged(nameof(RadiantFlux));
             }
         }
+        /// <summary>
+        /// 光通量 (lm)
+        /// </summary>
         public float LuminousFlux
         {
             get => _LuminousFlux;
