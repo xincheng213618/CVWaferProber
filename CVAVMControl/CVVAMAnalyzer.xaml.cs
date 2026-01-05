@@ -1648,10 +1648,10 @@ namespace CVAVMControl
                         debugImgResize = 2
                     },
                     azimuthalAngle = targetAngle, // 匹配DLL预期
-                    polar_RHO = 60.0,
-                    polar_Angle = 60.0,
+                    polar_RHO = 60.0,//线条角度
+                    polar_Angle = 60.0,//方位角
                     pixelToAngle = ConoscopeCoefficient,
-                    pointNumLine = 100,  // 采样点数量
+                    pointNumLine = _pointNumLine,  // 采样点数量
                     pointNumCircle = 60, // 还原为60，避免DLL数组越界
                     center = new { x = center.X, y = center.Y },
                     displayChannel = displayChannel.ToString() // 新增：传递选中通道
@@ -1782,7 +1782,7 @@ namespace CVAVMControl
                     polar_RHO = targetRadius, // R圆的极径为目标半径
                     polar_Angle = 0.0,
                     pixelToAngle = ConoscopeCoefficient,
-                    pointNumLine = 100,
+                    pointNumLine = _pointNumLine,
                     pointNumCircle = 60, // 还原为60
                     center = new { x = center.X, y = center.Y },
                     displayChannel = displayChannel.ToString()
@@ -2244,5 +2244,35 @@ namespace CVAVMControl
             }
         }
         #endregion
+
+        // 全局采样点数量（默认值100，可通过按钮修改）
+        private int _pointNumLine = 100;
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            // 1. 先校验输入是否为空
+            if (string.IsNullOrWhiteSpace(pointNumLineBox.Text))
+            {
+                MessageBox.Show("请输入数字", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // 2. 尝试转换为整数
+            if (!int.TryParse(pointNumLineBox.Text, out int pointNumLine))
+            {
+                MessageBox.Show("请输入数字", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // 3. 校验是否为正整数
+            if (pointNumLine <= 0)
+            {
+                MessageBox.Show("请输入正整数", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            // 将合法值赋值给全局变量
+            _pointNumLine = pointNumLine;
+            
+            MessageBox.Show($"采样点数量已设置为：{_pointNumLine}", "设置成功", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
     }
 }

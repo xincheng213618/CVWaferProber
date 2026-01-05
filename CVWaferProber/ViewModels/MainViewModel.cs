@@ -550,8 +550,7 @@ namespace CVWaferProber.ViewModels
             InvertSelectEQECommand = new RelayCommand(ExecuteInvertSelectEQE);
             InvertSelectVAMCommand = new RelayCommand(ExecuteInvertSelectVAM);
 
-            // Summary配置命令
-            OpenSummaryConfigCommand = new CVImgRelayCommand(OpenSummaryConfig);
+           
 
             // 初始化数据源
             TestResults = new ObservableCollection<DieViewModel>();
@@ -560,7 +559,9 @@ namespace CVWaferProber.ViewModels
             TestResults.CollectionChanged += EQEItems_CollectionChanged;
             TestResults.CollectionChanged += VAMItems_CollectionChanged;
             //  打开Summary导出配置窗口
-            OpenSummaryConfigCommand = new RelayCommand(OpenSummaryConfig);
+            // Summary配置命令
+            OpenSummaryConfigCommand = new CVImgRelayCommand(OpenSummaryConfig);
+            // OpenSummaryConfigCommand = new RelayCommand(OpenSummaryConfig);
             SysFlowCfgCommand = new RelayCommand(SysFlowCfg);
 
             ShowConnectionSettingsCommand = new RelayCommand(OpenProberDeviceDebug);
