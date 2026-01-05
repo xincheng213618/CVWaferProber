@@ -278,17 +278,18 @@
                                 Text="添加角度:" />
                             <TextBox
                                 x:Name="txtAddAngle1"
+                                Width="100"
                                 Height="18"
                                 MinWidth="60"
                                 Margin="0,0,5,0"
-                                VerticalAlignment="Center" Width="100"/>
+                                VerticalAlignment="Center" />
                             <Button
                                 Margin="0,0,5,0"
                                 Padding="10,2"
                                 Click="BtnAddAngle_RCircle_Click"
                                 Content="添加" />
                         </StackPanel>
-                       
+
                         <!--  导出R圆CSV按钮  -->
                         <Button
                             x:Name="btnExportCircle"

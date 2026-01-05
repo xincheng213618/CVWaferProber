@@ -13,6 +13,7 @@
             <GradientStop Offset="0.7" Color="#FFFAFAFA" />
             <GradientStop Offset="1" Color="#FFF0F0F0" />
         </LinearGradientBrush>
+
         <!--  方格背景  -->
         <DrawingBrush
             x:Key="CheckerboardBackground2"
@@ -107,12 +108,22 @@
             PreviewMouseWheel="ScrollViewer_PreviewMouseWheel"
             VerticalScrollBarVisibility="Auto">
 
-            <Grid x:Name="ImageContainer" Background="Transparent">
+            <Grid
+                x:Name="ImageContainer"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Background="Transparent">
                 <Image
                     x:Name="DisplayImage"
+                    MaxWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}}"
+                    MaxHeight="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Grid}}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
                     RenderTransformOrigin="0.5,0.5"
                     Source="{Binding CurrentImage}"
-                    Stretch="None">
+                    Stretch="Uniform"
+                    StretchDirection="Both">
+
                     <Image.RenderTransform>
                         <TransformGroup>
                             <ScaleTransform x:Name="ImageScaleTransform" ScaleX="1" ScaleY="1" />

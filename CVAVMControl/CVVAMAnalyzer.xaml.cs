@@ -38,7 +38,10 @@ namespace CVAVMControl
         private Mat? XMat;
         private Mat? YMat;
         private Mat? ZMat;
+        private Mat? XYZMat;
         private Mat? pseudoColorMat;
+
+        private byte[] dataXyz;
 
         private System.Windows.Point center;
         private int imageRadius;
@@ -348,7 +351,7 @@ namespace CVAVMControl
                 CVFileUtil.Read(filename, out fileInfo);
 
                 int channelSize = fileInfo.Cols * fileInfo.Rows * (fileInfo.Bpp / 8);
-
+                int allPixLen = fileInfo.Cols * fileInfo.Rows * (fileInfo.Bpp / 8) * fileInfo.Channels;
                 OpenCvSharp.MatType singleChannelType;
                 switch (fileInfo.Bpp)
                 {
@@ -367,7 +370,12 @@ namespace CVAVMControl
                     Buffer.BlockCopy(fileInfo.Data, 0, dataX, 0, channelSize);
                     Buffer.BlockCopy(fileInfo.Data, channelSize, dataY, 0, channelSize);
                     Buffer.BlockCopy(fileInfo.Data, channelSize * 2, dataZ, 0, channelSize);
-
+                    //dataXyz
+                    if (dataXyz == null || dataXyz.Length != allPixLen)
+                    {
+                        dataXyz = new byte[allPixLen];
+                    }
+                    Buffer.BlockCopy(fileInfo.Data, 0, dataXyz, 0, allPixLen);
                     XMat = OpenCvSharp.Mat.FromPixelData(fileInfo.Rows, fileInfo.Cols, singleChannelType, dataX);
                     YMat = OpenCvSharp.Mat.FromPixelData(fileInfo.Rows, fileInfo.Cols, singleChannelType, dataY);
                     ZMat = OpenCvSharp.Mat.FromPixelData(fileInfo.Rows, fileInfo.Cols, singleChannelType, dataZ);
@@ -394,7 +402,7 @@ namespace CVAVMControl
                 MessageBox.Show($"处理文件时出错: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-       
+
         #region 角度备注绘制（通用方法）
         /// <summary>
         /// 绘制角度/半径备注（通用方法，支持不同位置和样式）
@@ -426,7 +434,7 @@ namespace CVAVMControl
             bgRect.Y = Math.Max(0, Math.Min(mat.Height - bgRect.Height, bgRect.Y));
 
             // 绘制背景框（半透明）
-           // Cv2.Rectangle(mat, bgRect, backgroundColor, -1);
+            // Cv2.Rectangle(mat, bgRect, backgroundColor, -1);
             // 绘制背景框边框（增加辨识度）
             Cv2.Rectangle(mat, bgRect, txtColor, 1);
 
@@ -462,11 +470,11 @@ namespace CVAVMControl
         /// <param name="inputAngleText">输入的角度文本</param>
         private void AddAngleToComboBox(ComboBox targetComboBox, string inputAngleText)
         {
-            
+
             if (string.IsNullOrWhiteSpace(inputAngleText))
             {
                 MessageBox.Show("输入的角度不能为空", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
-                
+
             }
 
             // 1. 输入校验（兼容整数/负数）
@@ -739,8 +747,8 @@ namespace CVAVMControl
         {
             // 直接传入目标下拉框，无需输入框
             AddAngleToComboBox(cbDisplayAngle, txtAddAngle.Text);
-         
-           
+
+
             UpdateDisplay();
         }
 
@@ -748,7 +756,7 @@ namespace CVAVMControl
         private void BtnDeleteAngle_Diameter_Click(object sender, RoutedEventArgs e)
         {
             DeleteAngleFromComboBox(cbDisplayAngle);
-           
+
             UpdateDisplay();
         }
         // R圆面板 - 添加角度
@@ -1023,8 +1031,8 @@ namespace CVAVMControl
             wpfPlotDiameterLine.Plot.Axes.AutoScale();
             wpfPlotDiameterLine.Plot.Title(DC);
             wpfPlotDiameterLine.Refresh();
-        } 
-        string DC=(string)Application.Current.FindResource("Plot.Title.DiameterLine");
+        }
+        string DC = (string)Application.Current.FindResource("Plot.Title.DiameterLine");
         string RC = (string)Application.Current.FindResource("VAM.RCircle");
         string CDC = (string)Application.Current.FindResource("VAM.CircumferentialDistributionCurve");
         string CA = (string)Application.Current.FindResource("VAM.CircumferentialAngle");
@@ -1474,25 +1482,6 @@ namespace CVAVMControl
         private bool _isFirstLoad = true;
         private void CbDisplayAngle_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            //// 步骤1：首次加载（启动时）直接标记为非首次，不执行后续逻辑
-            //if (_isFirstLoad)
-            //{
-            //    _isFirstLoad = false;
-            //    return;
-            //}
-
-            //// 步骤2：用户主动切换时才检查数据
-            //if (cbDisplayAngle.SelectedItem is ComboBoxItem item && item.Tag is string angleStr)
-            //{
-            //    if (int.TryParse(angleStr, out int angle))
-            //    {
-            //        displayAngle = angle;
-            //        _selectedAngle = angle; // 更新“选中角度”
-            //        _selectedRadius = -1; // 切换面板时重置另一面板的选中状态
-            //        if (IsMatSafe(YMat)) UpdateDisplay();
-            //        else MessageBox.Show("数据未加载或已释放，请重新打开CVCIE文件", "提示");
-            //    }
-            //} 
             // 步骤1：首次加载（启动时）直接标记为非首次，不执行后续逻辑
             if (_isDeletingAngle) return; // 删除过程中跳过
             if (_isFirstLoad)
@@ -1530,7 +1519,7 @@ namespace CVAVMControl
             }
         }
 
-      
+
         /// <summary>
         /// 显示通道选择改变
         /// </summary>
@@ -1554,16 +1543,7 @@ namespace CVAVMControl
         /// </summary>
         private void CbDisplayRadius_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            //if (cbDisplayRadius.SelectedItem is ComboBoxItem item && item.Tag is string radiusStr)
-            //{
-            //    if (int.TryParse(radiusStr, out int radius))
-            //    {
-            //        displayRadius = radius;
-            //        _selectedRadius = radius; // 更新“选中半径”
-            //        _selectedAngle = -1; // 切换面板时重置另一面板的选中状态
-            //        if (IsMatSafe(YMat)) UpdateDisplay();
-            //    }
-            //}
+
             // 删除过程中跳过所有逻辑（避免触发DLL调用）
             if (_isDeletingAngle) return;
 
@@ -1631,7 +1611,12 @@ namespace CVAVMControl
                 int elementSize = bpp / 8; // 单个通道像素的字节数
 
                 // 步骤3：修复XYZ数据拼接（核心）
-                byte[] xyzData = MergeXYZToInterleaved(XMat, YMat, ZMat); // 调用新的拼接方法
+                // byte[] xyzData = MergeXYZToInterleaved(XMat, YMat, ZMat); // 调用新的拼接方法
+
+                if (dataXyz == null)
+                {
+                    return false;
+                }
 
                 // 步骤4：构建XYZ的ImageData（匹配DLL入参）
                 ImageData xyzImageData = new ImageData
@@ -1640,7 +1625,7 @@ namespace CVAVMControl
                     _h = imgHeight,
                     _bpp = bpp,
                     _channels = 3, // 关键：XYZ是3通道（交叉存储）
-                    data = xyzData
+                    data = dataXyz
                 };
 
                 // 步骤5：构建空的BGR ImageData（无BGR数据时传null）
@@ -1662,11 +1647,11 @@ namespace CVAVMControl
                         debugPath = "Result\\",
                         debugImgResize = 2
                     },
-                    azimuthalAngle = targetAngle, // 修复：去掉负号，匹配DLL预期
+                    azimuthalAngle = targetAngle, // 匹配DLL预期
                     polar_RHO = 60.0,
                     polar_Angle = 60.0,
                     pixelToAngle = ConoscopeCoefficient,
-                    pointNumLine = 100,
+                    pointNumLine = 100,  // 采样点数量
                     pointNumCircle = 60, // 还原为60，避免DLL数组越界
                     center = new { x = center.X, y = center.Y },
                     displayChannel = displayChannel.ToString() // 新增：传递选中通道
@@ -1760,7 +1745,11 @@ namespace CVAVMControl
                 int elementSize = bpp / 8;
 
                 // 步骤3：调用修复后的XYZ拼接方法
-                byte[] xyzData = MergeXYZToInterleaved(XMat, YMat, ZMat);
+                // byte[] xyzData = MergeXYZToInterleaved(XMat, YMat, ZMat);
+                if (dataXyz == null)
+                {
+                    return false;
+                }
 
                 // 步骤4：构建ImageData（同直径线）
                 ImageData xyzImageData = new ImageData
@@ -1768,15 +1757,15 @@ namespace CVAVMControl
                     _w = imgWidth,
                     _h = imgHeight,
                     _bpp = bpp,
-                    _channels = 3,
-                    data = xyzData
+                    _channels = 1,
+                    data = dataXyz
                 };
                 ImageData bgrImageData = new ImageData
                 {
                     _w = imgWidth,
                     _h = imgHeight,
                     _bpp = bpp,
-                    _channels = 3,
+                    _channels = 1,
                     data = null
                 };
 
@@ -1970,21 +1959,6 @@ namespace CVAVMControl
         // 切换图表
         private void BtnSwitchChart_Click(object sender, RoutedEventArgs e)
         {
-            //if (btnSwitchChart.Content.ToString() == RCircle)
-            //{
-            //    // 切换到R圆面板
-            //    btnSwitchChart.Content = Diameter;
-            //    panelDiameter.Visibility = Visibility.Collapsed;
-            //    panelRCircle.Visibility = Visibility.Visible;
-            //}
-            //else
-            //{
-            //    // 切换回直径线面板
-            //    btnSwitchChart.Content = RCircle;
-            //    panelDiameter.Visibility = Visibility.Visible;
-            //    panelRCircle.Visibility = Visibility.Collapsed;
-            //}
-
             // 获取当前按钮显示的文本（通过DynamicResource对应的Key）
             string currentBtnText = btnSwitchChart.Content.ToString();
             string rCircleTitle = FindResource("Plot.Title.RCircle").ToString();
@@ -2072,7 +2046,7 @@ namespace CVAVMControl
                 TextWrapping = TextWrapping.NoWrap,
                 SnapsToDevicePixels = true,
                 UseLayoutRounding = true,
-               
+
             };
             // 禁用文本渲染优化，避免文字抖动
             // 移到外部，用静态方法设置RenderOptions属性
