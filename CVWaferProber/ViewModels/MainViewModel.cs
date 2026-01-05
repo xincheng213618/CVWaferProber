@@ -310,19 +310,19 @@ namespace CVWaferProber.ViewModels
         /// </summary>
         private readonly List<ColumnConfig> _staticColumnConfigs = new List<ColumnConfig>
         {
-            new ColumnConfig { ColumnHeader = "序号", ColumnBindingPath = "Id", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
-            new ColumnConfig { ColumnHeader = "行", ColumnBindingPath = "MapY", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
-            new ColumnConfig { ColumnHeader = "列", ColumnBindingPath = "MapX", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
-            new ColumnConfig { ColumnHeader = "AOI", ColumnBindingPath = "IsAOIEnabled", ColumnType = ColumnType.CheckBox, IsOptional = false, ColumnKey = ColumnKey.AOI },
-            new ColumnConfig { ColumnHeader = "IVL", ColumnBindingPath = "IsIVLEnabled", ColumnType = ColumnType.CheckBox, IsOptional = false, ColumnKey = ColumnKey.IVL },
-            new ColumnConfig { ColumnHeader = "EQE", ColumnBindingPath = "IsEQEEnabled", ColumnType = ColumnType.CheckBox, IsOptional = false, ColumnKey = ColumnKey.EQE },
-            new ColumnConfig { ColumnHeader = "VAM", ColumnBindingPath = "IsVAMEnabled", ColumnType = ColumnType.CheckBox, IsOptional = false, ColumnKey = ColumnKey.VAM },
-            new ColumnConfig { ColumnHeader = "序列号", ColumnBindingPath = "SerialNumber", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
-            new ColumnConfig { ColumnHeader = "测试状态", ColumnBindingPath = "DisplayStatus", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
-            new ColumnConfig { ColumnHeader = "均匀性", ColumnBindingPath = "DataValue", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
-            new ColumnConfig { ColumnHeader = "开始时间", ColumnBindingPath = "StartTestTime", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
-            new ColumnConfig { ColumnHeader = "结束时间", ColumnBindingPath = "EndTestTime", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
-            new ColumnConfig { ColumnHeader = "总用时", ColumnBindingPath = "TotalTime", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
+            new ColumnConfig { ColumnHeader =(string)Application.Current.FindResource("GridHeader.No"), ColumnBindingPath = "MatrixNo", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
+            new ColumnConfig { ColumnHeader = (string)Application.Current.FindResource("Maping.GridHeader.Row"), ColumnBindingPath = "MapY", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
+            new ColumnConfig { ColumnHeader = (string)Application.Current.FindResource("Maping.GridHeader.Col"), ColumnBindingPath = "MapX", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
+            new ColumnConfig { ColumnHeader = "AOI Enabled", ColumnBindingPath = "IsAOIEnabled", ColumnType = ColumnType.CheckBox, IsOptional = false, ColumnKey = ColumnKey.AOI },
+            new ColumnConfig { ColumnHeader = "IVL Enabled", ColumnBindingPath = "IsIVLEnabled", ColumnType = ColumnType.CheckBox, IsOptional = false, ColumnKey = ColumnKey.IVL },
+            new ColumnConfig { ColumnHeader = "EQE Enabled", ColumnBindingPath = "IsEQEEnabled", ColumnType = ColumnType.CheckBox, IsOptional = false, ColumnKey = ColumnKey.EQE },
+            new ColumnConfig { ColumnHeader = "VAM Enabled", ColumnBindingPath = "IsVAMEnabled", ColumnType = ColumnType.CheckBox, IsOptional = false, ColumnKey = ColumnKey.VAM },
+            new ColumnConfig { ColumnHeader = (string)Application.Current.FindResource("Maping.GridHeader.SerialNumber"), ColumnBindingPath = "SerialNumber", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
+            new ColumnConfig { ColumnHeader = (string)Application.Current.FindResource("Maping.GridHeader.TestStatus"), ColumnBindingPath = "DisplayStatus", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
+            new ColumnConfig { ColumnHeader = (string)Application.Current.FindResource("Maping.GridHeader.Uniformity"), ColumnBindingPath = "DataValue", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
+            new ColumnConfig { ColumnHeader = (string)Application.Current.FindResource("Maping.GridHeader.StartTestTime"), ColumnBindingPath = "StartTestTime", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
+            new ColumnConfig { ColumnHeader = (string)Application.Current.FindResource("Maping.GridHeader.EndTestTime"), ColumnBindingPath = "EndTestTime", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
+            new ColumnConfig { ColumnHeader = (string)Application.Current.FindResource("Maping.GridHeader.TotalTime"), ColumnBindingPath = "TotalTime", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
 
         };
 
@@ -1159,7 +1159,7 @@ namespace CVWaferProber.ViewModels
                             }
                             else if (value is bool boolValue)
                             {
-                                rowData.Add(boolValue ? "是" : "否");
+                                rowData.Add(boolValue ? "Y" : "N");
                             }
                             else if (value is DateTime dateTimeValue)
                             {
@@ -1256,14 +1256,18 @@ namespace CVWaferProber.ViewModels
                 var searchKey = SearchSN.Trim();
                 if (_snIndex.TryGetValue(searchKey, out var results))
                 {
-                    FilteredTestResults = new ObservableCollection<DieViewModel>(results);
+                    //FilteredTestResults = new ObservableCollection<DieViewModel>(results);
+                    // 核心补充：搜索结果按MatrixNo升序排列（保留图二顺序）
+                    FilteredTestResults = new ObservableCollection<DieViewModel>(results.OrderBy(d => d.MatrixNo));
                 }
                 else
                 {
                     var query = TestResults.Where(die =>
                         !string.IsNullOrEmpty(die.SerialNumber) &&
                         die.SerialNumber.Contains(searchKey, StringComparison.OrdinalIgnoreCase));
-                    FilteredTestResults = new ObservableCollection<DieViewModel>(query);
+                    //FilteredTestResults = new ObservableCollection<DieViewModel>(query);
+                    // 核心补充：搜索结果按MatrixNo升序排列
+                    FilteredTestResults = new ObservableCollection<DieViewModel>(query.OrderBy(d => d.MatrixNo));
                 }
             }
         }
@@ -1720,9 +1724,15 @@ namespace CVWaferProber.ViewModels
                     DieViewModel dieViewModel = new DieViewModel(map);
                     _TestResults.Add(dieViewModel);
                 }
-                var sorted = _TestResults.OrderByDescending(x => x.Id).ToList();
+                // 1. 调用DieViewModel的静态方法，按MapY降序、MapX升序排序并生成MatrixNo
+                var sortedDieList = DieViewModel.SortAndGenerateMatrixNo(_TestResults.ToList());
+               // var sorted = _TestResults.OrderByDescending(x => x.Id).ToList();
                 TestResults.Clear();
-                foreach (var item in sorted)
+                //foreach (var item in sorted)
+                //{
+                //    TestResults.Add(item);
+                //}
+                foreach (var item in sortedDieList)
                 {
                     TestResults.Add(item);
                 }
@@ -1731,6 +1741,7 @@ namespace CVWaferProber.ViewModels
             if (string.IsNullOrWhiteSpace(SearchSN))
             {
                 FilteredTestResults = new ObservableCollection<DieViewModel>(TestResults);
+
             }
             else
             {
