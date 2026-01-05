@@ -3388,7 +3388,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         #endregion
 
     }
-
+    /// <summary>
+    /// 
+    /// </summary>
     public class SpectrumMeasureParam
     {
         /// <summary>
@@ -3396,6 +3398,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         /// </summary>
         public SMUMasterResultData SMUData { get; set; }
     }
+    /// <summary>
+    /// 
+    /// </summary>
     public class SMUMasterResultData
     {
         public double V { set; get; }
