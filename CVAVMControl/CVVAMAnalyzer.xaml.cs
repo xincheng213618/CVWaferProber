@@ -226,6 +226,8 @@ namespace CVAVMControl
             this.EventAggregator.Subscribe<VAMFlowCompletedEvent>(OnFlowCompleted);
             //this.EventAggregator.Subscribe<VAMFlowStartingEvent>(OnFlowStarting);
             this.EventAggregator.Subscribe<VAMResultGUIClearEvent>(OnResultGUIClear);
+            //订阅自动导出CSV事件
+            this.EventAggregator.Subscribe<VAMAutoExportCsvEvent>(OnAutoExportCsv);
         }
 
         private void UnInitializeEvents()
@@ -233,8 +235,172 @@ namespace CVAVMControl
             this.EventAggregator?.Unsubscribe<VAMFlowCompletedEvent>(OnFlowCompleted);
             //this.EventAggregator?.Unsubscribe<VAMFlowStartingEvent>(OnFlowStarting);
             this.EventAggregator?.Unsubscribe<VAMResultGUIClearEvent>(OnResultGUIClear);
+            this.EventAggregator?.Unsubscribe<VAMAutoExportCsvEvent>(OnAutoExportCsv);
         }
+        private void Export_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                try
+                {
+                    // 1. 基础校验
+                    if (!_isDataValid || !IsMatSafe(YMat) || dataXyz == null)
+                    {
+                        logger.Warn("VAM数据未加载，自动导出失败");
+                        return;
+                    }
 
+                    // 2. 导出路径（桌面+时间戳）
+                    string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                    string fileName = $"VAM_MatrixExport_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+                    string exportPath = System.IO.Path.Combine(desktopPath, fileName);
+
+                    // 3. 采集图二格式的数据（角度行 + 多采样点列）
+                    List<VamMatrixExportModel> matrixData = GetVamMatrixData();
+                    if (matrixData.Count == 0)
+                    {
+                        logger.Warn("无有效数据可导出");
+                        return;
+                    }
+
+                    // 4. 生成图二格式的CSV
+                    using (var writer = new StreamWriter(exportPath, false, Encoding.UTF8))
+                    {
+                        // 4.1 写入表头（第1-2行）
+                        writer.WriteLine($"Measurement Date,,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,"); // 第1行
+                        writer.WriteLine($"Instrument,,VAM 60°,,,,,,,,,,,,"); // 第2行
+                        writer.WriteLine(); // 第3行（空行）
+
+                        // 4.2 写入采样点序号行（第4行：C列开始是0、1、2…）
+                        int maxSampleCount = matrixData.Max(m => m.AllSampleValues.Count);
+                        string sampleHeader = $",,{string.Join(",", Enumerable.Range(0, maxSampleCount))}";
+                        writer.WriteLine(sampleHeader);
+
+                        // 4.3 写入数据行（B列是角度，C~N列是该角度的所有采样点值）
+                        foreach (var data in matrixData)
+                        {
+                            // 格式：空列 + 角度 + 该角度的所有采样点值（横向排列）
+                            string valuesStr = string.Join(",", data.AllSampleValues.Select(v => v.ToString("F5")));
+                            string line = $",{data.Angle},{valuesStr}";
+                            writer.WriteLine(line);
+                        }
+                    }
+
+                    logger.Info($"VAM图二格式CSV导出成功！路径：{exportPath}");
+                    MessageBox.Show($"CSV已自动导出至：\n{exportPath}", "导出成功",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error("VAM图二格式导出失败", ex);
+                    MessageBox.Show($"导出失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            });
+        }
+        /// <summary>
+        /// 自动导出CSV事件处理（测试完成后触发）
+        /// </summary>
+        private void OnAutoExportCsv(VAMAutoExportCsvEvent @event)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                try
+                {
+                    // 1. 基础校验
+                    if (!_isDataValid || !IsMatSafe(YMat) || dataXyz == null)
+                    {
+                        logger.Warn("VAM数据未加载，自动导出失败");
+                        return;
+                    }
+
+                    // 2. 导出路径（桌面+时间戳）
+                    string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                    string fileName = $"VAM_MatrixExport_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+                    string exportPath = System.IO.Path.Combine(desktopPath, fileName);
+
+                    // 3. 采集图二格式的数据（角度行 + 多采样点列）
+                    List<VamMatrixExportModel> matrixData = GetVamMatrixData();
+                    if (matrixData.Count == 0)
+                    {
+                        logger.Warn("无有效数据可导出");
+                        return;
+                    }
+
+                    // 4. 生成图二格式的CSV
+                    using (var writer = new StreamWriter(exportPath, false, Encoding.UTF8))
+                    {
+                        // 4.1 写入表头（第1-2行）
+                        writer.WriteLine($"Measurement Date,,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,"); // 第1行
+                        writer.WriteLine($"Instrument,,VAM 60°,,,,,,,,,,,,"); // 第2行
+                        writer.WriteLine(); // 第3行（空行）
+
+                        // 4.2 写入采样点序号行（第4行：C列开始是0、1、2…）
+                        int maxSampleCount = matrixData.Max(m => m.AllSampleValues.Count);
+                        string sampleHeader = $",,{string.Join(",", Enumerable.Range(0, maxSampleCount))}";
+                        writer.WriteLine(sampleHeader);
+
+                        // 4.3 写入数据行（B列是角度，C~N列是该角度的所有采样点值）
+                        foreach (var data in matrixData)
+                        {
+                            // 格式：空列 + 角度 + 该角度的所有采样点值（横向排列）
+                            string valuesStr = string.Join(",", data.AllSampleValues.Select(v => v.ToString("F5")));
+                            string line = $",{data.Angle},{valuesStr}";
+                            writer.WriteLine(line);
+                        }
+                    }
+
+                    logger.Info($"VAM图二格式CSV导出成功！路径：{exportPath}");
+                    MessageBox.Show($"CSV已自动导出至：\n{exportPath}", "导出成功",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error("VAM图二格式导出失败", ex);
+                    MessageBox.Show($"导出失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            });
+        }
+        /// <summary>
+        /// 采集图二格式的数据：同一角度的多个采样点值作为横向列
+        /// </summary>
+        private List<VamMatrixExportModel> GetVamMatrixData()
+        {
+            List<VamMatrixExportModel> matrixData = new List<VamMatrixExportModel>();
+            string currentBtnText = btnSwitchChart.Content.ToString();
+            string rCircleTitle = FindResource("Plot.Title.RCircle").ToString();
+
+            // 模式：R圆（图二是R圆的“角度行+多采样点列”格式）
+            if (currentBtnText != rCircleTitle)
+            {
+                int targetRadius = _selectedRadius != -1 ? _selectedRadius : 40;
+                var circleLine = CreateRCircleLine(targetRadius);
+
+                // 按角度分组：将同一角度的所有采样点值收集到一个列表
+                var angleGroups = circleLine.RgbData
+                    .GroupBy(sample => Math.Round(sample.Position, 0)) // 按角度（取整）分组
+                    .OrderByDescending(g => g.Key); // 按角度从大到小排序（匹配图二的-60到60）
+
+                // 遍历每个角度组，整理为“角度+多采样点列”
+                foreach (var group in angleGroups)
+                {
+                    matrixData.Add(new VamMatrixExportModel
+                    {
+                        Angle = group.Key,
+                        // 该角度对应的所有采样点值（横向列）
+                        AllSampleValues = group.Select(sample => Math.Round(sample.Y, 5)).ToList()
+                    });
+                }
+            }
+
+            return matrixData;
+        }
+        // 表格的导出模型（角度+多采样点值）
+        private class VamMatrixExportModel
+        {
+            public double Angle { get; set; } // B列：角度
+            public List<double> AllSampleValues { get; set; } = new List<double>(); // C~N列：该角度的所有采样点值
+        }
+       
         private void OnFlowCompleted(VAMFlowCompletedEvent @event)
         {
             if (!string.IsNullOrEmpty(@event.ResultFileName) && System.IO.File.Exists(@event.ResultFileName))
@@ -2246,7 +2412,7 @@ namespace CVAVMControl
         #endregion
 
         // 全局采样点数量（默认值100，可通过按钮修改）
-        private int _pointNumLine = 100;
+        private int _pointNumLine = 360;
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             // 1. 先校验输入是否为空

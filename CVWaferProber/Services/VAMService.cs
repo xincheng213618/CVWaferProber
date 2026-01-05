@@ -29,6 +29,15 @@ namespace CVWaferProber.Services
                     //TODO test
                     //cieFileName = "F:\\img\\晶圆台\\VAM\\test_ND0.cvcie";
                     EventAggregator?.Publish(new VAMFlowCompletedEvent(cieFileName));
+
+                    // 2.延迟1秒后发布自动导出事件（确保文件加载完成）
+                    Task.Delay(1000).ContinueWith(t =>
+                    {
+                        EventAggregator?.Publish(new VAMAutoExportCsvEvent
+                        {
+                            CvcieFilePath = cieFileName
+                        });
+                    });
                 }
             }
             return ChipStatus.VAM_COMPLETED;
