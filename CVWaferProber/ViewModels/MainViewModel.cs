@@ -310,7 +310,7 @@ namespace CVWaferProber.ViewModels
         /// </summary>
         private readonly List<ColumnConfig> _staticColumnConfigs = new List<ColumnConfig>
         {
-            new ColumnConfig { ColumnHeader =(string)Application.Current.FindResource("GridHeader.No"), ColumnBindingPath = "MatrixNo", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
+            new ColumnConfig { ColumnHeader =(string)Application.Current.FindResource("GridHeader.No"), ColumnBindingPath = "Id", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
             new ColumnConfig { ColumnHeader = (string)Application.Current.FindResource("Maping.GridHeader.Row"), ColumnBindingPath = "MapY", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
             new ColumnConfig { ColumnHeader = (string)Application.Current.FindResource("Maping.GridHeader.Col"), ColumnBindingPath = "MapX", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
             new ColumnConfig { ColumnHeader = "AOI Enabled", ColumnBindingPath = "IsAOIEnabled", ColumnType = ColumnType.CheckBox, IsOptional = false, ColumnKey = ColumnKey.AOI },
@@ -1256,18 +1256,14 @@ namespace CVWaferProber.ViewModels
                 var searchKey = SearchSN.Trim();
                 if (_snIndex.TryGetValue(searchKey, out var results))
                 {
-                    //FilteredTestResults = new ObservableCollection<DieViewModel>(results);
-                    // 核心补充：搜索结果按MatrixNo升序排列（保留图二顺序）
-                    FilteredTestResults = new ObservableCollection<DieViewModel>(results.OrderBy(d => d.MatrixNo));
+                    FilteredTestResults = new ObservableCollection<DieViewModel>(results);
                 }
                 else
                 {
                     var query = TestResults.Where(die =>
                         !string.IsNullOrEmpty(die.SerialNumber) &&
                         die.SerialNumber.Contains(searchKey, StringComparison.OrdinalIgnoreCase));
-                    //FilteredTestResults = new ObservableCollection<DieViewModel>(query);
-                    // 核心补充：搜索结果按MatrixNo升序排列
-                    FilteredTestResults = new ObservableCollection<DieViewModel>(query.OrderBy(d => d.MatrixNo));
+                    FilteredTestResults = new ObservableCollection<DieViewModel>(query);
                 }
             }
         }
@@ -1724,15 +1720,9 @@ namespace CVWaferProber.ViewModels
                     DieViewModel dieViewModel = new DieViewModel(map);
                     _TestResults.Add(dieViewModel);
                 }
-                // 1. 调用DieViewModel的静态方法，按MapY降序、MapX升序排序并生成MatrixNo
-                var sortedDieList = DieViewModel.SortAndGenerateMatrixNo(_TestResults.ToList());
-               // var sorted = _TestResults.OrderByDescending(x => x.Id).ToList();
+                var sorted = _TestResults.OrderByDescending(x => x.Id).ToList();
                 TestResults.Clear();
-                //foreach (var item in sorted)
-                //{
-                //    TestResults.Add(item);
-                //}
-                foreach (var item in sortedDieList)
+                foreach (var item in sorted)
                 {
                     TestResults.Add(item);
                 }

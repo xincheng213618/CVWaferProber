@@ -11,19 +11,6 @@ namespace CVWaferProber.ViewModels
     public class DieViewModel : ViewModelBase
     {
         public uint? Id => chipViewModel?.Id;
-        private int _matrixNo;
-        /// <summary>
-        /// 图二的No序号（从1开始递增，按MapY降序、MapX升序排序）
-        /// </summary>
-        public int MatrixNo
-        {
-            get => _matrixNo;
-            set
-            {
-                _matrixNo = value;
-                OnPropertyChanged(nameof(MatrixNo));
-            }
-        }
         public int? ScreenX => (int?)chipViewModel?.Position.X;
         public int? ScreenY => (int?)chipViewModel?.Position.Y;
         public int? MapX => chipViewModel?.Column;
@@ -82,33 +69,9 @@ namespace CVWaferProber.ViewModels
             this.chipViewModel = die;
             this.IsIVLCameraEnabled = false;
             this.IsChinese = GetCurrentLanguage() == "Chinese";
-            // 初始化时MatrixNo默认0，后续排序后赋值
-            this.MatrixNo = 0;
-        }
-        /// <summary>
-        /// 对DieViewModel列表按图二规则排序，并生成递增的MatrixNo
-        /// </summary>
-        /// <param name="dieList">原始DieViewModel列表</param>
-        /// <returns>按图二顺序排序后的列表（已分配MatrixNo）</returns>
-        public static List<DieViewModel> SortAndGenerateMatrixNo(List<DieViewModel> dieList)
-        {
-            if (dieList == null || dieList.Count == 0)
-                return new List<DieViewModel>();
 
-            // 核心排序规则：按MapY降序（0→-1→-2…），MapY相同则按MapX升序
-            var sortedList = dieList
-                .OrderByDescending(d => d.MapY)  // 优先按MapY（Row）降序
-                .ThenBy(d => d.MapX)             // 再按MapX（Column）升序
-                .ToList();
-
-            // 为排序后的列表分配MatrixNo（从1开始递增）
-            for (int i = 0; i < sortedList.Count; i++)
-            {
-                sortedList[i].MatrixNo = i + 1;
             }
 
-            return sortedList;
-        }
         public ChipStatus? Status => chipViewModel?.Status;
         //public ChipStatus? Status => ChipStatus.IVL_COMPLETED;
         public string? DisplayStatus => Status.HasValue ? ChipStatusTool.GetStatusDisplay(Status.Value, IsChinese) : "Unknown";
