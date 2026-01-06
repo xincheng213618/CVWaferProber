@@ -22,7 +22,7 @@ namespace CVWaferProber.Services
         {
             if (string.IsNullOrEmpty(dieViewModel.SerialNumber)) return ChipStatus.FAILED;
 
-            var results = ImageResultService.LoadResultByBatchCode(dieViewModel.SerialNumber);
+            var results = ImageResultService.LoadCIEResultByBatchCode(dieViewModel.SerialNumber);
             if (results != null && results.Count == 1)
             {
                 var result = results[0];
@@ -41,7 +41,7 @@ namespace CVWaferProber.Services
             }
             else
             {
-                if (logger.IsErrorEnabled) logger.ErrorFormat("VAM result is enpty");
+                if (logger.IsErrorEnabled) logger.ErrorFormat("VAM result is empty or count>1 => {0}", results != null ? results.Count : 0);
             }
             return ChipStatus.VAM_COMPLETED;
         }

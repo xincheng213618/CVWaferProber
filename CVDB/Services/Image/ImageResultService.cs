@@ -16,5 +16,9 @@ namespace CVDB.Services.Image
         {
             return MysqlControler.GetInstance().Sql.Select<VScgdMeasureResultImg>().Where(a => a.BatchCode.Equals(batchCode)).ToList();
         }
+        public static List<VScgdMeasureResultImg> LoadCIEResultByBatchCode(string batchCode)
+        {
+            return MysqlControler.GetInstance().Sql.Select<VScgdMeasureResultImg>().Where(a => a.BatchCode.Equals(batchCode) && a.FileType == 1).ToList();
+        }
     }
 }
