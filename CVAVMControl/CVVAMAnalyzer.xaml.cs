@@ -542,9 +542,9 @@ namespace CVAVMControl
                         dataXyz = new byte[allPixLen];
                     }
                     Buffer.BlockCopy(fileInfo.Data, 0, dataXyz, 0, allPixLen);
-                    XMat = OpenCvSharp.Mat.FromPixelData(fileInfo.Rows, fileInfo.Cols, singleChannelType, dataX);
+                    XMat = OpenCvSharp.Mat.FromPixelData(fileInfo.Cols, fileInfo.Rows, singleChannelType, dataX);
                     YMat = OpenCvSharp.Mat.FromPixelData(fileInfo.Cols, fileInfo.Rows, singleChannelType, dataY);
-                    ZMat = OpenCvSharp.Mat.FromPixelData(fileInfo.Rows, fileInfo.Cols, singleChannelType, dataZ);
+                    ZMat = OpenCvSharp.Mat.FromPixelData(fileInfo.Cols, fileInfo.Rows, singleChannelType, dataZ);
                 }
                 center = new System.Windows.Point(YMat.Width / 2.0, YMat.Height / 2.0);
                 imageRadius = (int)(MaxAngle / ConoscopeCoefficient);
