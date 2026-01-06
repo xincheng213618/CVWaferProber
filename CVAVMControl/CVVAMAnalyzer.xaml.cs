@@ -1027,7 +1027,7 @@ namespace CVAVMControl
                         (int)(endPoint.X + 15 * Math.Cos(radian)),
                         (int)(endPoint.Y + 15 * Math.Sin(radian))
                     );
-                    DrawAngleLabel(colorMat, labelPos, $"{angle}(A)", yellowColor, fontScale: 7);
+                    DrawAngleLabel(colorMat, labelPos, $"{angle}(A)", yellowColor, fontScale: 4);
                 }
 
                 // 选中项高亮
@@ -1048,7 +1048,7 @@ namespace CVAVMControl
                         (int)(endPoint.X + 15 * Math.Cos(radian)),
                         (int)(endPoint.Y + 15 * Math.Sin(radian))
                     );
-                    DrawAngleLabel(colorMat, labelPos, $"{_selectedAngle}(A)", purpleColor, fontScale: 7);
+                    DrawAngleLabel(colorMat, labelPos, $"{_selectedAngle}(A)", purpleColor, fontScale: 4);
                 }
             }
 
@@ -1075,13 +1075,29 @@ namespace CVAVMControl
                         LineTypes.AntiAlias
                     );
 
-                    // 绘制角度标签（保留原有逻辑）
-                    OpenCvSharp.Point labelPos = new OpenCvSharp.Point((int)(centerPoint.X + radiusPixel + 20), (int)centerPoint.Y);
-                    if (labelPos.X > colorMat.Width - 100)
+                    // ========== 正负角度区分标签位置 ==========
+                    OpenCvSharp.Point labelPos;
+                    if (radius >= 0)
                     {
-                        labelPos.X = (int)(centerPoint.X - radiusPixel - 100);
+                        // 正角度：显示在右边红框位置（中心右侧）
+                        labelPos = new OpenCvSharp.Point((int)(centerPoint.X + radiusPixel + 20), (int)centerPoint.Y);
+                        // 避免超出图像右边界
+                        if (labelPos.X > colorMat.Width - 100)
+                        {
+                            labelPos.X = (int)(centerPoint.X + radiusPixel - 100);
+                        }
                     }
-                    DrawAngleLabel(colorMat, labelPos, $"{radius}(R)", yellowColor, fontScale: 7);
+                    else
+                    {
+                        // 负角度：显示在左边红框位置（中心左侧）
+                        labelPos = new OpenCvSharp.Point((int)(centerPoint.X - radiusPixel - 100), (int)centerPoint.Y);
+                        // 避免超出图像左边界
+                        if (labelPos.X < 0)
+                        {
+                            labelPos.X = (int)(centerPoint.X - radiusPixel + 20);
+                        }
+                    }
+                    DrawAngleLabel(colorMat, labelPos, $"{radius}(R)", yellowColor, fontScale: 4);
                 }
 
                 // 选中项高亮（仅绘制当前选中的有效半径）
@@ -1099,12 +1115,27 @@ namespace CVAVMControl
                         LineTypes.AntiAlias
                     );
 
-                    OpenCvSharp.Point labelPos = new OpenCvSharp.Point((int)(centerPoint.X + radiusPixel + 20), (int)centerPoint.Y);
-                    if (labelPos.X > colorMat.Width - 100)
+                    // ========== 核心修改：选中项的正负角度标签位置 ==========
+                    OpenCvSharp.Point labelPos;
+                    if (_selectedRadius >= 0)
                     {
-                        labelPos.X = (int)(centerPoint.X - radiusPixel - 100);
+                        // 正角度：右边红框
+                        labelPos = new OpenCvSharp.Point((int)(centerPoint.X + radiusPixel + 20), (int)centerPoint.Y);
+                        if (labelPos.X > colorMat.Width - 100)
+                        {
+                            labelPos.X = (int)(centerPoint.X + radiusPixel - 100);
+                        }
                     }
-                    DrawAngleLabel(colorMat, labelPos, $"{_selectedRadius}(R)", purpleColor, fontScale: 7);
+                    else
+                    {
+                        // 负角度：左边红框
+                        labelPos = new OpenCvSharp.Point((int)(centerPoint.X - radiusPixel - 100), (int)centerPoint.Y);
+                        if (labelPos.X < 0)
+                        {
+                            labelPos.X = (int)(centerPoint.X - radiusPixel + 20);
+                        }
+                    }
+                    DrawAngleLabel(colorMat, labelPos, $"{_selectedRadius}(R)", purpleColor, fontScale: 4);
                 }
             }
 
@@ -1248,9 +1279,12 @@ namespace CVAVMControl
 
             if (radiusAngle == 0)
             {
-                // Center point: Use the center pixel value for all 360 samples
-                int ix = Math.Max(0, Math.Min(YMat.Width - 1, (int)Math.Round(center.X)));
-                int iy = Math.Max(0, Math.Min(YMat.Height - 1, (int)Math.Round(center.Y)));
+                // 修复：用Math.Floor替代Round，避免越界
+                int ix = (int)Math.Floor(center.X);
+                int iy = (int)Math.Floor(center.Y);
+                // 二次边界校验
+                ix = Math.Clamp(ix, 0, YMat.Width - 1);
+                iy = Math.Clamp(iy, 0, YMat.Height - 1);
 
                 double X = 0, Y = 0, Z = 0;
                 ExtractPixelValues(ix, iy, out X, out Y, out Z);
@@ -1391,13 +1425,20 @@ namespace CVAVMControl
         private void ExtractPixelValues(int ix, int iy, out double X, out double Y, out double Z)
         {
             X = Y = Z = 0;
-
-            if (XMat != null)
+            // 新增：空值保护
+            if (XMat != null && !XMat.Empty() && ix < XMat.Width && iy < XMat.Height)
                 X = XMat.At<float>(iy, ix);
-            if (YMat != null)
+            if (YMat != null && !YMat.Empty() && ix < YMat.Width && iy < YMat.Height)
                 Y = YMat.At<float>(iy, ix);
-            if (ZMat != null)
+            if (ZMat != null && !ZMat.Empty() && ix < ZMat.Width && iy < ZMat.Height)
                 Z = ZMat.At<float>(iy, ix);
+
+            //if (XMat != null)
+            //    X = XMat.At<float>(iy, ix);
+            //if (YMat != null)
+            //    Y = YMat.At<float>(iy, ix);
+            //if (ZMat != null)
+            //    Z = ZMat.At<float>(iy, ix);
         }
 
 
@@ -1884,6 +1925,12 @@ namespace CVAVMControl
         /// <returns>是否调用成功</returns>
         private bool CallVamDllForRCircle(int targetRadius)
         {
+            // 新增：0°时直接返回false，使用本地计算逻辑
+            //if (targetRadius == 0)
+            //{
+            //    logger.Warn("R圆0°跳过DLL调用，使用本地计算数据");
+            //    return false;
+            //}
             try
             {
                 // 步骤1：基础校验（同直径线）
@@ -1923,7 +1970,7 @@ namespace CVAVMControl
                     _w = imgWidth,
                     _h = imgHeight,
                     _bpp = bpp,
-                    _channels = 1,
+                    _channels = 3,
                     data = dataXyz
                 };
                 ImageData bgrImageData = new ImageData
@@ -1931,7 +1978,7 @@ namespace CVAVMControl
                     _w = imgWidth,
                     _h = imgHeight,
                     _bpp = bpp,
-                    _channels = 1,
+                    _channels = 3,
                     data = null
                 };
 
