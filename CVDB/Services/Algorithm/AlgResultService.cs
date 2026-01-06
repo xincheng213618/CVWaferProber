@@ -32,5 +32,9 @@ namespace CVDB.Services.Algorithm
         {
             return MysqlControler.GetInstance().Sql.Select<TScgdAlgorithmResultDetailPoiMtf>().Where(a => a.Pid == pid).ToList();
         }
+        public static List<TScgdAlgorithmResultDetailImage> GetImgDetailResult(int pid)
+        {
+            return MysqlControler.GetInstance().Sql.Select<TScgdAlgorithmResultDetailImage>().Where(a => a.Pid == pid).ToList();
+        }
     }
 }

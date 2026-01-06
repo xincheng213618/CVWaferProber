@@ -7,7 +7,6 @@
     xmlns:local="clr-namespace:CVWPFSpectrometerCtrl.ViewModels"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:oxy="http://oxyplot.org/wpf"
-    xmlns:sp="clr-namespace:CVWPFSpectrumControl;assembly=CVWPFSpectrumControl"
     xmlns:wpf="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
     mc:Ignorable="d">
     <UserControl.DataContext>
@@ -890,13 +889,14 @@
         <!--  EQE选项卡  -->
         <TabItem Header="EQE">
             <!--  EQE内容区域（绑定共享数据源）  -->
-            <Grid>
-
+            <Grid x:Name="EQEGrid">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="41*" />
-                    <ColumnDefinition Width="383*" />
-                    <ColumnDefinition Width="334*" />
-                    <ColumnDefinition Width="334*" />
+                    <ColumnDefinition Width="16*" />
+                    <ColumnDefinition Width="93*"/>
+                    <ColumnDefinition Width="109*"/>
+                    <ColumnDefinition Width="109*" />
+                    <ColumnDefinition Width="109*" />
+                    <ColumnDefinition Width="109*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
@@ -908,20 +908,20 @@
                 <!--  顶部按钮区域  -->
                 <StackPanel
                     Grid.Row="0"
-                    Grid.ColumnSpan="2"
+                    Grid.ColumnSpan="4"
                     Orientation="Horizontal">
                     <Button
                         x:Name="btnExport1"
                         Width="80"
                         Margin="5"
-                        Command="{Binding EQEExportCommand}"
-                        CommandParameter="{Binding SelectedTabIndex}"
+                        Command="{Binding CustomEQEVM.EQEExportCommand}"
+                        CommandParameter="{Binding CustomEQEVM.SelectedTabIndex}"
                         Content="{DynamicResource Export CSV}"
                         IsEnabled="True" />
                 </StackPanel>
                 <StackPanel
                     Grid.Row="1"
-                    Grid.ColumnSpan="4"
+                    Grid.ColumnSpan="6"
                     Margin="5,5,5,2"
                     Orientation="Horizontal">
                     <TextBlock VerticalAlignment="Center" Text="{DynamicResource Chart.LineColor}" />
@@ -929,7 +929,7 @@
                         Width="80"
                         Height="20"
                         Margin="2"
-                        SelectedValue="{Binding EQELineColor, Mode=TwoWay}">
+                        SelectedValue="{Binding CustomEQEVM.EQELineColor, Mode=TwoWay}">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
@@ -1012,28 +1012,28 @@
                         Margin="5"
                         VerticalAlignment="Center"
                         Content="{DynamicResource Sp.ShowAllData}"
-                        IsChecked="{Binding IsShowAllEQEData, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        IsChecked="{Binding CustomEQEVM.IsShowAllEQEData, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                     <CheckBox
                         x:Name="chkShowDetails1"
                         Margin="5"
                         VerticalAlignment="Center"
                         Content="{DynamicResource Sp.ShowSpectralDetail}"
-                        IsChecked="{Binding IsShowSpectralDetail, Mode=TwoWay}" />
+                        IsChecked="{Binding CustomEQEVM.IsShowSpectralDetail, Mode=TwoWay}" />
                 </StackPanel>
                 <!--  图表区域  -->
                 <oxy:PlotView
                     Grid.Row="2"
-                    Grid.ColumnSpan="4"
+                    Grid.ColumnSpan="6"
                     Margin="5,29,5,0"
                     Loaded="PlotView_Loaded"
-                    Model="{Binding EQEPlotModel}" />
+                    Model="{Binding CustomEQEVM.EQEPlotModel}" />
                 <!--  Model="{Binding PlotModel}"  -->
                 <!--  EQE的DataGrid（共享SP的Measurements数据源）  -->
                 <!--  DataGrid区域  -->
                 <DataGrid
                     x:Name="eqemeasurementsGrid"
                     Grid.Row="3"
-                    Grid.ColumnSpan="4"
+                    Grid.ColumnSpan="6"
                     Margin="5,2,5,2"
                     AutoGenerateColumns="False"
                     CanUserAddRows="False"
@@ -1043,24 +1043,23 @@
                     CanUserSortColumns="True"
                     GridLinesVisibility="All"
                     IsReadOnly="True"
-                    ItemsSource="{Binding Measurements}"
+                    ItemsSource="{Binding CustomEQEVM.Measurements}"
                     RowHeight="25"
-                    SelectedItem="{Binding SelectedEQERow, Mode=TwoWay}"
+                    SelectedItem="{Binding CustomEQEVM.SelectedEQERow, Mode=TwoWay}"
                     SelectionMode="Single"
                     SelectionUnit="FullRow">
 
                     <DataGrid.Columns>
                         <DataGridTextColumn
-                            Width="80"
+                            Width="50"
                             Binding="{Binding No}"
                             Header="{DynamicResource GridHeader.No}" />
-                        <DataGridTextColumn
+                        <!--<DataGridTextColumn
                             Width="80"
                             Binding="{Binding Meas_Id}"
-                            Header="{DynamicResource Sp.MeasurementBatch}" />
-
+                            Header="{DynamicResource Sp.MeasurementBatch}" />-->
                         <DataGridTextColumn
-                            Width="120"
+                            Width="130"
                             Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}"
                             Header="{DynamicResource Sp.Time}" />
                         <DataGridTextColumn
@@ -1071,6 +1070,22 @@
                             Width="80"
                             Binding="{Binding Current, StringFormat='F4'}"
                             Header="{DynamicResource Sp.Current}" />
+                        <DataGridTextColumn
+                            Width="80"
+                            Binding="{Binding EQE, StringFormat='F4'}"
+                            Header="{DynamicResource EQE.EQE}" /> 
+                        <DataGridTextColumn
+                            Width="80"
+                            Binding="{Binding LuminousFlux, StringFormat='F4'}"
+                            Header="{DynamicResource EQE.LuminousFlux}" /> 
+                        <DataGridTextColumn
+                            Width="80"
+                            Binding="{Binding RadiantFlux, StringFormat='F4'}"
+                            Header="{DynamicResource EQE.RadiantFlux}" /> 
+                         <DataGridTextColumn
+                            Width="80"
+                            Binding="{Binding LuminousEfficacy, StringFormat='F4'}"
+                            Header="{DynamicResource EQE.LuminousEfficacy}" /> 
                         <DataGridTextColumn
                             Width="80"
                             Binding="{Binding Luminance, StringFormat='F4'}"
@@ -1119,7 +1134,7 @@
                 <DataGrid
                     x:Name="WavelengthGrid1"
                     Grid.RowSpan="4"
-                    Grid.Column="4"
+                    Grid.Column="6"
                     Margin="2,2,2,2"
                     AutoGenerateColumns="False"
                     Background="#FFFFFF"
@@ -1133,9 +1148,9 @@
                     ColumnWidth="Auto"
                     GridLinesVisibility="Horizontal"
                     IsReadOnly="True"
-                    ItemsSource="{Binding SpectralGridItems}"
+                    ItemsSource="{Binding CustomEQEVM.SpectralGridItems}"
                     RowHeight="22"
-                    SelectedItem="{Binding SelectedMeasurement}"
+                    SelectedItem="{Binding CustomEQEVM.SelectedMeasurement}"
                     SelectionMode="Single"
                     SelectionUnit="FullRow"
                     VerticalScrollBarVisibility="Auto">

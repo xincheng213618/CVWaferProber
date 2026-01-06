@@ -44,6 +44,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             {
                 if (SetProperty(ref _imageSrc, value))
                 {
+
                 }
 
             }

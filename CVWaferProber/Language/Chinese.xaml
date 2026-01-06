@@ -75,6 +75,11 @@
     <sys:String x:Key="Sp.VL Curve">VL曲线</sys:String>
     <!--  Camera曲线相关  -->
     <sys:String x:Key="Sp.Camera Curve">相机曲线</sys:String>
+    <!--  EQE相关  -->
+    <sys:String x:Key="EQE.EQE">EQE</sys:String>
+    <sys:String x:Key="EQE.LuminousFlux">光通量(lm)</sys:String>
+    <sys:String x:Key="EQE.RadiantFlux">辐射通量(W)</sys:String>
+    <sys:String x:Key="EQE.LuminousEfficacy">光效(lm/W)</sys:String>
 
     <!--  测量参数  -->
     <sys:String x:Key="Sp.MeasurementBatch">测量批次</sys:String>
@@ -168,9 +173,9 @@
     <sys:String x:Key="VAM.CircumferentialAngle">圆周角度 (°)</sys:String>
     <sys:String x:Key="VAM.PixelValue">像素值</sys:String>
 
+    <!--  EQE相关  -->
 
-
-
+    <sys:String x:Key="EQE.luminous_flux">光通量</sys:String>
 
 
 

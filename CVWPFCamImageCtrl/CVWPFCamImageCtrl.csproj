@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CVDB\CVDB.csproj" />
     <ProjectReference Include="..\CVWaferProber.Core\CVWaferProber.Core.csproj" />
+    <ProjectReference Include="..\WaferProberClient\WaferComm.Core\WaferComm.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

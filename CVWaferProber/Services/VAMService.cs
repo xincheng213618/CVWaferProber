@@ -1,4 +1,4 @@
-﻿using CVAVMControl;
+﻿using CVDB.Services.Image;
 using CVWaferProber.Core.Events;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
@@ -14,11 +14,9 @@ namespace CVWaferProber.Services
         {
         }
 
-        public CVVAMAnalyzer? VamAnalyzer { get; set; }
-
         protected override ChipStatus GetResultStatus(string serialNumber)
         {
-            return ChipStatus.OK;
+            return ChipStatus.FAILED;
         }
         protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
         {
@@ -48,14 +46,26 @@ namespace CVWaferProber.Services
             return ChipStatus.VAM_COMPLETED;
         }
 
-        private string GetFlowResult(DieViewModel dieViewModel)
+        public override void ResultDisplay(DieViewModel dieViewModel)
         {
-            return string.Empty;
+            if (!string.IsNullOrEmpty(dieViewModel.SerialNumber))
+            {
+                FlowResultDisplay(dieViewModel);
+            }
+            else
+            {
+                EventAggregator?.Publish(new VAMResultGUIClearEvent());
+            }
         }
 
-        public void StartTestingVAM(string timestamp, DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow)
+        public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
         {
-            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel);
+            //
+            EventAggregator?.Publish(new VAMFlowStartingEvent());
+
+            dieViewModel.ChangeStatus(ChipStatus.VAM_TESTING);
+            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, isEnd);
+            return task;
         }
     }
 }

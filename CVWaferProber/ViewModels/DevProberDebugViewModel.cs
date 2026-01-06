@@ -1,83 +1,178 @@
 ﻿using CVWaferProber.Core.ViewModels;
-using MySqlX.XDevAPI;
-using OxyPlot;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using CVWaferProber.Models;
 using System.Windows;
 using System.Windows.Input;
 using WaferComm.Client;
+using WaferComm.Core;
+using WaferComm.StateMachine;
 
 namespace CVWaferProber.ViewModels
 {
     public class DevProberDebugViewModel : ViewModelBase
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(DevProberDebugViewModel));
+        private IWaferProberClient _client;
+        private IStateMachine _stateMachine;
+        private ConnectionInfo ConnectionInfo;
 
+        public IWaferProberClient ProberClient { get => _client; }
+        public IStateMachine StateMachine { get => _stateMachine; }
         public ICommand DevProberConnectCommand { get; }
         public ICommand DevProberDisconnectCommand { get; }
+        public ICommand ManualStatusUpdateCommand { get; }
+        public ICommand ResetStateMachineCommand { get; }
+        public ICommand SendAbsoluteMoveCommand { get; }
+        public ICommand SendBasicCommand { get; }
 
-        public string SvrIP { get; set; } = "127.0.0.1";
-        public string SvrPort { get; set; } = "8898";
-
-        private IWaferProberClient _client;
-
-        public DevProberDebugViewModel()
+        private string _AbsAxisY = "+020";
+        public string AbsAxisY
         {
-            DevProberConnectCommand = new RelayCommand(DevProberConnect);
-            DevProberDisconnectCommand = new RelayCommand(DevProberDisconnect);
-            InitializeClient();
+            get => _AbsAxisY;
+            set
+            {
+                SetProperty(ref _AbsAxisY, value);
+            }
         }
-        private void InitializeClient()
+        private string _AbsAxisX = "-020";
+        public string AbsAxisX
         {
+            get => _AbsAxisX;
+            set
+            {
+                SetProperty(ref _AbsAxisX, value);
+            }
+        }
+        public string ServerIP
+        {
+            get => ConnectionInfo.ServerIP;
+            set
+            {
+                ConnectionInfo.ServerIP = value;
+            }
+        }
+
+        public int Port
+        {
+            get => ConnectionInfo.Port;
+            set
+            {
+                ConnectionInfo.Port = value;
+            }
+        }
+        public string ConnectionStatusText =>
+                ConnectionInfo.Status switch
+                {
+                    ConnectionStatus.Connected => $"Connected ({ConnectionInfo.ServerIP}:{ConnectionInfo.Port})",
+                    ConnectionStatus.Connecting => "Connecting...",
+                    ConnectionStatus.Error => "Connection Error",
+                    _ => "Disconnected"
+                };
+
+        public bool CanConnect =>
+            ConnectionInfo.Status != ConnectionStatus.Connecting &&
+            ConnectionInfo.Status != ConnectionStatus.Connected;
+
+        public bool CanDisconnect =>
+            ConnectionInfo.Status == ConnectionStatus.Connected;
+
+        public DevProberDebugViewModel(IWaferProberClient proberClient, IStateMachine stateMachine, ConnectionInfo connectionInfo)
+        {
+            this._client = proberClient;
+            this._stateMachine = stateMachine;
+            this.ConnectionInfo = connectionInfo;
+
+            DevProberConnectCommand = new RelayCommand(
+                async _ => await ConnectAsync(),
+                _ => CanConnect);
+
+            DevProberDisconnectCommand = new RelayCommand(
+                _ => Disconnect(),
+                _ => CanDisconnect
+            );
+
+            ManualStatusUpdateCommand = new RelayCommand(
+                _ => ManualStatusUpdate(),
+                _ => CanDisconnect
+                );
+            //ResetStateMachineCommand = new RelayCommand(
+            //    _ => ResetStateMachine(),
+            //    _ => CanDisconnect
+            //    );
+            SendAbsoluteMoveCommand = new RelayCommand(
+                _ => SendAbsoluteMove(),
+                _ => CanDisconnect);
+            SendBasicCommand = new RelayCommand(
+                (obj) => SendBasicCmd(obj),
+                _ => CanDisconnect);
+
+            SetConnected(_client.IsConnected);
+
+            // Subscribe to service events
+            _client.EventAggregator.Subscribe<ConnectionStateChangedEvent>(OnConnectionStatusChanged);
+        }
+
+        private void SendAbsoluteMove()
+        {
+            _client.MoveAbsoluteAsync(_AbsAxisY, _AbsAxisX);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
+        public void Cleanup()
+        {
+            _client.EventAggregator.Unsubscribe<ConnectionStateChangedEvent>(OnConnectionStatusChanged);
+        }
+        private void SetConnected(bool isConnected)
+        {
+            ConnectionInfo.SetConnected(isConnected);
+        }
+        private void OnConnectionStatusChanged(ConnectionStateChangedEvent @event)
+        {
+            SetConnected(@event.IsConnected);
+            OnPropertyChanged(nameof(ConnectionStatusText));
+            OnPropertyChanged(nameof(CanConnect));
+            OnPropertyChanged(nameof(CanDisconnect));
+        }
+        private void SendBasicCmd(object obj)
+        {
+            _client.SendCommandAsync(obj.ToString());
+        }
+
+        private void ManualStatusUpdate()
+        {
+            _client.QueryStatusAsync();
+        }
+
+        private void ResetStateMachine()
+        {
+            // 重置状态机逻辑
+        }
+        private async Task ConnectAsync()
+        {
+            if (string.IsNullOrWhiteSpace(ServerIP) || Port < 1 || Port > 65535)
+            {
+                MessageBox.Show("Please enter valid server address and port", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             try
             {
-                // 创建事件聚合器
-                var eventAggregator = new EventAggregator();
-
-                // 创建客户端
-                _client = new WaferProberTCPClient(eventAggregator);
-
-                AddLog("客户端初始化完成", LogType.Info);
+                await _client.ConnectAsync(ServerIP, Port);
             }
             catch (Exception ex)
             {
-                AddLog($"初始化失败: {ex.Message}", LogType.Error);
-                MessageBox.Show($"客户端初始化失败: {ex.Message}");
+                MessageBox.Show($"Connection failed: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void DevProberDisconnect(object obj)
+
+        private void Disconnect()
         {
+            _client.DisconnectAsync();
         }
-
-        private async void DevProberConnect(object obj)
-        {
-            try
-            {
-                string ip = SvrIP.Trim();
-                if (string.IsNullOrEmpty(ip))
-                {
-                    MessageBox.Show("请输入服务器IP地址");
-                    return;
-                }
-
-                if (!int.TryParse(SvrPort, out int port))
-                {
-                    MessageBox.Show("请输入有效的端口号");
-                    return;
-                }
-
-                await _client.ConnectAsync(ip, port);
-            }
-            catch (Exception ex)
-            {
-                AddLog($"连接失败: {ex.Message}", LogType.Error);
-                MessageBox.Show($"连接失败: {ex.Message}");
-            }
-        }
-
         private enum LogType
         {
             Info,

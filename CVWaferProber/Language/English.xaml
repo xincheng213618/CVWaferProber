@@ -83,6 +83,12 @@
     <sys:String x:Key="Sp.VL Curve">VL Curve</sys:String>
     <!--  Camera曲线相关  -->
     <sys:String x:Key="Sp.Camera Curve">Camera Curve</sys:String>
+    <!--  EQE相关  -->
+    <sys:String x:Key="EQE.EQE">EQE</sys:String>
+    <sys:String x:Key="EQE.LuminousFlux">Luminous Flux(lm)</sys:String>
+    <sys:String x:Key="EQE.RadiantFlux">Radiant Flux(W)</sys:String>
+    <sys:String x:Key="EQE.LuminousEfficacy">Luminous Efficacy(lm/W)</sys:String>
+
     <sys:String x:Key="Dock.Layout.Title.AOI">AOI Panel</sys:String>
     <sys:String x:Key="IVLCamera">IVLCamera</sys:String>
     <sys:String x:Key="Image">Image</sys:String>
@@ -158,4 +164,10 @@
     <sys:String x:Key="VAM.CircumferentialDistributionCurve">Circumferential Distribution Curve</sys:String>
     <sys:String x:Key="VAM.CircumferentialAngle">Circumferential Angle (°)</sys:String>
     <sys:String x:Key="VAM.PixelValue">Pixel Value</sys:String>
+
+
+    <!--  EQE相关  -->
+
+    <sys:String x:Key="EQE.luminous_flux">luminousflux</sys:String>
+
 </ResourceDictionary>

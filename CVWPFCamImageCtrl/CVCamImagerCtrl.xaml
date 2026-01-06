@@ -183,6 +183,8 @@
             <Grid
                 x:Name="container"
                 Grid.ColumnSpan="2"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
                 RenderTransformOrigin="0.5,0.5">
                 <local:CVImager
                     x:Name="ImageDisplay"

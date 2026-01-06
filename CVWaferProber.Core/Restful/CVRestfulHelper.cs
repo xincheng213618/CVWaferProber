@@ -44,9 +44,14 @@ namespace CVWaferProber.Core.Restful
             return contentResp;
             //AddLog(contentResp);  
         }
-
-        public string? RcRegist()
+        public string? RcUnRegist(string ip, int port)
         {
+            return string.Empty;
+        }
+        public string? RcRegist(string ip, int port)
+        {
+            rcRegIp = string.Format("{0}:{1}", ip, port);
+            rcUrl = method + rcRegIp;
             string url = "/API/Node/Regist";
             RequestRegDTO reqBody = new RequestRegDTO() { NodeAppId = "app1", NodeKey = "123456", NodeName = "api.client.1", ServiceType = "client" };
             var body = JsonConvert.SerializeObject(reqBody);

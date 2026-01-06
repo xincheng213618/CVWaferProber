@@ -18,6 +18,10 @@
     <ProjectReference Include="..\CVWPFCamImageCtrl\CVWPFCamImageCtrl.csproj" />
     <ProjectReference Include="..\CVWPFSpectrometerCtrl\CVWPFSpectrometerCtrl.csproj" />
     <ProjectReference Include="..\GSWinMsgSim\GSWinMsgSim.csproj" />
+    <ProjectReference Include="..\WaferProberClient\WaferComm.Client\WaferComm.Client.csproj" />
+    <ProjectReference Include="..\WaferProberClient\WaferComm.Core\WaferComm.Core.csproj" />
+    <ProjectReference Include="..\WaferProberClient\WaferComm.Processors\WaferComm.Processors.csproj" />
+    <ProjectReference Include="..\WaferProberClient\WaferComm.StateMachine\WaferComm.StateMachine.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -48,12 +52,6 @@
     </Reference>
     <Reference Include="CVMysqlLib">
       <HintPath>..\DLL\CVMysqlLib.dll</HintPath>
-    </Reference>
-    <Reference Include="WaferComm.Client">
-      <HintPath>..\DLL\WaferComm.Client.dll</HintPath>
-    </Reference>
-    <Reference Include="WaferComm.Core">
-      <HintPath>..\DLL\WaferComm.Core.dll</HintPath>
     </Reference>
   </ItemGroup>
 

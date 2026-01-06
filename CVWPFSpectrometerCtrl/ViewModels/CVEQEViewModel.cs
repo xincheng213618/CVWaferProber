@@ -2,11 +2,10 @@
 using CVCommCore;
 using CVDB.Services.Algorithm;
 using CVDB.Services.Spectrum;
+using CVWaferProber.Core.Events;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.ViewModels;
 using CVWPFSpectrometerCtrl.Models;
-using CVWPFSpectrumControl;
-using CVWPFSpectrumControl.Models;
 using log4net;
 using Newtonsoft.Json;
 using OxyPlot;
@@ -15,13 +14,12 @@ using OxyPlot.Axes;
 using OxyPlot.Series;
 using ScottPlot.WPF;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
+using WaferComm.Core;
 
 namespace CVWPFSpectrometerCtrl.ViewModels
 {
@@ -64,7 +62,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private VLViewModel VL_viewModel;
         //private IVLCameraViewModel IVLCamera_viewModel;
 
-        private SpectrumControl _spectralCtrl;
+        //private SpectrumControl _spectralCtrl;
 
         private WpfPlot _plotControl;
         // 新增：EQE曲线缓存
@@ -883,6 +881,24 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             // 初始化总览图（关键步骤）
             InitializeOverviewPlotModels();
 
+            InitializeEvents();
+        }
+
+        private void InitializeEvents()
+        {
+            IEventAggregator eventAggregator = CVWPEventAggregatorInstance.Instance;
+            eventAggregator.Subscribe<EQEFlowCompletedEvent>(OnFlowCompleted);
+            eventAggregator.Subscribe<EQEResultGUIClearEvent>(OnResultGUIClear);
+        }
+
+        private void OnResultGUIClear(EQEResultGUIClearEvent @event)
+        {
+            ClearResult();
+        }
+
+        private void OnFlowCompleted(EQEFlowCompletedEvent @event)
+        {
+            LoadEQEData(@event.Results);
         }
 
 
@@ -2767,11 +2783,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             PlotModel.Series.Add(lineSeries);
             PlotModel.InvalidatePlot(true);
             //
-            if (_spectralCtrl != null)
-            {
-                _spectralCtrl.SpectralData.SetData(SelectedMeasurement.Wavelengths, SelectedMeasurement.Intensities);
-                _spectralCtrl.InvalidateVisual();
-            }
+            //if (_spectralCtrl != null)
+            //{
+            //    _spectralCtrl.SpectralData.SetData(SelectedMeasurement.Wavelengths, SelectedMeasurement.Intensities);
+            //    _spectralCtrl.InvalidateVisual();
+            //}
         }
         private void Clear()
         {
@@ -2839,11 +2855,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
 
             // 清空SpectrumControl
-            if (_spectralCtrl != null)
-            {
-                _spectralCtrl.SpectralData.SetData(new float[0], new float[0]);
-                _spectralCtrl.InvalidateVisual();
-            }
+            //if (_spectralCtrl != null)
+            //{
+            //    _spectralCtrl.SpectralData.SetData(new float[0], new float[0]);
+            //    _spectralCtrl.InvalidateVisual();
+            //}
             // 新增：清空EQE曲线缓存
             _eqeSeriesCache.Clear();
         }
@@ -2887,7 +2903,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             InitializeOverviewSeries();
 
             // 触发自动导出
-           // AutoExportData();
+            // AutoExportData();
         }
         private static string ArrayToString(float[] array)
         {
@@ -2895,30 +2911,34 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 return ""; // 空数组返回空字符串
             return string.Join(",", array); // 用逗号拼接元素
         }
-        public void LoadEQEData(string serialNumber)
+        public void LoadEQEData(List<VScgdMeasureResultEqe> results)
         {
-            if (string.IsNullOrWhiteSpace(serialNumber))
-            {
-                ClearAllDisplays();
-                return;
-            }
-            var results = SpectrumResultService.LoadEQEResultByBatchCode(DeviceCode, serialNumber);
             if (results == null || results.Count == 0) return;
 
-            //IL_viewModel.LoadData(results);
-            //IV_viewModel.LoadData(serialNumber);
-            //VL_viewModel.LoadData(results);
             //
             int n = 1;
             foreach (var result in results)
             {
-               
+                SpectrumMeasureParam? param = null;
+                if (!string.IsNullOrEmpty(result.Params)) param = JsonConvert.DeserializeObject<SpectrumMeasureParam>(result.Params);
+                float voltage = 0;
+                float current = 0;
+                if (result.VResult.HasValue) voltage = result.VResult.Value;
+                else if (param != null)
+                {
+                    voltage = Convert.ToSingle(param.SMUData.V);
+                }
+                if (result.IResult.HasValue) current = result.IResult.Value;
+                else if (param != null)
+                {
+                    current = Convert.ToSingle(param.SMUData.I);
+                }
                 var measurement = new SpectrumEQEMeasurement(n++)
                 {
                     Timestamp = result.CreateDate,
                     Meas_Id = result.BatchCode,
-                    Voltage = (float)result.VResult,
-                    Current = (float)result.IResult,
+                    Voltage = voltage,
+                    Current = current,
                     Luminance = (float)result.FPh / 1,
 
                     IP = Math.Round((decimal)(result.FIp / 65535 * 100), 2).ToString() + "%",
@@ -2960,11 +2980,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             if (Measurements.Any())
             {
                 SelectedMeasurement = Measurements.First();
-                if (_spectralCtrl != null)
-                {
-                    _spectralCtrl.SpectralData.SetData(Wavelengths, SelectedMeasurement.Intensities);
-                    _spectralCtrl.InvalidateVisual();
-                }
+                //if (_spectralCtrl != null)
+                //{
+                //    _spectralCtrl.SpectralData.SetData(Wavelengths, SelectedMeasurement.Intensities);
+                //    _spectralCtrl.InvalidateVisual();
+                //}
                 // 新增：加载EQE数据
                 UpdateEQEChartFromSelectedMeasurement();
             }
@@ -2976,6 +2996,16 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             InitializeOverviewSeries();
             // 触发自动导出
             //AutoExportData();
+        }
+        public void LoadEQEData(string serialNumber)
+        {
+            if (string.IsNullOrWhiteSpace(serialNumber))
+            {
+                ClearAllDisplays();
+                return;
+            }
+            var results = SpectrumResultService.LoadEQEResultByBatchCode(DeviceCode, serialNumber);
+            LoadEQEData(results);
         }
         //public SpectrumMeasurement GetSpectrumData(string serialNumber)
         //{
@@ -3014,7 +3044,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         }
                     }
                 }
-                catch (Exception ex) 
+                catch (Exception ex)
                 {
                     // 捕获所有文件操作/反序列化异常，避免影响主流程
                     // 可替换为项目日志框架（如log4net/NLog）
@@ -3141,10 +3171,10 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         //    OnPropertyChanged(nameof(IVLCameraImageSrc));
         //}
 
-        public void SetSpectrumCtrl(SpectrumControl spectralCtrl)
-        {
-            this._spectralCtrl = spectralCtrl;
-        }
+        //public void SetSpectrumCtrl(SpectrumControl spectralCtrl)
+        //{
+        //    this._spectralCtrl = spectralCtrl;
+        //}
         // 新增：控制右侧DataGrid显示/隐藏的勾选状态
         private bool _isShowSpectralDetail;
         public bool IsShowSpectralDetail
@@ -3357,5 +3387,25 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
         #endregion
 
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    public class SpectrumMeasureParam
+    {
+        /// <summary>
+        /// SMU 数据
+        /// </summary>
+        public SMUMasterResultData SMUData { get; set; }
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    public class SMUMasterResultData
+    {
+        public double V { set; get; }
+        public double I { set; get; }
+        public int MasterId { get; set; }
+        public int MasterResultType { get; set; }
     }
 }

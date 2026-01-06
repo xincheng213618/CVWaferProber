@@ -1,10 +1,7 @@
-﻿using CVWPFSpectrometerCtrl.ViewModels;
-using CVWPFSpectrumControl.Models;
+﻿using CVWPFSpectrometerCtrl.Models;
+using CVWPFSpectrometerCtrl.ViewModels;
 using OxyPlot.Wpf;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Media;
 
 
 namespace CVWPFSpectrometerCtrl
@@ -18,14 +15,14 @@ namespace CVWPFSpectrometerCtrl
         private SpectralData _spectralData;
         public CVSpectrumAnalyzer()
         {
-            InitializeComponent();
-          
-            _spectralData = new SpectralData();
-            //_spectralData.GenerateSampleData(550, 50);
-            //SpectralDisplay.SpectralData = _spectralData;
 
-            //_spectralData.GenerateMultiPeakData();
-            Loaded += (s, e) =>
+            InitializeComponent();
+            //EQEGrid.DataContext = CVEQEViewModel.GetInstance();
+             //_spectralData.GenerateSampleData(550, 50);
+             //SpectralDisplay.SpectralData = _spectralData;
+
+             //_spectralData.GenerateMultiPeakData();
+             Loaded += (s, e) =>
             {
                 if (this.DataContext is CVSpectrumViewModel viewModel)
                 {

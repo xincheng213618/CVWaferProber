@@ -33,10 +33,15 @@ namespace CVAVMControl
     /// </summary>
     public partial class CVVAMAnalyzer : UserControl
     {
+        private static readonly ILog logger = LogManager.GetLogger(typeof(CVVAMAnalyzer));
+
         private Mat? XMat;
         private Mat? YMat;
         private Mat? ZMat;
+        private Mat? XYZMat;
         private Mat? pseudoColorMat;
+
+        private byte[] dataXyz;
 
         private System.Windows.Point center;
         private int imageRadius;
@@ -48,7 +53,6 @@ namespace CVAVMControl
         private int displayRadius = 40; // Default display radius angle
                                         // CVVAMAnalyzer.cs 中新增定时器
         private DispatcherTimer? _resourceCleanTimer;
-        private static readonly ILog log = LogManager.GetLogger(typeof(CVVAMAnalyzer));
         // 自定义悬浮面板（用于显示格式信息）
         private Border? _hoverInfoPanel;
         private TextBlock? _hoverInfoText;
@@ -211,23 +215,46 @@ namespace CVAVMControl
                     _resourceCleanTimer.Stop();
                 }
             };
-            //InitializeEvents();
+            InitializeEvents();
 
             //this.Unloaded += CVVAMAnalyzer_Unloaded;
         }
 
-        public void InitializeEvents(IEventAggregator eventAggregator)
+        private void InitializeEvents(IEventAggregator? eventAggregator = null)
         {
-            this.EventAggregator = eventAggregator;
-            this.EventAggregator.Subscribe<FlowCompletedEvent>(OnFlowCompleted);
+            this.EventAggregator = eventAggregator == null ? CVWPEventAggregatorInstance.Instance : eventAggregator;
+            this.EventAggregator.Subscribe<VAMFlowCompletedEvent>(OnFlowCompleted);
+            //this.EventAggregator.Subscribe<VAMFlowStartingEvent>(OnFlowStarting);
+            this.EventAggregator.Subscribe<VAMResultGUIClearEvent>(OnResultGUIClear);
         }
-        public void UnInitializeEvents()
+
+        private void UnInitializeEvents()
         {
-            this.EventAggregator?.Unsubscribe<FlowCompletedEvent>(OnFlowCompleted);
+            this.EventAggregator?.Unsubscribe<VAMFlowCompletedEvent>(OnFlowCompleted);
+            //this.EventAggregator?.Unsubscribe<VAMFlowStartingEvent>(OnFlowStarting);
+            this.EventAggregator?.Unsubscribe<VAMResultGUIClearEvent>(OnResultGUIClear);
         }
-        private void OnFlowCompleted(FlowCompletedEvent @event)
+
+        private void OnFlowCompleted(VAMFlowCompletedEvent @event)
         {
+            if (!string.IsNullOrEmpty(@event.ResultFileName) && System.IO.File.Exists(@event.ResultFileName))
+            {
+                ProcessCVCIEFile(@event.ResultFileName);
+            }
+            else
+            {
+                if (logger.IsErrorEnabled) logger.ErrorFormat("VAM result cvcie file not exist => {0}", @event.ResultFileName);
+            }
         }
+        private void OnFlowStarting(VAMFlowStartingEvent @event)
+        {
+            ResetDataWithoutDispose();
+        }
+        private void OnResultGUIClear(VAMResultGUIClearEvent @event)
+        {
+            ResetDataWithoutDispose();
+        }
+
 
         //private void CVVAMAnalyzer_Unloaded(object sender, RoutedEventArgs e)
         //{
@@ -324,7 +351,7 @@ namespace CVAVMControl
                 CVFileUtil.Read(filename, out fileInfo);
 
                 int channelSize = fileInfo.Cols * fileInfo.Rows * (fileInfo.Bpp / 8);
-
+                int allPixLen = fileInfo.Cols * fileInfo.Rows * (fileInfo.Bpp / 8) * fileInfo.Channels;
                 OpenCvSharp.MatType singleChannelType;
                 switch (fileInfo.Bpp)
                 {
@@ -343,7 +370,12 @@ namespace CVAVMControl
                     Buffer.BlockCopy(fileInfo.Data, 0, dataX, 0, channelSize);
                     Buffer.BlockCopy(fileInfo.Data, channelSize, dataY, 0, channelSize);
                     Buffer.BlockCopy(fileInfo.Data, channelSize * 2, dataZ, 0, channelSize);
-
+                    //dataXyz
+                    if (dataXyz == null || dataXyz.Length != allPixLen)
+                    {
+                        dataXyz = new byte[allPixLen];
+                    }
+                    Buffer.BlockCopy(fileInfo.Data, 0, dataXyz, 0, allPixLen);
                     XMat = OpenCvSharp.Mat.FromPixelData(fileInfo.Rows, fileInfo.Cols, singleChannelType, dataX);
                     YMat = OpenCvSharp.Mat.FromPixelData(fileInfo.Rows, fileInfo.Cols, singleChannelType, dataY);
                     ZMat = OpenCvSharp.Mat.FromPixelData(fileInfo.Rows, fileInfo.Cols, singleChannelType, dataZ);
@@ -370,7 +402,7 @@ namespace CVAVMControl
                 MessageBox.Show($"处理文件时出错: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-       
+
         #region 角度备注绘制（通用方法）
         /// <summary>
         /// 绘制角度/半径备注（通用方法，支持不同位置和样式）
@@ -402,7 +434,7 @@ namespace CVAVMControl
             bgRect.Y = Math.Max(0, Math.Min(mat.Height - bgRect.Height, bgRect.Y));
 
             // 绘制背景框（半透明）
-           // Cv2.Rectangle(mat, bgRect, backgroundColor, -1);
+            // Cv2.Rectangle(mat, bgRect, backgroundColor, -1);
             // 绘制背景框边框（增加辨识度）
             Cv2.Rectangle(mat, bgRect, txtColor, 1);
 
@@ -438,11 +470,11 @@ namespace CVAVMControl
         /// <param name="inputAngleText">输入的角度文本</param>
         private void AddAngleToComboBox(ComboBox targetComboBox, string inputAngleText)
         {
-            
+
             if (string.IsNullOrWhiteSpace(inputAngleText))
             {
                 MessageBox.Show("输入的角度不能为空", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
-                
+
             }
 
             // 1. 输入校验（兼容整数/负数）
@@ -500,6 +532,162 @@ namespace CVAVMControl
         /// </summary>
         /// <param name="targetComboBox">目标下拉框（如cbDisplayAngle/cbDisplayRadius）</param>
         /// <param name="inputAngleText">输入的角度文本</param>
+        //private void DeleteAngleFromComboBox(ComboBox targetComboBox)
+        //{
+        //    // 1. 校验是否有选中项
+        //    if (targetComboBox.SelectedItem == null)
+        //    {
+        //        MessageBox.Show("请选择对应角度", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+        //        return;
+        //    }
+
+        //    // 2. 获取选中项的角度值
+        //    if (!(targetComboBox.SelectedItem is ComboBoxItem selectedItem) ||
+        //        !int.TryParse(selectedItem.Tag?.ToString(), out int delAngle))
+        //    {
+        //        MessageBox.Show("选中项无效", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+        //        return;
+        //    }
+
+        //    // 3. 弹出确认提示
+        //    MessageBoxResult result = MessageBox.Show(
+        //        $"是否确认删除 {delAngle}°？",
+        //        "确认删除",
+        //        MessageBoxButton.YesNo,
+        //        MessageBoxImage.Question
+        //    );
+        //    if (result != MessageBoxResult.Yes)
+        //    {
+        //        return; // 点击“否”，不操作
+        //    }
+
+        //    // 4. 删除选中项
+        //    targetComboBox.Items.Remove(selectedItem);
+
+        //    // 5. 自动选中第一个项（若还有项）
+        //    if (targetComboBox.Items.Count > 0)
+        //    {
+        //        targetComboBox.SelectedIndex = 0;
+        //    }
+        //    else
+        //    {
+        //        // 若下拉框为空，重置选中状态
+        //        _selectedAngle = -1;
+        //        _selectedRadius = -1;
+        //    }
+
+        //    // 6. 刷新显示
+        //    if (IsMatSafe(YMat)) UpdateDisplay();
+        //}
+        // 新增：标记是否正在执行删除操作（屏蔽DLL调用）
+        private void DeleteAngleFromComboBox(ComboBox targetComboBox)
+        {
+            _isDeletingAngle = true;
+            try
+            {
+                if (targetComboBox.SelectedItem == null)
+                {
+                    MessageBox.Show("请先从下拉框中选择要删除的角度", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                if (!(targetComboBox.SelectedItem is ComboBoxItem selectedItem) ||
+                    !int.TryParse(selectedItem.Tag?.ToString(), out int delAngle))
+                {
+                    MessageBox.Show("选中的角度项无效，请重新选择", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                bool isRCircle = IsRCircleMode();
+                string modeName = isRCircle ? "R圆" : "直径线";
+
+                MessageBoxResult result = MessageBox.Show(
+                    $"确认删除{modeName}模式下 {delAngle}° 的角度吗？",
+                    "删除确认",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question
+                );
+                if (result != MessageBoxResult.Yes)
+                {
+                    return;
+                }
+
+                // ========== 关键修复1：删除项后强制重置选中状态 ==========
+                targetComboBox.Items.Remove(selectedItem);
+                targetComboBox.SelectedItem = null; // 清空选中项
+                targetComboBox.UpdateLayout(); // 强制刷新UI
+
+                // ========== 关键修复2：重置全局选中状态（避免绘制已删除的选中项） ==========
+                if (isRCircle)
+                {
+                    _selectedRadius = -1; // 清空选中半径，避免高亮已删除的圆环
+                    displayRadius = -1;
+                }
+                else
+                {
+                    _selectedAngle = -1;
+                    displayAngle = -1;
+                }
+
+                // 自动选中第一个项（仅UI层面）
+                if (targetComboBox.Items.Count > 0)
+                {
+                    targetComboBox.SelectedIndex = 0;
+                    // 同步更新全局状态（仅选中有效项）
+                    if (isRCircle && targetComboBox.SelectedItem is ComboBoxItem newSelItem &&
+                        int.TryParse(newSelItem.Tag?.ToString(), out int newRadius))
+                    {
+                        _selectedRadius = newRadius;
+                        displayRadius = newRadius;
+                    }
+                    else if (!isRCircle && targetComboBox.SelectedItem is ComboBoxItem newSelItem1 &&
+                        int.TryParse(newSelItem1.Tag?.ToString(), out int newAngle))
+                    {
+                        _selectedAngle = newAngle;
+                        displayAngle = newAngle;
+                    }
+                }
+                else
+                {
+                    // 删空时添加默认项
+                    int defaultAngle = isRCircle ? 40 : 120;
+                    ComboBoxItem defaultItem = new ComboBoxItem
+                    {
+                        Content = $"{defaultAngle}°",
+                        Tag = defaultAngle.ToString()
+                    };
+                    targetComboBox.Items.Add(defaultItem);
+                    targetComboBox.SelectedIndex = 0;
+                    if (isRCircle)
+                    {
+                        _selectedRadius = defaultAngle;
+                        displayRadius = defaultAngle;
+                    }
+                    else
+                    {
+                        _selectedAngle = defaultAngle;
+                        displayAngle = defaultAngle;
+                    }
+                    MessageBox.Show($"{modeName}下拉框已空，自动填充默认角度：{defaultAngle}°", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+
+                // ========== 关键修复3：强制刷新显示（立即重绘画布） ==========
+                Application.Current.Dispatcher.Invoke(DispatcherPriority.Render, () =>
+                {
+                    if (IsMatSafe(YMat))
+                    {
+                        UpdateDisplay();
+                    }
+                });
+
+                logger.Info($"[{modeName}] 成功删除角度：{delAngle}°，当前剩余角度数：{targetComboBox.Items.Count}");
+            }
+            finally
+            {
+                _isDeletingAngle = false;
+            }
+        }
+        private bool _isDeletingAngle = false;
         private void DeleteAngleFromComboBox(ComboBox targetComboBox, string inputAngleText)
         {
             // 1. 输入校验（兼容负数）
@@ -530,16 +718,15 @@ namespace CVAVMControl
             }
 
             targetComboBox.Items.Remove(targetItem);
-            // 自动选中第一个项（可选）
+            // 自动选中第一个项
             if (targetComboBox.SelectedItem == targetItem && targetComboBox.Items.Count > 0)
             {
-                targetComboBox.SelectedIndex = 0;
+                targetComboBox.SelectedIndex = 1;
             }
 
             // 4. 刷新显示
             if (IsMatSafe(YMat)) UpdateDisplay();
         }
-
         /// <summary>
         /// 检查目标ComboBox中是否存在指定角度
         /// </summary>
@@ -558,16 +745,18 @@ namespace CVAVMControl
         // 直径线面板 - 添加角度
         private void BtnAddAngle_Diameter_Click(object sender, RoutedEventArgs e)
         {
+            // 直接传入目标下拉框，无需输入框
             AddAngleToComboBox(cbDisplayAngle, txtAddAngle.Text);
-            txtAddAngle.Text = string.Empty;// 新增：添加后立即刷新显示
+
+
             UpdateDisplay();
         }
 
         // 直径线面板 - 删除角度
         private void BtnDeleteAngle_Diameter_Click(object sender, RoutedEventArgs e)
         {
-            DeleteAngleFromComboBox(cbDisplayAngle, txtDeleteAngle.Text);
-            txtDeleteAngle.Text = string.Empty;
+            DeleteAngleFromComboBox(cbDisplayAngle);
+
             UpdateDisplay();
         }
         // R圆面板 - 添加角度
@@ -581,8 +770,9 @@ namespace CVAVMControl
         // R圆面板 - 删除角度
         private void BtnDeleteAngle_RCircle_Click(object sender, RoutedEventArgs e)
         {
-            DeleteAngleFromComboBox(cbDisplayRadius, txtDeleteAngle1.Text);
-            txtDeleteAngle1.Text = string.Empty;
+            //DeleteAngleFromComboBox(cbDisplayRadius,txtDeleteAngle1.Text);
+            DeleteAngleFromComboBox(cbDisplayRadius);
+            //txtDeleteAngle1.Text = string.Empty;
             UpdateDisplay();
         }
         #endregion
@@ -700,12 +890,15 @@ namespace CVAVMControl
             // R圆模式：圆环半径匹配图像实际有效区域
             if (currentBtnText == diameterTitle)
             {
+                // 强制刷新下拉框并读取最新值列表
+                cbDisplayRadius.UpdateLayout();
                 List<double> radiusValues = GetAllComboBoxValues(cbDisplayRadius);
+
+                // 绘制所有当前有效的R圆角度（已删除的不会出现在列表中）
                 foreach (double radius in radiusValues)
                 {
-                    // 按“图像实际有效半径”均匀映射角度（0°→0，MaxAngle→图像实际有效半径）
-                    float radiusPixel = (float)(radius / MaxAngle * imageActualRadius);
-                    if (radiusPixel > imageActualRadius) continue; // 限制在图像内
+                    float radiusPixel = (float)(Math.Abs(radius) / MaxAngle * imageActualRadius);
+                    if (radiusPixel > imageActualRadius) continue;
 
                     Cv2.Circle(
                         colorMat,
@@ -716,11 +909,8 @@ namespace CVAVMControl
                         LineTypes.AntiAlias
                     );
 
-                    // 备注位置（自适应图像边缘）
-                    OpenCvSharp.Point labelPos = new OpenCvSharp.Point(
-                        (int)(centerPoint.X + radiusPixel + 20),
-                        (int)centerPoint.Y
-                    );
+                    // 绘制角度标签（保留原有逻辑）
+                    OpenCvSharp.Point labelPos = new OpenCvSharp.Point((int)(centerPoint.X + radiusPixel + 20), (int)centerPoint.Y);
                     if (labelPos.X > colorMat.Width - 100)
                     {
                         labelPos.X = (int)(centerPoint.X - radiusPixel - 100);
@@ -728,10 +918,10 @@ namespace CVAVMControl
                     DrawAngleLabel(colorMat, labelPos, $"{radius}(R)", yellowColor, fontScale: 7);
                 }
 
-                // 选中项高亮
-                if (_selectedRadius != -1)
+                // 选中项高亮（仅绘制当前选中的有效半径）
+                if (_selectedRadius != -1 && radiusValues.Contains(_selectedRadius))
                 {
-                    float radiusPixel = (float)(_selectedRadius / MaxAngle * imageActualRadius);
+                    float radiusPixel = (float)(Math.Abs(_selectedRadius) / MaxAngle * imageActualRadius);
                     if (radiusPixel > imageActualRadius) return;
 
                     Cv2.Circle(
@@ -743,10 +933,7 @@ namespace CVAVMControl
                         LineTypes.AntiAlias
                     );
 
-                    OpenCvSharp.Point labelPos = new OpenCvSharp.Point(
-                        (int)(centerPoint.X + radiusPixel + 20),
-                        (int)centerPoint.Y
-                    );
+                    OpenCvSharp.Point labelPos = new OpenCvSharp.Point((int)(centerPoint.X + radiusPixel + 20), (int)centerPoint.Y);
                     if (labelPos.X > colorMat.Width - 100)
                     {
                         labelPos.X = (int)(centerPoint.X - radiusPixel - 100);
@@ -754,6 +941,7 @@ namespace CVAVMControl
                     DrawAngleLabel(colorMat, labelPos, $"{_selectedRadius}(R)", purpleColor, fontScale: 7);
                 }
             }
+
 
 
             // ========== 绘制XY轴（贯穿图像） ==========
@@ -843,8 +1031,8 @@ namespace CVAVMControl
             wpfPlotDiameterLine.Plot.Axes.AutoScale();
             wpfPlotDiameterLine.Plot.Title(DC);
             wpfPlotDiameterLine.Refresh();
-        } 
-        string DC=(string)Application.Current.FindResource("Plot.Title.DiameterLine");
+        }
+        string DC = (string)Application.Current.FindResource("Plot.Title.DiameterLine");
         string RC = (string)Application.Current.FindResource("VAM.RCircle");
         string CDC = (string)Application.Current.FindResource("VAM.CircumferentialDistributionCurve");
         string CA = (string)Application.Current.FindResource("VAM.CircumferentialAngle");
@@ -1020,6 +1208,8 @@ namespace CVAVMControl
             displayRadius = 40;
             wpfPlotDiameterLine.Plot.Clear();
             wpfPlotRCircle.Plot.Clear();
+            wpfPlotDiameterLine.Refresh();
+            wpfPlotRCircle.Refresh();
             imgDisplay.Source = null;
         }
         public void UpdateVAMParams(double maxAngle, double conoscopeCoefficient)
@@ -1292,53 +1482,33 @@ namespace CVAVMControl
         private bool _isFirstLoad = true;
         private void CbDisplayAngle_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            //// 步骤1：首次加载（启动时）直接标记为非首次，不执行后续逻辑
-            //if (_isFirstLoad)
-            //{
-            //    _isFirstLoad = false;
-            //    return;
-            //}
-
-            //// 步骤2：用户主动切换时才检查数据
-            //if (cbDisplayAngle.SelectedItem is ComboBoxItem item && item.Tag is string angleStr)
-            //{
-            //    if (int.TryParse(angleStr, out int angle))
-            //    {
-            //        displayAngle = angle;
-            //        _selectedAngle = angle; // 更新“选中角度”
-            //        _selectedRadius = -1; // 切换面板时重置另一面板的选中状态
-            //        if (IsMatSafe(YMat)) UpdateDisplay();
-            //        else MessageBox.Show("数据未加载或已释放，请重新打开CVCIE文件", "提示");
-            //    }
-            //} 
             // 步骤1：首次加载（启动时）直接标记为非首次，不执行后续逻辑
+            if (_isDeletingAngle) return; // 删除过程中跳过
             if (_isFirstLoad)
             {
                 _isFirstLoad = false;
                 return;
             }
 
-            // 步骤2：用户主动切换时才检查数据
             if (cbDisplayAngle.SelectedItem is ComboBoxItem item && item.Tag is string angleStr)
             {
                 if (int.TryParse(angleStr, out int angle))
                 {
                     displayAngle = angle;
-                    _selectedAngle = angle; // 更新“选中角度”
-                    _selectedRadius = -1; // 切换面板时重置另一面板的选中状态
+                    _selectedAngle = angle;
+                    _selectedRadius = -1;
 
                     if (IsMatSafe(YMat))
                     {
-                        // 调用DLL接口获取直径线数据，再更新图表
                         bool dllCallSuccess = CallVamDllForDiameterLine(angle);
                         if (dllCallSuccess)
                         {
-                            UpdateDisplay(); // 刷新图像上的角度线
+                            UpdateDisplay();
                         }
                         else
                         {
                             MessageBox.Show("VAM接口调用失败，使用本地计算数据", "提示");
-                            UpdateDisplay(); // 降级使用原有本地计算逻辑
+                            UpdateDisplay();
                         }
                     }
                     else
@@ -1349,7 +1519,7 @@ namespace CVAVMControl
             }
         }
 
-      
+
         /// <summary>
         /// 显示通道选择改变
         /// </summary>
@@ -1373,36 +1543,34 @@ namespace CVAVMControl
         /// </summary>
         private void CbDisplayRadius_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            //if (cbDisplayRadius.SelectedItem is ComboBoxItem item && item.Tag is string radiusStr)
-            //{
-            //    if (int.TryParse(radiusStr, out int radius))
-            //    {
-            //        displayRadius = radius;
-            //        _selectedRadius = radius; // 更新“选中半径”
-            //        _selectedAngle = -1; // 切换面板时重置另一面板的选中状态
-            //        if (IsMatSafe(YMat)) UpdateDisplay();
-            //    }
-            //}
+
+            // 删除过程中跳过所有逻辑（避免触发DLL调用）
+            if (_isDeletingAngle) return;
+
             if (cbDisplayRadius.SelectedItem is ComboBoxItem item && item.Tag is string radiusStr)
             {
                 if (int.TryParse(radiusStr, out int radius))
                 {
+                    if (radius < -60 || radius > 60)
+                    {
+                        MessageBox.Show("R圆半径角度需在-60~60之间（支持负数）", "提示");
+                        return;
+                    }
                     displayRadius = radius;
-                    _selectedRadius = radius; // 更新“选中半径”
-                    _selectedAngle = -1; // 切换面板时重置另一面板的选中状态
+                    _selectedRadius = radius;
+                    _selectedAngle = -1;
 
                     if (IsMatSafe(YMat))
                     {
-                        // 调用DLL接口获取R圆数据，再更新图表
                         bool dllCallSuccess = CallVamDllForRCircle(radius);
                         if (dllCallSuccess)
                         {
-                            UpdateDisplay(); // 刷新图像上的半径线
+                            UpdateDisplay();
                         }
                         else
                         {
                             MessageBox.Show("VAM接口调用失败，使用本地计算数据", "提示");
-                            UpdateDisplay(); // 降级使用原有本地计算逻辑
+                            UpdateDisplay();
                         }
                     }
                 }
@@ -1421,12 +1589,12 @@ namespace CVAVMControl
                 // 步骤1：基础校验
                 if (!IsMatSafe(XMat) || !IsMatSafe(YMat) || !IsMatSafe(ZMat))
                 {
-                    log.Error("XYZ Mat 为空或已释放");
+                    logger.Error("XYZ Mat 为空或已释放");
                     return false;
                 }
                 if (center.X == 0 && center.Y == 0)
                 {
-                    log.Error("图像中心未初始化（未加载CVCIE文件）");
+                    logger.Error("图像中心未初始化（未加载CVCIE文件）");
                     return false;
                 }
 
@@ -1443,7 +1611,12 @@ namespace CVAVMControl
                 int elementSize = bpp / 8; // 单个通道像素的字节数
 
                 // 步骤3：修复XYZ数据拼接（核心）
-                byte[] xyzData = MergeXYZToInterleaved(XMat, YMat, ZMat); // 调用新的拼接方法
+                // byte[] xyzData = MergeXYZToInterleaved(XMat, YMat, ZMat); // 调用新的拼接方法
+
+                if (dataXyz == null)
+                {
+                    return false;
+                }
 
                 // 步骤4：构建XYZ的ImageData（匹配DLL入参）
                 ImageData xyzImageData = new ImageData
@@ -1452,7 +1625,7 @@ namespace CVAVMControl
                     _h = imgHeight,
                     _bpp = bpp,
                     _channels = 3, // 关键：XYZ是3通道（交叉存储）
-                    data = xyzData
+                    data = dataXyz
                 };
 
                 // 步骤5：构建空的BGR ImageData（无BGR数据时传null）
@@ -1474,19 +1647,19 @@ namespace CVAVMControl
                         debugPath = "Result\\",
                         debugImgResize = 2
                     },
-                    azimuthalAngle = targetAngle, // 修复：去掉负号，匹配DLL预期
+                    azimuthalAngle = targetAngle, // 匹配DLL预期
                     polar_RHO = 60.0,
                     polar_Angle = 60.0,
                     pixelToAngle = ConoscopeCoefficient,
-                    pointNumLine = 100,
+                    pointNumLine = 100,  // 采样点数量
                     pointNumCircle = 60, // 还原为60，避免DLL数组越界
                     center = new { x = center.X, y = center.Y },
                     displayChannel = displayChannel.ToString() // 新增：传递选中通道
                 });
 
                 // 步骤7：打印参数日志（调试用）
-                log.Info($"DLL调用参数：targetAngle={targetAngle}, center=({center.X},{center.Y}), bpp={bpp}, imgSize=({imgWidth}x{imgHeight})");
-                log.Info($"JSON参数：{staticJson}");
+                logger.Info($"DLL调用参数：targetAngle={targetAngle}, center=({center.X},{center.Y}), bpp={bpp}, imgSize=({imgWidth}x{imgHeight})");
+                logger.Info($"JSON参数：{staticJson}");
 
                 // 步骤8：调用DLL封装方法
                 string resultJson;
@@ -1502,7 +1675,7 @@ namespace CVAVMControl
                 // 步骤9：处理DLL返回结果
                 if (callResult != CV_AliResType.SUCCESS && callResult != CV_AliResType.PART_SUCCESS)
                 {
-                    log.Error($"DLL调用失败，错误码：{callResult}");
+                    logger.Error($"DLL调用失败，错误码：{callResult}");
                     return false;
                 }
 
@@ -1517,14 +1690,14 @@ namespace CVAVMControl
                 string cleanResultJson = resultJson.Trim('\0').Trim();
                 if (string.IsNullOrEmpty(cleanResultJson))
                 {
-                    log.Error("DLL返回空JSON");
+                    logger.Error("DLL返回空JSON");
                     return false;
                 }
 
                 VamResultRoot vamResult = JsonConvert.DeserializeObject<VamResultRoot>(cleanResultJson);
                 if (vamResult?.result?.line?.Data == null || vamResult.result.line.Data.Count == 0)
                 {
-                    log.Error("DLL返回的直径线数据为空");
+                    logger.Error("DLL返回的直径线数据为空");
                     return false;
                 }
 
@@ -1534,7 +1707,7 @@ namespace CVAVMControl
             }
             catch (Exception ex)
             {
-                log.Error("调用DLL获取直径线数据异常", ex);
+                logger.Error("调用DLL获取直径线数据异常", ex);
                 return false;
             }
         }
@@ -1550,12 +1723,12 @@ namespace CVAVMControl
                 // 步骤1：基础校验（同直径线）
                 if (!IsMatSafe(XMat) || !IsMatSafe(YMat) || !IsMatSafe(ZMat))
                 {
-                    log.Error("XYZ Mat 为空或已释放");
+                    logger.Error("XYZ Mat 为空或已释放");
                     return false;
                 }
                 if (center.X == 0 && center.Y == 0)
                 {
-                    log.Error("图像中心未初始化（未加载CVCIE文件）");
+                    logger.Error("图像中心未初始化（未加载CVCIE文件）");
                     return false;
                 }
 
@@ -1572,7 +1745,11 @@ namespace CVAVMControl
                 int elementSize = bpp / 8;
 
                 // 步骤3：调用修复后的XYZ拼接方法
-                byte[] xyzData = MergeXYZToInterleaved(XMat, YMat, ZMat);
+                // byte[] xyzData = MergeXYZToInterleaved(XMat, YMat, ZMat);
+                if (dataXyz == null)
+                {
+                    return false;
+                }
 
                 // 步骤4：构建ImageData（同直径线）
                 ImageData xyzImageData = new ImageData
@@ -1580,15 +1757,15 @@ namespace CVAVMControl
                     _w = imgWidth,
                     _h = imgHeight,
                     _bpp = bpp,
-                    _channels = 3,
-                    data = xyzData
+                    _channels = 1,
+                    data = dataXyz
                 };
                 ImageData bgrImageData = new ImageData
                 {
                     _w = imgWidth,
                     _h = imgHeight,
                     _bpp = bpp,
-                    _channels = 3,
+                    _channels = 1,
                     data = null
                 };
 
@@ -1625,7 +1802,7 @@ namespace CVAVMControl
                 // 步骤7：处理结果（同直径线）
                 if (callResult != CV_AliResType.SUCCESS && callResult != CV_AliResType.PART_SUCCESS)
                 {
-                    log.Error($"DLL调用失败，错误码：{callResult}");
+                    logger.Error($"DLL调用失败，错误码：{callResult}");
                     return false;
                 }
                 if (showImage.data != null)
@@ -1637,14 +1814,14 @@ namespace CVAVMControl
                 string cleanResultJson = resultJson.Trim('\0').Trim();
                 if (string.IsNullOrEmpty(cleanResultJson))
                 {
-                    log.Error("DLL返回空JSON");
+                    logger.Error("DLL返回空JSON");
                     return false;
                 }
 
                 VamResultRoot vamResult = JsonConvert.DeserializeObject<VamResultRoot>(cleanResultJson);
                 if (vamResult?.result?.circle?.Data == null || vamResult.result.circle.Data.Count == 0)
                 {
-                    log.Error("DLL返回的R圆数据为空");
+                    logger.Error("DLL返回的R圆数据为空");
                     return false;
                 }
 
@@ -1653,7 +1830,7 @@ namespace CVAVMControl
             }
             catch (Exception ex)
             {
-                log.Error("调用DLL获取R圆数据异常", ex);
+                logger.Error("调用DLL获取R圆数据异常", ex);
                 return false;
             }
         }
@@ -1782,21 +1959,6 @@ namespace CVAVMControl
         // 切换图表
         private void BtnSwitchChart_Click(object sender, RoutedEventArgs e)
         {
-            //if (btnSwitchChart.Content.ToString() == RCircle)
-            //{
-            //    // 切换到R圆面板
-            //    btnSwitchChart.Content = Diameter;
-            //    panelDiameter.Visibility = Visibility.Collapsed;
-            //    panelRCircle.Visibility = Visibility.Visible;
-            //}
-            //else
-            //{
-            //    // 切换回直径线面板
-            //    btnSwitchChart.Content = RCircle;
-            //    panelDiameter.Visibility = Visibility.Visible;
-            //    panelRCircle.Visibility = Visibility.Collapsed;
-            //}
-
             // 获取当前按钮显示的文本（通过DynamicResource对应的Key）
             string currentBtnText = btnSwitchChart.Content.ToString();
             string rCircleTitle = FindResource("Plot.Title.RCircle").ToString();
@@ -1884,7 +2046,7 @@ namespace CVAVMControl
                 TextWrapping = TextWrapping.NoWrap,
                 SnapsToDevicePixels = true,
                 UseLayoutRounding = true,
-               
+
             };
             // 禁用文本渲染优化，避免文字抖动
             // 移到外部，用静态方法设置RenderOptions属性
@@ -2117,11 +2279,6 @@ namespace CVAVMControl
             {
                 imgGridClip.Rect = new System.Windows.Rect(0, 0, imgGrid.ActualWidth, imgGrid.ActualHeight);
             }
-        }
-
-        public void ResultDisplay(string cieFileName)
-        {
-            ProcessCVCIEFile(cieFileName);
         }
         #endregion
     }
