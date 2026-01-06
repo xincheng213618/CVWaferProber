@@ -3,6 +3,7 @@ using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
 using CVWaferProber.Utils;
+using System.ComponentModel;
 using System.Windows;
 using WaferComm.StateMachine;
 
@@ -40,7 +41,22 @@ namespace CVWaferProber.ViewModels
         public bool IsAOIEnabled
         {
             get => _isAOIEnabled;
-            set { _isAOIEnabled = value; OnPropertyChanged(); }
+            set 
+            {
+                // 核心：值未变化时，不触发PropertyChanged
+                if (_isAOIEnabled == value) return;
+                _isAOIEnabled = value;
+                OnPropertyChanged(nameof(IsAOIEnabled));
+                //// 触发非当前类型检查
+                //MainViewModel.Instance?.CheckNonCurrentTypeCheckboxes();
+                //var mainVM = MainViewModel.Instance;
+                //// 触发计数更新
+                //mainVM?.UpdateCurrentTypeCheckedCount();
+                var mainVM = MainViewModel.Instance;
+                //// 触发计数更新
+                mainVM?.UpdateComboBoxEnableStatus();
+                
+            }
         }
 
         // IVL复选框绑定属性
@@ -48,13 +64,39 @@ namespace CVWaferProber.ViewModels
         public bool IsIVLEnabled
         {
             get => _isIVLEnabled;
-            set { _isIVLEnabled = value; OnPropertyChanged(); }
+            set
+            {
+                if (_isIVLEnabled == value) return;
+                _isIVLEnabled = value;
+                OnPropertyChanged(nameof(IsIVLEnabled));
+                // 触发非当前类型检查
+                //MainViewModel.Instance?.CheckNonCurrentTypeCheckboxes();
+                //var mainVM = MainViewModel.Instance;
+                //// 触发计数更新
+                //mainVM?.UpdateCurrentTypeCheckedCount();
+                var mainVM = MainViewModel.Instance;
+                //// 触发计数更新
+                mainVM?.UpdateComboBoxEnableStatus();
+            }
         }
         private bool _isEQEEnabled;
         public bool IsEQEEnabled
         {
             get => _isEQEEnabled;
-            set { _isEQEEnabled = value; OnPropertyChanged(); }
+            set
+            {
+                if (_isEQEEnabled == value) return;
+                _isEQEEnabled = value;
+                OnPropertyChanged(nameof(IsEQEEnabled));
+                // 新增：触发非当前类型检查
+                //MainViewModel.Instance?.CheckNonCurrentTypeCheckboxes();
+                //var mainVM = MainViewModel.Instance;
+                //// 触发计数更新
+                //mainVM?.UpdateCurrentTypeCheckedCount();
+                var mainVM = MainViewModel.Instance;
+                //// 触发计数更新
+                mainVM?.UpdateComboBoxEnableStatus();
+            }
         }
 
         // IVL复选框绑定属性
@@ -62,7 +104,19 @@ namespace CVWaferProber.ViewModels
         public bool IsVAMEnabled
         {
             get => _isVAMEnabled;
-            set { _isVAMEnabled = value; OnPropertyChanged(); }
+            set {
+                if (_isVAMEnabled == value) return;
+                _isVAMEnabled = value;
+                OnPropertyChanged(nameof(IsVAMEnabled));
+                // 新增：触发非当前类型检查
+                //MainViewModel.Instance?.CheckNonCurrentTypeCheckboxes();
+                //var mainVM = MainViewModel.Instance;
+                //// 触发计数更新
+                //mainVM?.UpdateCurrentTypeCheckedCount();
+                var mainVM = MainViewModel.Instance;
+                //// 触发计数更新
+                mainVM?.UpdateComboBoxEnableStatus();
+            }
         }
         public DieViewModel(ChipViewModel die)
         {
@@ -70,7 +124,7 @@ namespace CVWaferProber.ViewModels
             this.IsIVLCameraEnabled = false;
             this.IsChinese = GetCurrentLanguage() == "Chinese";
 
-            }
+        }
 
         public ChipStatus? Status => chipViewModel?.Status;
         //public ChipStatus? Status => ChipStatus.IVL_COMPLETED;
@@ -177,9 +231,30 @@ namespace CVWaferProber.ViewModels
         public string Pressure { get; set; } = "na";
         public int TouchDownCounts { get; set; } = 0;
         public string ProbingCardSN { get; set; } = "na";
-       
+
 
 
         #endregion
+        private bool _isPropertyChangedDisabled = false;
+
+        /// <summary>
+        /// 临时禁用PropertyChanged通知
+        /// </summary>
+        public void DisablePropertyChanged()
+        {
+            _isPropertyChangedDisabled = true;
+        }
+
+        /// <summary>
+        /// 恢复PropertyChanged通知
+        /// </summary>
+        public void EnablePropertyChanged()
+        {
+            _isPropertyChangedDisabled = false;
+            // 触发一次变更，同步最终状态
+            OnPropertyChanged(null);
+        }
+
+        
     }
 }
