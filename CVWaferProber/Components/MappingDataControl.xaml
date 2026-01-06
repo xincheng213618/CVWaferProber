@@ -4,7 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ccv="clr-namespace:CVWaferProber.Core.Converters;assembly=CVWaferProber.Core"
     xmlns:cv="clr-namespace:CVWaferProber.Converters"
-    xmlns:mbac="clr-namespace:CVWaferProber.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CVWaferProber.Components"
     xmlns:map="clr-namespace:ChipMapping.Views;assembly=ChipMapping"
@@ -14,8 +13,6 @@
     <UserControl.Resources>
         <cv:StatusToColorConverter x:Key="StatusColorConverter" />
         <ccv:NotBooleanConverter x:Key="NotBooleanConverter" />
-        <!-- 多布尔值与转换器 -->
-        <mbac:MultiBooleanAndConverter x:Key="MultiBooleanAndConverter" />
         <!--  全局配色/圆角常量  -->
         <SolidColorBrush x:Key="PrimaryColor" Color="#FF0078D7" />
         <SolidColorBrush x:Key="PrimaryDarkColor" Color="#FF005FB8" />
@@ -371,18 +368,9 @@
                                                 Width="250"
                                                 Height="30"
                                                 VerticalAlignment="Center"
-                                                
+                                                IsEnabled="{Binding IsNotProcessing}"
                                                 ItemsSource="{Binding WPFlows}"
                                                 SelectedItem="{Binding SelectedWPFlow}">
-                                                <!-- 核心修改：MultiBinding 合并两个条件 -->
-                                                <ComboBox.IsEnabled>
-                                                    <MultiBinding Converter="{StaticResource MultiBooleanAndConverter}">
-                                                        <!-- 条件1：非处理中（原IsNotProcessing） -->
-                                                        <Binding Path="IsNotProcessing" />
-                                                        <!-- 条件2：无非当前类型复选框勾选（IsWPFlowComboBoxEnabled） -->
-                                                        <Binding Path="IsWPFlowComboBoxEnabled" />
-                                                    </MultiBinding>
-                                                </ComboBox.IsEnabled>
                                                 <ComboBox.ItemTemplate>
                                                     <DataTemplate>
                                                         <StackPanel Orientation="Horizontal">
