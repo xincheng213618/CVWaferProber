@@ -361,7 +361,7 @@ namespace CVAVMControl
             });
         }
         /// <summary>
-        /// 采集图二格式的数据：同一角度的多个采样点值作为横向列
+        /// 同一角度的多个采样点值作为横向列
         /// </summary>
         private List<VamMatrixExportModel> GetVamMatrixData()
         {
@@ -2439,6 +2439,158 @@ namespace CVAVMControl
             _pointNumLine = pointNumLine;
             
             MessageBox.Show($"采样点数量已设置为：{_pointNumLine}", "设置成功", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void BtnExport_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // 1. 基础校验逻辑
+                if (YMat == null || YMat.Empty())
+                {
+                    MessageBox.Show("没有可导出的数据", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                // 2. 复用文件保存对话框逻辑
+                SaveFileDialog saveFileDialog = new SaveFileDialog
+                {
+                    Filter = "CSV Files (*.csv)|*.csv",
+                    FileName = $"VAM_Export_{displayChannel}_{DateTime.Now:yyyyMMdd_HHmmss}_-60to60.csv",
+                    Title = "保存直径线数据(-60°~60°)"
+                };
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    // 3. 导出方法（核心：-60°~60°范围）
+                    ExportAngleModeToCSV_60To60(saveFileDialog.FileName, displayChannel);
+                    MessageBox.Show($"直径线数据导出成功！\n已导出0°-180°方位角，-60°~60°径向角度数据", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"导出失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        /// <summary>
+        /// 导出-60°~60°径向角度范围的CSV（核心修改方法）
+        /// </summary>
+        private void ExportAngleModeToCSV_60To60(string filePath, ExportChannel channel)
+        {
+            Mat? selectedMat = GetSelectedChannelMat(channel);
+            if (selectedMat == null || selectedMat.Empty())
+                return;
+
+            var angleLines = CreateAngleLinesForExport_60To60(selectedMat);
+
+            using (StreamWriter writer = new StreamWriter(filePath, false, Encoding.UTF8))
+            {
+                if (angleLines.Count == 0)
+                    return;
+
+                // ========== 1. 保留图一的前两行固定表头 ==========
+                writer.WriteLine($"Measurement Date,,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,"); // 第1行
+                writer.WriteLine($"Instrument,,VAM 60°,,,,,,,,,,,,"); // 第2行
+                writer.WriteLine(); // 第3行（空行）
+
+                // ========== 2. 写入核心表头（补充方位角度标注） ==========
+                StringBuilder headerLine = new StringBuilder();
+                headerLine.Append(""); // 第一列标题（径向角度）
+                foreach (var line in angleLines)
+                {
+                    // 列标题添加°符号（方位角度标注：0°、1°…180°）
+                    headerLine.Append($",{line.Angle:F0}°");
+                }
+                writer.WriteLine(headerLine.ToString());
+
+                // ========== 3. 写入数据行（径向角度-60°~60°） ==========
+                int maxSamples = angleLines.Max(l => l.RgbData.Count);
+                if (maxSamples == 0) return;
+
+                for (int i = 0; i < maxSamples; i++)
+                {
+                    StringBuilder dataLine = new StringBuilder();
+                    // 径向角度（-60.00 ~ 60.00）
+                    double theta = angleLines[0].RgbData.Count > i ? angleLines[0].RgbData[i].Position : 0;
+                    dataLine.Append($"{theta:F2}");
+
+                    // 写入每个方位角度对应的数值
+                    foreach (var line in angleLines)
+                    {
+                        if (line.RgbData.Count > i)
+                        {
+                            double value = GetChannelValue(line.RgbData[i], channel);
+                            dataLine.Append($",{value:F2}");
+                        }
+                        else
+                        {
+                            dataLine.Append(",");
+                        }
+                    }
+                    writer.WriteLine(dataLine.ToString());
+                }
+            }
+        }
+
+        /// <summary>
+        /// 创建0°~180°方位角数据（径向角度改为-60°~60°）
+        /// </summary>
+        private List<PolarAngleLine> CreateAngleLinesForExport_60To60(Mat mat)
+        {
+            var angleLines = new List<PolarAngleLine>();
+
+            // 保持方位角范围0°~180°不变
+            for (int phi = 0; phi <= 180; phi++)
+            {
+                angleLines.Add(ExportVAM_60To60(phi, mat));
+            }
+
+            return angleLines;
+        }
+
+        /// <summary>
+        /// 生成-60°~60°径向角度的直径线数据（核心修改）
+        /// </summary>
+        private PolarAngleLine ExportVAM_60To60(double angle, Mat mat)
+        {
+            PolarAngleLine polarLine = new PolarAngleLine
+            {
+                Angle = angle
+            };
+
+            double radians = angle * Math.PI / 180.0;
+
+            // 核心修改：径向角度从-60°循环到60°
+            for (int theta = -60; theta <= 60; theta++)
+            {
+                // 半径像素数取绝对值（距离中心的像素数）
+                double radiusPixels = Math.Abs(theta) / ConoscopeCoefficient;
+                // 方向控制：theta为负时向角度反方向延伸
+                double direction = theta >= 0 ? 1 : -1;
+
+                // 计算像素坐标（适配正负角度）
+                double x = center.X + radiusPixels * Math.Cos(radians) * direction;
+                double y = center.Y + radiusPixels * Math.Sin(radians) * direction;
+
+                // 边界校验
+                int ix = Math.Max(0, Math.Min(mat.Width - 1, (int)Math.Round(x)));
+                int iy = Math.Max(0, Math.Min(mat.Height - 1, (int)Math.Round(y)));
+
+                // 提取像素值
+                double X = 0, Y = 0, Z = 0;
+                ExtractPixelValues(ix, iy, out X, out Y, out Z);
+
+                // 保存采样点（Position为-60~60的角度值）
+                polarLine.RgbData.Add(new RgbSample
+                {
+                    Position = theta,
+                    X = X,
+                    Y = Y,
+                    Z = Z
+                });
+            }
+
+            return polarLine;
         }
     }
 }

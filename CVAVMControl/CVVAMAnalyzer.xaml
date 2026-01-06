@@ -265,7 +265,7 @@
                             x:Name="btnExport"
                             Height="30"
                             Margin="5"
-                            Click="Export_Click"
+                           Click="BtnExport_Click"
                             Content="导出" />
                     </StackPanel>
 
