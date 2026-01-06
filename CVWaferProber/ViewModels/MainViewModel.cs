@@ -90,23 +90,7 @@ namespace CVWaferProber.ViewModels
                 if (_selectedWPFlow != value)
                 {
                     SetProperty(ref _selectedWPFlow, value);
-                    // 空值保护：仅当选中项不为null时执行面板激活
-                    if (value != null)
-                    {
-                        ActivateCorrespondingPanel();
-                        CurrentSelectedType = value.FlowType;
-                        // 切换类型时重置计数
-                        UpdateComboBoxEnableStatus();
-                    }
-                    else
-                    {
-                        CurrentSelectedType = null; // 清空当前选中类型
-                        CurrentTypeCheckedCount = 0;
-                        IsWPFlowComboBoxEnabled = true; // 切换类型时恢复启用
-                    }
-
-                    CheckNonCurrentTypeCheckboxes();
-                   
+                    ActivateCorrespondingPanel();
                 }
             }
         }
@@ -297,85 +281,19 @@ namespace CVWaferProber.ViewModels
         /// false 外部控件关联触发
         /// </summary>
         private bool selfClick = true;
-        private bool _isHandlingAutoCheck = false;
+
         private object? _selectedItem;
         public object? SelectedItem
         {
             get => _selectedItem;
             set
             {
-                if (_isHandlingAutoCheck) return; // 保留循环防护
-
-                if (SetProperty(ref _selectedItem, value))
-                {
-                    ManScrollToItem(SelectedItem);
-                    OnSelectedChanged(value);
-
-                    _isHandlingAutoCheck = true;
-                    try
-                    {
-                        if (value is DieViewModel selectedDie && CurrentSelectedType.HasValue)
-                        {
-                            // 核心新增：判断当前选中类型，仅勾选对应属性，不碰其他类型
-                            switch (CurrentSelectedType.Value)
-                            {
-                                case CVWaferProberFlowType.AOI:
-                                    // 只修改AOI，不影响EQE/IVL/VAM
-                                    if (!selectedDie.IsAOIEnabled)
-                                        selectedDie.IsAOIEnabled = true;
-                                    break;
-                                case CVWaferProberFlowType.IVL_SP:
-                                case CVWaferProberFlowType.IVL_Camera:
-                                    if (!selectedDie.IsIVLEnabled)
-                                        selectedDie.IsIVLEnabled = true;
-                                    break;
-                                case CVWaferProberFlowType.EQE:
-                                    if (!selectedDie.IsEQEEnabled)
-                                        selectedDie.IsEQEEnabled = true;
-                                    break;
-                                case CVWaferProberFlowType.VAM:
-                                    if (!selectedDie.IsVAMEnabled)
-                                        selectedDie.IsVAMEnabled = true;
-                                    break;
-                            }
-
-                            // 移除全选状态同步（避免触发连锁更新）
-                            // UpdateCorrespondingSelectAllState(CurrentSelectedType.Value);
-
-                            if (_dataGrid != null)
-                            {
-                                _dataGrid.ScrollIntoView(selectedDie);
-                                _dataGrid.UpdateLayout();
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        _isHandlingAutoCheck = false;
-                    }
-                }
+                SetProperty(ref _selectedItem, value);
+                ManScrollToItem(SelectedItem);
+                OnSelectedChanged(value);
             }
         }
-        // ========== 新增：同步全选表头状态（可选） ==========
-        private void UpdateCorrespondingSelectAllState(CVWaferProberFlowType type)
-        {
-            switch (type)
-            {
-                case CVWaferProberFlowType.AOI:
-                    UpdateSelectAllAOIState();
-                    break;
-                case CVWaferProberFlowType.IVL_SP:
-                case CVWaferProberFlowType.IVL_Camera:
-                    UpdateSelectAllIVLState();
-                    break;
-                case CVWaferProberFlowType.EQE:
-                    UpdateSelectAllEQEState();
-                    break;
-                case CVWaferProberFlowType.VAM:
-                    UpdateSelectAllVAMState();
-                    break;
-            }
-        }
+
         private CVMQTTWPClient mqtt;
         private int CurTestDieIdx = -1;
 
@@ -452,10 +370,6 @@ namespace CVWaferProber.ViewModels
                         finally
                         {
                             _isUpdatingFromHeader_AOI = false;
-                            // 全选后检查禁用状态
-                            //CheckNonCurrentTypeCheckboxes();
-                            //UpdateCurrentTypeCheckedCount(); // 触发计数检查
-                            UpdateComboBoxEnableStatus();
                         }
                     }
                 }
@@ -489,10 +403,6 @@ namespace CVWaferProber.ViewModels
                         finally
                         {
                             _isUpdatingFromHeader_IVL = false;
-                            // 全选后检查禁用状态
-                            //CheckNonCurrentTypeCheckboxes();
-                            //UpdateCurrentTypeCheckedCount(); // 触发计数检查
-                            UpdateComboBoxEnableStatus();
                         }
                     }
                 }
@@ -526,10 +436,6 @@ namespace CVWaferProber.ViewModels
                         finally
                         {
                             _isUpdatingFromHeader_EQE = false;
-                            // 全选后检查禁用状态
-                            // CheckNonCurrentTypeCheckboxes();
-                            //UpdateCurrentTypeCheckedCount(); // 触发计数检查
-                            UpdateComboBoxEnableStatus();
                         }
                     }
                 }
@@ -563,10 +469,6 @@ namespace CVWaferProber.ViewModels
                         finally
                         {
                             _isUpdatingFromHeader_VAM = false;
-                            // 全选后检查禁用状态
-                            //CheckNonCurrentTypeCheckboxes();
-                            //UpdateCurrentTypeCheckedCount(); // 触发计数检查
-                            UpdateComboBoxEnableStatus();
                         }
                     }
                 }
@@ -1130,8 +1032,6 @@ namespace CVWaferProber.ViewModels
             }
             _dataGrid?.Items.Refresh();
             UpdateSelectAllAOIState();
-            // 反选后检查禁用状态
-            UpdateComboBoxEnableStatus();
         }
 
         private void ExecuteInvertSelectIVL(object obj)
@@ -1142,7 +1042,6 @@ namespace CVWaferProber.ViewModels
             }
             _dataGrid?.Items.Refresh();
             UpdateSelectAllIVLState();
-            UpdateComboBoxEnableStatus();
         }
 
         private void ExecuteInvertSelectEQE(object obj)
@@ -1153,7 +1052,6 @@ namespace CVWaferProber.ViewModels
             }
             _dataGrid?.Items.Refresh();
             UpdateSelectAllEQEState();
-            UpdateComboBoxEnableStatus();
         }
 
         private void ExecuteInvertSelectVAM(object obj)
@@ -1164,7 +1062,6 @@ namespace CVWaferProber.ViewModels
             }
             _dataGrid?.Items.Refresh();
             UpdateSelectAllVAMState();
-            UpdateComboBoxEnableStatus();
         }
 
         #endregion
@@ -1279,20 +1176,20 @@ namespace CVWaferProber.ViewModels
                 }
 
                 logger.Info($"Summary结果已自动导出：{savePath}");
-                //Application.Current.Dispatcher.Invoke(() =>
-                //{
-                //    MessageBox.Show($"Summary结果已导出至：{savePath}", "导出成功",
-                //        MessageBoxButton.OK, MessageBoxImage.Information);
-                //});
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    MessageBox.Show($"Summary结果已导出至：{savePath}", "导出成功",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                });
             }
             catch (Exception ex)
             {
                 logger.Error("Summary结果导出失败", ex);
-                //Application.Current.Dispatcher.Invoke(() =>
-                //{
-                //    MessageBox.Show($"导出失败：{ex.Message}", "错误",
-                //        MessageBoxButton.OK, MessageBoxImage.Error);
-                //});
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    MessageBox.Show($"导出失败：{ex.Message}", "错误",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                });
             }
         }
         #endregion
@@ -1527,7 +1424,6 @@ namespace CVWaferProber.ViewModels
                     if (logger.IsErrorEnabled) logger.Error(ex);
                 }
             }
-            UpdateComboBoxEnableStatus();
         }
 
         private void RefreshStatus(object? obj)
@@ -1843,8 +1739,6 @@ namespace CVWaferProber.ViewModels
             }
 
             CalculateYieldBySerialNumber();
-            // 加载数据后检查禁用状态
-            CheckNonCurrentTypeCheckboxes();
         }
 
         public void SetDataGrid(DataGrid dataGrid)
@@ -1999,8 +1893,6 @@ namespace CVWaferProber.ViewModels
             if (e.PropertyName == nameof(DieViewModel.IsAOIEnabled) && !_isUpdatingFromHeader_AOI)
             {
                 UpdateSelectAllAOIState();
-                // 复选框变化时立即检查非当前类型勾选
-                UpdateComboBoxEnableStatus();
             }
         }
         #endregion
@@ -2042,8 +1934,6 @@ namespace CVWaferProber.ViewModels
             if (e.PropertyName == nameof(DieViewModel.IsIVLEnabled) && !_isUpdatingFromHeader_IVL)
             {
                 UpdateSelectAllIVLState();
-                // 复选框变化时立即检查非当前类型勾选
-                UpdateComboBoxEnableStatus();
             }
         }
         #endregion
@@ -2085,8 +1975,6 @@ namespace CVWaferProber.ViewModels
             if (e.PropertyName == nameof(DieViewModel.IsEQEEnabled) && !_isUpdatingFromHeader_EQE)
             {
                 UpdateSelectAllEQEState();
-                // 复选框变化时立即检查非当前类型勾选
-                UpdateComboBoxEnableStatus();
             }
         }
         #endregion
@@ -2128,246 +2016,9 @@ namespace CVWaferProber.ViewModels
             if (e.PropertyName == nameof(DieViewModel.IsVAMEnabled) && !_isUpdatingFromHeader_VAM)
             {
                 UpdateSelectAllVAMState();
-                // 复选框变化时立即检查非当前类型勾选
-                UpdateComboBoxEnableStatus();
             }
         }
         #endregion
         #endregion
-
-        // 新增：记录当前下拉框选中的类型
-        private CVWaferProberFlowType? _currentSelectedType;
-        public CVWaferProberFlowType? CurrentSelectedType
-        {
-            get => _currentSelectedType;
-            set => SetProperty(ref _currentSelectedType, value);
-        }
-        // ========== 当前类型勾选行数 ==========
-        private int _currentTypeCheckedCount = 0;
-        /// <summary>
-        /// 当前下拉框类型对应的复选框勾选行数
-        /// </summary>
-        public int CurrentTypeCheckedCount
-        {
-            get => _currentTypeCheckedCount;
-            set => SetProperty(ref _currentTypeCheckedCount, value);
-        }
-        /// <summary>
-        /// 更新当前类型的勾选行数并检查是否超量
-        /// </summary>
-        //public void UpdateCurrentTypeCheckedCount()
-        //{
-        //    if (!CurrentSelectedType.HasValue || TestResults.Count == 0)
-        //    {
-        //        CurrentTypeCheckedCount = 0;
-        //        return;
-        //    }
-
-        //    // 根据当前类型统计勾选行数
-        //    switch (CurrentSelectedType.Value)
-        //    {
-        //        case CVWaferProberFlowType.AOI:
-        //            CurrentTypeCheckedCount = TestResults.Count(d => d.IsAOIEnabled);
-        //            break;
-        //        case CVWaferProberFlowType.IVL_SP:
-        //        case CVWaferProberFlowType.IVL_Camera:
-        //            CurrentTypeCheckedCount = TestResults.Count(d => d.IsIVLEnabled);
-        //            break;
-        //        case CVWaferProberFlowType.EQE:
-        //            CurrentTypeCheckedCount = TestResults.Count(d => d.IsEQEEnabled);
-        //            break;
-        //        case CVWaferProberFlowType.VAM:
-        //            CurrentTypeCheckedCount = TestResults.Count(d => d.IsVAMEnabled);
-        //            break;
-        //    }
-
-        //    // 核心逻辑：勾选行数≥2时，禁用下拉框+清空选中项
-        //    if (CurrentTypeCheckedCount >= 2)
-        //    {
-        //        IsWPFlowComboBoxEnabled = false; // 禁用下拉框
-        //        SelectedWPFlow = null; // 清空选中项 → SelectedIndex=-1
-        //        CurrentSelectedType = null; // 清空当前类型
-        //    }
-        //    else
-        //    {
-        //        IsWPFlowComboBoxEnabled = true;
-        //        // 恢复启用时选中第一个项
-        //        if (WPFlows.Count > 0 && SelectedWPFlow == null)
-        //        {
-        //            SelectedWPFlow = WPFlows[0];
-        //        }
-        //    }
-        //    OnPropertyChanged(nameof(IsWPFlowComboBoxEnabled));
-        //}
-        // ========== 下拉框禁用相关属性 ==========
-        private bool _isWPFlowComboBoxEnabled = true;
-        /// <summary>
-        /// 下拉框是否可用（检测到非当前类型复选框勾选时禁用）
-        /// </summary>
-        public bool IsWPFlowComboBoxEnabled
-        {
-            get => _isWPFlowComboBoxEnabled;
-            set => SetProperty(ref _isWPFlowComboBoxEnabled, value);
-        }
-        /// <summary>
-        /// 检查是否有非当前类型的复选框被勾选
-        /// </summary>
-        //public void CheckNonCurrentTypeCheckboxes()
-        //{
-        //    if (!CurrentSelectedType.HasValue || TestResults.Count == 0)
-        //    {
-        //        IsWPFlowComboBoxEnabled = true;
-        //        OnPropertyChanged(nameof(IsWPFlowComboBoxEnabled));
-        //        return;
-        //    }
-
-        //    // 根据当前选中类型，检查是否有其他类型被勾选
-        //    bool hasNonCurrentChecked = false;
-        //    switch (CurrentSelectedType.Value)
-        //    {
-        //        case CVWaferProberFlowType.AOI:
-        //            // 检查IVL/EQE/VAM是否有勾选
-        //            hasNonCurrentChecked = TestResults.Any(d => d.IsIVLEnabled || d.IsEQEEnabled || d.IsVAMEnabled);
-        //            break;
-        //        case CVWaferProberFlowType.IVL_SP:
-        //        case CVWaferProberFlowType.IVL_Camera:
-        //            // 检查AOI/EQE/VAM是否有勾选
-        //            hasNonCurrentChecked = TestResults.Any(d => d.IsAOIEnabled || d.IsEQEEnabled || d.IsVAMEnabled);
-        //            break;
-        //        case CVWaferProberFlowType.EQE:
-        //            // 检查AOI/IVL/VAM是否有勾选
-        //            hasNonCurrentChecked = TestResults.Any(d => d.IsAOIEnabled || d.IsIVLEnabled || d.IsVAMEnabled);
-        //            break;
-        //        case CVWaferProberFlowType.VAM:
-        //            // 检查AOI/IVL/EQE是否有勾选
-        //            hasNonCurrentChecked = TestResults.Any(d => d.IsAOIEnabled || d.IsIVLEnabled || d.IsEQEEnabled);
-        //            break;
-        //    }
-        //    // 禁用时主动清空选中项（触发SelectedIndex=-1）
-        //    if (hasNonCurrentChecked)
-        //    {
-        //        IsWPFlowComboBoxEnabled = false; // 标记禁用
-        //        SelectedWPFlow = null; // 手动清空选中项，对应ComboBox.SelectedIndex=-1
-        //    }
-        //    else
-        //    {
-        //        IsWPFlowComboBoxEnabled = true; // 恢复启用
-        //                                        // 可选：恢复启用时默认选中第一个项（根据需求决定）
-        //        if (WPFlows.Count > 0 && SelectedWPFlow == null)
-        //        {
-        //            SelectedWPFlow = WPFlows[0];
-        //        }
-        //    }
-        //    OnPropertyChanged(nameof(IsWPFlowComboBoxEnabled));
-        //    // 更新下拉框禁用状态
-        //    IsWPFlowComboBoxEnabled = !hasNonCurrentChecked;
-        //}
-
-
-
-        // ========== 核心方法：整合所有状态更新逻辑（单一入口） ==========
-        /// <summary>
-        /// 统一更新ComboBox启用状态（包含：勾选数统计 + 非当前类型检查 + 禁用逻辑）
-        /// 推荐在复选框状态变化、选中类型变化时调用此方法
-        /// </summary>
-        public void UpdateComboBoxEnableStatus()
-        {
-            // 边界条件：无选中类型/无测试数据 → 重置状态
-            if (!CurrentSelectedType.HasValue || TestResults.Count == 0)
-            {
-                ResetComboBoxStatus();
-                return;
-            }
-
-            // 步骤1：统计当前类型的勾选行数（提取为独立方法，提高可读性）
-            CalculateCurrentTypeCheckedCount();
-
-            // 步骤2：检查是否有非当前类型的复选框被勾选
-            bool hasNonCurrentChecked = CheckNonCurrentTypeCheckboxes();
-
-            // 步骤3：判断是否禁用ComboBox（两个条件满足其一即禁用）
-            bool shouldDisable = CurrentTypeCheckedCount >= 2 || hasNonCurrentChecked;
-
-            // 步骤4：更新禁用状态 + 清空选中项（仅在禁用时清空）
-            IsWPFlowComboBoxEnabled = !shouldDisable;
-            if (shouldDisable)
-            {
-                ClearComboBoxSelection();
-            }
-            // 可选：启用时自动选中第一个项（根据业务需求决定是否保留）
-            else if (WPFlows.Count > 0 && SelectedWPFlow == null)
-            {
-                SelectedWPFlow = WPFlows[0];
-            }
-        }
-
-        // ========== 辅助方法：拆分逻辑，单一职责 ==========
-        /// <summary>
-        /// 重置ComboBox状态（无选中类型/无数据时）
-        /// </summary>
-        private void ResetComboBoxStatus()
-        {
-            CurrentTypeCheckedCount = 0;
-            IsWPFlowComboBoxEnabled = true;
-            // 可选：重置时不清空选中项，根据业务调整
-            // SelectedWPFlow = null;
-            // CurrentSelectedType = null;
-        }
-
-        /// <summary>
-        /// 统计当前选中类型对应的复选框勾选行数
-        /// </summary>
-        private void CalculateCurrentTypeCheckedCount()
-        {
-            // 补充防御性判断：若CurrentSelectedType为null，直接重置计数
-            if (!CurrentSelectedType.HasValue)
-            {
-                CurrentTypeCheckedCount = 0;
-                return;
-            }
-            CurrentTypeCheckedCount = CurrentSelectedType.Value switch
-            {
-                CVWaferProberFlowType.AOI => TestResults.Count(d => d.IsAOIEnabled),
-                CVWaferProberFlowType.IVL_SP or CVWaferProberFlowType.IVL_Camera => TestResults.Count(d => d.IsIVLEnabled),
-                CVWaferProberFlowType.EQE => TestResults.Count(d => d.IsEQEEnabled),
-                CVWaferProberFlowType.VAM => TestResults.Count(d => d.IsVAMEnabled),
-                _ => 0 // 兜底，避免枚举新增值导致异常
-            };
-        }
-
-        /// <summary>
-        /// 检查是否有非当前类型的复选框被勾选
-        /// </summary>
-        /// <returns>true=有非当前类型勾选，false=无</returns>
-        private bool CheckNonCurrentTypeCheckboxes()
-        {
-            // 补充防御性判断：若CurrentSelectedType为null，直接返回false
-            if (!CurrentSelectedType.HasValue)
-            {
-                return false;
-            }
-            return CurrentSelectedType.Value switch
-            {
-                CVWaferProberFlowType.AOI => TestResults.Any(d => d.IsIVLEnabled || d.IsEQEEnabled || d.IsVAMEnabled),
-                CVWaferProberFlowType.IVL_SP or CVWaferProberFlowType.IVL_Camera => TestResults.Any(d => d.IsAOIEnabled || d.IsEQEEnabled || d.IsVAMEnabled),
-                CVWaferProberFlowType.EQE => TestResults.Any(d => d.IsAOIEnabled || d.IsIVLEnabled || d.IsVAMEnabled),
-                CVWaferProberFlowType.VAM => TestResults.Any(d => d.IsAOIEnabled || d.IsIVLEnabled || d.IsEQEEnabled),
-                _ => false
-            };
-
-        }
-
-        /// <summary>
-        /// 清空ComboBox选中项（禁用时调用）
-        /// </summary>
-        private void ClearComboBoxSelection()
-        {
-            SelectedWPFlow = null;
-            CurrentSelectedType = null; // 清空选中类型，触发状态重置
-        }
-        private void OnCheckboxStatusChanged()
-        {
-            UpdateComboBoxEnableStatus();
-        }
     }
 }
