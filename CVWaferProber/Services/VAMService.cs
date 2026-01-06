@@ -2,18 +2,15 @@
 using CVWaferProber.Core.Events;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WaferComm.Core;
+using Newtonsoft.Json;
 
 namespace CVWaferProber.Services
 {
     public class VAMService : BaseSerivce
     {
-        public VAMService(RCRestService rcService, IEventAggregator? eventAggregator = null) : base(rcService, eventAggregator)
+        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(VAMService));
+
+        public VAMService(RCRestService rcService) : base(rcService, CVWPEventAggregatorInstance.Instance)
         {
         }
 
@@ -25,10 +22,30 @@ namespace CVWaferProber.Services
         }
         protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
         {
-            string cieFileName = GetFlowResult(dieViewModel);
-            VamAnalyzer?.ResultDisplay(cieFileName);
-            EventAggregator?.Publish(new FlowCompletedEvent(dieViewModel));
-            return ChipStatus.OK;
+            if (string.IsNullOrEmpty(dieViewModel.SerialNumber)) return ChipStatus.FAILED;
+
+            var results = ImageResultService.LoadResultByBatchCode(dieViewModel.SerialNumber);
+            if (results != null && results.Count == 1)
+            {
+                var result = results[0];
+                if (result.ResultCode.HasValue && result.ResultCode.Value == 0)
+                {
+                    string cieFileName = result.FileUrl;
+                    //TODO test
+                    //cieFileName = "F:\\img\\晶圆台\\VAM\\test_ND0.cvcie";
+                    logger.InfoFormat("VAM result cie => {0}", cieFileName);
+                    EventAggregator?.Publish(new VAMFlowCompletedEvent(cieFileName));
+                }
+                else
+                {
+                    if (logger.IsErrorEnabled) logger.ErrorFormat("VAM result is failed => {0}", JsonConvert.SerializeObject(result));
+                }
+            }
+            else
+            {
+                if (logger.IsErrorEnabled) logger.ErrorFormat("VAM result is enpty");
+            }
+            return ChipStatus.VAM_COMPLETED;
         }
 
         private string GetFlowResult(DieViewModel dieViewModel)
