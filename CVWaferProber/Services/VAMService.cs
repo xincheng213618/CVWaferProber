@@ -2,11 +2,14 @@
 using CVWaferProber.Core.Events;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
+using Newtonsoft.Json;
 
 namespace CVWaferProber.Services
 {
     public class VAMService : BaseSerivce
     {
+        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(VAMService));
+
         public VAMService(RCRestService rcService) : base(rcService, CVWPEventAggregatorInstance.Instance)
         {
         }
@@ -19,7 +22,7 @@ namespace CVWaferProber.Services
         {
             if (string.IsNullOrEmpty(dieViewModel.SerialNumber)) return ChipStatus.FAILED;
 
-            var results = ImageResultService.LoadResultByBatchCode(dieViewModel.SerialNumber);
+            var results = ImageResultService.LoadCIEResultByBatchCode(dieViewModel.SerialNumber);
             if (results != null && results.Count == 1)
             {
                 var result = results[0];
@@ -28,6 +31,7 @@ namespace CVWaferProber.Services
                     string cieFileName = result.FileUrl;
                     //TODO test
                     //cieFileName = "F:\\img\\晶圆台\\VAM\\test_ND0.cvcie";
+                    logger.InfoFormat("VAM result cie => {0}", cieFileName);
                     EventAggregator?.Publish(new VAMFlowCompletedEvent(cieFileName));
 
                     // 2.延迟1秒后发布自动导出事件（确保文件加载完成）
@@ -39,6 +43,14 @@ namespace CVWaferProber.Services
                         });
                     });
                 }
+                else
+                {
+                    if (logger.IsErrorEnabled) logger.ErrorFormat("VAM result is failed => {0}", JsonConvert.SerializeObject(result));
+                }
+            }
+            else
+            {
+                if (logger.IsErrorEnabled) logger.ErrorFormat("VAM result is empty or count>1 => {0}", results != null ? results.Count : 0);
             }
             return ChipStatus.VAM_COMPLETED;
         }
