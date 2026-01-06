@@ -17,7 +17,6 @@
     <ProjectReference Include="..\CVWaferProber.Core\CVWaferProber.Core.csproj" />
     <ProjectReference Include="..\CVWPFCamImageCtrl\CVWPFCamImageCtrl.csproj" />
     <ProjectReference Include="..\CVWPFSpectrometerCtrl\CVWPFSpectrometerCtrl.csproj" />
-    <ProjectReference Include="..\GSWinMsgSim\GSWinMsgSim.csproj" />
     <ProjectReference Include="..\WaferProberClient\WaferComm.Client\WaferComm.Client.csproj" />
     <ProjectReference Include="..\WaferProberClient\WaferComm.Core\WaferComm.Core.csproj" />
     <ProjectReference Include="..\WaferProberClient\WaferComm.Processors\WaferComm.Processors.csproj" />
@@ -36,11 +35,13 @@
     <PackageReference Include="System.Management" Version="10.0.0" />
     <PackageReference Include="System.Reactive" Version="6.0.2" />
   </ItemGroup>
-
   <ItemGroup>
-    <Reference Include="ConoscopeDemo">
-      <HintPath>..\VAMdemo(1)\net8.0-windows\ConoscopeDemo.dll</HintPath>
-    </Reference>
+    <!-- 指定要包含的 DLL -->
+    <Content Include="..\DLL\CV_algorithm.dll">
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="CV.DBEntities">
       <HintPath>..\DLL\CV.DBEntities.dll</HintPath>
     </Reference>
