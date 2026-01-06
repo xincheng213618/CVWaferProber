@@ -40,6 +40,12 @@
     <Content Include="..\DLL\CV_algorithm.dll">
       <CopyToPublishDirectory>Always</CopyToPublishDirectory>
     </Content>
+    <Content Include="..\DLL\opencv_world401.dll">
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </Content> 
+    <Content Include="..\ScanData_sc.csv">
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="CV.DBEntities">
