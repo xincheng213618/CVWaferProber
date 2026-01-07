@@ -39,12 +39,15 @@
     <!-- 指定要包含的 DLL -->
     <Content Include="..\DLL\CV_algorithm.dll">
       <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\DLL\opencv_world401.dll">
       <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content> 
     <Content Include="..\ScanData_sc.csv">
       <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
