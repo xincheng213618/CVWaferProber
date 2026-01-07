@@ -812,7 +812,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             {
                 try
                 {
-                    string currentTab = GetCurrentTabName();
+                    string currentTab = "EQE";
                     var saveFileDialog = new Microsoft.Win32.SaveFileDialog
                     {
                         Filter = "CSV Files|*.csv",
@@ -825,26 +825,10 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
                         try
                         {
-                            //var csv = new StringBuilder();
 
-                            // 根据不同的Tab索引生成不同的数据格式
-                            switch (SelectedTabIndex)
-                            {
-                                case 2: // IV Tab
-                                    ExportToCsv(IVMeasurements, saveFileDialog.FileName, 1);
+                            // 调用导出方法（传入路径、测量数据、波长数组）
+                            ExportToCsv(saveFileDialog.FileName, Measurements, Wavelengths);
 
-                                    break;
-                                case 3: // IL Tab
-                                    ExportToCsv(ILMeasurements, saveFileDialog.FileName, 2);
-                                    break;
-                                case 4: // VL Tab 
-                                    ExportToCsv(VLMeasurements, saveFileDialog.FileName, 0);
-                                    break;
-                                default:
-                                    // 调用导出方法（传入路径、测量数据、波长数组）
-                                    ExportToCsv(saveFileDialog.FileName, Measurements, Wavelengths);
-                                    break;
-                            }
                         }
                         catch (Exception ex)
                         {
@@ -1985,13 +1969,12 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             //const int OriginalTotalPoints = (MaxWave - MinWave) * 10 + 1; // 4001个原始点（380.0~780.0nm，步长0.1）
 
 
-
             try
             {
                 // 1. 固定表头（与目标代码数据项对齐）
                 var fixedHeaders = new List<string>
                 {
-                    "Time","Meas_Id", "Voltage/V", "Current/mA", "Lv(cd/m²)", "IP",
+                    "Time","Meas_Id", "Voltage/V", "Current/mA", "Luminous Flux(lm)","EQE(%)","Efficacy(lm/watt)", "IP",
                     "BlueLight", "cx", "cy", "u'", "v'", "CCT(K)",
                     "Dominant Wavelength(nm)", "Saturation(%)", "Peak Wavelength(nm)", "FWHM"
                 };
@@ -2042,7 +2025,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         measId.ToString(), // 替换原固定值36，改为1、2、3...
                         item.Voltage.ToString("F6"),
                         item.Current.ToString(), // A→mA
-                        item.Luminance.ToString(),
+                        item.LuminousFlux.ToString(),
+                        item.EQE.ToString(),
+                        item.LuminousEfficacy.ToString(),
                         EscapeCsvValue(item.IP ?? ""),
                         item.Blue.ToString(),
                         item.CIE_x.ToString(),
