@@ -807,7 +807,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             #endregion
 
             DeviceCode = "DEV.Spectrum.Default";
-            #region 输出CSV文件
+            #region 输出EQE.CSV文件
             ExportCommand = new RelayCommand((s) =>
             {
                 try
@@ -845,7 +845,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 }
             });
             #endregion
-
+            
             // 初始化颜色映射（可见光谱：紫->蓝->绿->黄->红）
             ScottPlot.Color[] visibleSpectrumColors = {
             ScottPlot.Color.FromHex("#750085"), // 紫色
@@ -867,7 +867,61 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             InitializeEvents();
         }
+        #region 自动导出EQE.CSV文件
+        public void AutoExportEQECsv()
+        {
+            try
+            {
+                if (!Measurements.Any() || Wavelengths == null || Wavelengths.Length == 0)
+                {
+                    System.Windows.MessageBox.Show("无有效EQE数据可导出！", "提示");
+                    return;
+                }
 
+                // 构造导出路径：D:\Project\EQE
+                string basePath = @"D:\Project\EQE";
+                // 检查路径是否可写
+                if (!HasWritePermission(basePath))
+                {
+                    throw new UnauthorizedAccessException($"无权限写入目录：{basePath}");
+                }
+                // 确保目录存在
+                if (!Directory.Exists(basePath))
+                {
+                    Directory.CreateDirectory(basePath);
+                    log.Info($"创建EQE导出目录：{basePath}");
+                }
+
+                // 构造文件名（包含时间戳避免重复）
+                string fileName = $"EQE_Data_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+                string fullPath = Path.Combine(basePath, fileName);
+
+                // 调用已有导出方法
+                ExportEQEToCsv(fullPath, Measurements, Wavelengths);
+                log.Info($"EQE数据已自动导出至：{fullPath}");
+            }
+            catch (Exception ex)
+            {
+                log.Error("EQE自动导出失败", ex);
+                System.Windows.MessageBox.Show($"EQE自动导出错误：{ex.Message}", "错误");
+            }
+        }
+        // 辅助方法：检查目录是否可写
+        private bool HasWritePermission(string path)
+        {
+            try
+            {
+                using (FileStream fs = File.Create(Path.Combine(path, "temp.txt"), 1, FileOptions.DeleteOnClose))
+                {
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        #endregion
         private void InitializeEvents()
         {
             IEventAggregator eventAggregator = CVWPEventAggregatorInstance.Instance;

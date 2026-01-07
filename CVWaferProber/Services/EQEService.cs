@@ -80,6 +80,8 @@ namespace CVWaferProber.Services
             //EQEResultDisplay(dieViewModel);
             //CustomEQEVM.ClearResult();
             //CustomEQEVM.LoadEQEData(dieViewModel.SerialNumber);
+            // 测试完成后自动触发导出
+            CustomEQEVM.AutoExportEQECsv();
             return ChipStatus.EQE_COMPLETED; // 替换为EQE完成状态
         }
 
