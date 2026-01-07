@@ -879,8 +879,12 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 }
 
                 // 构造导出路径：D:\Project\EQE
-                string basePath = @"D:\Project\EQE";
-               
+                string basePath = @"F:\Projects\EQE";
+                // 检查路径是否可写
+                if (!HasWritePermission(basePath))
+                {
+                    throw new UnauthorizedAccessException($"无权限写入目录：{basePath}");
+                }
                 // 确保目录存在
                 if (!Directory.Exists(basePath))
                 {
@@ -902,7 +906,21 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 System.Windows.MessageBox.Show($"EQE自动导出错误：{ex.Message}", "错误");
             }
         }
-      
+        // 辅助方法：检查目录是否可写
+        private bool HasWritePermission(string path)
+        {
+            try
+            {
+                using (FileStream fs = File.Create(Path.Combine(path, "temp.txt"), 1, FileOptions.DeleteOnClose))
+                {
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
         #endregion
         private void InitializeEvents()
         {
