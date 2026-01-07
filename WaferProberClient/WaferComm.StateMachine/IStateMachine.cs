@@ -35,5 +35,7 @@ namespace WaferComm.StateMachine
         MotionStatistics GetMotionStatistics();
         void ResetMotionMonitor();
         TemperatureStatistics GetTemperatureStatistics();
+        Task StartHeaterMonitorAsync();
+        Task StopHeaterMonitorAsync();
     }
 }

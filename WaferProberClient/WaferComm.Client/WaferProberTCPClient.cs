@@ -384,7 +384,8 @@ namespace WaferComm.Client
 
         public Task SetTemperatureAsync(decimal temperature)
         {
-            string tempStr = temperature.ToString("0000"); // 4位，如 0250
+            int temp = (int)(temperature * 10);
+            string tempStr = temp.ToString("D4"); // 4位，如 0250
             return SendCommandAsync($"f{tempStr}");
         }
 

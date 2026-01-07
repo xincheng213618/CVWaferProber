@@ -11,7 +11,7 @@ using WaferComm.Processors;
 namespace WaferComm.StateMachine
 {
     /// <summary>
-    /// 加热吸盘监控器
+    /// Heater Chuck Monitor
     /// </summary>
     public class HeaterMonitor : CommandProcessorBase
     {
@@ -26,7 +26,7 @@ namespace WaferComm.StateMachine
         private bool _isMonitoring = false;
         private decimal? _lastStableTemperature;
         private DateTime _lastStableTime;
-        private const decimal TEMPERATURE_STABILITY_THRESHOLD = 0.1m; // 稳定阈值 ±0.1℃
+        private const decimal TEMPERATURE_STABILITY_THRESHOLD = 0.1m; // Stability threshold ±0.1℃
         private const int MAX_UNSTABLE_COUNT = 5;
 
         public TemperatureInfo CurrentHeaterInfo
@@ -45,12 +45,12 @@ namespace WaferComm.StateMachine
             _eventAggregator = eventAggregator;
             _client = client;
 
-            // 温度检查定时器（每5秒检查一次）
+            // Temperature check timer (check every 5 seconds)
             _temperatureCheckTimer = new System.Timers.Timer(5000);
             _temperatureCheckTimer.Elapsed += OnTemperatureCheckTimerElapsed;
             _temperatureCheckTimer.AutoReset = true;
 
-            // 温度稳定性检查定时器（每10秒检查一次）
+            // Temperature stability check timer (check every 10 seconds)
             _stabilityCheckTimer = new System.Timers.Timer(10000);
             _stabilityCheckTimer.Elapsed += OnStabilityCheckTimerElapsed;
             _stabilityCheckTimer.AutoReset = true;
@@ -92,12 +92,14 @@ namespace WaferComm.StateMachine
         {
             await base.StartAsync();
             StartMonitoring();
+            _eventAggregator?.Publish(new HeaterMonitorStartedEvent());
         }
 
         public override async Task StopAsync()
         {
             StopMonitoring();
             await base.StopAsync();
+            _eventAggregator?.Publish(new HeaterMonitorStopedEvent());
         }
 
         private void StartMonitoring()
@@ -120,14 +122,14 @@ namespace WaferComm.StateMachine
             if (!_isMonitoring || !_client.IsConnected) return;
             try
             {
-                // 发送加热吸盘状态查询指令
+                // Send heater chuck status query command
                 //_eventAggregator.Publish(new CommandSentEvent("$r#"));
                 _client?.GetCurrentTemperatureAsync();
                 _client?.GetHeaterStatusAsync();
             }
             catch (Exception ex)
             {
-                _eventAggregator.Publish(new CommunicationErrorEvent("温度检查失败", ex, "HeaterMonitor"));
+                _eventAggregator.Publish(new CommunicationErrorEvent("Temperature check failed", ex, "HeaterMonitor"));
             }
         }
 
@@ -141,7 +143,7 @@ namespace WaferComm.StateMachine
             }
             catch (Exception ex)
             {
-                _eventAggregator.Publish(new CommunicationErrorEvent("稳定性检查失败", ex, "HeaterMonitor"));
+                _eventAggregator.Publish(new CommunicationErrorEvent("Stability check failed", ex, "HeaterMonitor"));
             }
         }
 
@@ -151,17 +153,17 @@ namespace WaferComm.StateMachine
 
             string response = @event.Command;
 
-            // 处理加热吸盘状态响应
+            // Process heater status response
             if (response.StartsWith("r"))
             {
                 ProcessHeaterStatusResponse(response);
             }
-            // 处理当前温度响应
+            // Process current temperature response
             else if (response.StartsWith("fl") && response.Length > 2)
             {
                 ProcessCurrentTemperatureResponse(response);
-            } 
-            // 处理温度设置响应
+            }
+            // Process temperature set response
             else if (response.StartsWith("f") && response.Length >= 5)
             {
                 ProcessTemperatureSetResponse(response);
@@ -170,7 +172,7 @@ namespace WaferComm.StateMachine
 
         private void OnCommandSent(CommandSentEvent @event)
         {
-            // 检测是否是温度设置指令
+            // Detect if it's a temperature set command
             if (@event.Command.StartsWith("$f") && @event.Command.Length >= 6)
             {
                 ProcessTemperatureSetCommand(@event.Command);
@@ -179,14 +181,14 @@ namespace WaferComm.StateMachine
 
         private void OnStateTransition(StateTransitionEvent @event)
         {
-            // 状态转换时，如果转到错误状态，停止加热监控
+            // On state transition, stop heater monitoring if transitioning to error state
             if (@event.ToState == ProberState.Error)
             {
                 StopMonitoring();
             }
             else if (@event.ToState == ProberState.Ready && @event.FromState == ProberState.Error)
             {
-                // 从错误状态恢复，重新开始监控
+                // Recover from error state, restart monitoring
                 StartMonitoring();
             }
         }
@@ -195,7 +197,7 @@ namespace WaferComm.StateMachine
         {
             if (@event.IsConnected)
             {
-                // 连接成功后延迟启动监控
+                // Delay starting monitoring after successful connection
                 Task.Delay(2000).ContinueWith(_ => StartMonitoring());
             }
             else
@@ -209,12 +211,12 @@ namespace WaferComm.StateMachine
         {
             lock (_heaterLock)
             {
-                // 解析加热吸盘状态响应
-                // r@@ - 无加热吸盘
-                // rG@ - 温度过高
-                // rK@ - 温度过低
-                // rC@ - 正常
-                // rA@ - 其他
+                // Parse heater chuck status response
+                // r@@ - No heater chuck
+                // rG@ - Temperature too high
+                // rK@ - Temperature too low
+                // rC@ - Normal
+                // rA@ - Other
 
                 HeaterChuckStatus status = HeaterChuckStatus.Unknown;
 
@@ -231,11 +233,11 @@ namespace WaferComm.StateMachine
                         _ => HeaterChuckStatus.Unknown
                     };
 
-                    // 更新状态
+                    // Update status
                     _currentHeaterInfo.Status = status;
                     _currentHeaterInfo.LastTemperatureUpdate = DateTime.Now;
 
-                    // 记录故障
+                    // Record faults
                     if (status == HeaterChuckStatus.TemperatureTooHigh ||
                         status == HeaterChuckStatus.TemperatureTooLow ||
                         status == HeaterChuckStatus.Other)
@@ -243,10 +245,10 @@ namespace WaferComm.StateMachine
                         _currentHeaterInfo.HeaterFaultCount++;
                     }
 
-                    // 计算运行时间
+                    // Calculate runtime
                     _currentHeaterInfo.HeaterUptime = DateTime.Now - _heaterStartTime;
 
-                    // 发布状态更新事件
+                    // Publish status update event
                     _eventAggregator.Publish(new HeaterStatusUpdatedEvent(
                         status,
                         _currentHeaterInfo.CurrentTemperature,
@@ -254,7 +256,7 @@ namespace WaferComm.StateMachine
                         response
                     ));
 
-                    // 检查是否需要发布警告
+                    // Check if warnings need to be published
                     CheckForTemperatureWarnings();
                 }
             }
@@ -266,23 +268,23 @@ namespace WaferComm.StateMachine
             {
                 try
                 {
-                    // 解析温度设置响应 f0250
+                    // Parse temperature set response f0250
                     if (response.Length >= 5)
                     {
                         string tempStr = response.Substring(1, 4);
                         if (decimal.TryParse(tempStr, out decimal temp))
                         {
-                            _currentHeaterInfo.SetTemperature = temp; // 转换为实际温度
+                            _currentHeaterInfo.SetTemperature = temp; // Convert to actual temperature
 
-                            // 记录日志
+                            // Record log
                             //_eventAggregator.Publish(new CommandSentEvent(
-                            //    $"$M温度设置: {_currentHeaterInfo.SetTemperature:F1}℃#"));
+                            //    $"$MTemperature set: {_currentHeaterInfo.SetTemperature:F1}℃#"));
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    _eventAggregator.Publish(new CommunicationErrorEvent("解析温度设置响应失败", ex, "HeaterMonitor"));
+                    _eventAggregator.Publish(new CommunicationErrorEvent("Failed to parse temperature set response", ex, "HeaterMonitor"));
                 }
             }
         }
@@ -293,7 +295,7 @@ namespace WaferComm.StateMachine
             {
                 try
                 {
-                    // 解析当前温度响应 fl024.7
+                    // Parse current temperature response fl024.7
                     if (response.Length > 2)
                     {
                         string tempStr = response.Substring(2);
@@ -303,25 +305,25 @@ namespace WaferComm.StateMachine
                             _currentHeaterInfo.CurrentTemperature = temp;
                             _currentHeaterInfo.LastTemperatureUpdate = DateTime.Now;
 
-                            // 添加到历史记录
+                            // Add to history
                             _currentHeaterInfo.TemperatureHistory.AddRecord(temp, _currentHeaterInfo.Status);
 
-                            // 计算温度趋势
+                            // Calculate temperature trend
                             _currentHeaterInfo.TemperatureTrend = _currentHeaterInfo.TemperatureHistory.GetTemperatureTrend();
 
                             /*
-                            // 检查温度变化
+                            // Check temperature change
                             if (oldTemp != 0)
                             {
                                 decimal tempChange = temp - oldTemp;
-                                if (Math.Abs(tempChange) > 1.0m) // 温度变化超过1℃
+                                if (Math.Abs(tempChange) > 1.0m) // Temperature change exceeds 1℃
                                 {
                                     _eventAggregator.Publish(new TemperatureWarningEvent(
                                         TemperatureWarningType.TemperatureDrift, temp, _currentHeaterInfo.SetTemperature));
                                 }
                             }
 
-                            // 检查温度是否在设定范围内
+                            // Check if temperature is within set range
                             CheckTemperatureInRange();
                             */
                         }
@@ -329,7 +331,7 @@ namespace WaferComm.StateMachine
                 }
                 catch (Exception ex)
                 {
-                    _eventAggregator.Publish(new CommunicationErrorEvent("解析当前温度响应失败", ex, "HeaterMonitor"));
+                    _eventAggregator.Publish(new CommunicationErrorEvent("Failed to parse current temperature response", ex, "HeaterMonitor"));
                 }
             }
         }
@@ -340,7 +342,7 @@ namespace WaferComm.StateMachine
             {
                 try
                 {
-                    // 解析温度设置指令 $f0250#
+                    // Parse temperature set command $f0250#
                     string cmd = command.Trim('$', '#');
                     if (cmd.Length >= 5 && cmd.StartsWith("f"))
                     {
@@ -349,15 +351,15 @@ namespace WaferComm.StateMachine
                         {
                             _currentHeaterInfo.SetTemperature = temp / 10;
 
-                            // 记录日志
+                            // Record log
                             _eventAggregator.Publish(new CommandSentEvent(
-                                $"$M设置目标温度: {_currentHeaterInfo.SetTemperature:F1}℃#"));
+                                $"$MSet target temperature: {_currentHeaterInfo.SetTemperature:F1}℃#"));
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    _eventAggregator.Publish(new CommunicationErrorEvent("解析温度设置指令失败", ex, "HeaterMonitor"));
+                    _eventAggregator.Publish(new CommunicationErrorEvent("Failed to parse temperature set command", ex, "HeaterMonitor"));
                 }
             }
         }
@@ -403,7 +405,7 @@ namespace WaferComm.StateMachine
 
                     if (Math.Abs(current - target) > tolerance)
                     {
-                        // 温度超出容差范围
+                        // Temperature exceeds tolerance range
                         if (current > target + tolerance)
                         {
                             _eventAggregator.Publish(new TemperatureWarningEvent(
@@ -431,7 +433,7 @@ namespace WaferComm.StateMachine
 
                 if (recentTemps.Count < 2) return false;
 
-                // 计算温度标准差
+                // Calculate temperature standard deviation
                 decimal average = recentTemps.Average();
                 decimal sumOfSquares = recentTemps.Sum(t => (t - average) * (t - average));
                 decimal variance = sumOfSquares / recentTemps.Count;
@@ -439,7 +441,7 @@ namespace WaferComm.StateMachine
 
                 bool isStable = stdDev <= TEMPERATURE_STABILITY_THRESHOLD;
 
-                // 更新状态
+                // Update status
                 if (isStable && _currentHeaterInfo.Status == HeaterChuckStatus.Normal)
                 {
                     _currentHeaterInfo.Status = HeaterChuckStatus.TemperatureStable;
@@ -486,7 +488,8 @@ namespace WaferComm.StateMachine
                 var recs = history.GetRecentRecords(100);
                 decimal MinTemperature = 0;
                 decimal MaxTemperature = 0;
-                if( recs != null ) { 
+                if (recs != null)
+                {
                     TotalRecords = recs.Count();
                     if (TotalRecords > 0)
                     {
@@ -517,7 +520,7 @@ namespace WaferComm.StateMachine
     }
 
     /// <summary>
-    /// 温度统计信息
+    /// Temperature Statistics Information
     /// </summary>
     public class TemperatureStatistics
     {
@@ -533,8 +536,8 @@ namespace WaferComm.StateMachine
 
         public override string ToString()
         {
-            return $"平均: {AverageTemperature?.ToString("F1") ?? "N/A"}℃ | 范围: {MinTemperature:F1}-{MaxTemperature:F1}℃ | " +
-                   $"趋势: {TemperatureTrend?.ToString("F2") ?? "N/A"}℃/min | 状态: {CurrentStatus}";
+            return $"Average: {AverageTemperature?.ToString("F1") ?? "N/A"}℃ | Range: {MinTemperature:F1}-{MaxTemperature:F1}℃ | " +
+                   $"Trend: {TemperatureTrend?.ToString("F2") ?? "N/A"}℃/min | Status: {CurrentStatus}";
         }
     }
 }
