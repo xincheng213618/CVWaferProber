@@ -2510,7 +2510,7 @@ namespace CVAVMControl
                 if (saveFileDialog.ShowDialog() == true)
                 {
                     // 3. 调用修复后的导出方法
-                    ExportAngleModeToCSV_60To60_Fixed(saveFileDialog.FileName, displayChannel);
+                    //ExportAngleModeToCSV_60To60(saveFileDialog.FileName, displayChannel);
                     MessageBox.Show($"直径线数据导出成功！\n已导出0°-180°方位角，-60°~60°径向角度数据", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
@@ -2519,149 +2519,149 @@ namespace CVAVMControl
                 MessageBox.Show($"导出失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        /// <summary>
-        /// 导出-60°~60°径向角度范围的CSV（核心修改方法）
-        /// </summary>
-        private void ExportAngleModeToCSV_60To60_Fixed(string filePath, ExportChannel channel)
-        {
-            Mat? selectedMat = GetSelectedChannelMat(channel);
-            if (selectedMat == null || selectedMat.Empty())
-                return;
+        ///// <summary>
+        ///// 导出-60°~60°径向角度范围的CSV（核心修改方法）
+        ///// </summary>
+        //private void ExportAngleModeToCSV_60To60_Fixed(string filePath, ExportChannel channel)
+        //{
+        //    Mat? selectedMat = GetSelectedChannelMat(channel);
+        //    if (selectedMat == null || selectedMat.Empty())
+        //        return;
 
-            var angleLines = CreateAngleLinesForExport_60To60_Fixed(selectedMat);
+        //    var angleLines = CreateAngleLinesForExport_60To60_Fixed(selectedMat);
 
-            using (StreamWriter writer = new StreamWriter(filePath, false, Encoding.UTF8))
-            {
-                if (angleLines.Count == 0)
-                    return;
+        //    using (StreamWriter writer = new StreamWriter(filePath, false, Encoding.UTF8))
+        //    {
+        //        if (angleLines.Count == 0)
+        //            return;
 
-                // 1. 保留图一的前两行固定表头
-                writer.WriteLine($"Measurement Date,,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,"); // 第1行
-                writer.WriteLine($"Instrument,,VAM 60°,,,,,,,,,,,,"); // 第2行
-                writer.WriteLine(); // 第3行（空行）
+        //        // 1. 保留图一的前两行固定表头
+        //        writer.WriteLine($"Measurement Date,,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,"); // 第1行
+        //        writer.WriteLine($"Instrument,,VAM 60°,,,,,,,,,,,,"); // 第2行
+        //        writer.WriteLine(); // 第3行（空行）
 
-                // 2. 写入核心表头（补充方位角度标注）
-                StringBuilder headerLine = new StringBuilder();
-                headerLine.Append(""); // 第一列标题（径向角度）
-                foreach (var line in angleLines)
-                {
-                    // 列标题添加°符号（方位角度标注：0°、1°…180°）
-                    headerLine.Append($",{line.Angle:F0}°");
-                }
-                writer.WriteLine(headerLine.ToString());
+        //        // 2. 写入核心表头（补充方位角度标注）
+        //        StringBuilder headerLine = new StringBuilder();
+        //        headerLine.Append(""); // 第一列标题（径向角度）
+        //        foreach (var line in angleLines)
+        //        {
+        //            // 列标题添加°符号（方位角度标注：0°、1°…180°）
+        //            headerLine.Append($",{line.Angle:F0}°");
+        //        }
+        //        writer.WriteLine(headerLine.ToString());
 
-                // 3. 写入数据行（径向角度-60°~60°）
-                int maxSamples = angleLines.Max(l => l.RgbData.Count);
-                if (maxSamples == 0) return;
+        //        // 3. 写入数据行（径向角度-60°~60°）
+        //        int maxSamples = angleLines.Max(l => l.RgbData.Count);
+        //        if (maxSamples == 0) return;
 
-                for (int i = 0; i < maxSamples; i++)
-                {
-                    StringBuilder dataLine = new StringBuilder();
-                    // 径向角度（-60.00 ~ 60.00）
-                    double theta = angleLines[0].RgbData.Count > i ? angleLines[0].RgbData[i].Position : 0;
-                    dataLine.Append($"{theta:F2}");
+        //        for (int i = 0; i < maxSamples; i++)
+        //        {
+        //            StringBuilder dataLine = new StringBuilder();
+        //            // 径向角度（-60.00 ~ 60.00）
+        //            double theta = angleLines[0].RgbData.Count > i ? angleLines[0].RgbData[i].Position : 0;
+        //            dataLine.Append($"{theta:F2}");
 
-                    // 写入每个方位角度对应的数值
-                    foreach (var line in angleLines)
-                    {
-                        if (line.RgbData.Count > i)
-                        {
-                            double value = GetChannelValue(line.RgbData[i], channel);
-                            dataLine.Append($",{value:F2}");
-                        }
-                        else
-                        {
-                            dataLine.Append(",");
-                        }
-                    }
-                    writer.WriteLine(dataLine.ToString());
-                }
-            }
-        }
+        //            // 写入每个方位角度对应的数值
+        //            foreach (var line in angleLines)
+        //            {
+        //                if (line.RgbData.Count > i)
+        //                {
+        //                    double value = GetChannelValue(line.RgbData[i], channel);
+        //                    dataLine.Append($",{value:F2}");
+        //                }
+        //                else
+        //                {
+        //                    dataLine.Append(",");
+        //                }
+        //            }
+        //            writer.WriteLine(dataLine.ToString());
+        //        }
+        //    }
+        //}
 
-        /// <summary>
-        /// 创建0°~180°方位角数据（径向角度改为-60°~60°）
-        /// </summary>
-        private List<PolarAngleLine> CreateAngleLinesForExport_60To60_Fixed(Mat mat)
-        {
-            var angleLines = new List<PolarAngleLine>();
+        ///// <summary>
+        ///// 创建0°~180°方位角数据（径向角度改为-60°~60°）
+        ///// </summary>
+        //private List<PolarAngleLine> CreateAngleLinesForExport_60To60_Fixed(Mat mat)
+        //{
+        //    var angleLines = new List<PolarAngleLine>();
 
-            // 遍历0°~180°方位角
-            for (int phi = 0; phi <= 180; phi++)
-            {
-                // 核心修复：180°直接复用0°的数据（反向后数据一致）
-                if (phi == 180)
-                {
-                    // 获取0°的直径线数据
-                    var zeroLine = ExportVAM_60To60_Fixed(0, mat);
-                    // 180°的直径线数据 = 0°数据的径向角度反转（-60↔60），保证数值一致
-                    var reversedData = zeroLine.RgbData.Select(s => new RgbSample
-                    {
-                        Position = s.Position, // 角度标签保持-60~60不变
-                        X = s.X,
-                        Y = s.Y,
-                        Z = s.Z
-                    }).Reverse().ToList(); // 数据顺序反转，保证180°和0°数值一致
+        //    // 遍历0°~180°方位角
+        //    for (int phi = 0; phi <= 180; phi++)
+        //    {
+        //        // 核心修复：180°直接复用0°的数据（反向后数据一致）
+        //        if (phi == 180)
+        //        {
+        //            // 获取0°的直径线数据
+        //            var zeroLine = ExportVAM_60To60_Fixed(0, mat);
+        //            // 180°的直径线数据 = 0°数据的径向角度反转（-60↔60），保证数值一致
+        //            var reversedData = zeroLine.RgbData.Select(s => new RgbSample
+        //            {
+        //                Position = s.Position, // 角度标签保持-60~60不变
+        //                X = s.X,
+        //                Y = s.Y,
+        //                Z = s.Z
+        //            }).Reverse().ToList(); // 数据顺序反转，保证180°和0°数值一致
 
-                    angleLines.Add(new PolarAngleLine
-                    {
-                        Angle = 180,
-                        RgbData = reversedData
-                    });
-                }
-                else
-                {
-                    // 其他角度正常生成
-                    angleLines.Add(ExportVAM_60To60_Fixed(phi, mat));
-                }
-            }
+        //            angleLines.Add(new PolarAngleLine
+        //            {
+        //                Angle = 180,
+        //                RgbData = reversedData
+        //            });
+        //        }
+        //        else
+        //        {
+        //            // 其他角度正常生成
+        //            angleLines.Add(ExportVAM_60To60_Fixed(phi, mat));
+        //        }
+        //    }
 
-            return angleLines;
-        }
+        //    return angleLines;
+        //}
 
-        /// <summary>
-        /// 生成-60°~60°径向角度的直径线数据（核心修改）
-        /// </summary>
-        private PolarAngleLine ExportVAM_60To60_Fixed(double angle, Mat mat)
-        {
-            PolarAngleLine polarLine = new PolarAngleLine
-            {
-                Angle = angle
-            };
+        ///// <summary>
+        ///// 生成-60°~60°径向角度的直径线数据（核心修改）
+        ///// </summary>
+        //private PolarAngleLine ExportVAM_60To60_Fixed(double angle, Mat mat)
+        //{
+        //    PolarAngleLine polarLine = new PolarAngleLine
+        //    {
+        //        Angle = angle
+        //    };
 
-            double radians = angle * Math.PI / 180.0;
+        //    double radians = angle * Math.PI / 180.0;
 
-            // 径向角度从-60°循环到60°
-            for (int theta = -60; theta <= 60; theta++)
-            {
-                // 半径像素数取绝对值（距离中心的像素数）
-                double radiusPixels = Math.Abs(theta) / ConoscopeCoefficient;
-                // 方向控制：theta为负时向角度反方向延伸
-                double direction = theta >= 0 ? 1 : -1;
+        //    // 径向角度从-60°循环到60°
+        //    for (int theta = -60; theta <= 60; theta++)
+        //    {
+        //        // 半径像素数取绝对值（距离中心的像素数）
+        //        double radiusPixels = Math.Abs(theta) / ConoscopeCoefficient;
+        //        // 方向控制：theta为负时向角度反方向延伸
+        //        double direction = theta >= 0 ? 1 : -1;
 
-                // 计算像素坐标（适配正负角度）
-                double x = center.X + radiusPixels * Math.Cos(radians) * direction;
-                double y = center.Y + radiusPixels * Math.Sin(radians) * direction;
+        //        // 计算像素坐标（适配正负角度）
+        //        double x = center.X + radiusPixels * Math.Cos(radians) * direction;
+        //        double y = center.Y + radiusPixels * Math.Sin(radians) * direction;
 
-                // 边界校验（增强版：避免越界）
-                int ix = Math.Max(0, Math.Min(mat.Width - 1, (int)Math.Round(x)));
-                int iy = Math.Max(0, Math.Min(mat.Height - 1, (int)Math.Round(y)));
+        //        // 边界校验（增强版：避免越界）
+        //        int ix = Math.Max(0, Math.Min(mat.Width - 1, (int)Math.Round(x)));
+        //        int iy = Math.Max(0, Math.Min(mat.Height - 1, (int)Math.Round(y)));
 
-                // 提取像素值
-                double X = 0, Y = 0, Z = 0;
-                ExtractPixelValues(ix, iy, out X, out Y, out Z);
+        //        // 提取像素值
+        //        double X = 0, Y = 0, Z = 0;
+        //        ExtractPixelValues(ix, iy, out X, out Y, out Z);
 
-                // 保存采样点（Position为-60~60的角度值）
-                polarLine.RgbData.Add(new RgbSample
-                {
-                    Position = theta,
-                    X = X,
-                    Y = Y,
-                    Z = Z
-                });
-            }
+        //        // 保存采样点（Position为-60~60的角度值）
+        //        polarLine.RgbData.Add(new RgbSample
+        //        {
+        //            Position = theta,
+        //            X = X,
+        //            Y = Y,
+        //            Z = Z
+        //        });
+        //    }
 
-            return polarLine;
-        }
+        //    return polarLine;
+        //}
     }
 }

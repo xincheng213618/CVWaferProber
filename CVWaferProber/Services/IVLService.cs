@@ -114,6 +114,7 @@ namespace CVWaferProber.Services
             string csvContent = GenerateCsvContent(dieViewModel, "IVL");
             // 【关键修改2】构建Summary数据（对接AutoExportHelper的TestSummaryData）
             AutoExportHelper.TestSummaryData summaryData = BuildIVLSummaryData(dieViewModel);
+
             return ChipStatus.IVL_COMPLETED;
         }
         /// <summary>
