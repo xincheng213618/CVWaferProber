@@ -1,6 +1,4 @@
-﻿using CVWaferProber.Services;
-using CVWaferProber.ViewModels;
-using log4net;
+﻿using log4net;
 using log4net.Config;
 using System.Reflection;
 using System.Windows;

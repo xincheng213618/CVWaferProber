@@ -23,7 +23,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
-using WaferComm.Client;
 using WaferComm.Core;
 
 
@@ -67,13 +66,6 @@ namespace CVWaferProber.ViewModels
         public ConnectionInfo ConnectionInfo
         {
             get => _connectionInfo;
-            //set
-            //{
-            //    if (_connectionInfo != value)
-            //    {
-            //        SetProperty(ref _connectionInfo, value);
-            //    }
-            //}
         }
         private ConnectionInfo _rcConnectionInfo;
         public ConnectionInfo RcConnectionInfo
@@ -550,8 +542,6 @@ namespace CVWaferProber.ViewModels
             InvertSelectEQECommand = new RelayCommand(ExecuteInvertSelectEQE);
             InvertSelectVAMCommand = new RelayCommand(ExecuteInvertSelectVAM);
 
-           
-
             // 初始化数据源
             TestResults = new ObservableCollection<DieViewModel>();
             TestResults.CollectionChanged += AOIItems_CollectionChanged;
@@ -598,6 +588,7 @@ namespace CVWaferProber.ViewModels
             LoadBuzWPFlows();
             InitMQTT();
 
+            InitRc();
 
             SubscribeItems_AOI(TestResults);
             SubscribeItems_IVL(TestResults);
@@ -607,6 +598,13 @@ namespace CVWaferProber.ViewModels
             //IsMappingPanelVisible = Properties.Settings.Default.IsMappingPanelVisible;
             //IsCameraPanelVisible = Properties.Settings.Default.IsCameraPanelVisible;
             //IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
+        }
+
+        private void InitRc()
+        {
+            Task.Factory.StartNew(() => {
+                rcService.RcRegist();
+            });
         }
 
         private void ShowRcConnectionSettings(object obj)
@@ -640,7 +638,7 @@ namespace CVWaferProber.ViewModels
         {
             mainService = MainService.Instance;
             _connectionInfo = mainService.ConnectionInfo;
-            mainService.InitializeService(ProberId, rcService, _connectionInfo);
+            mainService.InitializeService(ProberId, rcService);
             //
             mainService.TestingCompleted += OnTestingCompleted;
             mainService.AutoTestingNext += OnOneDieTestingNext;
@@ -649,7 +647,7 @@ namespace CVWaferProber.ViewModels
             CustomMappingVM = mainService.GetMappingVM();
             CustomImageVM = mainService.GetAOIVM();
             CustomIVLVM = mainService.GetIVLVM();
-            CustomIVLVM.CustomEQEVM = mainService.GetEQEVM();
+            if (CustomIVLVM != null) CustomIVLVM.CustomEQEVM = mainService.GetEQEVM();
 
             Task.Factory.StartNew(async () =>
             {
@@ -1211,7 +1209,7 @@ namespace CVWaferProber.ViewModels
             });
         }
 
-        private void OnChipDieSelected(object sender, ChipViewModel chip)
+        private void OnChipDieSelected(object? sender, ChipViewModel chip)
         {
             if (chip == null || TestResults.Count == 0)
             {
@@ -1314,7 +1312,7 @@ namespace CVWaferProber.ViewModels
         {
             DoEndTesting();
         }
-        private void OnOneDieTestingNext(object? sender, (DieViewModel preDie, DieViewModel nextDie) e)
+        private void OnOneDieTestingNext(object? sender, (DieViewModel? preDie, DieViewModel nextDie) e)
         {
             if (e.preDie != null) e.preDie.UnSelected();
             SelectedItem = e.nextDie;
@@ -1350,7 +1348,6 @@ namespace CVWaferProber.ViewModels
 
         private void LoadBuzWPFlows()
         {
-            rcService.RcRegist();
             List<TScgdBuzProductDetail> flows = WaferProberDBService.LoadBuzFlows();
             WPFlows.Clear();
             if (flows != null && flows.Count > 0)
