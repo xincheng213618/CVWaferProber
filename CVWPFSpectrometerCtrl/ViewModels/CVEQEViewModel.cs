@@ -3185,14 +3185,23 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 _isShowSpectralDetail = value;
                 OnPropertyChanged();
                 // 勾选状态变化时，更新右侧DataGrid数据
-                if (value && SelectedMeasurement != null)
+                // 修复核心：无论value是true/false，都执行对应的逻辑
+                if (value)
                 {
-                    UpdateSpectralGridData(SelectedMeasurement);
+                    // 重新勾选时，强制刷新数据（即使SelectedMeasurement没有变化）
+                    if (SelectedMeasurement != null)
+                    {
+                        UpdateSpectralGridData(SelectedMeasurement);
+                    }
+                    else
+                    {
+                        SpectralGridItems?.Clear();
+                    }
                 }
                 else
                 {
+                    // 取消勾选时清空表格
                     SpectralGridItems?.Clear();
-
                 }
             }
         }
