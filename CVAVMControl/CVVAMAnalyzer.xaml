@@ -201,7 +201,7 @@
                                 Margin="5,0,5,0"
                                 Padding="10,2"
                                 Click="BtnDeleteAngle_Diameter_Click"
-                                Content="删除" />
+                                Content="{DynamicResource VAM.Delete}" />
                         </StackPanel>
                         <StackPanel Margin="5,0,5,10" Orientation="Horizontal">
                             <TextBlock
@@ -222,7 +222,7 @@
                             <TextBlock
                                 Margin="5,0,5,0"
                                 VerticalAlignment="Center"
-                                Text="添加角度:" />
+                                Text="{DynamicResource VAM.AddAngle}" />
                             <TextBox
                                 x:Name="txtAddAngle"
                                 Width="100"
@@ -234,13 +234,13 @@
                                 Margin="0,0,5,0"
                                 Padding="10,2"
                                 Click="BtnAddAngle_Diameter_Click"
-                                Content="添加" />
+                                Content="{DynamicResource VAM.Add}" />
                         </StackPanel>
                         <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
                             <TextBlock
                                 Margin="5,0,5,0"
                                 VerticalAlignment="Center"
-                                Text="采样点数:" />
+                                Text="{DynamicResource VAM.SampleCount}" />
                             <TextBox
                                 x:Name="pointNumLineBox"
                                 Width="100"
@@ -252,7 +252,7 @@
                                 Margin="0,0,5,0"
                                 Padding="10,2"
                                 Click="Button_Click"
-                                Content="确定" />
+                                Content="{DynamicResource VAM.Apply}" />
                         </StackPanel>
                         <!--  导出直径线CSV按钮  -->
                         <Button
@@ -265,7 +265,7 @@
                             x:Name="btnExport"
                             Height="30"
                             Margin="5"
-                           Click="BtnExport_Click"
+                            Click="BtnExport_Click"
                             Content="导出" />
                     </StackPanel>
 
@@ -292,13 +292,13 @@
                                 Margin="5,0,5,0"
                                 Padding="10,2"
                                 Click="BtnDeleteAngle_RCircle_Click"
-                                Content="删除" />
+                                Content="{DynamicResource VAM.Delete}" />
                         </StackPanel>
                         <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
                             <TextBlock
                                 Margin="5,0,5,0"
                                 VerticalAlignment="Center"
-                                Text="添加角度:" />
+                                Text="{DynamicResource VAM.AddAngle}" />
                             <TextBox
                                 x:Name="txtAddAngle1"
                                 Width="100"
@@ -310,7 +310,7 @@
                                 Margin="0,0,5,0"
                                 Padding="10,2"
                                 Click="BtnAddAngle_RCircle_Click"
-                                Content="添加" />
+                                Content="{DynamicResource VAM.Add}" />
                         </StackPanel>
 
                         <!--  导出R圆CSV按钮  -->

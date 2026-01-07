@@ -892,8 +892,8 @@
             <Grid x:Name="EQEGrid">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="16*" />
-                    <ColumnDefinition Width="93*"/>
-                    <ColumnDefinition Width="109*"/>
+                    <ColumnDefinition Width="93*" />
+                    <ColumnDefinition Width="109*" />
                     <ColumnDefinition Width="109*" />
                     <ColumnDefinition Width="109*" />
                     <ColumnDefinition Width="109*" />
@@ -914,7 +914,7 @@
                         x:Name="btnExport1"
                         Width="80"
                         Margin="5"
-                        Command="{Binding CustomEQEVM.EQEExportCommand}"
+                        Command="{Binding CustomEQEVM.ExportCommand}"
                         CommandParameter="{Binding CustomEQEVM.SelectedTabIndex}"
                         Content="{DynamicResource Export CSV}"
                         IsEnabled="True" />
@@ -1018,7 +1018,7 @@
                         Margin="5"
                         VerticalAlignment="Center"
                         Content="{DynamicResource Sp.ShowSpectralDetail}"
-                        IsChecked="{Binding CustomEQEVM.IsShowSpectralDetail, Mode=TwoWay}" />
+                        IsChecked="{Binding CustomEQEVM.IsShowSpectralDetail, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
                 <!--  图表区域  -->
                 <oxy:PlotView
@@ -1073,23 +1073,19 @@
                         <DataGridTextColumn
                             Width="80"
                             Binding="{Binding EQE, StringFormat='F4'}"
-                            Header="{DynamicResource EQE.EQE}" /> 
+                            Header="{DynamicResource EQE.EQE}" />
                         <DataGridTextColumn
                             Width="80"
                             Binding="{Binding LuminousFlux, StringFormat='F4'}"
-                            Header="{DynamicResource EQE.LuminousFlux}" /> 
+                            Header="{DynamicResource EQE.LuminousFlux}" />
                         <DataGridTextColumn
                             Width="80"
                             Binding="{Binding RadiantFlux, StringFormat='F4'}"
-                            Header="{DynamicResource EQE.RadiantFlux}" /> 
-                         <DataGridTextColumn
-                            Width="80"
-                            Binding="{Binding LuminousEfficacy, StringFormat='F4'}"
-                            Header="{DynamicResource EQE.LuminousEfficacy}" /> 
+                            Header="{DynamicResource EQE.RadiantFlux}" />
                         <DataGridTextColumn
                             Width="80"
-                            Binding="{Binding Luminance, StringFormat='F4'}"
-                            Header="{DynamicResource Sp.Luminance}" />
+                            Binding="{Binding LuminousEfficacy, StringFormat='F4'}"
+                            Header="{DynamicResource EQE.LuminousEfficacy}" />
                         <DataGridTextColumn
                             Width="80"
                             Binding="{Binding CIE_x, StringFormat='F4'}"
@@ -1161,7 +1157,7 @@
                             <!--  初始宽度0  -->
                             <Style.Triggers>
                                 <!--  绑定CheckBox的IsChecked，True时宽度变为100（带动画）  -->
-                                <DataTrigger Binding="{Binding ElementName=chkShowDetails, Path=IsChecked}" Value="True">
+                                <DataTrigger Binding="{Binding ElementName=chkShowDetails1, Path=IsChecked}" Value="True">
                                     <DataTrigger.EnterActions>
                                         <BeginStoryboard>
                                             <Storyboard>

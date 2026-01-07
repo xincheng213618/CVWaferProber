@@ -149,6 +149,11 @@
     <sys:String x:Key="VAM.PseudocolorImage">Pseudocolor Image (Jet)</sys:String>
     <sys:String x:Key="VAM.ViewingAngle">Viewing Angle:</sys:String>
     <sys:String x:Key="VAM.DisplayChannel">Display Channel:</sys:String>
+    <sys:String x:Key="VAM.AddAngle">Add Angle:</sys:String>
+    <sys:String x:Key="VAM.SampleCount">Sample Count:</sys:String>
+    <sys:String x:Key="VAM.Add">Add</sys:String>
+    <sys:String x:Key="VAM.Delete">Delete</sys:String>
+    <sys:String x:Key="VAM.Apply">Apply</sys:String>
     <sys:String x:Key="VAM.XChannel">XChannel</sys:String>
     <sys:String x:Key="VAM.YChannel">YChannel</sys:String>
     <sys:String x:Key="VAM.ZChannel">ZChannel</sys:String>

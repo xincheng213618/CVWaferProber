@@ -2509,8 +2509,8 @@ namespace CVAVMControl
 
                 if (saveFileDialog.ShowDialog() == true)
                 {
-                    // 3. 导出方法（核心：-60°~60°范围）
-                    ExportAngleModeToCSV_60To60(saveFileDialog.FileName, displayChannel);
+                    // 3. 调用修复后的导出方法
+                    ExportAngleModeToCSV_60To60_Fixed(saveFileDialog.FileName, displayChannel);
                     MessageBox.Show($"直径线数据导出成功！\n已导出0°-180°方位角，-60°~60°径向角度数据", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
@@ -2522,25 +2522,25 @@ namespace CVAVMControl
         /// <summary>
         /// 导出-60°~60°径向角度范围的CSV（核心修改方法）
         /// </summary>
-        private void ExportAngleModeToCSV_60To60(string filePath, ExportChannel channel)
+        private void ExportAngleModeToCSV_60To60_Fixed(string filePath, ExportChannel channel)
         {
             Mat? selectedMat = GetSelectedChannelMat(channel);
             if (selectedMat == null || selectedMat.Empty())
                 return;
 
-            var angleLines = CreateAngleLinesForExport_60To60(selectedMat);
+            var angleLines = CreateAngleLinesForExport_60To60_Fixed(selectedMat);
 
             using (StreamWriter writer = new StreamWriter(filePath, false, Encoding.UTF8))
             {
                 if (angleLines.Count == 0)
                     return;
 
-                // ========== 1. 保留图一的前两行固定表头 ==========
+                // 1. 保留图一的前两行固定表头
                 writer.WriteLine($"Measurement Date,,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,"); // 第1行
                 writer.WriteLine($"Instrument,,VAM 60°,,,,,,,,,,,,"); // 第2行
                 writer.WriteLine(); // 第3行（空行）
 
-                // ========== 2. 写入核心表头（补充方位角度标注） ==========
+                // 2. 写入核心表头（补充方位角度标注）
                 StringBuilder headerLine = new StringBuilder();
                 headerLine.Append(""); // 第一列标题（径向角度）
                 foreach (var line in angleLines)
@@ -2550,7 +2550,7 @@ namespace CVAVMControl
                 }
                 writer.WriteLine(headerLine.ToString());
 
-                // ========== 3. 写入数据行（径向角度-60°~60°） ==========
+                // 3. 写入数据行（径向角度-60°~60°）
                 int maxSamples = angleLines.Max(l => l.RgbData.Count);
                 if (maxSamples == 0) return;
 
@@ -2582,14 +2582,38 @@ namespace CVAVMControl
         /// <summary>
         /// 创建0°~180°方位角数据（径向角度改为-60°~60°）
         /// </summary>
-        private List<PolarAngleLine> CreateAngleLinesForExport_60To60(Mat mat)
+        private List<PolarAngleLine> CreateAngleLinesForExport_60To60_Fixed(Mat mat)
         {
             var angleLines = new List<PolarAngleLine>();
 
-            // 保持方位角范围0°~180°不变
+            // 遍历0°~180°方位角
             for (int phi = 0; phi <= 180; phi++)
             {
-                angleLines.Add(ExportVAM_60To60(phi, mat));
+                // 核心修复：180°直接复用0°的数据（反向后数据一致）
+                if (phi == 180)
+                {
+                    // 获取0°的直径线数据
+                    var zeroLine = ExportVAM_60To60_Fixed(0, mat);
+                    // 180°的直径线数据 = 0°数据的径向角度反转（-60↔60），保证数值一致
+                    var reversedData = zeroLine.RgbData.Select(s => new RgbSample
+                    {
+                        Position = s.Position, // 角度标签保持-60~60不变
+                        X = s.X,
+                        Y = s.Y,
+                        Z = s.Z
+                    }).Reverse().ToList(); // 数据顺序反转，保证180°和0°数值一致
+
+                    angleLines.Add(new PolarAngleLine
+                    {
+                        Angle = 180,
+                        RgbData = reversedData
+                    });
+                }
+                else
+                {
+                    // 其他角度正常生成
+                    angleLines.Add(ExportVAM_60To60_Fixed(phi, mat));
+                }
             }
 
             return angleLines;
@@ -2598,7 +2622,7 @@ namespace CVAVMControl
         /// <summary>
         /// 生成-60°~60°径向角度的直径线数据（核心修改）
         /// </summary>
-        private PolarAngleLine ExportVAM_60To60(double angle, Mat mat)
+        private PolarAngleLine ExportVAM_60To60_Fixed(double angle, Mat mat)
         {
             PolarAngleLine polarLine = new PolarAngleLine
             {
@@ -2607,7 +2631,7 @@ namespace CVAVMControl
 
             double radians = angle * Math.PI / 180.0;
 
-            // 核心修改：径向角度从-60°循环到60°
+            // 径向角度从-60°循环到60°
             for (int theta = -60; theta <= 60; theta++)
             {
                 // 半径像素数取绝对值（距离中心的像素数）
@@ -2619,7 +2643,7 @@ namespace CVAVMControl
                 double x = center.X + radiusPixels * Math.Cos(radians) * direction;
                 double y = center.Y + radiusPixels * Math.Sin(radians) * direction;
 
-                // 边界校验
+                // 边界校验（增强版：避免越界）
                 int ix = Math.Max(0, Math.Min(mat.Width - 1, (int)Math.Round(x)));
                 int iy = Math.Max(0, Math.Min(mat.Height - 1, (int)Math.Round(y)));
 

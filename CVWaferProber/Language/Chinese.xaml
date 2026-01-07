@@ -76,7 +76,7 @@
     <!--  Camera曲线相关  -->
     <sys:String x:Key="Sp.Camera Curve">相机曲线</sys:String>
     <!--  EQE相关  -->
-    <sys:String x:Key="EQE.EQE">EQE</sys:String>
+    <sys:String x:Key="EQE.EQE">EQE(%)</sys:String>
     <sys:String x:Key="EQE.LuminousFlux">光通量(lm)</sys:String>
     <sys:String x:Key="EQE.RadiantFlux">辐射通量(W)</sys:String>
     <sys:String x:Key="EQE.LuminousEfficacy">光效(lm/W)</sys:String>
@@ -156,9 +156,15 @@
     <sys:String x:Key="VAM.PseudocolorImage">伪彩色图像 (Jet)</sys:String>
     <sys:String x:Key="VAM.ViewingAngle">显示角度:</sys:String>
     <sys:String x:Key="VAM.DisplayChannel">显示通道:</sys:String>
+    <sys:String x:Key="VAM.AddAngle">添加角度:</sys:String>
+    <sys:String x:Key="VAM.SampleCount">采样点数:</sys:String>
+    <sys:String x:Key="VAM.Add">添加</sys:String>
+    <sys:String x:Key="VAM.Delete">删除</sys:String>
+    <sys:String x:Key="VAM.Apply">确定</sys:String>
     <sys:String x:Key="VAM.XChannel">X通道</sys:String>
     <sys:String x:Key="VAM.YChannel">Y通道</sys:String>
     <sys:String x:Key="VAM.ZChannel">Z通道</sys:String>
+
     <sys:String x:Key="Plot.Title.DiameterLine">直径线分布曲线</sys:String>
     <sys:String x:Key="Plot.Title.RCircle">R圆分布曲线</sys:String>
     <sys:String x:Key="Plot.Axis.X">Degrees</sys:String>
