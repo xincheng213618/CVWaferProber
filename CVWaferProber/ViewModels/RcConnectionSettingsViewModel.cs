@@ -4,6 +4,7 @@ using CVWaferProber.Services;
 using System.Windows;
 using System.Windows.Input;
 using WaferComm.Core;
+using MessageBox = System.Windows.MessageBox;
 
 namespace CVWaferProber.ViewModels
 {
@@ -134,7 +135,7 @@ namespace CVWaferProber.ViewModels
 
         private void CloseWindow(object? parameter)
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
                 if (parameter is Window window)
                 {

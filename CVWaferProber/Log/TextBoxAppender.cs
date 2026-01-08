@@ -2,6 +2,7 @@
 using log4net.Appender;
 using log4net.Core;
 using System.Windows.Threading;
+using TextBox = System.Windows.Controls.TextBox;
 
 namespace CVWaferProber.Log
 {

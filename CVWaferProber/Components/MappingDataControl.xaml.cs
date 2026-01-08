@@ -1,15 +1,12 @@
 ﻿using CVWaferProber.ViewModels;
-using Microsoft.Win32;
-using System.IO;
 using System.Windows;
-using System.Windows.Controls;
 
 namespace CVWaferProber.Components
 {
     /// <summary>
     /// MappingDataControl.xaml 的交互逻辑
     /// </summary>
-    public partial class MappingDataControl : UserControl
+    public partial class MappingDataControl : System.Windows.Controls.UserControl
     {
         public MappingDataControl()
         {

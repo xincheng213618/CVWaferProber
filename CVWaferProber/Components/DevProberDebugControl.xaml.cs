@@ -10,6 +10,12 @@ using System.Windows.Shapes;
 using WaferComm.Client;
 using WaferComm.Core;
 using WaferComm.StateMachine;
+using Application = System.Windows.Application;
+using Brush = System.Windows.Media.Brush;
+using Brushes = System.Windows.Media.Brushes;
+using Color = System.Windows.Media.Color;
+using Point = System.Windows.Point;
+using UserControl = System.Windows.Controls.UserControl;
 
 namespace CVWaferProber.Components
 {

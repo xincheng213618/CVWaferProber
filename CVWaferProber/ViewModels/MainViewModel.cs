@@ -13,7 +13,6 @@ using CVWaferProber.Utils;
 using CVWaferProber.Views;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
-using Microsoft.Win32;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -24,6 +23,12 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using WaferComm.Core;
+using Application = System.Windows.Application;
+using Binding = System.Windows.Data.Binding;
+using CheckBox = System.Windows.Controls.CheckBox;
+using MessageBox = System.Windows.MessageBox;
+using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
+using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 
 
 namespace CVWaferProber.ViewModels

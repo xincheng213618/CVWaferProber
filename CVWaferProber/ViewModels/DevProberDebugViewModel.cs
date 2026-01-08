@@ -5,6 +5,7 @@ using System.Windows.Input;
 using WaferComm.Client;
 using WaferComm.Core;
 using WaferComm.StateMachine;
+using MessageBox = System.Windows.MessageBox;
 
 namespace CVWaferProber.ViewModels
 {

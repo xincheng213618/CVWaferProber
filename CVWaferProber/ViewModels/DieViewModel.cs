@@ -5,6 +5,7 @@ using CVWaferProber.Core.ViewModels;
 using CVWaferProber.Utils;
 using System.Windows;
 using WaferComm.StateMachine;
+using Application = System.Windows.Application;
 
 namespace CVWaferProber.ViewModels
 {

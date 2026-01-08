@@ -8,6 +8,7 @@
     <UseWPF>true</UseWPF>
     <PlatformTarget>x64</PlatformTarget>
     <Platforms>AnyCPU;x64</Platforms>
+    <UseWindowsForms>True</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -62,6 +63,12 @@
     </Reference>
     <Reference Include="CVMysqlLib">
       <HintPath>..\DLL\CVMysqlLib.dll</HintPath>
+    </Reference>
+    <Reference Include="FlowEngineLib">
+      <HintPath>..\DLL\FlowEngineLib.dll</HintPath>
+    </Reference>
+    <Reference Include="ST.Library.UI">
+      <HintPath>..\DLL\ST.Library.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
 

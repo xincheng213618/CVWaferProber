@@ -2,6 +2,7 @@
 using System.Windows.Data;
 using System.Windows.Media;
 using WaferComm.StateMachine;
+using Brushes = System.Windows.Media.Brushes;
 
 namespace CVWaferProber.Converters
 {

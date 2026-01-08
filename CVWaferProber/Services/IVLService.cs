@@ -5,6 +5,7 @@ using CVWaferProber.ViewModels;
 using CVWPFSpectrometerCtrl.ViewModels;
 using System.Text;
 using System.Windows;
+using Application = System.Windows.Application;
 
 namespace CVWaferProber.Services
 {

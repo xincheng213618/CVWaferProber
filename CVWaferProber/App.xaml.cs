@@ -4,17 +4,23 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Application = System.Windows.Application;
+using Brushes = System.Windows.Media.Brushes;
+using Color = System.Windows.Media.Color;
 
 namespace CVWaferProber
 {
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
-    public partial class App : Application
+    public partial class App : System.Windows.Application
     {
         private static readonly ILog log = LogManager.GetLogger(typeof(App));
         protected override void OnStartup(StartupEventArgs e)
         {
+            // 设置兼容模式
+            System.Windows.Forms.Application.EnableVisualStyles();
+            System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
             // 初始化 log4net
             var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
 
