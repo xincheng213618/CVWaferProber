@@ -171,17 +171,17 @@ namespace CVAVMControl
             }
             catch (SEHException ex)
             {
-                logger.Error($"DLL调用异常：{ex.Message}", ex);
+                logger.Error($"DLL{(string)Application.Current.FindResource("callexception")}：{ex.Message}", ex);
                 res = CV_AliResType.FAILED;
             }
             catch (Exception ex)
             {
-                logger.Error($"调用DLL时出错：{ex.Message}", ex);
+                logger.Error($"{(string)Application.Current.FindResource("ErrorcallingDLL")}：{ex.Message}", ex);
                 res = CV_AliResType.FAILED;
             }
 
             // 关键：打印返回结果，定位问题
-            logger.Info($"DLL返回码：{res}，返回JSON：{resultJson}");
+            logger.Info($"DLL{(string)Application.Current.FindResource("Returncode")}：{res}，{(string)Application.Current.FindResource("Return")}JSON：{resultJson}");
             return res;
         }
 
@@ -586,9 +586,11 @@ namespace CVAVMControl
                 fileInfo.Dispose();
                 _isDataValid = true;
             }
+            
             catch (Exception ex)
             {
-                MessageBox.Show($"处理文件时出错: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                string errorMsg = (string)Application.Current.FindResource("State.Error");
+                MessageBox.Show($"{(string)Application.Current.FindResource("Anerroroccurredwhileprocessingthefile")}: {ex.Message}", $"{errorMsg}", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -662,14 +664,14 @@ namespace CVAVMControl
 
             if (string.IsNullOrWhiteSpace(inputAngleText))
             {
-                MessageBox.Show("输入的角度不能为空", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"{FindResource("Cannotempty")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
 
             }
 
             // 1. 输入校验（兼容整数/负数）
-            if (!int.TryParse(inputAngleText.Trim(), out int newAngle))
+            if (!int.TryParse(inputAngleText.Trim(), out int newAngle)&& !string.IsNullOrWhiteSpace(inputAngleText))
             {
-                MessageBox.Show("请输入有效的整数角度", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"{FindResource("Pleaseenteravalidintegerangle")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -680,7 +682,7 @@ namespace CVAVMControl
                 // R圆模式：-60° ~ 60°
                 if (newAngle < -60 || newAngle > 60)
                 {
-                    MessageBox.Show("角度范围应为-60°~60°", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show($"{FindResource("Shouldbe")} -60°~60°", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
             }
@@ -689,15 +691,15 @@ namespace CVAVMControl
                 // 直径线模式：0° ~ 360°（保留原规则）
                 if (newAngle < 0 || newAngle > 360)
                 {
-                    MessageBox.Show("角度范围应为0°~360°", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show($"{FindResource("Shouldbe")} 0°~360°", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
             }
 
             // 3. 检查是否已存在
-            if (IsAngleExistsInComboBox(targetComboBox, newAngle))
+            if (!string.IsNullOrWhiteSpace(inputAngleText)&&IsAngleExistsInComboBox(targetComboBox, newAngle))
             {
-                MessageBox.Show("角度已存在", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"{FindResource("Anglealreadyexists")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -769,6 +771,8 @@ namespace CVAVMControl
         //    if (IsMatSafe(YMat)) UpdateDisplay();
         //}
         // 新增：标记是否正在执行删除操作（屏蔽DLL调用）
+
+        public static bool IsEnglishMode = false;
         private void DeleteAngleFromComboBox(ComboBox targetComboBox)
         {
             _isDeletingAngle = true;
@@ -776,23 +780,23 @@ namespace CVAVMControl
             {
                 if (targetComboBox.SelectedItem == null)
                 {
-                    MessageBox.Show("请先从下拉框中选择要删除的角度", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show(IsEnglishMode? "Please first select the angle you want to delete from the dropdown menu." : "请先从下拉框中选择要删除的角度", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
 
                 if (!(targetComboBox.SelectedItem is ComboBoxItem selectedItem) ||
                     !int.TryParse(selectedItem.Tag?.ToString(), out int delAngle))
                 {
-                    MessageBox.Show("选中的角度项无效，请重新选择", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show(IsEnglishMode? "The selected angle option is invalid, please choose again." : "选中的角度项无效，请重新选择", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
 
                 bool isRCircle = IsRCircleMode();
-                string modeName = isRCircle ? "R圆" : "直径线";
+                //string modeName = isRCircle ? "R圆" : "直径线";
 
                 MessageBoxResult result = MessageBox.Show(
-                    $"确认删除{modeName}模式下 {delAngle}° 的角度吗？",
-                    "删除确认",
+                    IsEnglishMode ? $"Are you sure you want to delete the {delAngle}° angle?" : $"确认删除 {delAngle}°的角度吗？",
+                    IsEnglishMode ? "Delete Confirmation" : "删除确认",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question
                 );
@@ -857,7 +861,7 @@ namespace CVAVMControl
                         _selectedAngle = defaultAngle;
                         displayAngle = defaultAngle;
                     }
-                    MessageBox.Show($"{modeName}下拉框已空，自动填充默认角度：{defaultAngle}°", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show(IsEnglishMode ? $"The dropdown is empty, automatically filling in the default angle: {defaultAngle}°" : $"下拉框已空，自动填充默认角度：{defaultAngle}°", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
 
                 // ========== 关键修复3：强制刷新显示（立即重绘画布） ==========
@@ -869,7 +873,7 @@ namespace CVAVMControl
                     }
                 });
 
-                logger.Info($"[{modeName}] 成功删除角度：{delAngle}°，当前剩余角度数：{targetComboBox.Items.Count}");
+                logger.Info(IsEnglishMode ? $"Successfully deleted angle: {delAngle}°, current remaining angles: {targetComboBox.Items.Count}" : $" 成功删除角度：{delAngle}°，当前剩余角度数：{targetComboBox.Items.Count}");
             }
             finally
             {
@@ -1483,7 +1487,7 @@ namespace CVAVMControl
             {
                 if (YMat == null || YMat.Empty())
                 {
-                    MessageBox.Show("没有可导出的数据", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show($"{FindResource("Nodata")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
 
@@ -1491,18 +1495,18 @@ namespace CVAVMControl
                 {
                     Filter = "CSV Files (*.csv)|*.csv",
                     FileName = $"DiameterLine_Export_{displayChannel}_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
-                    Title = "保存直径线数据"
+                    Title = IsEnglishMode ? "Save azimuth section data":"保存方位角截面数据"  
                 };
 
                 if (saveFileDialog.ShowDialog() == true)
                 {
                     ExportAngleModeToCSV(saveFileDialog.FileName, displayChannel);
-                    MessageBox.Show($"直径线数据导出成功！\n已导出0°-180°所有角度数据", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show($"{FindResource("Exportsuccessful")}！", $"{FindResource("Log.Success")}", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"导出失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"{FindResource("Exportfailed")}: {ex.Message}", $"{FindResource("Log.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -1623,7 +1627,7 @@ namespace CVAVMControl
             {
                 if (YMat == null || YMat.Empty())
                 {
-                    MessageBox.Show("没有可导出的数据", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show($"{FindResource("Nodata")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
 
@@ -1631,18 +1635,18 @@ namespace CVAVMControl
                 {
                     Filter = "CSV Files (*.csv)|*.csv",
                     FileName = $"RCircle_Export_{displayChannel}_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
-                    Title = "保存R圆数据"
+                    Title = IsEnglishMode? "Save polar section data" : "保存极角截面数据"
                 };
 
                 if (saveFileDialog.ShowDialog() == true)
                 {
                     ExportCircleModeToCSV(saveFileDialog.FileName, displayChannel);
-                    MessageBox.Show("R圆数据导出成功！", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show($"{FindResource("Exportsuccessful")}！", $"{FindResource("Log.Success")}", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"导出失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"{FindResource("Exportfailed")}: {ex.Message}", $"{FindResource("Log.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -1741,13 +1745,13 @@ namespace CVAVMControl
                         }
                         else
                         {
-                            MessageBox.Show("VAM接口调用失败，使用本地计算数据", "提示");
+                            MessageBox.Show(IsEnglishMode ? "VAM interface call failed, using local calculation data" : "VAM接口调用失败，使用本地计算数据", $"{FindResource("Prompt")}");
                             UpdateDisplay();
                         }
                     }
                     else
                     {
-                        MessageBox.Show("数据未加载或已释放，请重新打开CVCIE文件", "提示");
+                        MessageBox.Show(IsEnglishMode ? "Data not loaded or has been released. Please reopen the CVCIE file." : "数据未加载或已释放，请重新打开CVCIE文件", $"{FindResource("Prompt")}");
                     }
                 }
             }
@@ -1787,7 +1791,7 @@ namespace CVAVMControl
                 {
                     if (radius < -60 || radius > 60)
                     {
-                        MessageBox.Show("R圆半径角度需在-60~60之间（支持负数）", "提示");
+                        MessageBox.Show(IsEnglishMode? "The angle must be between -60 and 60 (negative values are supported)" : "角度需在-60~60之间（支持负数）", $"{FindResource("Prompt")}");
                         return;
                     }
                     displayRadius = radius;
@@ -1803,7 +1807,7 @@ namespace CVAVMControl
                         }
                         else
                         {
-                            MessageBox.Show("VAM接口调用失败，使用本地计算数据", "提示");
+                            MessageBox.Show(IsEnglishMode ? "VAM interface call failed, using local calculation data" : "VAM接口调用失败，使用本地计算数据", $"{FindResource("Prompt")}");
                             UpdateDisplay();
                         }
                     }
@@ -1823,12 +1827,12 @@ namespace CVAVMControl
                 // 步骤1：基础校验
                 if (!IsMatSafe(XMat) || !IsMatSafe(YMat) || !IsMatSafe(ZMat))
                 {
-                    logger.Error("XYZ Mat 为空或已释放");
+                    logger.Error(IsEnglishMode ? "XYZ Mat is null or has been released" : "XYZ Mat 为空或已释放");
                     return false;
                 }
                 if (center.X == 0 && center.Y == 0)
                 {
-                    logger.Error("图像中心未初始化（未加载CVCIE文件）");
+                    logger.Error(IsEnglishMode ? "Image center not initialized (CVCIE file not loaded)" : "图像中心未初始化（未加载CVCIE文件）");
                     return false;
                 }
 
@@ -1892,8 +1896,8 @@ namespace CVAVMControl
                 });
 
                 // 步骤7：打印参数日志（调试用）
-                logger.Info($"DLL调用参数：targetAngle={targetAngle}, center=({center.X},{center.Y}), bpp={bpp}, imgSize=({imgWidth}x{imgHeight})");
-                logger.Info($"JSON参数：{staticJson}");
+                logger.Info($"DLL{FindResource("Callparameters")}：targetAngle={targetAngle}, center=({center.X},{center.Y}), bpp={bpp}, imgSize=({imgWidth}x{imgHeight})");
+                logger.Info($"JSON{FindResource("Parameters")}：{staticJson}");
 
                 // 步骤8：调用DLL封装方法
                 string resultJson;
@@ -1909,7 +1913,7 @@ namespace CVAVMControl
                 // 步骤9：处理DLL返回结果
                 if (callResult != CV_AliResType.SUCCESS && callResult != CV_AliResType.PART_SUCCESS)
                 {
-                    logger.Error($"DLL调用失败，错误码：{callResult}");
+                    logger.Error($"DLL{FindResource("Callfailed")}，{FindResource("Errorcode")}：{callResult}");
                     return false;
                 }
 
@@ -1924,14 +1928,14 @@ namespace CVAVMControl
                 string cleanResultJson = resultJson.Trim('\0').Trim();
                 if (string.IsNullOrEmpty(cleanResultJson))
                 {
-                    logger.Error("DLL返回空JSON");
+                    logger.Error(IsEnglishMode ? "DLL returns an empty JSON" : "DLL返回空JSON");
                     return false;
                 }
 
                 VamResultRoot vamResult = JsonConvert.DeserializeObject<VamResultRoot>(cleanResultJson);
                 if (vamResult?.result?.line?.Data == null || vamResult.result.line.Data.Count == 0)
                 {
-                    logger.Error("DLL返回的直径线数据为空");
+                    logger.Error(IsEnglishMode ? "The azimuth sectional data returned by the DLL is empty" : "DLL返回的方位角截面数据为空");
                     return false;
                 }
 
@@ -1941,7 +1945,7 @@ namespace CVAVMControl
             }
             catch (Exception ex)
             {
-                logger.Error("调用DLL获取直径线数据异常", ex);
+                logger.Error(IsEnglishMode? "Exception occurred while calling DLL to obtain azimuth cross-section data" : "调用DLL获取方位角截面数据异常", ex);
                 return false;
             }
 
@@ -1956,7 +1960,7 @@ namespace CVAVMControl
             {
                 if (!IsMatSafe(XMat) || !IsMatSafe(YMat) || !IsMatSafe(ZMat) || center.X == 0 || center.Y == 0)
                 {
-                    logger.Error("数据未加载或图像中心未初始化");
+                    logger.Error(IsEnglishMode? "Data not loaded or image center not initialized" : "数据未加载或图像中心未初始化");
                     return false;
                 }
 
@@ -2015,7 +2019,7 @@ namespace CVAVMControl
 
                     if (callResult != CV_AliResType.SUCCESS && callResult != CV_AliResType.PART_SUCCESS)
                     {
-                        logger.Error($"方位角{azimuth}° DLL调用失败，错误码：{callResult}");
+                        logger.Error($"{FindResource("Azimuth")}{azimuth}° DLL{FindResource("Callfailed")}，{FindResource("Errorcode")}：{callResult}");
                         continue;
                     }
 
@@ -2064,7 +2068,7 @@ namespace CVAVMControl
             }
             catch (Exception ex)
             {
-                logger.Error("获取全量方位角数据失败", ex);
+                logger.Error(IsEnglishMode ? "Failed to obtain full azimuth data" : "获取全量方位角数据失败", ex);
                 return false;
             }
         }
@@ -2086,21 +2090,21 @@ namespace CVAVMControl
                 // 步骤1：基础校验（同直径线批量调用逻辑）
                 if (!IsMatSafe(XMat) || !IsMatSafe(YMat) || !IsMatSafe(ZMat) || center.X == 0 || center.Y == 0)
                 {
-                    logger.Error("CallVamDllForAllCircle - 数据未加载或图像中心未初始化");
+                    logger.Error(IsEnglishMode? "Data not loaded or image center not initialized" : "数据未加载或图像中心未初始化");
                     return false;
                 }
 
                 // 步骤2：极角参数合法性校验
                 if (polarStep <= 0)
                 {
-                    logger.Error($"CallVamDllForAllCircle - 极角间隔{polarStep}无效，需为正整数");
-                    MessageBox.Show("极角间隔需为正整数", "参数错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    logger.Error(IsEnglishMode? $"Polar angle interval {polarStep} is invalid and must be a positive integer" : $" 极角间隔{polarStep}无效，需为正整数");
+                    MessageBox.Show(IsEnglishMode? "The polar angle interval must be a positive integer" : "极角间隔需为正整数", IsEnglishMode? "Parameter error" : "参数错误", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return false;
                 }
                 if (azimuthSampleCount <= 0)
                 {
-                    logger.Error($"CallVamDllForAllCircle - 方位角采样点数{azimuthSampleCount}无效，需为正整数");
-                    MessageBox.Show("方位角采样点数需为正整数", "参数错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    logger.Error(IsEnglishMode?$"The azimuth sample count {azimuthSampleCount} is invalid and must be a positive integer." :$"方位角采样点数{azimuthSampleCount}无效，需为正整数");
+                    MessageBox.Show(IsEnglishMode? "The number of azimuth sampling points must be a positive integer" : "方位角采样点数需为正整数", IsEnglishMode ? "Parameter error" : "参数错误", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return false;
                 }
                 // 极角范围限制（-60°~60°，符合VAM业务规则）
@@ -2121,7 +2125,7 @@ namespace CVAVMControl
                 // 步骤4：校验XYZ数据
                 if (dataXyz == null)
                 {
-                    logger.Error("CallVamDllForAllCircle - XYZ图像数据为空");
+                    logger.Error(IsEnglishMode? "XYZ image data is empty" : "XYZ图像数据为空");
                     return false;
                 }
 
@@ -2200,7 +2204,7 @@ namespace CVAVMControl
                         // 步骤7.5：处理DLL返回结果
                         if (callResult != CV_AliResType.SUCCESS && callResult != CV_AliResType.PART_SUCCESS)
                         {
-                            logger.Warn($"CallVamDllForAllCircle - 极角{polarAngle}° 方位角{currentAzimuth:F1}° DLL调用失败，错误码：{callResult}");
+                            logger.Warn(IsEnglishMode?$"Polar angle {polarAngle}°, Azimuth {currentAzimuth:F1}° DLL call failed, error code: {callResult}" :$"极角{polarAngle}° 方位角{currentAzimuth:F1}° DLL调用失败，错误码：{callResult}");
                             continue;
                         }
 
@@ -2208,7 +2212,7 @@ namespace CVAVMControl
                         string cleanResultJson = resultJson.Trim('\0').Trim();
                         if (string.IsNullOrEmpty(cleanResultJson))
                         {
-                            logger.Warn($"CallVamDllForAllCircle - 极角{polarAngle}° 方位角{currentAzimuth:F1}° 返回空JSON");
+                            logger.Warn(IsEnglishMode? $"Polar angle {polarAngle}° Azimuth {currentAzimuth:F1}° Returning empty JSON" : $"极角{polarAngle}° 方位角{currentAzimuth:F1}° 返回空JSON");
                             continue;
                         }
 
@@ -2239,7 +2243,7 @@ namespace CVAVMControl
                         }
                         catch (JsonException ex)
                         {
-                            logger.Error($"CallVamDllForAllCircle - 极角{polarAngle}° 方位角{currentAzimuth:F1}° JSON解析失败", ex);
+                            logger.Error(IsEnglishMode ? $"Polar angle {polarAngle}° Azimuth {currentAzimuth:F1}° JSON parsing failed" : $"极角{polarAngle}° 方位角{currentAzimuth:F1}° JSON解析失败", ex);
                             continue;
                         }
                     }
@@ -2249,18 +2253,19 @@ namespace CVAVMControl
                 }
 
                 // 步骤8：日志输出统计信息
-                logger.Info($"CallVamDllForAllCircle 执行完成 - 极角范围[{polarStart}~{polarEnd}]° 间隔{polarStep}° | 方位角采样{azimuthSampleCount}点 | 有效数据{DllAllCircleData.Count}条");
+                logger.Info(IsEnglishMode ? $"Execution completed - Polar angle range [{polarStart}~{polarEnd}]° with interval {polarStep}° | Azimuth sampled at {azimuthSampleCount} points | Valid data: {DllAllCircleData.Count} entries" : $"执行完成 - 极角范围[{polarStart}~{polarEnd}]° 间隔{polarStep}° | 方位角采样{azimuthSampleCount}点 | 有效数据{DllAllCircleData.Count}条");
+
 
                 // 步骤9：空数据兜底提示
                 if (!isSuccess)
                 {
-                    MessageBox.Show("未获取到有效圆环数据，请检查DLL参数或图像数据", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show(IsEnglishMode? "Failed to obtain valid ring data. Please check the DLL parameters or image data." : "未获取到有效圆环数据，请检查DLL参数或图像数据", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
             catch (Exception ex)
             {
-                logger.Error("CallVamDllForAllCircle 执行异常", ex);
-                MessageBox.Show($"批量获取圆环数据失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                logger.Error("执行异常", ex);
+                MessageBox.Show(IsEnglishMode ? $"Failed to retrieve batch ring data: {ex.Message}" : $"批量获取圆环数据失败：{ex.Message}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Error);
                 isSuccess = false;
             }
 
@@ -2284,12 +2289,12 @@ namespace CVAVMControl
                 // 步骤1：基础校验（同直径线）
                 if (!IsMatSafe(XMat) || !IsMatSafe(YMat) || !IsMatSafe(ZMat))
                 {
-                    logger.Error("XYZ Mat 为空或已释放");
+                    logger.Error(IsEnglishMode? "XYZ Mat is null or has been released" : "XYZ Mat 为空或已释放");
                     return false;
                 }
                 if (center.X == 0 && center.Y == 0)
                 {
-                    logger.Error("图像中心未初始化（未加载CVCIE文件）");
+                    logger.Error(IsEnglishMode? "Image center not initialized (CVCIE file not loaded)" : "图像中心未初始化（未加载CVCIE文件）");
                     return false;
                 }
 
@@ -2363,7 +2368,7 @@ namespace CVAVMControl
                 // 步骤7：处理结果（同直径线）
                 if (callResult != CV_AliResType.SUCCESS && callResult != CV_AliResType.PART_SUCCESS)
                 {
-                    logger.Error($"DLL调用失败，错误码：{callResult}");
+                    logger.Error($"DLL{FindResource("Callfailed")}，{FindResource("Errorcode")}：{callResult}");
                     return false;
                 }
                 if (showImage.data != null)
@@ -2375,14 +2380,14 @@ namespace CVAVMControl
                 string cleanResultJson = resultJson.Trim('\0').Trim();
                 if (string.IsNullOrEmpty(cleanResultJson))
                 {
-                    logger.Error("DLL返回空JSON");
+                    logger.Error(IsEnglishMode ? "DLL returns an empty JSON" : "DLL返回空JSON");
                     return false;
                 }
 
                 VamResultRoot vamResult = JsonConvert.DeserializeObject<VamResultRoot>(cleanResultJson);
                 if (vamResult?.result?.circle?.Data == null || vamResult.result.circle.Data.Count == 0)
                 {
-                    logger.Error("DLL返回的R圆数据为空");
+                    logger.Error(IsEnglishMode ? "The polar section data returned by the DLL is empty" : "DLL返回的极角截面数据为空");
                     return false;
                 }
 
@@ -2391,7 +2396,7 @@ namespace CVAVMControl
             }
             catch (Exception ex)
             {
-                logger.Error("调用DLL获取R圆数据异常", ex);
+                logger.Error(IsEnglishMode? "Exception occurred while calling DLL to get polar section data" : "调用DLL获取极角截面数据异常", ex);
                 return false;
             }
         }
@@ -2529,7 +2534,7 @@ namespace CVAVMControl
             catch (ObjectDisposedException)
             {
                 // 若仍触发Disposed异常，直接返回false并提示重新加载
-                MessageBox.Show("VAM数据已失效，请重新加载CVCIE文件", "提示");
+                MessageBox.Show(IsEnglishMode? "The VAM data has expired, please reload the CVCIE file.":"VAM数据已失效，请重新加载CVCIE文件", $"{FindResource("Prompt")}");
                 return false;
             }
         }
@@ -2813,27 +2818,27 @@ namespace CVAVMControl
             // 1. 先校验输入是否为空
             if (string.IsNullOrWhiteSpace(pointNumLineBox.Text))
             {
-                MessageBox.Show("请输入数字", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"{FindResource("Prompt")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
             // 2. 尝试转换为整数
             if (!int.TryParse(pointNumLineBox.Text, out int pointNumLine))
             {
-                MessageBox.Show("请输入数字", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"{FindResource("Pleaseenteraninteger")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
             // 3. 校验是否为正整数
             if (pointNumLine <= 0)
             {
-                MessageBox.Show("请输入正整数", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"{FindResource("Pleaseenterapositiveinteger")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
             // 将合法值赋值给全局变量
             _pointNumLine = pointNumLine;
 
-            MessageBox.Show($"采样点数量已设置为：{_pointNumLine}", "设置成功", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(IsEnglishMode ? $"The number of sampling points has been set to: {_pointNumLine}" : $"采样点数量已设置为：{_pointNumLine}", IsEnglishMode? "Settings saved successfully" : "设置成功", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void BtnExport_Click(object sender, RoutedEventArgs e)
@@ -2842,7 +2847,7 @@ namespace CVAVMControl
             {
                 if (YMat == null || YMat.Empty())
                 {
-                    MessageBox.Show("没有可导出的数据！", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show($"{FindResource("Nodata")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
 
@@ -2851,7 +2856,7 @@ namespace CVAVMControl
                 {
                     Filter = "CSV Files (*.csv)|*.csv",
                     FileName = $"VAM_Export_{DateTime.Now:yyyyMMdd_HHmmss}",
-                    Title = "选择导出基础路径"
+                    Title =IsEnglishMode? "Select export base path" : "选择导出基础路径"
                 };
 
                 if (saveFileDialog.ShowDialog() != true) return;
@@ -2865,13 +2870,13 @@ namespace CVAVMControl
 
                 if (exportDialog.ShowDialog() == true)
                 {
-                    MessageBox.Show("所有选中通道的数据已导出完成！", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show(IsEnglishMode? "All data from the selected channels has been successfully exported!" : "所有选中通道的数据已导出完成！", $"{FindResource("Log.Success")}", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
             catch (Exception ex)
             {
-                logger.Error("导出初始化失败", ex);
-                MessageBox.Show($"导出初始化失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                logger.Error(IsEnglishMode? "Export initialization failed" : "导出初始化失败", ex);
+                MessageBox.Show(IsEnglishMode?$"":$"Export initialization failed：{ex.Message}", $"{FindResource("Log.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             //Application.Current.Dispatcher.Invoke(() =>
             //{

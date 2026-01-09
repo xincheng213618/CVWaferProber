@@ -1,5 +1,6 @@
 ﻿using ColorVision.Core.Entities;
 using CVMysql;
+using System.Windows;
 
 namespace CVDB.Services.Buz
 {
@@ -37,13 +38,14 @@ namespace CVDB.Services.Buz
 
             return null;
         }
-
+       
         public static void InitBuzWaferProber_10001()
         {
+            string waferProbeStationProcess = (string)Application.Current.FindResource("WaferProbeStationProcess");
             var master = MysqlControler.GetInstance().Sql.Select<TScgdBuzProductMaster>().Where(a => a.BuzType == 10001 && a.IsEnable == 1 && a.IsDelete == 0).ToOne();
             if (master == null)
             {
-                master = new TScgdBuzProductMaster() { BuzType = 10001, Code = "WaferProber.Flow", Name = "晶圆探针台流程", IsEnable = 1, IsDelete = 0 };
+                master = new TScgdBuzProductMaster() { BuzType = 10001, Code = "WaferProber.Flow", Name = waferProbeStationProcess, IsEnable = 1, IsDelete = 0 };
                 long id = MysqlControler.GetInstance().Sql.Insert(master).ExecuteIdentity();
                 if (id > 0)
                 {

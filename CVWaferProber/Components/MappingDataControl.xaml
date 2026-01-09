@@ -421,7 +421,7 @@
                                         <DockPanel Height="30" Margin="5,5">
                                             <!--  使用Margin来设置间距  -->
                                             <Button
-                                                Width="110"
+                                                Width="100"
                                                 Margin="0,0,10,0"
                                                 BorderThickness="0"
                                                 Command="{Binding StartAutoTestCommand}"
@@ -429,7 +429,7 @@
                                                 IsEnabled="{Binding IsNotProcessing}" />
 
                                             <Button
-                                                Width="110"
+                                                Width="100"
                                                 Margin="0,0,10,0"
                                                 BorderThickness="0"
                                                 Command="{Binding StopAutoTestCommand}"
@@ -448,7 +448,7 @@
                                                 IsChecked="{Binding IsColorEnabled}" />
 
                                             <Button
-                                                Width="110"
+                                                Width="100"
                                                 Margin="0,0,10,0"
                                                 BorderThickness="0"
                                                 Command="{Binding StartManTestCommand}"

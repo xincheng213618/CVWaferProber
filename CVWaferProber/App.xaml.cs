@@ -17,6 +17,7 @@ namespace CVWaferProber
     /// </summary>
     public partial class App : System.Windows.Application
     {
+        public static bool IsEnglishMode = false;
         private const string LIBRARY_CV_Ali = "CV_algorithm.dll";
 
         [DllImport(LIBRARY_CV_Ali, EntryPoint = "CV_Ali_initial",

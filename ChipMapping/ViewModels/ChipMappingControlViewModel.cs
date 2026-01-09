@@ -22,7 +22,7 @@ namespace ChipMapping.ViewModels
         private readonly Random _random = new Random();
         private readonly DispatcherTimer _renderTimer;
         private double _scale = 1.0;
-        private string _statusText = "就绪";
+        private string _statusText = (string)Application.Current.FindResource("State.Ready");
         private string _mousePositionText = "X: 0, Y: 0";
         private double _renderProgress;
         private bool _isRendering;
@@ -41,7 +41,7 @@ namespace ChipMapping.ViewModels
         private int _screenHeight = 480;
        
         private ChipViewModel? _selectedChip;
-        private string _chipDetails = "请点击芯片查看详细信息";
+        private string _chipDetails = (string)Application.Current.FindResource("Click");
 
         private bool _DisabledInput;
         public bool DisabledInput { get => _DisabledInput; set {
@@ -261,7 +261,7 @@ namespace ChipMapping.ViewModels
             }
             else
             {
-                ChipDetails = "请点击芯片查看详细信息";
+                ChipDetails = (string)Application.Current.FindResource("Click");
             }
         }
 
@@ -716,17 +716,21 @@ namespace ChipMapping.ViewModels
 
             // 在实际项目中，这里可以添加渲染逻辑
             // 由于使用数据绑定，渲染由WPF自动处理
-
+            string statusText = (string)Application.Current.FindResource("Rendering");
+            string Renderingcomplete = (string)Application.Current.FindResource("Renderingcomplete");
+            string Chip = (string)Application.Current.FindResource("Chip");
+            string rows = (string)Application.Current.FindResource("Maping.GridHeader.Row");
+            string columns = (string)Application.Current.FindResource("Maping.GridHeader.Col");
             sw.Stop();
 
             RenderProgress = toRender;
-            StatusText = $"渲染中... {toRender}/{Chips.Count} ({sw.ElapsedMilliseconds}ms)";
+            StatusText = $"{statusText} {toRender}/{Chips.Count} ({sw.ElapsedMilliseconds}ms)";
 
             if (toRender >= Chips.Count)
             {
                 _renderTimer.Stop();
                 IsRendering = false;
-                StatusText = $"渲染完成 - 共 {Chips.Count} 芯片 ({Rows}行×{Columns}列)";
+                StatusText = $"{Renderingcomplete} {Chips.Count} {Chip} ({Rows}{rows}×{Columns}{columns})";
             }
         }
 

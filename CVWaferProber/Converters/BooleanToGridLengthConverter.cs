@@ -24,10 +24,10 @@ namespace CVWaferProber.Converters
             }
             return new GridLength(FalseValue);
         }
-
+        public static bool IsEnglishMode = false;
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            throw new NotImplementedException("反向转换未实现");
+            throw new NotImplementedException(IsEnglishMode? "Reverse conversion not implemented" : "反向转换未实现");
         }
     }
 }

@@ -99,8 +99,8 @@
     <sys:String x:Key="Zoom out">🔍Zoom out</sys:String>
     <sys:String x:Key="Original">⭕Original</sys:String>
     <sys:String x:Key="Fit">📏Fit</sys:String>
-    <sys:String x:Key="Previous">⬅Previous</sys:String>
-    <sys:String x:Key="Next">➡Next</sys:String>
+    <sys:String x:Key="Previous">◀ Previous</sys:String>
+    <sys:String x:Key="Next">Next ▶</sys:String>
     <sys:String x:Key="File">🖼️File</sys:String>
     <sys:String x:Key="Folder">📁Folder</sys:String>
     <sys:String x:Key="Reload">🔄Reload</sys:String>
@@ -409,4 +409,24 @@
     <sys:String x:Key="StatusPanel.AOI_LINE_NG">AOI_LINE_NG</sys:String>
     <sys:String x:Key="StatusPanel.IVL_TESTING">IVL_TESTING</sys:String>
     <sys:String x:Key="StatusPanel.IVL_COMPLETED">IVL_COMPLETED</sys:String>
+
+
+    <!--  提示信息  -->
+    <sys:String x:Key="Cannotbeempty">Cannot be empty</sys:String>
+    <sys:String x:Key="Click">Please click the chip to view detailed information</sys:String>
+    <sys:String x:Key="Rendering">Rendering...</sys:String>
+    <sys:String x:Key="Renderingcomplete">Rendering complete - Total</sys:String>
+    <sys:String x:Key="Chip">Chip</sys:String>
+    <sys:String x:Key="WaferProbeStationProcess">Wafer Probe Station Process</sys:String>
+    <sys:String x:Key="callexception">Call exception</sys:String>
+    <sys:String x:Key="ErrorcallingDLL">Error calling DLL</sys:String>
+    <sys:String x:Key="Returncode">Return code</sys:String>
+    <sys:String x:Key="Return">Return</sys:String>
+    <sys:String x:Key="Anerroroccurredwhileprocessingthefile">An error occurred while processing the file</sys:String>
+    <sys:String x:Key="Cannotempty">The input angle cannot be empty</sys:String>
+    <sys:String x:Key="Pleaseenteravalidintegerangle">Please enter a valid integer angle</sys:String>
+    <sys:String x:Key="Shouldbe">The angle range should be</sys:String>
+    <sys:String x:Key="Anglealreadyexists">Angle already exists</sys:String>
+    <sys:String x:Key="Prompt">Prompt</sys:String>
+
 </ResourceDictionary>

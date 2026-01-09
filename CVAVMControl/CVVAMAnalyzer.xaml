@@ -178,16 +178,24 @@
                 <!--  参数区  -->
                 <Grid Grid.Row="1">
                     <!--  面板1：直径线参数（默认显示）  -->
-                    <StackPanel x:Name="paramPanelDiameter" Visibility="Visible">
-                        <!--  原第二行前两项  -->
-                        <StackPanel Margin="5,5,5,10" Orientation="Horizontal">
+                    <StackPanel
+                        x:Name="paramPanelDiameter"
+                        Margin="5"
+                        Visibility="Visible">
+                        <!--  统一控件尺寸：设置TextBlock宽度、控件对齐方式  -->
+                        <StackPanel
+                            Margin="0,0,0,8"
+                            HorizontalAlignment="Left"
+                            Orientation="Horizontal">
                             <TextBlock
+                                Width="120"
                                 Margin="0,0,5,0"
                                 VerticalAlignment="Center"
                                 Text="{DynamicResource VAM.ViewingAngle}" />
                             <ComboBox
                                 x:Name="cbDisplayAngle"
                                 Width="100"
+                                VerticalAlignment="Center"
                                 SelectedIndex="4"
                                 SelectionChanged="CbDisplayAngle_SelectionChanged">
                                 <ComboBoxItem Content="0°" Tag="0" />
@@ -199,19 +207,27 @@
                                 <ComboBoxItem Content="180°" Tag="180" />
                             </ComboBox>
                             <Button
-                                Margin="5,0,5,0"
-                                Padding="10,2"
+                                Width="80"
+                                Margin="8,0,0,0"
+                                Padding="0"
+                                VerticalAlignment="Center"
                                 Click="BtnDeleteAngle_Diameter_Click"
                                 Content="{DynamicResource VAM.Delete}" />
                         </StackPanel>
-                        <StackPanel Margin="5,0,5,10" Orientation="Horizontal">
+
+                        <StackPanel
+                            Margin="0,0,0,8"
+                            HorizontalAlignment="Left"
+                            Orientation="Horizontal">
                             <TextBlock
+                                Width="120"
                                 Margin="0,0,5,0"
                                 VerticalAlignment="Center"
                                 Text="{DynamicResource VAM.DisplayChannel}" />
                             <ComboBox
                                 x:Name="cbDisplayChannel"
-                                Width="151"
+                                Width="188"
+                                VerticalAlignment="Center"
                                 SelectedIndex="1"
                                 SelectionChanged="CbDisplayChannel_SelectionChanged">
                                 <ComboBoxItem Content="{DynamicResource VAM.XChannel}" Tag="X" />
@@ -219,102 +235,128 @@
                                 <ComboBoxItem Content="{DynamicResource VAM.ZChannel}" Tag="Z" />
                             </ComboBox>
                         </StackPanel>
-                        <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
+
+                        <StackPanel
+                            Margin="0,0,0,8"
+                            HorizontalAlignment="Left"
+                            Orientation="Horizontal">
                             <TextBlock
-                                Margin="5,0,5,0"
+                                Width="120"
+                                Margin="0,0,5,0"
                                 VerticalAlignment="Center"
                                 Text="{DynamicResource VAM.AddAngle}" />
                             <TextBox
                                 x:Name="txtAddAngle"
                                 Width="100"
-                                Height="18"
-                                MinWidth="60"
-                                Margin="0,0,5,0"
+                                Height="22"
+                                Margin="0,0,8,0"
                                 VerticalAlignment="Center" />
                             <Button
-                                Margin="0,0,5,0"
-                                Padding="10,2"
+                                Width="80"
+                                Padding="0"
+                                VerticalAlignment="Center"
                                 Click="BtnAddAngle_Diameter_Click"
                                 Content="{DynamicResource VAM.Add}" />
                         </StackPanel>
-                        <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
+
+                        <StackPanel
+                            Margin="0,0,0,8"
+                            HorizontalAlignment="Left"
+                            Orientation="Horizontal">
                             <TextBlock
-                                Margin="5,0,5,0"
+                                Width="120"
+                                Margin="0,0,5,0"
                                 VerticalAlignment="Center"
                                 Text="{DynamicResource VAM.SampleCount}" />
                             <TextBox
                                 x:Name="pointNumLineBox"
                                 Width="100"
-                                Height="18"
-                                MinWidth="60"
-                                Margin="0,0,5,0"
+                                Height="22"
+                                Margin="0,0,8,0"
                                 VerticalAlignment="Center" />
                             <Button
-                                Margin="0,0,5,0"
-                                Padding="10,2"
+                                Width="80"
+                                Padding="0"
+                                VerticalAlignment="Center"
                                 Click="Button_Click"
                                 Content="{DynamicResource VAM.Apply}" />
                         </StackPanel>
-                        <!--  导出直径线CSV按钮  -->
+
+                        <!--  导出按钮单独对齐  -->
                         <Button
                             x:Name="btnExportDiameter"
+                            Width="313"
                             Height="30"
-                            Margin="5"
+                            Margin="0,10,0,0"
+                            HorizontalAlignment="Left"
                             Click="BtnExportDiameter_Click"
                             Content="{DynamicResource VAM.ExportDiameterLineCSV}" />
-
-
                     </StackPanel>
-
                     <!--  面板2：R圆参数（默认隐藏）  -->
-                    <StackPanel x:Name="paramPanelRCircle" Visibility="Collapsed">
-                        <!--  原第二行最后一项  -->
-                        <StackPanel Margin="5,5,5,10" Orientation="Horizontal">
+                    <StackPanel
+                        x:Name="paramPanelRCircle"
+                        Margin="5"
+                        Visibility="Collapsed">
+                        <!--  原第二行最后一项 - 与面板一对齐风格统一  -->
+                        <StackPanel
+                            Margin="0,0,0,8"
+                            HorizontalAlignment="Left"
+                            Orientation="Horizontal">
                             <TextBlock
-                                Margin="0,0,10,0"
+                                Width="120"
+                                Margin="0,0,5,0"
                                 VerticalAlignment="Center"
                                 Text="{DynamicResource VAM.RCircleRadius}" />
                             <ComboBox
                                 x:Name="cbDisplayRadius"
                                 Width="100"
+                                VerticalAlignment="Center"
                                 SelectedIndex="2"
                                 SelectionChanged="CbDisplayRadius_SelectionChanged">
                                 <ComboBoxItem Content="0°" Tag="0" />
                                 <ComboBoxItem Content="20°" Tag="20" />
                                 <ComboBoxItem Content="40°" Tag="40" />
                                 <ComboBoxItem Content="60°" Tag="60" />
-
                             </ComboBox>
                             <Button
-                                Margin="5,0,5,0"
-                                Padding="10,2"
+                                Width="80"
+                                Margin="8,0,0,0"
+                                Padding="0"
+                                VerticalAlignment="Center"
                                 Click="BtnDeleteAngle_RCircle_Click"
                                 Content="{DynamicResource VAM.Delete}" />
                         </StackPanel>
-                        <StackPanel Margin="5,0,0,10" Orientation="Horizontal">
+                        <StackPanel
+                            Margin="0,0,0,8"
+                            HorizontalAlignment="Left"
+                            Orientation="Horizontal">
                             <TextBlock
-                                Margin="0,0,10,0"
+                                Width="120"
+                                Margin="0,0,5,0"
                                 VerticalAlignment="Center"
                                 Text="{DynamicResource VAM.AddAngle}" />
                             <TextBox
                                 x:Name="txtAddAngle1"
                                 Width="100"
-                                Height="18"
+                                Height="22"
                                 MinWidth="60"
-                                Margin="0,0,5,0"
+                                Margin="0,0,8,0"
                                 VerticalAlignment="Center" />
                             <Button
-                                Margin="0,0,5,0"
-                                Padding="10,2"
+                                Width="80"
+                                Padding="0"
+                                VerticalAlignment="Center"
                                 Click="BtnAddAngle_RCircle_Click"
                                 Content="{DynamicResource VAM.Add}" />
                         </StackPanel>
 
-                        <!--  导出R圆CSV按钮  -->
+                        <!--  导出R圆CSV按钮 - 与面板一导出按钮对齐统一  -->
                         <Button
                             x:Name="btnExportCircle"
+                            Width="280"
                             Height="35"
-                            Margin="5"
+                            Margin="0,10,0,0"
+                            HorizontalAlignment="Left"
                             Click="BtnExportCircle_Click"
                             Content="{DynamicResource VAM.ExportRCircleCSV}" />
 
@@ -324,8 +366,10 @@
                 <StackPanel Grid.Row="2" Margin="5,0,5,5">
                     <Button
                         x:Name="btnExport"
+                        Width="280"
                         Height="30"
                         Margin="0,5"
+                        HorizontalAlignment="Left"
                         Click="BtnExport_Click"
                         Content="导出" />
                 </StackPanel>

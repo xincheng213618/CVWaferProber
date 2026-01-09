@@ -543,9 +543,9 @@ namespace CVWPFCamImageCtrl
                     1 => IsChineseMode?"灰度":"grayscale",
                     3 => "RGB",
                     4 => "RGBA",
-                    _ => $"{info.channels}通道"
+                    _ => IsChineseMode ? $"{info.channels}通道": $"{info.channels}Channel"
                 };
-                ResolutionText.ToolTip = $"色彩模式: {channelInfo}\n分辨率: {bitmapSource.DpiX:F0} DPI";
+                ResolutionText.ToolTip = IsChineseMode ? $"色彩模式: {channelInfo}\n分辨率: {bitmapSource.DpiX:F0} DPI": $"Color mode: {channelInfo}\nResolution: {bitmapSource.DpiX:F0} DPI";
             }
         }
 

@@ -104,8 +104,8 @@
     <sys:String x:Key="Zoom out">🔍缩小</sys:String>
     <sys:String x:Key="Original">⭕原始</sys:String>
     <sys:String x:Key="Fit">📏适应</sys:String>
-    <sys:String x:Key="Previous">◀上一张</sys:String>
-    <sys:String x:Key="Next">下一张▶</sys:String>
+    <sys:String x:Key="Previous">◀ 上一张</sys:String>
+    <sys:String x:Key="Next">下一张 ▶</sys:String>
     <sys:String x:Key="File">🖼️文件</sys:String>
     <sys:String x:Key="Folder">📁文件夹</sys:String>
     <sys:String x:Key="Reload">🔄重载</sys:String>
@@ -415,6 +415,50 @@
     <sys:String x:Key="StatusPanel.AOI_LINE_NG">线缺陷检测NG</sys:String>
     <sys:String x:Key="StatusPanel.IVL_TESTING">IVL正在检测</sys:String>
     <sys:String x:Key="StatusPanel.IVL_COMPLETED">IVL检测完成</sys:String>
+    <!--  提示信息  -->
+    <sys:String x:Key="Cannotbeempty">不能为空</sys:String>
+    <sys:String x:Key="Click">请点击芯片查看详细信息(Please click the chip to view detailed information)</sys:String>
+    <sys:String x:Key="Rendering">渲染中...</sys:String>
+    <sys:String x:Key="Renderingcomplete">渲染完成 - 共</sys:String>
+    <sys:String x:Key="Chip">芯片</sys:String>
+    <sys:String x:Key="WaferProbeStationProcess">晶圆探针台流程</sys:String>
+    <sys:String x:Key="callexception">调用异常</sys:String>
+    <sys:String x:Key="ErrorcallingDLL">调用DLL时出错</sys:String>
+    <sys:String x:Key="Returncode">返回码</sys:String>
+    <sys:String x:Key="Return">返回</sys:String>
+    <sys:String x:Key="Anerroroccurredwhileprocessingthefile">处理文件时出错</sys:String>
+    <sys:String x:Key="Cannotempty">输入的角度不能为空(The input angle cannot be empty)</sys:String>
+    <sys:String x:Key="Pleaseenteravalidintegerangle">请输入有效的整数角度</sys:String>
+    <sys:String x:Key="Shouldbe">角度范围应为(The angle range should be)</sys:String>
+    <sys:String x:Key="Anglealreadyexists">角度已存在</sys:String>
+    <sys:String x:Key="Prompt">提示</sys:String>
+
+    <sys:String x:Key="Nodata">没有可导出的数据(No data available for export)</sys:String>
+    <sys:String x:Key="Exportsuccessful">导出成功Export successful</sys:String>
+    <sys:String x:Key="Exportfailed">导出失败Export failed</sys:String>
+    <sys:String x:Key="Callparameters">调用参数</sys:String>
+    <sys:String x:Key="Parameters">参数</sys:String>
+    <sys:String x:Key="Callfailed">调用失败</sys:String>
+    <sys:String x:Key="Errorcode">错误码</sys:String>
+    <sys:String x:Key="Azimuth">方位角</sys:String>
+    <sys:String x:Key="Pleaseenteranumber">请输入数字</sys:String>
+    <sys:String x:Key="Pleaseenteraninteger">请输入整数</sys:String>
+    <sys:String x:Key="Pleaseenterapositiveinteger">请输入正整数</sys:String>
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 </ResourceDictionary>

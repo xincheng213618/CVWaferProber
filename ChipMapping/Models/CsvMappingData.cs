@@ -1,6 +1,7 @@
 ﻿using CsvHelper;
 using System.Globalization;
 using System.IO;
+using System.Windows;
 
 namespace ChipMapping.Models
 {
@@ -77,7 +78,7 @@ namespace ChipMapping.Models
         {
             if (mappingData == null || mappingData.Count == 0)
             {
-                throw new ArgumentException("mappingData 不能为空");
+                throw new ArgumentException( $"mappingData {Application.Current.FindResource("Cannotbeempty")}");
             }
 
             return new MappingPosDataRange
@@ -92,7 +93,7 @@ namespace ChipMapping.Models
         {
             if (mappingData == null || mappingData.Count == 0)
             {
-                throw new ArgumentException("mappingData 不能为空");
+                throw new ArgumentException($"mappingData {Application.Current.FindResource("Cannotbeempty")}");
             }
 
             return new MappingMapDataRange
