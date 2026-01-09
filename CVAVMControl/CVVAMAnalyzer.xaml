@@ -267,6 +267,7 @@
                             Margin="5"
                             Click="BtnExport_Click"
                             Content="导出" />
+                       
                     </StackPanel>
 
                     <!--  面板2：R圆参数（默认隐藏）  -->
@@ -320,6 +321,7 @@
                             Margin="5"
                             Click="BtnExportCircle_Click"
                             Content="{DynamicResource VAM.ExportRCircleCSV}" />
+                       
                     </StackPanel>
                 </Grid>
             </Grid>

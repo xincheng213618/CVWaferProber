@@ -1,5 +1,6 @@
 ﻿using ColorVision.FileIO;
 using ConoscopeDemo;
+using CVVAMControl;
 using CVWaferProber.Core.Events;
 using log4net;
 using Microsoft.Win32;
@@ -33,6 +34,7 @@ namespace CVAVMControl
     /// </summary>
     public partial class CVVAMAnalyzer : UserControl
     {
+
         private static readonly ILog logger = LogManager.GetLogger(typeof(CVVAMAnalyzer));
 
         private Mat? XMat;
@@ -93,75 +95,93 @@ namespace CVAVMControl
         [DllImport(LIBRARY_CV_Ali, EntryPoint = "CV_Ali_calcVam",
             CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
         private static extern CV_AliResType CV_Ali_calcVam(
-            IntPtr handle,
-            int w,
-            int h,
-            int bpp,
-            int channels,
-            byte[] data,          // 替换IntPtr为byte[]（BGR图片数据）
-            byte[] xyz,           // 替换IntPtr为byte[]（XYZ数据）
-            string staticJson,    // 移除MarshalAs，StdCall默认适配
-            StringBuilder result, // 移除MarshalAs
-            ref int resultLength,
-            ref int dstBpp,
-            ref int dstChannel,
-            byte[] dstData        // 替换IntPtr为byte[]（输出图像数据）
+            IntPtr handle,                // 第1个参数：句柄（通常传IntPtr.Zero）
+            int w,                        // 第2个参数：图像宽度
+            int h,                        // 第3个参数：图像高度
+            int bpp,                      // 第4个参数：每像素位数
+            int channels,                 // 第5个参数：通道数
+            byte[] bgrData,               // 第6个参数：BGR图像数据
+            byte[] xyzData,               // 第7个参数：XYZ图像数据
+            string paramJson,             // 第8个参数：JSON参数
+            StringBuilder resultJson,     // 第9个参数：返回的JSON结果
+            ref int resultJsonLength,     // 第10个参数：结果缓冲区长度
+            ref int dstBpp,               // 第11个参数：输出图像BPP
+            ref int dstChannels,          // 第12个参数：输出图像通道数
+            byte[] dstData                // 第13个参数：输出图像数据
         );
 
         // 4. 新增封装调用方法（适配ImageData入参）
-        private CV_AliResType CallCV_Ali_calcVam(ImageData i, ImageData xyz, string paramJson, out string result, out ImageData showImage)
+        // 2. 修正封装调用方法
+        private CV_AliResType CallCV_Ali_calcVam(ImageData bgrImg, ImageData xyzImg, string paramJson, out string resultJson, out ImageData showImage)
         {
-            // 初始化输出图像
+            // 初始化输出参数（关键：先赋默认值，由DLL覆盖）
+            resultJson = string.Empty;
             showImage = new ImageData
             {
-                _w = i._w,
-                _h = i._h,
-                _bpp = 16,
-                _channels = 3,
-                data = new byte[i._w * i._h * 3 * (16 / 8)] // 16位3通道初始化
+                _w = xyzImg._w,
+                _h = xyzImg._h,
+                _bpp = 0,  // 初始化为0，由DLL返回真实值
+                _channels = 0, // 初始化为0，由DLL返回真实值
+                data = new byte[xyzImg._w * xyzImg._h * 4 * 3] // 预分配足够内存（4字节/像素，3通道）
             };
 
-            // 初始化结果缓冲区
-            int resultLength = 2048000; // 2MB缓冲区
-            StringBuilder bf = new StringBuilder(resultLength);
-            CV_AliResType res = CV_Ali_calcVam(
-                IntPtr.Zero,
-                xyz._w,
-                xyz._h,
-                i._bpp,
-                xyz._channels,
-                i.data,       // BGR图片数据（无则传null）
-                xyz.data,     // XYZ数据
-                paramJson,    // 静态参数JSON
-                bf,
-                ref resultLength,
-                ref showImage._bpp,
-                ref showImage._channels,
-                showImage.data
-            );
+            // 初始化结果缓冲区（扩大到4MB，避免长度不足）
+            int resultBufLen = 4 * 1024 * 1024; // 4MB
+            StringBuilder resultBuf = new StringBuilder(resultBufLen);
+            int dstBpp = showImage._bpp;
+            int dstChannels = showImage._channels;
 
-            // 处理缓冲区长度不足的情况
-            if (res == CV_AliResType.ERR_LENGTH)
+            CV_AliResType res = CV_AliResType.FAILED;
+            try
             {
-                bf = new StringBuilder(resultLength);
+                // 核心：参数顺序严格匹配导入签名
                 res = CV_Ali_calcVam(
-                    IntPtr.Zero,
-                    xyz._w,
-                    xyz._h,
-                    i._bpp,
-                    xyz._channels,
-                    i.data,
-                    xyz.data,
-                    paramJson,
-                    bf,
-                    ref resultLength,
-                    ref showImage._bpp,
-                    ref showImage._channels,
-                    showImage.data
+                    IntPtr.Zero,                // handle
+                    xyzImg._w,                  // w
+                    xyzImg._h,                  // h
+                    bgrImg._bpp,                // bpp
+                    xyzImg._channels,           // channels
+                    bgrImg.data,                // bgrData（无数据传null）
+                    xyzImg.data,                // xyzData
+                    paramJson,                  // JSON参数
+                    resultBuf,                  // 返回结果缓冲区
+                    ref resultBufLen,           // 缓冲区长度
+                    ref dstBpp,                 // 输出BPP
+                    ref dstChannels,            // 输出通道数
+                    showImage.data              // 输出图像数据
                 );
+
+                // 处理缓冲区长度不足的情况（重新调用）
+                if (res == CV_AliResType.ERR_LENGTH)
+                {
+                    resultBuf = new StringBuilder(resultBufLen);
+                    res = CV_Ali_calcVam(
+                        IntPtr.Zero,
+                        xyzImg._w, xyzImg._h, bgrImg._bpp, xyzImg._channels,
+                        bgrImg.data, xyzImg.data, paramJson,
+                        resultBuf, ref resultBufLen, ref dstBpp, ref dstChannels, showImage.data
+                    );
+                }
+
+                // 更新输出图像的真实参数
+                showImage._bpp = dstBpp;
+                showImage._channels = dstChannels;
+                // 获取返回的JSON（去除空字符）
+                resultJson = resultBuf.ToString().Trim('\0');
+            }
+            catch (SEHException ex)
+            {
+                logger.Error($"DLL调用异常：{ex.Message}", ex);
+                res = CV_AliResType.FAILED;
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"调用DLL时出错：{ex.Message}", ex);
+                res = CV_AliResType.FAILED;
             }
 
-            result = bf.ToString();
+            // 关键：打印返回结果，定位问题
+            logger.Info($"DLL返回码：{res}，返回JSON：{resultJson}");
             return res;
         }
 
@@ -187,7 +207,7 @@ namespace CVAVMControl
             public List<VamSamplePoint> Data { get; set; } = new List<VamSamplePoint>();
         }
 
-        private class VamSamplePoint
+        public class VamSamplePoint
         {
             public double X { get; set; }       // 三刺激值X
             public double Y { get; set; }       // 三刺激值Y（亮度值，图表用）
@@ -196,6 +216,9 @@ namespace CVAVMControl
             public double cie_y { get; set; }   // CIE坐标y（可选）
             public double position { get; set; } // 角度位置（对应图表X轴）
         }
+        // 新增：全局缓存DLL返回的所有方位角数据（0°~180°）
+        public Dictionary<int, List<VamSamplePoint>> _dllAllAzimuthData = new Dictionary<int, List<VamSamplePoint>>();
+        public Dictionary<(int polar, double azimuth), RgbSample> DllAllCircleData { get; private set; }
         public CVVAMAnalyzer()
         {
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
@@ -227,7 +250,7 @@ namespace CVAVMControl
             //this.EventAggregator.Subscribe<VAMFlowStartingEvent>(OnFlowStarting);
             this.EventAggregator.Subscribe<VAMResultGUIClearEvent>(OnResultGUIClear);
             //订阅自动导出CSV事件
-            this.EventAggregator.Subscribe<VAMAutoExportCsvEvent>(OnAutoExportCsv);
+            //this.EventAggregator.Subscribe<VAMAutoExportCsvEvent>(OnAutoExportCsv);
         }
 
         private void UnInitializeEvents()
@@ -235,131 +258,131 @@ namespace CVAVMControl
             this.EventAggregator?.Unsubscribe<VAMFlowCompletedEvent>(OnFlowCompleted);
             //this.EventAggregator?.Unsubscribe<VAMFlowStartingEvent>(OnFlowStarting);
             this.EventAggregator?.Unsubscribe<VAMResultGUIClearEvent>(OnResultGUIClear);
-            this.EventAggregator?.Unsubscribe<VAMAutoExportCsvEvent>(OnAutoExportCsv);
+            //this.EventAggregator?.Unsubscribe<VAMAutoExportCsvEvent>(OnAutoExportCsv);
         }
-        private void Export_Click(object sender, RoutedEventArgs e)
-        {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                try
-                {
-                    // 1. 基础校验
-                    if (!_isDataValid || !IsMatSafe(YMat) || dataXyz == null)
-                    {
-                        logger.Warn("VAM数据未加载，自动导出失败");
-                        return;
-                    }
+        //private void Export_Click(object sender, RoutedEventArgs e)
+        //{
+        //    Application.Current.Dispatcher.Invoke(() =>
+        //    {
+        //        try
+        //        {
+        //            // 1. 基础校验
+        //            if (!_isDataValid || !IsMatSafe(YMat) || dataXyz == null)
+        //            {
+        //                logger.Warn("VAM数据未加载，自动导出失败");
+        //                return;
+        //            }
 
-                    // 2. 导出路径（桌面+时间戳）
-                    string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                    string fileName = $"VAM_MatrixExport_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-                    string exportPath = System.IO.Path.Combine(desktopPath, fileName);
+        //            // 2. 导出路径（桌面+时间戳）
+        //            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        //            string fileName = $"VAM_MatrixExport_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        //            string exportPath = System.IO.Path.Combine(desktopPath, fileName);
 
-                    // 3. 采集图二格式的数据（角度行 + 多采样点列）
-                    List<VamMatrixExportModel> matrixData = GetVamMatrixData();
-                    if (matrixData.Count == 0)
-                    {
-                        logger.Warn("无有效数据可导出");
-                        return;
-                    }
+        //            // 3. 采集图二格式的数据（角度行 + 多采样点列）
+        //            List<VamMatrixExportModel> matrixData = GetVamMatrixData();
+        //            if (matrixData.Count == 0)
+        //            {
+        //                logger.Warn("无有效数据可导出");
+        //                return;
+        //            }
 
-                    // 4. 生成图二格式的CSV
-                    using (var writer = new StreamWriter(exportPath, false, Encoding.UTF8))
-                    {
-                        // 4.1 写入表头（第1-2行）
-                        writer.WriteLine($"Measurement Date,,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,"); // 第1行
-                        writer.WriteLine($"Instrument,,VAM 60°,,,,,,,,,,,,"); // 第2行
-                        writer.WriteLine(); // 第3行（空行）
+        //            // 4. 生成图二格式的CSV
+        //            using (var writer = new StreamWriter(exportPath, false, Encoding.UTF8))
+        //            {
+        //                // 4.1 写入表头（第1-2行）
+        //                writer.WriteLine($"Measurement Date,,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,"); // 第1行
+        //                writer.WriteLine($"Instrument,,VAM 60°,,,,,,,,,,,,"); // 第2行
+        //                writer.WriteLine(); // 第3行（空行）
 
-                        // 4.2 写入采样点序号行（第4行：C列开始是0、1、2…）
-                        int maxSampleCount = matrixData.Max(m => m.AllSampleValues.Count);
-                        string sampleHeader = $",,{string.Join(",", Enumerable.Range(0, maxSampleCount))}";
-                        writer.WriteLine(sampleHeader);
+        //                // 4.2 写入采样点序号行（第4行：C列开始是0、1、2…）
+        //                int maxSampleCount = matrixData.Max(m => m.AllSampleValues.Count);
+        //                string sampleHeader = $",,{string.Join(",", Enumerable.Range(0, maxSampleCount))}";
+        //                writer.WriteLine(sampleHeader);
 
-                        // 4.3 写入数据行（B列是角度，C~N列是该角度的所有采样点值）
-                        foreach (var data in matrixData)
-                        {
-                            // 格式：空列 + 角度 + 该角度的所有采样点值（横向排列）
-                            string valuesStr = string.Join(",", data.AllSampleValues.Select(v => v.ToString("F5")));
-                            string line = $",{data.Angle},{valuesStr}";
-                            writer.WriteLine(line);
-                        }
-                    }
+        //                // 4.3 写入数据行（B列是角度，C~N列是该角度的所有采样点值）
+        //                foreach (var data in matrixData)
+        //                {
+        //                    // 格式：空列 + 角度 + 该角度的所有采样点值（横向排列）
+        //                    string valuesStr = string.Join(",", data.AllSampleValues.Select(v => v.ToString("F5")));
+        //                    string line = $",{data.Angle},{valuesStr}";
+        //                    writer.WriteLine(line);
+        //                }
+        //            }
 
-                    logger.Info($"VAM图二格式CSV导出成功！路径：{exportPath}");
-                    MessageBox.Show($"CSV已自动导出至：\n{exportPath}", "导出成功",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                catch (Exception ex)
-                {
-                    logger.Error("VAM图二格式导出失败", ex);
-                    MessageBox.Show($"导出失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            });
-        }
+        //            logger.Info($"VAM图二格式CSV导出成功！路径：{exportPath}");
+        //            MessageBox.Show($"CSV已自动导出至：\n{exportPath}", "导出成功",
+        //                MessageBoxButton.OK, MessageBoxImage.Information);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            logger.Error("VAM图二格式导出失败", ex);
+        //            MessageBox.Show($"导出失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+        //        }
+        //    });
+        //}
         /// <summary>
         /// 自动导出CSV事件处理（测试完成后触发）
         /// </summary>
-        private void OnAutoExportCsv(VAMAutoExportCsvEvent @event)
-        {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                try
-                {
-                    // 1. 基础校验
-                    if (!_isDataValid || !IsMatSafe(YMat) || dataXyz == null)
-                    {
-                        logger.Warn("VAM数据未加载，自动导出失败");
-                        return;
-                    }
+        //private void OnAutoExportCsv(VAMAutoExportCsvEvent @event)
+        //{
+        //    Application.Current.Dispatcher.Invoke(() =>
+        //    {
+        //        try
+        //        {
+        //            // 1. 基础校验
+        //            if (!_isDataValid || !IsMatSafe(YMat) || dataXyz == null)
+        //            {
+        //                logger.Warn("VAM数据未加载，自动导出失败");
+        //                return;
+        //            }
 
-                    // 2. 导出路径（桌面+时间戳）
-                    string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                    string fileName = $"VAM_MatrixExport_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-                    string exportPath = System.IO.Path.Combine(desktopPath, fileName);
+        //            // 2. 导出路径（桌面+时间戳）
+        //            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        //            string fileName = $"VAM_MatrixExport_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        //            string exportPath = System.IO.Path.Combine(desktopPath, fileName);
 
-                    // 3. 采集图二格式的数据（角度行 + 多采样点列）
-                    List<VamMatrixExportModel> matrixData = GetVamMatrixData();
-                    if (matrixData.Count == 0)
-                    {
-                        logger.Warn("无有效数据可导出");
-                        return;
-                    }
+        //            // 3. 采集图二格式的数据（角度行 + 多采样点列）
+        //            List<VamMatrixExportModel> matrixData = GetVamMatrixData();
+        //            if (matrixData.Count == 0)
+        //            {
+        //                logger.Warn("无有效数据可导出");
+        //                return;
+        //            }
 
-                    // 4. 生成图二格式的CSV
-                    using (var writer = new StreamWriter(exportPath, false, Encoding.UTF8))
-                    {
-                        // 4.1 写入表头（第1-2行）
-                        writer.WriteLine($"Measurement Date,,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,"); // 第1行
-                        writer.WriteLine($"Instrument,,VAM 60°,,,,,,,,,,,,"); // 第2行
-                        writer.WriteLine(); // 第3行（空行）
+        //            // 4. 生成图二格式的CSV
+        //            using (var writer = new StreamWriter(exportPath, false, Encoding.UTF8))
+        //            {
+        //                // 4.1 写入表头（第1-2行）
+        //                writer.WriteLine($"Measurement Date,,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,"); // 第1行
+        //                writer.WriteLine($"Instrument,,VAM 60°,,,,,,,,,,,,"); // 第2行
+        //                writer.WriteLine(); // 第3行（空行）
 
-                        // 4.2 写入采样点序号行（第4行：C列开始是0、1、2…）
-                        int maxSampleCount = matrixData.Max(m => m.AllSampleValues.Count);
-                        string sampleHeader = $",,{string.Join(",", Enumerable.Range(0, maxSampleCount))}";
-                        writer.WriteLine(sampleHeader);
+        //                // 4.2 写入采样点序号行（第4行：C列开始是0、1、2…）
+        //                int maxSampleCount = matrixData.Max(m => m.AllSampleValues.Count);
+        //                string sampleHeader = $",,{string.Join(",", Enumerable.Range(0, maxSampleCount))}";
+        //                writer.WriteLine(sampleHeader);
 
-                        // 4.3 写入数据行（B列是角度，C~N列是该角度的所有采样点值）
-                        foreach (var data in matrixData)
-                        {
-                            // 格式：空列 + 角度 + 该角度的所有采样点值（横向排列）
-                            string valuesStr = string.Join(",", data.AllSampleValues.Select(v => v.ToString("F5")));
-                            string line = $",{data.Angle},{valuesStr}";
-                            writer.WriteLine(line);
-                        }
-                    }
+        //                // 4.3 写入数据行（B列是角度，C~N列是该角度的所有采样点值）
+        //                foreach (var data in matrixData)
+        //                {
+        //                    // 格式：空列 + 角度 + 该角度的所有采样点值（横向排列）
+        //                    string valuesStr = string.Join(",", data.AllSampleValues.Select(v => v.ToString("F5")));
+        //                    string line = $",{data.Angle},{valuesStr}";
+        //                    writer.WriteLine(line);
+        //                }
+        //            }
 
-                    logger.Info($"VAM图二格式CSV导出成功！路径：{exportPath}");
-                    MessageBox.Show($"CSV已自动导出至：\n{exportPath}", "导出成功",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                catch (Exception ex)
-                {
-                    logger.Error("VAM图二格式导出失败", ex);
-                    MessageBox.Show($"导出失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            });
-        }
+        //            logger.Info($"VAM图二格式CSV导出成功！路径：{exportPath}");
+        //            MessageBox.Show($"CSV已自动导出至：\n{exportPath}", "导出成功",
+        //                MessageBoxButton.OK, MessageBoxImage.Information);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            logger.Error("VAM图二格式导出失败", ex);
+        //            MessageBox.Show($"导出失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+        //        }
+        //    });
+        //}
         /// <summary>
         /// 同一角度的多个采样点值作为横向列
         /// </summary>
@@ -400,7 +423,7 @@ namespace CVAVMControl
             public double Angle { get; set; } // B列：角度
             public List<double> AllSampleValues { get; set; } = new List<double>(); // C~N列：该角度的所有采样点值
         }
-       
+
         private void OnFlowCompleted(VAMFlowCompletedEvent @event)
         {
             if (!string.IsNullOrEmpty(@event.ResultFileName) && System.IO.File.Exists(@event.ResultFileName))
@@ -1270,7 +1293,7 @@ namespace CVAVMControl
         /// <summary>
         /// 创建指定半径角度的R圆数据（按原代码采样模式）
         /// </summary>
-        private ConcentricCircleLine CreateRCircleLine(double radiusAngle)
+        public ConcentricCircleLine CreateRCircleLine(double radiusAngle)
         {
             ConcentricCircleLine circleLine = new ConcentricCircleLine
             {
@@ -1563,11 +1586,15 @@ namespace CVAVMControl
 
             double radians = angle * Math.PI / 180.0;
             // Sample points along the line (same as original)
-            for (int theta = 0; theta <= (int)MaxAngle; theta++)
+            // 修复：采样范围从 -MaxAngle 到 MaxAngle
+            for (int theta = (int)-MaxAngle; theta <= (int)MaxAngle; theta++)
             {
-                double radiusPixels = theta / ConoscopeCoefficient;
-                double x = center.X + radiusPixels * Math.Cos(radians);
-                double y = center.Y + radiusPixels * Math.Sin(radians);
+                double radiusPixels = Math.Abs(theta) / ConoscopeCoefficient;
+                // 方向控制：负角度向反方向延伸
+                double direction = theta >= 0 ? 1 : -1;
+
+                double x = center.X + radiusPixels * Math.Cos(radians) * direction;
+                double y = center.Y + radiusPixels * Math.Sin(radians) * direction;
 
                 int ix = Math.Max(0, Math.Min(mat.Width - 1, (int)Math.Round(x)));
                 int iy = Math.Max(0, Math.Min(mat.Height - 1, (int)Math.Round(y)));
@@ -1577,7 +1604,7 @@ namespace CVAVMControl
 
                 polarLine.RgbData.Add(new RgbSample
                 {
-                    Position = theta,
+                    Position = theta, // 保留负角度值
                     X = X,
                     Y = Y,
                     Z = Z
@@ -1917,6 +1944,327 @@ namespace CVAVMControl
                 logger.Error("调用DLL获取直径线数据异常", ex);
                 return false;
             }
+
+        }
+        //缓存所有方位角数据
+        /// <summary>
+        /// 重构：支持传入动态参数（通道、采样点数量、极径/极角）
+        /// </summary>
+        public bool CallVamDllForAllAzimuth(ExportChannel exportChannel, int pointNumLine = 360, double polarRHO = 60.0, double polarAngle = 60.0)
+        {
+            try
+            {
+                if (!IsMatSafe(XMat) || !IsMatSafe(YMat) || !IsMatSafe(ZMat) || center.X == 0 || center.Y == 0)
+                {
+                    logger.Error("数据未加载或图像中心未初始化");
+                    return false;
+                }
+
+                int imgWidth = YMat.Width;
+                int imgHeight = YMat.Height;
+                int bpp = YMat.Depth() switch
+                {
+                    MatType.CV_8U => 8,
+                    MatType.CV_16U => 16,
+                    MatType.CV_32F => 32,
+                    _ => 16
+                };
+
+                if (dataXyz == null) return false;
+
+                ImageData xyzImageData = new ImageData
+                {
+                    _w = imgWidth,
+                    _h = imgHeight,
+                    _bpp = bpp,
+                    _channels = 3,
+                    data = dataXyz
+                };
+                ImageData bgrImageData = new ImageData
+                {
+                    _w = imgWidth,
+                    _h = imgHeight,
+                    _bpp = bpp,
+                    _channels = 3,
+                    data = null
+                };
+
+                // 清空原有缓存
+                _dllAllAzimuthData.Clear();
+
+                // 遍历0°~180°所有方位角，调用DLL并缓存数据
+                for (int azimuth = 0; azimuth <= 180; azimuth++)
+                {
+                    // 使用传入的动态参数构建JSON
+                    string staticJson = JsonConvert.SerializeObject(new
+                    {
+                        debugCfg = new { Debug = false, debugPath = "Result\\", debugImgResize = 2 },
+                        azimuthalAngle = azimuth,
+                        polar_RHO = polarRHO, // 动态参数
+                        polar_Angle = polarAngle, // 动态参数
+                        pixelToAngle = ConoscopeCoefficient,
+                        pointNumLine = pointNumLine, // 动态参数（采样点）
+                        pointNumCircle = 60,
+                        center = new { x = center.X, y = center.Y },
+                        displayChannel = exportChannel.ToString() // 动态参数（通道）
+                    });
+
+                    string resultJson;
+                    ImageData showImage;
+                    CV_AliResType callResult = CallCV_Ali_calcVam(bgrImageData, xyzImageData, staticJson, out resultJson, out showImage);
+
+                    if (callResult != CV_AliResType.SUCCESS && callResult != CV_AliResType.PART_SUCCESS)
+                    {
+                        logger.Error($"方位角{azimuth}° DLL调用失败，错误码：{callResult}");
+                        continue;
+                    }
+
+                    if (showImage.data != null)
+                    {
+                        Array.Clear(showImage.data, 0, showImage.data.Length);
+                        showImage.data = null;
+                    }
+
+                    string cleanJson = resultJson.Trim('\0').Trim();
+                    if (string.IsNullOrEmpty(cleanJson)) continue;
+
+                    VamResultRoot result = JsonConvert.DeserializeObject<VamResultRoot>(cleanJson);
+                    if (result?.result?.line?.Data != null && result.result.line.Data.Count > 0)
+                    {
+                        _dllAllAzimuthData[azimuth] = result.result.line.Data;
+                    }
+                }
+
+                if (_dllAllAzimuthData.ContainsKey(0) && !_dllAllAzimuthData.ContainsKey(180))
+                {
+                    var zeroData = _dllAllAzimuthData[0];
+                    var reversed180Data = new List<VamSamplePoint>();
+
+                    // 核心修复：反转径向角度的数据顺序
+                    // 0°的+60° → 180°的-60°，0°的-60° → 180°的+60°
+                    for (int i = zeroData.Count - 1; i >= 0; i--)
+                    {
+                        var originalPoint = zeroData[i];
+                        // 径向角度取反（保持数值，反转位置）
+                        reversed180Data.Add(new VamSamplePoint
+                        {
+                            X = originalPoint.X,
+                            Y = originalPoint.Y,
+                            Z = originalPoint.Z,
+                            cie_x = originalPoint.cie_x,
+                            cie_y = originalPoint.cie_y,
+                            position = -originalPoint.position // 关键：径向角度取反
+                        });
+                    }
+
+                    _dllAllAzimuthData[180] = reversed180Data;
+                }
+
+                return _dllAllAzimuthData.Count > 0;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("获取全量方位角数据失败", ex);
+                return false;
+            }
+        }
+        /// <summary>
+        /// 批量调用DLL获取所有极角+方位角的圆环全量数据（对齐CallVamDllForAllAzimuth）
+        /// </summary>
+        /// <param name="polarStart">极角起始值</param>
+        /// <param name="polarEnd">极角结束值</param>
+        /// <param name="polarStep">极角间隔</param>
+        /// <param name="azimuthSampleCount">方位角采样点数</param>
+        /// <returns>是否调用成功</returns>
+        public bool CallVamDllForAllCircle(int polarStart, int polarEnd, int polarStep, int azimuthSampleCount)
+        {
+            // 初始化返回状态
+            bool isSuccess = false;
+
+            try
+            {
+                // 步骤1：基础校验（同直径线批量调用逻辑）
+                if (!IsMatSafe(XMat) || !IsMatSafe(YMat) || !IsMatSafe(ZMat) || center.X == 0 || center.Y == 0)
+                {
+                    logger.Error("CallVamDllForAllCircle - 数据未加载或图像中心未初始化");
+                    return false;
+                }
+
+                // 步骤2：极角参数合法性校验
+                if (polarStep <= 0)
+                {
+                    logger.Error($"CallVamDllForAllCircle - 极角间隔{polarStep}无效，需为正整数");
+                    MessageBox.Show("极角间隔需为正整数", "参数错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return false;
+                }
+                if (azimuthSampleCount <= 0)
+                {
+                    logger.Error($"CallVamDllForAllCircle - 方位角采样点数{azimuthSampleCount}无效，需为正整数");
+                    MessageBox.Show("方位角采样点数需为正整数", "参数错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return false;
+                }
+                // 极角范围限制（-60°~60°，符合VAM业务规则）
+                polarStart = Math.Clamp(polarStart, -60, 60);
+                polarEnd = Math.Clamp(polarEnd, -60, 60);
+
+                // 步骤3：获取图像基础参数（复用已有逻辑）
+                int imgWidth = YMat.Width;
+                int imgHeight = YMat.Height;
+                int bpp = YMat.Depth() switch
+                {
+                    MatType.CV_8U => 8,
+                    MatType.CV_16U => 16,
+                    MatType.CV_32F => 32,
+                    _ => 16
+                };
+
+                // 步骤4：校验XYZ数据
+                if (dataXyz == null)
+                {
+                    logger.Error("CallVamDllForAllCircle - XYZ图像数据为空");
+                    return false;
+                }
+
+                // 步骤5：构建ImageData入参（复用已有逻辑）
+                ImageData xyzImageData = new ImageData
+                {
+                    _w = imgWidth,
+                    _h = imgHeight,
+                    _bpp = bpp,
+                    _channels = 3,
+                    data = dataXyz
+                };
+                ImageData bgrImageData = new ImageData
+                {
+                    _w = imgWidth,
+                    _h = imgHeight,
+                    _bpp = bpp,
+                    _channels = 3,
+                    data = null // 无BGR数据时传null
+                };
+
+                // 步骤6：初始化/清空缓存字典
+                if (DllAllCircleData == null)
+                {
+                    DllAllCircleData = new Dictionary<(int polar, double azimuth), RgbSample>();
+                }
+                DllAllCircleData.Clear();
+
+                // 步骤7：遍历极角范围（支持正负极角）
+                int polarAngle = polarStart;
+                while (polarAngle <= polarEnd)
+                {
+                    // 步骤7.1：遍历方位角（按采样点数均分0~360°）
+                    double azimuthStep = 360.0 / azimuthSampleCount;
+                    for (int i = 0; i < azimuthSampleCount; i++)
+                    {
+                        double currentAzimuth = i * azimuthStep; // 0°, 1°, 2°...359°
+
+                        // 步骤7.2：构建R圆模式的JSON参数（适配DLL要求）
+                        string circleJson = JsonConvert.SerializeObject(new
+                        {
+                            debugCfg = new
+                            {
+                                Debug = false,
+                                debugPath = "Result\\",
+                                debugImgResize = 2
+                            },
+                            azimuthalAngle = currentAzimuth, // 方位角（0~360°）
+                            polar_RHO = polarAngle,          // 极角（当前遍历的半径角度）
+                            polar_Angle = 60.0,              // 固定60°（VAM业务默认值）
+                            pixelToAngle = ConoscopeCoefficient,
+                            pointNumLine = _pointNumLine,    // 全局采样点配置
+                            pointNumCircle = azimuthSampleCount, // 方位角采样点数
+                            center = new { x = center.X, y = center.Y },
+                            displayChannel = displayChannel.ToString() // 当前选中通道
+                        });
+
+                        // 步骤7.3：调用DLL封装方法
+                        string resultJson;
+                        ImageData showImage;
+                        CV_AliResType callResult = CallCV_Ali_calcVam(
+                            bgrImageData,
+                            xyzImageData,
+                            circleJson,
+                            out resultJson,
+                            out showImage
+                        );
+
+                        // 步骤7.4：清理showImage内存（避免泄漏）
+                        if (showImage.data != null)
+                        {
+                            Array.Clear(showImage.data, 0, showImage.data.Length);
+                            showImage.data = null;
+                        }
+
+                        // 步骤7.5：处理DLL返回结果
+                        if (callResult != CV_AliResType.SUCCESS && callResult != CV_AliResType.PART_SUCCESS)
+                        {
+                            logger.Warn($"CallVamDllForAllCircle - 极角{polarAngle}° 方位角{currentAzimuth:F1}° DLL调用失败，错误码：{callResult}");
+                            continue;
+                        }
+
+                        // 步骤7.6：解析JSON结果
+                        string cleanResultJson = resultJson.Trim('\0').Trim();
+                        if (string.IsNullOrEmpty(cleanResultJson))
+                        {
+                            logger.Warn($"CallVamDllForAllCircle - 极角{polarAngle}° 方位角{currentAzimuth:F1}° 返回空JSON");
+                            continue;
+                        }
+
+                        // 步骤7.7：反序列化结果并存入缓存
+                        try
+                        {
+                            VamResultRoot vamResult = JsonConvert.DeserializeObject<VamResultRoot>(cleanResultJson);
+                            if (vamResult?.result?.circle?.Data != null && vamResult.result.circle.Data.Count > 0)
+                            {
+                                // 找到当前方位角对应的采样点
+                                var targetSample = vamResult.result.circle.Data
+                                    .FirstOrDefault(p => Math.Abs(p.position - currentAzimuth) < 0.1); // 误差允许0.1°
+
+                                if (targetSample != null)
+                                {
+                                    // 转换为RgbSample格式存入缓存
+                                    var rgbSample = new RgbSample
+                                    {
+                                        Position = currentAzimuth,
+                                        X = targetSample.X,
+                                        Y = targetSample.Y,
+                                        Z = targetSample.Z
+                                    };
+                                    DllAllCircleData.Add((polarAngle, currentAzimuth), rgbSample);
+                                    isSuccess = true; // 有有效数据则标记成功
+                                }
+                            }
+                        }
+                        catch (JsonException ex)
+                        {
+                            logger.Error($"CallVamDllForAllCircle - 极角{polarAngle}° 方位角{currentAzimuth:F1}° JSON解析失败", ex);
+                            continue;
+                        }
+                    }
+
+                    // 步骤7.8：步进极角
+                    polarAngle += polarStep;
+                }
+
+                // 步骤8：日志输出统计信息
+                logger.Info($"CallVamDllForAllCircle 执行完成 - 极角范围[{polarStart}~{polarEnd}]° 间隔{polarStep}° | 方位角采样{azimuthSampleCount}点 | 有效数据{DllAllCircleData.Count}条");
+
+                // 步骤9：空数据兜底提示
+                if (!isSuccess)
+                {
+                    MessageBox.Show("未获取到有效圆环数据，请检查DLL参数或图像数据", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error("CallVamDllForAllCircle 执行异常", ex);
+                MessageBox.Show($"批量获取圆环数据失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                isSuccess = false;
+            }
+
+            return isSuccess;
         }
         /// <summary>
         /// 调用DLL接口获取R圆数据，更新R圆图表
@@ -2050,7 +2398,7 @@ namespace CVAVMControl
         #endregion
 
         #region
-       
+
         // 辅助方法：读取单个像素的字节数组（适配不同Mat类型）
         private byte[] GetPixelBytes(Mat mat, int x, int y)
         {
@@ -2484,7 +2832,7 @@ namespace CVAVMControl
             }
             // 将合法值赋值给全局变量
             _pointNumLine = pointNumLine;
-            
+
             MessageBox.Show($"采样点数量已设置为：{_pointNumLine}", "设置成功", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
@@ -2492,33 +2840,130 @@ namespace CVAVMControl
         {
             try
             {
-                // 1. 基础校验逻辑
                 if (YMat == null || YMat.Empty())
                 {
-                    MessageBox.Show("没有可导出的数据", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("没有可导出的数据！", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
 
-                // 2. 复用文件保存对话框逻辑
-                SaveFileDialog saveFileDialog = new SaveFileDialog
+                // 选择导出基础路径
+                var saveFileDialog = new SaveFileDialog
                 {
                     Filter = "CSV Files (*.csv)|*.csv",
-                    FileName = $"VAM_Export_{displayChannel}_{DateTime.Now:yyyyMMdd_HHmmss}_-60to60.csv",
-                    Title = "保存直径线数据(-60°~60°)"
+                    FileName = $"VAM_Export_{DateTime.Now:yyyyMMdd_HHmmss}",
+                    Title = "选择导出基础路径"
                 };
 
-                if (saveFileDialog.ShowDialog() == true)
+                if (saveFileDialog.ShowDialog() != true) return;
+                string basePath = System.IO.Path.ChangeExtension(saveFileDialog.FileName, null); // 去除.csv后缀
+
+                // 打开导出配置弹窗
+                var exportDialog = new VamExportDialog(this, basePath)
                 {
-                    // 3. 调用修复后的导出方法
-                    //ExportAngleModeToCSV_60To60(saveFileDialog.FileName, displayChannel);
-                    MessageBox.Show($"直径线数据导出成功！\n已导出0°-180°方位角，-60°~60°径向角度数据", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
+                    Owner = System.Windows.Window.GetWindow(this) // 设置父窗口，保证居中
+                };
+
+                if (exportDialog.ShowDialog() == true)
+                {
+                    MessageBox.Show("所有选中通道的数据已导出完成！", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"导出失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                logger.Error("导出初始化失败", ex);
+                MessageBox.Show($"导出初始化失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            //Application.Current.Dispatcher.Invoke(() =>
+            //{
+            //    try
+            //    {
+            //        if (YMat == null || YMat.Empty())
+            //        {
+            //            MessageBox.Show("没有可导出的数据", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+            //            return;
+            //        }
+
+            //        // 核心修改：导出时主动传递最新参数（当前通道、当前采样点数量）
+            //        bool dllSuccess = CallVamDllForAllAzimuth(
+            //            exportChannel: displayChannel, // 导出时的当前通道
+            //            pointNumLine: _pointNumLine,   // 导出时的当前采样点数量
+            //            polarRHO: 60.0,                // 可根据需求改为用户输入
+            //            polarAngle: 60.0               // 可根据需求改为用户输入
+            //        );
+
+            //        if (!dllSuccess)
+            //        {
+            //            MessageBox.Show("DLL数据获取失败，无法导出", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            //            return;
+            //        }
+
+            //        // 选择导出路径
+            //        SaveFileDialog saveFileDialog = new SaveFileDialog
+            //        {
+            //            Filter = "CSV Files (*.csv)|*.csv",
+            //            FileName = $"VAM_Export_{displayChannel}_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
+            //            Title = "保存VAM数据（0°~180°方位角）"
+            //        };
+
+            //        if (saveFileDialog.ShowDialog() != true) return;
+            //        string exportPath = saveFileDialog.FileName;
+
+            //        // 按示例表格格式导出（原有逻辑不变）
+            //        using (var writer = new StreamWriter(exportPath, false, Encoding.UTF8))
+            //        {
+            //            // 第1行：Measurement Date
+            //            writer.WriteLine($"Measurement Date,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,");
+            //            // 第2行：Instrument
+            //            writer.WriteLine($"Instrument,VAM 60°,,,,,,,,,,,,");
+            //            // 第3行：空行
+            //            writer.WriteLine();
+            //            // 第4行：列标题（径向角行标题 + 方位角0°~180°）
+            //            StringBuilder headerLine = new StringBuilder();
+            //            headerLine.Append(","); // A列空
+            //            headerLine.Append(" "); // B列：径向角
+            //            foreach (int azimuth in Enumerable.Range(0, 180)) // 0°~180°方位角
+            //            {
+            //                headerLine.Append($",{azimuth}°");
+            //            }
+            //            writer.WriteLine(headerLine.ToString());
+
+            //            // 遍历径向角-60°~60°，逐行写入数据
+            //            for (int radial = -60; radial <= 60; radial++)
+            //            {
+            //                StringBuilder dataLine = new StringBuilder();
+            //                dataLine.Append(","); // A列空
+            //                dataLine.Append($"{radial}°"); // B列：当前径向角
+
+            //                // 遍历每个方位角（0°~180°），填充对应列数据
+            //                foreach (int azimuth in Enumerable.Range(0, 180))
+            //                {
+            //                    if (_dllAllAzimuthData.TryGetValue(azimuth, out var sampleList))
+            //                    {
+            //                        // 找到当前径向角对应的采样点
+            //                        var sample = sampleList.FirstOrDefault(p => Math.Round(p.position, 0) == radial);
+            //                        double value = sample != null ? GetChannelValueFromDll(sample, displayChannel) : 0;
+            //                        dataLine.Append($",{value:F5}");
+            //                    }
+            //                    else
+            //                    {
+            //                        dataLine.Append(","); // 无数据则留空
+            //                    }
+            //                }
+            //                writer.WriteLine(dataLine.ToString());
+            //            }
+            //        }
+
+            //        MessageBox.Show($"VAM数据已按要求导出至：\n{exportPath}", "导出成功", MessageBoxButton.OK, MessageBoxImage.Information);
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        logger.Error("VAM数据导出失败", ex);
+            //        MessageBox.Show($"导出失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            //    }
+            //});
         }
+        #region VAM导出入口方法
+        #endregion
         ///// <summary>
         ///// 导出-60°~60°径向角度范围的CSV（核心修改方法）
         ///// </summary>

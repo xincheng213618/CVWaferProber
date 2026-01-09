@@ -3,6 +3,7 @@ using CVWaferProber.ViewModels;
 using log4net;
 using log4net.Config;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -14,6 +15,16 @@ namespace CVWaferProber
     /// </summary>
     public partial class App : Application
     {
+        private const string LIBRARY_CV_Ali = "CV_algorithm.dll";
+
+        [DllImport(LIBRARY_CV_Ali, EntryPoint = "CV_Ali_initial",
+            CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
+        private static extern void CV_Ali_initial();
+
+        [DllImport(LIBRARY_CV_Ali, EntryPoint = "CV_Ali_release",
+            CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
+        private static extern void CV_Ali_release();
+
         private static readonly ILog log = LogManager.GetLogger(typeof(App));
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -101,7 +112,34 @@ namespace CVWaferProber
             // 3. 注册全局样式
             Application.Current.Resources.Add(typeof(DataGridRow), rowStyle);
             Application.Current.Resources.Add(typeof(DataGridCell), cellStyle);
+            try
+            {
+                // 调用DLL初始化方法
+                CV_Ali_initial();
+                Console.WriteLine("CV_algorithm.dll 初始化成功");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"DLL初始化失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown(); // 初始化失败则关闭应用
+            }
         }
+        // 应用关闭时调用释放
+        protected override void OnExit(ExitEventArgs e)
+        {
+            try
+            {
+                // 调用DLL释放方法
+                CV_Ali_release();
+                Console.WriteLine("CV_algorithm.dll 资源释放成功");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"DLL释放失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            base.OnExit(e);
+        }
+
     }
 
 }
