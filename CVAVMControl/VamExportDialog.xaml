@@ -142,6 +142,8 @@
                     Click="btnExport_Click"
                     Content="导出" />
                 <Button
+                     Background="#DC3545"
+                    Foreground="White"
                     x:Name="btnCancel"
                     Width="80"
                     Click="btnCancel_Click"

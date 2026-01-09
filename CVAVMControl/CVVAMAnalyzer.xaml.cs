@@ -48,7 +48,7 @@ namespace CVAVMControl
         private System.Windows.Point center;
         private int imageRadius;
         private double MaxAngle = 60; // Default max angle
-        private double ConoscopeCoefficient = 0.02645; // Pixels per degree
+        private double ConoscopeCoefficient = 0.01935; // Pixels per degree 0.02645
 
         private int displayAngle = 120; // Default display angle
         private ExportChannel displayChannel = ExportChannel.Y; // Default display channel

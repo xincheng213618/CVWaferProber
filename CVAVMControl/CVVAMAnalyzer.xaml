@@ -161,6 +161,7 @@
                     <RowDefinition Height="Auto" />
                     <!--  切换按钮  -->
                     <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
                     <!--  参数区  -->
                 </Grid.RowDefinitions>
 
@@ -261,13 +262,8 @@
                             Margin="5"
                             Click="BtnExportDiameter_Click"
                             Content="{DynamicResource VAM.ExportDiameterLineCSV}" />
-                        <Button
-                            x:Name="btnExport"
-                            Height="30"
-                            Margin="5"
-                            Click="BtnExport_Click"
-                            Content="导出" />
-                       
+
+
                     </StackPanel>
 
                     <!--  面板2：R圆参数（默认隐藏）  -->
@@ -321,9 +317,19 @@
                             Margin="5"
                             Click="BtnExportCircle_Click"
                             Content="{DynamicResource VAM.ExportRCircleCSV}" />
-                       
+
                     </StackPanel>
+
                 </Grid>
+                <StackPanel Grid.Row="2" Margin="5,0,5,5">
+                    <Button
+                        x:Name="btnExport"
+                        Height="30"
+                        Margin="0,5"
+                        Click="BtnExport_Click"
+                        Content="导出" />
+                </StackPanel>
+
             </Grid>
         </Border>
     </Grid>
