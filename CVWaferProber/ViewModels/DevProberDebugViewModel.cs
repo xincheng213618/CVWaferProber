@@ -21,7 +21,7 @@ namespace CVWaferProber.ViewModels
         public ICommand DevProberConnectCommand { get; }
         public ICommand DevProberDisconnectCommand { get; }
         public ICommand ManualStatusUpdateCommand { get; }
-        public ICommand ResetStateMachineCommand { get; }
+        public ICommand? ResetStateMachineCommand { get; }
         public ICommand SendAbsoluteMoveCommand { get; }
         public ICommand SendBasicCommand { get; }
         public ICommand SendCustomCommand { get; }
@@ -30,6 +30,7 @@ namespace CVWaferProber.ViewModels
         public ICommand GetHeaterStatusCommand { get; }
         public ICommand StartHeaterMonitorCommand { get; }
         public ICommand StopHeaterMonitorCommand { get; }
+        public ICommand? ResetMotionCommand { get; }
 
         private decimal _Temperature = 25.0M;
         public decimal Temperature
@@ -105,6 +106,9 @@ namespace CVWaferProber.ViewModels
             this._client = proberClient;
             this._stateMachine = stateMachine;
             this.ConnectionInfo = connectionInfo;
+
+            ResetMotionCommand = null;
+            ResetStateMachineCommand = null;
 
             DevProberConnectCommand = new RelayCommand(
                 async _ => await ConnectAsync(),

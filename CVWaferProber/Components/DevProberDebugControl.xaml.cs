@@ -819,5 +819,11 @@ namespace CVWaferProber.Components
         }
 
         #endregion
+
+        private void Expander_Expanded(object sender, RoutedEventArgs e)
+        {
+            canvasTempChart.InvalidateVisual();
+            InitializeTemperatureChart();
+        }
     }
 }

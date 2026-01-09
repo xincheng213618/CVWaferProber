@@ -193,7 +193,7 @@
                 </ScrollViewer>
             </TabItem>
 
-            <TabItem Header="{DynamicResource ProberDebugControl.HeaterStatus}">
+            <TabItem Header="{DynamicResource ProberDebugControl.HeaterStatus}" HorizontalAlignment="Left">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="5">
                         <GroupBox Header="{DynamicResource ProberDebugControl.HeaterStatus}" Margin="10,5,10,5">
@@ -249,7 +249,7 @@
                                 </Grid>
 
                                 <!-- 温度历史图表 -->
-                                <Expander Header="{DynamicResource Heater.TempHistory}" Margin="0,10,0,0">
+                                <Expander Header="{DynamicResource Heater.TempHistory}" Margin="0,10,0,0" Expanded="Expander_Expanded">
                                     <StackPanel>
                                         <Canvas x:Name="canvasTempChart" Height="150" Background="White" Margin="5"/>
                                         <TextBlock x:Name="tbTempStats" 

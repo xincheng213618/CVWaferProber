@@ -211,7 +211,7 @@ namespace CVWaferProber.Services
             }
         }
 
-        public Task DoDieFlowExec(WPFlowViewModel? _selectedWPFlow, DieViewModel die, bool isEnd = true)
+        public Task? DoDieFlowExec(WPFlowViewModel? _selectedWPFlow, DieViewModel die, bool isEnd = true)
         {
             if (_selectedWPFlow == null) 
             {

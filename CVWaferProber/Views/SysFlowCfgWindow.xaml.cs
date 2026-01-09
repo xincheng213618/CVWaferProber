@@ -96,7 +96,7 @@ namespace CVWaferProber.Views
             var flows = WaferProberDBService.LoadAllFlows();
             // 模拟数据 - 假设有不同类型的配置项
             var flowAll = new ObservableCollection<ConfigOption>();
-            var option_emp = new ConfigOption() { DisplayName = "Empty", Value = null };
+            var option_emp = new ConfigOption() { DisplayName = "Empty", Value = string.Empty };
             flowAll.Add(option_emp);
             foreach (var flow in flows)
             {
