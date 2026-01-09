@@ -174,6 +174,35 @@
 
     <!--  EQE相关  -->
     <sys:String x:Key="EQE.luminous_flux">luminousflux</sys:String>
+    
+    <!-- 流程窗口标题 -->
+    <sys:String x:Key="SysFlowCfgWindow_Title">System Flow Configuration</sys:String>
+
+    <!-- 主标题区域 -->
+    <sys:String x:Key="MainTitle">System Flow Configuration Management</sys:String>
+    <sys:String x:Key="SubTitle">Configure system parameters and options</sys:String>
+
+    <!-- 数据列标题 -->
+    <sys:String x:Key="Column_No">No.</sys:String>
+    <sys:String x:Key="Column_Name">Name</sys:String>
+    <sys:String x:Key="Column_Type">Type</sys:String>
+    <sys:String x:Key="Column_Timeout">Timeout</sys:String>
+    <sys:String x:Key="Column_SelectValue">Select Value</sys:String>
+
+    <!-- WinForms区域 -->
+    <sys:String x:Key="WinFormsTitle">Detailed Configuration</sys:String>
+
+    <!-- 按钮文本 -->
+    <sys:String x:Key="Button_Save">Save Configuration</sys:String>
+    <sys:String x:Key="Button_Reset">Reset</sys:String>
+    <sys:String x:Key="Button_Close">Close</sys:String>
+
+    <!-- 类型本地化 -->
+    <sys:String x:Key="Type_String">String</sys:String>
+    <sys:String x:Key="Type_Integer">Integer</sys:String>
+    <sys:String x:Key="Type_Boolean">Boolean</sys:String>
+    <sys:String x:Key="Type_Double">Double</sys:String>
+    <sys:String x:Key="Type_Enum">Enum</sys:String>
 
     <!-- 设备调试 连接设置区域 -->
     <sys:String x:Key="ProberDebugControl.ConnCfg">Connection Configuration</sys:String>

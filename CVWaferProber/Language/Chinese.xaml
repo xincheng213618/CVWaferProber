@@ -182,9 +182,36 @@
     <sys:String x:Key="VAM.PixelValue">像素值</sys:String>
 
     <!--  EQE相关  -->
-
     <sys:String x:Key="EQE.luminous_flux">光通量</sys:String>
+    
+    <!-- 窗口标题 -->
+    <sys:String x:Key="SysFlowCfgWindow_Title">系统Flow配置</sys:String>
 
+    <!-- 主标题区域 -->
+    <sys:String x:Key="MainTitle">系统Flow配置管理</sys:String>
+    <sys:String x:Key="SubTitle">配置系统的各项参数和选项</sys:String>
+
+    <!-- 数据列标题 -->
+    <sys:String x:Key="Column_No">序号</sys:String>
+    <sys:String x:Key="Column_Name">名称</sys:String>
+    <sys:String x:Key="Column_Type">类型</sys:String>
+    <sys:String x:Key="Column_Timeout">超时</sys:String>
+    <sys:String x:Key="Column_SelectValue">选择配置值</sys:String>
+
+    <!-- WinForms区域 -->
+    <sys:String x:Key="WinFormsTitle">详细配置</sys:String>
+
+    <!-- 按钮文本 -->
+    <sys:String x:Key="Button_Save">保存配置</sys:String>
+    <sys:String x:Key="Button_Reset">重置</sys:String>
+    <sys:String x:Key="Button_Close">关闭</sys:String>
+
+    <!-- 类型本地化 -->
+    <sys:String x:Key="Type_String">字符串</sys:String>
+    <sys:String x:Key="Type_Integer">整数</sys:String>
+    <sys:String x:Key="Type_Boolean">布尔值</sys:String>
+    <sys:String x:Key="Type_Double">浮点数</sys:String>
+    <sys:String x:Key="Type_Enum">枚举</sys:String>
 
     <!-- 连接设置区域 -->
     <sys:String x:Key="ProberDebugControl.ConnCfg">连接设置</sys:String>
