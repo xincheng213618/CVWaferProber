@@ -15,6 +15,7 @@ namespace CVWaferProber.Services
         private RespDataRegDTO? RegDTO;
         private const int MaxRetryCount = 2; // 注册/接口调用最大重试次数
         private EventAggregator eventAggregator;
+        public static bool IsEnglishMode = false;
         public RCRestService()
         {
             ConnectionInfo = new ConnectionInfo("Registed", "UnRegisted") { ServerIP = "127.0.0.1", Port = 8080 };
@@ -41,17 +42,17 @@ namespace CVWaferProber.Services
             // 未注册，执行注册（最多重试2次）
             for (int i = 0; i < MaxRetryCount; i++)
             {
-                logger.InfoFormat("开始第{0}次注册...", i + 1);
+                logger.InfoFormat(IsEnglishMode? $"Start registration #{0}" : $"开始第{0}次注册...", i + 1);
                 if (RcRegist())
                 {
                     logger.Info("Regist success");
                     return true;
                 }
-                logger.WarnFormat("第{0}次注册failed，等待1秒后重试...", i + 1);
+                logger.WarnFormat(IsEnglishMode? $"Registration attempt {0} failed, retrying after 1 second" : $"第{0}次注册failed，等待1秒后重试...", i + 1);
                 System.Threading.Thread.Sleep(1000); // 重试间隔1秒
             }
 
-            logger.Error("Regist failed，已达到最大重试次数");
+            logger.Error(IsEnglishMode? "Registration failed, maximum retry attempts reached" : "Regist failed，已达到最大重试次数");
             return false;
         }
 
@@ -77,7 +78,7 @@ namespace CVWaferProber.Services
                 var contentResp = restful.RcRegist(ConnectionInfo.ServerIP, ConnectionInfo.Port);
                 if (string.IsNullOrEmpty(contentResp))
                 {
-                    logger.Error("Regist failed：接口返回空内容");
+                    logger.Error(IsEnglishMode? "Regist failed：The interface returned empty content" : "Regist failed：接口返回空内容");
                     PublishStatus(ConnectionStatus.Disconnected);
                     return false;
                 }
@@ -86,7 +87,7 @@ namespace CVWaferProber.Services
                 var respData = JsonConvert.DeserializeObject<RespDTO<RespDataRegDTO>>(contentResp);
                 if (respData == null)
                 {
-                    logger.ErrorFormat("Regist failed：返回内容无法反序列化 => {0}", contentResp);
+                    logger.ErrorFormat(IsEnglishMode ? $"Regist failed：The returned content cannot be deserialized => {0}" : $"Regist failed：返回内容无法反序列化 => {0}", contentResp);
                     PublishStatus(ConnectionStatus.Disconnected);
                     return false;
                 }
@@ -105,7 +106,7 @@ namespace CVWaferProber.Services
             }
             catch (Exception ex)
             {
-                logger.Error("注册过程异常", ex);
+                logger.Error(IsEnglishMode? "Registration process error" : "注册过程异常", ex);
                 PublishStatus(ConnectionStatus.Disconnected);
                 return false;
             }
@@ -137,37 +138,37 @@ namespace CVWaferProber.Services
                 var contentResp =  restful.RcLoadFlows(RegDTO!.Token.AccessToken);
                 if (string.IsNullOrEmpty(contentResp))
                 {
-                    logger.Error("加载流程failed：接口返回空内容");
+                    logger.Error(IsEnglishMode? "Loading process failed: interface returned empty content" : "加载流程failed：接口返回空内容");
                     return null;
                 }
 
                 var respData = JsonConvert.DeserializeObject<RespDTO<List<RespDataFlowTempDTO>>>(contentResp);
                 if (respData == null)
                 {
-                    logger.ErrorFormat("加载流程failed：返回内容无法反序列化 => {0}", contentResp);
+                    logger.ErrorFormat(IsEnglishMode? $"Loading process failed: returned content could not be deserialized => {0}" : $"加载流程failed：返回内容无法反序列化 => {0}", contentResp);
                     return null;
                 }
 
                 if (respData.IsSuccess)
                 {
-                    logger.InfoFormat("加载流程success，共{0}个流程", respData.Data?.Count ?? 0);
+                    logger.InfoFormat(IsEnglishMode? $"Load process succeeded, a total of {0} processes" : $"加载流程success，共{0}个流程", respData.Data?.Count ?? 0);
                     return respData.Data;
                 }
 
                 // Token过期？重新注册后重试一次
                 if (IsTokenExpired(respData.Message))
                 {
-                    logger.Warn("Token已过期，重新注册后重试...");
+                    logger.Warn(IsEnglishMode? "The token has expired, please try again after re-registering..." : "Token已过期，重新注册后重试...");
                     RegDTO = null; // 清空过期Token
                     return EnsureRegistered() ? RcLoadFlows() : null;
                 }
 
-                logger.ErrorFormat("加载流程failed：{0} => {1}", respData.Message, contentResp);
+                logger.ErrorFormat(IsEnglishMode? $"Load process failed: {0} => {1}" : $"加载流程failed：{0} => {1}", respData.Message, contentResp);
                 return null;
             }
             catch (Exception ex)
             {
-                logger.Error("加载流程过程异常", ex);
+                logger.Error(IsEnglishMode? "Abnormal loading process" : "加载流程过程异常", ex);
                 return null;
             }
             /*if (RegDTO != null)
@@ -202,36 +203,36 @@ namespace CVWaferProber.Services
                 var contentResp = restful.RcRunFlow(fid, serialNumber, RegDTO!.Token.AccessToken);
                 if (string.IsNullOrEmpty(contentResp))
                 {
-                    logger.ErrorFormat("Execution process（ID：{0}）failed：接口返回空内容", fid);
+                    logger.ErrorFormat($"Execution process（ID：{0}）failed：{(IsEnglishMode? "The interface returned empty content":"接口返回空内容")}", fid);
                     return null;
                 }
 
                 var respData = JsonConvert.DeserializeObject<RespDTO<RespDataRunFlowDTO>>(contentResp);
                 if (respData == null)
                 {
-                    logger.ErrorFormat("Execution process（ID：{0}）failed：返回内容无法反序列化 => {1}", fid, contentResp);
+                    logger.ErrorFormat($"Execution process（ID：{0}）failed：{(IsEnglishMode ? "The interface returned empty content" : "返回内容无法反序列化")} => {1}", fid, contentResp);
                     return null;
                 }
 
                 if (respData.IsSuccess || respData.IsProcessing)
                 {
-                    logger.InfoFormat("Execution process（ID：{0}）success，状态：{1}", fid, respData.IsProcessing ? "processing" : "success");
+                    logger.InfoFormat($"Execution process（ID：{0}）success，{(IsEnglishMode? "Status":"状态")}：{1}", fid, respData.IsProcessing ? "processing" : "success");
                     return respData.Data;
                 }
 
                 if (IsTokenExpired(respData.Message))
                 {
-                    logger.Warn("Token已过期，重新注册后重试...");
+                    logger.Warn(IsEnglishMode? "The token has expired, please try again after re-registering..." : "Token已过期，重新注册后重试...");
                     RegDTO = null;
                     return EnsureRegistered() ? RcRunFlowById(fid, serialNumber) : null;
                 }
 
-                logger.ErrorFormat("Execution process（ID：{0}）failed：{1} => {2}", fid, respData.Message, contentResp);
+                logger.ErrorFormat($"Execution process（ID：{0}）failed：{1} => {2}", fid, respData.Message, contentResp);
                 return null;
             }
             catch (Exception ex)
             {
-                logger.ErrorFormat("Execution process（ID：{0}）过程异常", fid, ex);
+                logger.ErrorFormat($"Execution process（ID：{0}）{(IsEnglishMode ? "Process exception" : "过程异常")}", fid, ex);
                 return null;
             }
         }
@@ -245,36 +246,36 @@ namespace CVWaferProber.Services
                 var contentResp = restful.RcRunFlow(fname, serialNumber, RegDTO!.Token.AccessToken);
                 if (string.IsNullOrEmpty(contentResp))
                 {
-                    logger.ErrorFormat("Execution process（Name：{0}）failed：接口返回空内容", fname);
+                    logger.ErrorFormat($"Execution process（Name：{0}）failed：{(IsEnglishMode? "The interface returned empty content":"接口返回空内容")}", fname);
                     return false;
                 }
 
                 var respData = JsonConvert.DeserializeObject<RespDTO<RespDataRunFlowDTO>>(contentResp);
                 if (respData == null)
                 {
-                    logger.ErrorFormat("Execution process（Name：{0}）failed：返回内容无法反序列化 => {1}", fname, contentResp);
+                    logger.ErrorFormat($"Execution process（Name：{0}）failed：{(IsEnglishMode ? "The interface returned empty content" : "返回内容无法反序列化")} => {1}", fname, contentResp);
                     return false;
                 }
 
                 if (respData.IsSuccess || respData.IsProcessing)
                 {
-                    logger.InfoFormat("Execution process（Name={0},sn={1}）completed, status：{2}", fname, serialNumber, respData.IsProcessing ? "processing" : "success");
+                    logger.InfoFormat($"Execution process（Name={0},sn={1}）completed, status：{2}", fname, serialNumber, respData.IsProcessing ? "processing" : "success");
                     return true;
                 }
 
                 if (IsTokenExpired(respData.Message))
                 {
-                    logger.Warn("Token已过期，重新注册后重试...");
+                    logger.Warn(IsEnglishMode ? "The token has expired, please try again after re-registering..." : "Token已过期，重新注册后重试...");
                     RegDTO = null;
                     return EnsureRegistered() ? RcRunFlowByName(fname, serialNumber) : false;
                 }
 
-                logger.ErrorFormat("Execution process（Name：{0}）failed：{1} => {2}", fname, respData.Message, contentResp);
+                logger.ErrorFormat($"Execution process（Name：{0}）failed：{1} => {2}", fname, respData.Message, contentResp);
                 return false;
             }
             catch (Exception ex)
             {
-                logger.ErrorFormat("Execution process（Name：{0}）过程异常", fname, ex);
+                logger.ErrorFormat($"Execution process（Name：{0}）{(IsEnglishMode ? "Process exception" : "过程异常")}", fname, ex);
                 return false;
             }
         }
@@ -288,36 +289,36 @@ namespace CVWaferProber.Services
                 var contentResp = restful.RcGetFlowResult_POI(serialNumber, RegDTO!.Token.AccessToken);
                 if (string.IsNullOrEmpty(contentResp))
                 {
-                    logger.ErrorFormat("获取POI流程结果（SN：{0}）failed：接口返回空内容", serialNumber);
+                    logger.ErrorFormat(IsEnglishMode?$"Failed to get POI process result (SN: {0}): interface returned empty content" :$"获取POI流程结果（SN：{0}）failed：接口返回空内容", serialNumber);
                     return null;
                 }
 
                 var respData = JsonConvert.DeserializeObject<RespDTO<RespDataFlowResultDTO<AlgResultItem>>>(contentResp);
                 if (respData == null)
                 {
-                    logger.ErrorFormat("获取POI流程结果（SN：{0}）failed：返回内容无法反序列化 => {1}", serialNumber, contentResp);
+                    logger.ErrorFormat(IsEnglishMode?$"Failed to get POI process result (SN: {0}): returned content could not be deserialized => {1}" :$"获取POI流程结果（SN：{0}）failed：返回内容无法反序列化 => {1}", serialNumber, contentResp);
                     return null;
                 }
 
                 if (respData.IsSuccess)
                 {
-                    logger.InfoFormat("获取POI流程结果（SN：{0}）success，状态：{1}", serialNumber, (bool)(respData.Data?.IsFinished) ? "已完成" : "processing");
+                    logger.InfoFormat(IsEnglishMode?$"Retrieve POI process result (SN: {0}) successful, status: {1}" :"获取POI流程结果（SN：{0}）success，状态：{1}", serialNumber, (bool)(respData.Data?.IsFinished) ? "已完成" : "processing");
                     return respData.Data;
                 }
 
                 if (IsTokenExpired(respData.Message))
                 {
-                    logger.Warn("Token已过期，重新注册后重试...");
+                    logger.Warn(IsEnglishMode ? "The token has expired, please try again after re-registering..." : "Token已过期，重新注册后重试...");
                     RegDTO = null;
                     return EnsureRegistered() ? RcGetFlowResult_POI(serialNumber) : null;
                 }
 
-                logger.ErrorFormat("获取POI流程结果（SN：{0}）failed：{1} => {2}", serialNumber, respData.Message, contentResp);
+                logger.ErrorFormat(IsEnglishMode? $"Failed to get POI process result (SN: {0}): {1} => {2}" : $"获取POI流程结果（SN：{0}）failed：{1} => {2}", serialNumber, respData.Message, contentResp);
                 return null;
             }
             catch (Exception ex)
             {
-                logger.ErrorFormat("获取POI流程结果（SN：{0}）过程异常", serialNumber, ex);
+                logger.ErrorFormat(IsEnglishMode? $"An exception occurred during the process of obtaining the POI result (SN: {0})" : $"获取POI流程结果（SN：{0}）过程异常", serialNumber, ex);
                 return null;
             }
         }
@@ -331,36 +332,36 @@ namespace CVWaferProber.Services
                 var contentResp = restful.RcGetFlowResult_POI_Detail(getURL, RegDTO!.Token.AccessToken);
                 if (string.IsNullOrEmpty(contentResp))
                 {
-                    logger.ErrorFormat("获取POI详情（URL：{0}）failed：接口返回空内容", getURL);
+                    logger.ErrorFormat(IsEnglishMode? $"Failed to get POI details (URL: {0}): API returned empty content" : $"获取POI详情（URL：{0}）failed：接口返回空内容", getURL);
                     return null;
                 }
 
                 var respData = JsonConvert.DeserializeObject<RespDTO<List<RespDataDTO_CIE>>>(contentResp);
                 if (respData == null)
                 {
-                    logger.ErrorFormat("获取POI详情（URL：{0}）failed：返回内容无法反序列化 => {1}", getURL, contentResp);
+                    logger.ErrorFormat(IsEnglishMode?$"Failed to get POI details (URL: {0}): returned content could not be deserialized => {1}" :$"获取POI详情（URL：{0}）failed：返回内容无法反序列化 => {1}", getURL, contentResp);
                     return null;
                 }
 
                 if (respData.IsSuccess)
                 {
-                    logger.InfoFormat("获取POI详情（URL：{0}）success，共{1}条数据", getURL, respData.Data?.Count ?? 0);
+                    logger.InfoFormat(IsEnglishMode?$"Successfully retrieved POI details (URL: {0}), with a total of {1} entries" :$"获取POI详情（URL：{0}）success，共{1}条数据", getURL, respData.Data?.Count ?? 0);
                     return respData.Data;
                 }
 
                 if (IsTokenExpired(respData.Message))
                 {
-                    logger.Warn("Token已过期，重新注册后重试...");
+                    logger.Warn(IsEnglishMode ? "The token has expired, please try again after re-registering..." : "Token已过期，重新注册后重试...");
                     RegDTO = null;
                     return EnsureRegistered() ? RcGetFlowResult_POI_Detail(getURL) : null;
                 }
 
-                logger.ErrorFormat("获取POI详情（URL：{0}）failed：{1} => {2}", getURL, respData.Message, contentResp);
+                logger.ErrorFormat(IsEnglishMode ? $"Failed to get POI details (URL: {0}): {1} => {2}" : $"获取POI详情（URL：{0}）failed：{1} => {2}", getURL, respData.Message, contentResp);
                 return null;
             }
             catch (Exception ex)
             {
-                logger.ErrorFormat("获取POI详情（URL：{0}）过程异常", getURL, ex);
+                logger.ErrorFormat(IsEnglishMode ? $"An exception occurred while retrieving POI details (URL: {0})" : $"获取POI详情（URL：{0}）过程异常", getURL, ex);
                 return null;
             }
         }
@@ -374,36 +375,36 @@ namespace CVWaferProber.Services
                 var contentResp = restful.RcGetFlowResult_SP(serialNumber, RegDTO!.Token.AccessToken);
                 if (string.IsNullOrEmpty(contentResp))
                 {
-                    logger.ErrorFormat("获取SP流程结果（SN：{0}）failed：接口返回空内容", serialNumber);
+                    logger.ErrorFormat(IsEnglishMode?$"Failed to obtain SP process result (SN: {0}): API returned empty content" :$"获取SP流程结果（SN：{0}）failed：接口返回空内容", serialNumber);
                     return null;
                 }
 
                 var respData = JsonConvert.DeserializeObject<RespDTO<RespDataFlowResultDTO<AlgResultItem>>>(contentResp);
                 if (respData == null)
                 {
-                    logger.ErrorFormat("获取SP流程结果（SN：{0}）failed：返回内容无法反序列化 => {1}", serialNumber, contentResp);
+                    logger.ErrorFormat(IsEnglishMode ? $"Failed to obtain SP process result (SN: {0}): the returned content cannot be deserialized => {1}" : $"获取SP流程结果（SN：{0}）failed：返回内容无法反序列化 => {1}", serialNumber, contentResp);
                     return null;
                 }
 
                 if (respData.IsSuccess)
                 {
-                    logger.InfoFormat("获取SP流程结果（SN：{0}）success", serialNumber);
+                    logger.InfoFormat($"{(IsEnglishMode? "Get SP process results" : "获取SP流程结果")}（SN：{0}）success", serialNumber);
                     return respData.Data;
                 }
 
                 if (IsTokenExpired(respData.Message))
                 {
-                    logger.Warn("Token已过期，重新注册后重试...");
+                    logger.Warn(IsEnglishMode ? "The token has expired, please try again after re-registering..." : "Token已过期，重新注册后重试...");
                     RegDTO = null;
                     return EnsureRegistered() ? RcGetFlowResult_SP(serialNumber) : null;
                 }
 
-                logger.ErrorFormat("获取SP流程结果（SN：{0}）failed：{1} => {2}", serialNumber, respData.Message, contentResp);
+                logger.ErrorFormat($"{(IsEnglishMode ? "Get SP process results" : "获取SP流程结果")}（SN：{0}）failed：{1} => {2}", serialNumber, respData.Message, contentResp);
                 return null;
             }
             catch (Exception ex)
             {
-                logger.ErrorFormat("获取SP流程结果（SN：{0}）过程异常", serialNumber, ex);
+                logger.ErrorFormat(IsEnglishMode?$"An exception occurred while retrieving the SP process result (SN: {0})" :$"获取SP流程结果（SN：{0}）过程异常", serialNumber, ex);
                 return null;
             }
         }
@@ -417,39 +418,39 @@ namespace CVWaferProber.Services
                 var contentResp = restful.RcGetFlowResult_AOI(serialNumber, RegDTO!.Token.AccessToken);
                 if (string.IsNullOrEmpty(contentResp))
                 {
-                    logger.ErrorFormat("Get process result（SN：{0}）failed：接口返回空内容", serialNumber);
+                    logger.ErrorFormat($"Get process result（SN：{0}）failed：{(IsEnglishMode? "The interface returned empty content" : "接口返回空内容")}", serialNumber);
                     return null;
                 }
 
                 var respData = JsonConvert.DeserializeObject<RespDTO<RespDataFlowResultDTO<AlgResultItem>>>(contentResp);
                 if (respData == null)
                 {
-                    logger.ErrorFormat("Get process result（SN：{0}）failed：返回内容无法反序列化 => {1}", serialNumber, contentResp);
+                    logger.ErrorFormat($"Get process result（SN：{0}）failed：{(IsEnglishMode ? "The returned content cannot be deserialized" : "返回内容无法反序列化")} => {1}", serialNumber, contentResp);
                     return null;
                 }
 
                 if (respData.IsSuccess)
                 {
-                    logger.InfoFormat("Get process result（SN：{0}）completed, Status：{1}", serialNumber, (bool)(respData.Data?.IsFinished) ? "Finished" : "Processing");
+                    logger.InfoFormat($"Get process result（SN：{0}）completed, Status：{1}", serialNumber, (bool)(respData.Data?.IsFinished) ? "Finished" : "Processing");
                 }
                 else
                 {
                     // Token过期重试
                     if (IsTokenExpired(respData.Message))
                     {
-                        logger.Warn("Token已过期，重新注册后重试...");
+                         logger.Warn(IsEnglishMode ? "The token has expired, please try again after re-registering..." : "Token已过期，重新注册后重试...");
                         RegDTO = null;
                         return EnsureRegistered() ? RcGetFlowResult_AOI(serialNumber) : null;
                     }
 
-                    logger.ErrorFormat("Get process result（SN：{0}）failed：{1} => {2}", serialNumber, respData.Message, contentResp);
+                    logger.ErrorFormat($"Get process result（SN：{0}）failed：{1} => {2}", serialNumber, respData.Message, contentResp);
                 }
 
                 return respData;
             }
             catch (Exception ex)
             {
-                logger.ErrorFormat("Get process result（SN：{0}）过程异常", serialNumber, ex);
+                logger.ErrorFormat($"Get process result（SN：{0}）{(IsEnglishMode ? "The returned content cannot be deserialized" : "Process Abnormal")}", serialNumber, ex);
                 return null;
             }
         }
@@ -459,7 +460,7 @@ namespace CVWaferProber.Services
                 return false;
 
             // 可根据实际接口返回的Token过期提示修改（示例关键词）
-            var expiredKeywords = new[] { "Token过期", "Unauthorized", "token invalid", "token expired" };
+            var expiredKeywords = new[] { "Tokenexpired", "Unauthorized", "token invalid", "token expired" };
             return Array.Exists(expiredKeywords, kw => message.Contains(kw, StringComparison.OrdinalIgnoreCase));
         }
     }

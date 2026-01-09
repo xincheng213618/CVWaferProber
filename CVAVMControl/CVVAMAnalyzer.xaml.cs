@@ -2818,7 +2818,7 @@ namespace CVAVMControl
             // 1. 先校验输入是否为空
             if (string.IsNullOrWhiteSpace(pointNumLineBox.Text))
             {
-                MessageBox.Show($"{FindResource("Prompt")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"{FindResource("Pleaseenteranumber")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 

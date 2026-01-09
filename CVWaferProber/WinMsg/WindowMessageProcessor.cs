@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Reflection.Metadata;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 
@@ -93,7 +94,7 @@ namespace CVWaferProber.WinMsg
                 _disposed = true;
             }
         }
-
+        public static bool IsEnglishMode = false;
         ~WindowMessageProcessor()
         {
             Dispose(false);
@@ -109,7 +110,7 @@ namespace CVWaferProber.WinMsg
                 throw new ArgumentNullException(nameof(window));
 
             if (IsInitialized)
-                throw new InvalidOperationException("消息处理器已经初始化");
+                throw new InvalidOperationException(IsEnglishMode ? " The message handler has been initialized" : "消息处理器已经初始化");
 
             //window.SourceInitialized += (s, e) =>
             //{
@@ -220,7 +221,7 @@ namespace CVWaferProber.WinMsg
         public IntPtr SendMessage(int messageId, IntPtr wParam = default, IntPtr lParam = default)
         {
             if (!IsInitialized)
-                throw new InvalidOperationException("消息处理器未初始化");
+                throw new InvalidOperationException(IsEnglishMode? "Message processor not initialized" : "消息处理器未初始化");
 
             return SendMessage(_windowHandle, (uint)messageId, wParam, lParam);
         }
@@ -231,7 +232,7 @@ namespace CVWaferProber.WinMsg
         public bool PostMessage(int messageId, IntPtr wParam = default, IntPtr lParam = default)
         {
             if (!IsInitialized)
-                throw new InvalidOperationException("消息处理器未初始化");
+                throw new InvalidOperationException(IsEnglishMode ? "Message processor not initialized" : "消息处理器未初始化");
 
             return PostMessage(_windowHandle, (uint)messageId, wParam, lParam);
         }

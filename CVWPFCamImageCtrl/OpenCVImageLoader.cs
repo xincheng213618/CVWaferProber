@@ -42,7 +42,7 @@ namespace CVWPFCamImageCtrl
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"加载图像失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Failed to load image: {ex.Message}");
                 return null;
             }
         }
@@ -64,7 +64,7 @@ namespace CVWPFCamImageCtrl
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"获取图像信息失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Failed to get image information: {ex.Message}");
             }
 
             return (0, 0, 0);

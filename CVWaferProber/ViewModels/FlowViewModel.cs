@@ -32,7 +32,7 @@ namespace CVWaferProber.ViewModels
         public WPFlowViewModel(TScgdBuzProductDetail flow)
         {
             Id = -1;
-            if (string.IsNullOrEmpty(flow.Name)) Name = "空";
+            if (string.IsNullOrEmpty(flow.Name)) Name = "null";
             else Name = flow.Name;
             switch (flow.Code)
             {

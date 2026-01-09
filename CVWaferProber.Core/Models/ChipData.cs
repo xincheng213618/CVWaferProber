@@ -1,4 +1,5 @@
 ﻿using CVWaferProber.Core.Models.Enums;
+using System.Windows;
 
 namespace CVWaferProber.Core.Models
 {
@@ -66,20 +67,20 @@ namespace CVWaferProber.Core.Models
             {
                 return status switch
                 {
-                    ChipStatus.WAITING => "未检测",
-                    ChipStatus.TESTING => "正在检测",
-                    ChipStatus.OK => "检测合格",
-                    ChipStatus.AOI_NG => "AOI外观检测NG",
-                    ChipStatus.DW_NG => "定位NG",
-                    ChipStatus.BLIND => "完全不亮",
-                    ChipStatus.CAL_NG => "提取失败",
-                    ChipStatus.I2C_NG => "I2C状态异常",
-                    ChipStatus.AOI_LINE_NG => "线缺陷检测NG",
-                    ChipStatus.IVL_TESTING => "正在IVL检测",
-                    ChipStatus.IVL_COMPLETED => "IVL检测完成",
-                    ChipStatus.FAILED => "运行失败",
-                    ChipStatus.OVERTIME => "超时",
-                    _ => "未知"
+                    ChipStatus.WAITING => (string)Application.Current.FindResource("StatusPanel.WAITING"),
+                    ChipStatus.TESTING => (string)Application.Current.FindResource("StatusPanel.TESTING"),
+                    ChipStatus.OK => (string)Application.Current.FindResource("StatusPanel.OK"),
+                    ChipStatus.AOI_NG => (string)Application.Current.FindResource("StatusPanel.AOI_NG"),
+                    ChipStatus.DW_NG => (string)Application.Current.FindResource("StatusPanel.DW_NG"),
+                    ChipStatus.BLIND => (string)Application.Current.FindResource("StatusPanel.BLIND"),
+                    ChipStatus.CAL_NG => (string)Application.Current.FindResource("StatusPanel.CAL_NG"),
+                    ChipStatus.I2C_NG => (string)Application.Current.FindResource("StatusPanel.I2C_NG"),
+                    ChipStatus.AOI_LINE_NG => (string)Application.Current.FindResource("StatusPanel.AOI_LINE_NG"),
+                    ChipStatus.IVL_TESTING => (string)Application.Current.FindResource("StatusPanel.IVL_TESTING"),
+                    ChipStatus.IVL_COMPLETED => (string)Application.Current.FindResource("StatusPanel.IVL_COMPLETED"),
+                    ChipStatus.FAILED => (string)Application.Current.FindResource("StatusPanel.FAILED"),
+                    ChipStatus.OVERTIME => (string)Application.Current.FindResource("StatusPanel.OVERTIME"),
+                    _ => "Unknown"
                 };
             }
             else

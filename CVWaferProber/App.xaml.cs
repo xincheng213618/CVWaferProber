@@ -122,11 +122,11 @@ namespace CVWaferProber
             {
                 // 调用DLL初始化方法
                 CV_Ali_initial();
-                Console.WriteLine("CV_algorithm.dll 初始化成功");
+                Console.WriteLine("CV_algorithm.dll Initialization successful");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"DLL初始化失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"DLL Initialization failed：{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown(); // 初始化失败则关闭应用
             }
         }
@@ -137,11 +137,11 @@ namespace CVWaferProber
             {
                 // 调用DLL释放方法
                 CV_Ali_release();
-                Console.WriteLine("CV_algorithm.dll 资源释放成功");
+                Console.WriteLine("CV_algorithm.dll Resource released successfully");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"DLL释放失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"DLL Release failed：{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             base.OnExit(e);
         }

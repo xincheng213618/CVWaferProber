@@ -437,7 +437,7 @@
     <sys:String x:Key="Callfailed">Call failed</sys:String>
     <sys:String x:Key="Errorcode">Error code</sys:String>
     <sys:String x:Key="Azimuth">Azimuth</sys:String>
-    <sys:String x:Key="Pleaseenteranumber">Please enter anumber</sys:String>
+    <sys:String x:Key="Pleaseenteranumber">Please enter a number</sys:String>
     <sys:String x:Key="Pleaseenteraninteger">Please enter an integer</sys:String>
     <sys:String x:Key="Pleaseenterapositiveinteger">Please enter a positive integer</sys:String>
 </ResourceDictionary>

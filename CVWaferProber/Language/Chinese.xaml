@@ -415,6 +415,9 @@
     <sys:String x:Key="StatusPanel.AOI_LINE_NG">线缺陷检测NG</sys:String>
     <sys:String x:Key="StatusPanel.IVL_TESTING">IVL正在检测</sys:String>
     <sys:String x:Key="StatusPanel.IVL_COMPLETED">IVL检测完成</sys:String>
+    <sys:String x:Key="StatusPanel.FAILED">运行失败</sys:String>
+    <sys:String x:Key="StatusPanel.OVERTIME">超时</sys:String>
+    <sys:String x:Key="StatusPanel.PAUSED">未知</sys:String>
     <!--  提示信息  -->
     <sys:String x:Key="Cannotbeempty">不能为空</sys:String>
     <sys:String x:Key="Click">请点击芯片查看详细信息(Please click the chip to view detailed information)</sys:String>
@@ -444,7 +447,7 @@
     <sys:String x:Key="Pleaseenteranumber">请输入数字</sys:String>
     <sys:String x:Key="Pleaseenteraninteger">请输入整数</sys:String>
     <sys:String x:Key="Pleaseenterapositiveinteger">请输入正整数</sys:String>
-    
+
 
 
 

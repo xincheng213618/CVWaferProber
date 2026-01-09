@@ -42,7 +42,7 @@ namespace CVWaferProber
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"加载语言资源失败：{ex.Message}");
+                MessageBox.Show($"Failed to load language resources：{ex.Message}");
             }
             //FlowDirection ST node
             if(language== "Chinese")

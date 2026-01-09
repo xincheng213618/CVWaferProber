@@ -45,6 +45,7 @@ namespace CVWPFSpectrometerCtrl
         /// </summary>
         /// <param name="source">源对象</param>
         /// <param name="target">目标对象</param>
+        public static bool IsEnglishMode = false; 
         private static void CopyObjectProperties(object source, object target)
         {
             if (source == null || target == null) return;
@@ -73,7 +74,7 @@ namespace CVWPFSpectrometerCtrl
                 catch (Exception ex)
                 {
                     // 忽略无法复制的属性（如只读/内部属性）
-                    Console.WriteLine($"复制属性 {prop.Name} 失败：{ex.Message}");
+                    Console.WriteLine(IsEnglishMode? $"Failed to copy property {prop.Name}: {ex.Message}" : $"复制属性 {prop.Name} 失败：{ex.Message}");
                 }
             }
         }

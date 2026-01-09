@@ -165,7 +165,7 @@ namespace CVWaferProber.Services
                 }
                 else
                 {
-                    logger.Warn($"IVL数据为空，SN：{die.SerialNumber}");
+                    logger.Warn(IsEnglishMode? "IVL data is empty" : $"IVL数据为空，SN：{die.SerialNumber}");
                     csvRows.AppendLine(",,,,,,,,,,,,,,"); // 空行兜底
                 }
 
