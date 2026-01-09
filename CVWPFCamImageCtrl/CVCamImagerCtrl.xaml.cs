@@ -514,8 +514,8 @@ namespace CVWPFCamImageCtrl
         }
         private void ClearImageInfoDisplay()
         {
-            ImageDimensionsText.Text = "0 × 0 像素";
-            DisplayDimensionsText.Text = "0 × 0 像素";
+            ImageDimensionsText.Text = "0 × 0 ";
+            DisplayDimensionsText.Text = "0 × 0 ";
             ResolutionText.Text = "0 DPI";
             ZoomPercentageText.Text = "100%";
             ZoomSlider.Value = 100;
@@ -523,11 +523,11 @@ namespace CVWPFCamImageCtrl
         private void UpdateImageInfoDisplay((int width, int height, int channels) info, BitmapSource bitmapSource)
         {
             // 显示原始尺寸
-            ImageDimensionsText.Text = $"{info.width} × {info.height} 像素";
+            ImageDimensionsText.Text = $"{info.width} × {info.height}";
 
             // 显示当前显示尺寸（实时计算）
             var displayInfo = ImageDisplay.GetDisplayInfo();
-            DisplayDimensionsText.Text = $"{displayInfo.DisplaySize.Width:F0} × {displayInfo.DisplaySize.Height:F0} 像素";
+            DisplayDimensionsText.Text = $"{displayInfo.DisplaySize.Width:F0} × {displayInfo.DisplaySize.Height:F0} ";
 
             // 显示分辨率
             ResolutionText.Text = $"{bitmapSource.DpiX:F0} DPI";

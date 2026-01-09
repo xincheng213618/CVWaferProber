@@ -291,9 +291,9 @@
                                 Click="BtnDeleteAngle_RCircle_Click"
                                 Content="{DynamicResource VAM.Delete}" />
                         </StackPanel>
-                        <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
+                        <StackPanel Margin="5,0,0,10" Orientation="Horizontal">
                             <TextBlock
-                                Margin="5,0,5,0"
+                                Margin="0,0,10,0"
                                 VerticalAlignment="Center"
                                 Text="{DynamicResource VAM.AddAngle}" />
                             <TextBox

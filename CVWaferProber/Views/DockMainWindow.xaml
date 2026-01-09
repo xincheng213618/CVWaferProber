@@ -12,9 +12,9 @@
     xmlns:local="clr-namespace:CVWaferProber.ViewModels"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:CVWaferProber.ViewModels"
-    Title="晶圆探针台"
-    Width="1200"
-    Height="1000"
+    Title="{DynamicResource CVWaferProber}"
+    WindowStartupLocation="CenterScreen"
+    WindowState="Maximized"
     mc:Ignorable="d">
 
     <Window.DataContext>
@@ -26,13 +26,13 @@
             x:Key="BooleanToGridLengthConverter"
             FalseValue="0"
             TrueValue="300" />
-        <cv:ConnectionStatusToColorConverter x:Key="StatusToColorConverter"/>
-        <cv:DeviceStatusToColorConverter x:Key="DevStatusToColorConverter"/>
+        <cv:ConnectionStatusToColorConverter x:Key="StatusToColorConverter" />
+        <cv:DeviceStatusToColorConverter x:Key="DevStatusToColorConverter" />
 
         <Style x:Key="StatusButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
             <!--<Setter Property="ToolTip" Value="{Binding ConnectionInfo.ServerTipInfo}"/>-->
         </Style>
     </Window.Resources>
@@ -65,9 +65,10 @@
             -->
             <!--  系统菜单  -->
             <MenuItem Header="{DynamicResource Menu.System}" InputGestureText="Alt+S">
-                <MenuItem Header="{DynamicResource Menu.System.CfgFlows}" 
-                          Command="{Binding SysFlowCfgCommand}"
-                           InputGestureText="Alt+F"/>
+                <MenuItem
+                    Command="{Binding SysFlowCfgCommand}"
+                    Header="{DynamicResource Menu.System.CfgFlows}"
+                    InputGestureText="Alt+F" />
                 <MenuItem
                     x:Name="MenuSummaryConfig"
                     Command="{Binding OpenSummaryConfigCommand}"
@@ -295,44 +296,55 @@
                 <TextBlock Text="{Binding ConnectionInfo.StatusMessage}" />
             </StatusBarItem>
             <Separator/>-->
-            <!-- 右边区域：连接状态图标和信息 -->
+            <!--  右边区域：连接状态图标和信息  -->
             <StatusBarItem HorizontalAlignment="Right">
-                <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
-                    <!-- 连接状态指示器 -->
-                    <Button Command="{Binding ShowRCConnectionSettingsCommand}"
-                            Style="{StaticResource StatusButtonStyle}"
-                            Padding="5,0">
+                <StackPanel Margin="0,0,10,0" Orientation="Horizontal">
+                    <!--  连接状态指示器  -->
+                    <Button
+                        Padding="5,0"
+                        Command="{Binding ShowRCConnectionSettingsCommand}"
+                        Style="{StaticResource StatusButtonStyle}">
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="12" Height="12" 
-                                     Stroke="Gray" StrokeThickness="1"
-                                     Margin="0,0,8,0">
+                            <Ellipse
+                                Width="12"
+                                Height="12"
+                                Margin="0,0,8,0"
+                                Stroke="Gray"
+                                StrokeThickness="1">
                                 <Ellipse.Fill>
-                                    <Binding Path="RcConnectionInfo.Status" 
-                                             Converter="{StaticResource StatusToColorConverter}"/>
+                                    <Binding Converter="{StaticResource StatusToColorConverter}" Path="RcConnectionInfo.Status" />
                                 </Ellipse.Fill>
                             </Ellipse>
-                            <TextBlock Text="{Binding RcConnectionInfo.StatusMessage}"
-                                       VerticalAlignment="Center"/>
+                            <TextBlock VerticalAlignment="Center" Text="{Binding RcConnectionInfo.StatusMessage}" />
                         </StackPanel>
                     </Button>
-                    <!-- 分隔线 -->
-                    <Separator Width="2" Height="15" Background="#CCCCCC" Margin="0,0,15,0"/>
+                    <!--  分隔线  -->
+                    <Separator
+                        Width="2"
+                        Height="15"
+                        Margin="0,0,15,0"
+                        Background="#CCCCCC" />
 
-                    <!-- 连接状态指示器 -->
-                    <Button Command="{Binding ShowConnectionSettingsCommand}"
-                            Style="{StaticResource StatusButtonStyle}"
-                            Padding="0,0">
+                    <!--  连接状态指示器  -->
+                    <Button
+                        Padding="0,0"
+                        Command="{Binding ShowConnectionSettingsCommand}"
+                        Style="{StaticResource StatusButtonStyle}">
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="12" Height="12" 
-                                     Stroke="Gray" StrokeThickness="1"
-                                     Margin="0,0,8,0">
+                            <Ellipse
+                                Width="12"
+                                Height="12"
+                                Margin="0,0,8,0"
+                                Stroke="Gray"
+                                StrokeThickness="1">
                                 <Ellipse.Fill>
-                                    <Binding Path="ConnectionInfo.DevCurrentState" 
-                                             Converter="{StaticResource DevStatusToColorConverter}"/>
+                                    <Binding Converter="{StaticResource DevStatusToColorConverter}" Path="ConnectionInfo.DevCurrentState" />
                                 </Ellipse.Fill>
                             </Ellipse>
-                            <TextBlock Text="{Binding ConnectionInfo.DevStatusMessage}"
-                                       VerticalAlignment="Center" Width="80"/>
+                            <TextBlock
+                                Width="80"
+                                VerticalAlignment="Center"
+                                Text="{Binding ConnectionInfo.DevStatusMessage}" />
                         </StackPanel>
                     </Button>
                 </StackPanel>

@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -94,67 +95,67 @@ namespace ChipMapping.ViewModels
             {
                 Status = ChipStatus.WAITING,
                 Color = new SolidColorBrush(Colors.Blue), // 蓝
-                Description = "未检测"
+                Description = (string)Application.Current.FindResource("StatusPanel.WAITING")
             });
             StatusTips.Add(new StatusTip
             {
                 Status = ChipStatus.TESTING,
                 Color = new SolidColorBrush(Colors.Yellow), // 黄
-                Description = "正在检测"
+                Description = (string)Application.Current.FindResource("StatusPanel.TESTING")
             });
             StatusTips.Add(new StatusTip
             {
                 Status = ChipStatus.OK,
                 Color = new SolidColorBrush(Colors.Green), // 绿
-                Description = "检测OK"
+                Description = (string)Application.Current.FindResource("StatusPanel.OK")
             });
             StatusTips.Add(new StatusTip
             {
                 Status = ChipStatus.AOI_NG,
                 Color = new SolidColorBrush(Colors.Red), // 红
-                Description = "AOI外观检测NG"
+                Description = (string)Application.Current.FindResource("StatusPanel.AOI_NG")
             });
             StatusTips.Add(new StatusTip
             {
                 Status = ChipStatus.DW_NG,
                 Color = new SolidColorBrush(Colors.Orange), // 橙
-                Description = "定位NG"
+                Description = (string)Application.Current.FindResource("StatusPanel.DW_NG")
             });
             StatusTips.Add(new StatusTip
             {
                 Status = ChipStatus.BLIND,
                 Color = new SolidColorBrush(Colors.Gray), // 灰
-                Description = "完全不亮"
+                Description = (string)Application.Current.FindResource("StatusPanel.BLIND")
             });
             StatusTips.Add(new StatusTip
             {
                 Status = ChipStatus.CAL_NG,
                 Color = new SolidColorBrush(Colors.Purple), // 紫
-                Description = "提取失败"
+                Description = (string)Application.Current.FindResource("StatusPanel.CAL_NG")
             });
             StatusTips.Add(new StatusTip
             {
                 Status = ChipStatus.I2C_NG,
                 Color = new SolidColorBrush(Colors.White), // 白
-                Description = "I2C状态异常"
+                Description = (string)Application.Current.FindResource("StatusPanel.I2C_NG")
             });
             StatusTips.Add(new StatusTip
             {
                 Status = ChipStatus.AOI_LINE_NG,
                 Color = new SolidColorBrush(Colors.Olive), // 橄榄
-                Description = "线缺陷检测NG"
+                Description = (string)Application.Current.FindResource("StatusPanel.AOI_LINE_NG")
             });
             StatusTips.Add(new StatusTip
             {
                 Status = ChipStatus.IVL_TESTING,
                 Color = new SolidColorBrush(Colors.LightYellow), // 浅黄
-                Description = "IVL正在检测"
+                Description = (string)Application.Current.FindResource("StatusPanel.IVL_TESTING")
             });
             StatusTips.Add(new StatusTip
             {
                 Status = ChipStatus.IVL_COMPLETED,
                 Color = new SolidColorBrush(Colors.LightGreen), // 浅绿
-                Description = "IVL检测完成"
+                Description = (string)Application.Current.FindResource("StatusPanel.IVL_COMPLETED")
             });
             // 可继续添加其他状态...
         }

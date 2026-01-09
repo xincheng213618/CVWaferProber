@@ -1255,8 +1255,8 @@ namespace CVAVMControl
         string DC = (string)Application.Current.FindResource("Plot.Title.DiameterLine");
         string RC = (string)Application.Current.FindResource("VAM.RCircle");
         string CDC = (string)Application.Current.FindResource("VAM.CircumferentialDistributionCurve");
-        string CA = (string)Application.Current.FindResource("VAM.CircumferentialAngle");
-        string Pixel = (string)Application.Current.FindResource("VAM.PixelValue");
+        string CA = (string)Application.Current.FindResource("Plot.Axis.X");
+        string Pixel = (string)Application.Current.FindResource("Plot.Axis.Y");
         private void PlotRCircleChart()
         {
             var circleLine = CreateRCircleLine(displayRadius);

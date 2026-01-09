@@ -114,7 +114,7 @@
     <sys:String x:Key="Zoom level">缩放级别：</sys:String>
     <sys:String x:Key="Zoom">缩放：</sys:String>
     <sys:String x:Key="Image Dimensions">图像尺寸：</sys:String>
-    <sys:String x:Key="pixels">像素</sys:String>
+    <sys:String x:Key="Pixels">像素</sys:String>
     <sys:String x:Key="Display Dimensions">显示尺寸：</sys:String>
     <sys:String x:Key="Resolution">分辨率：</sys:String>
     <sys:String x:Key="CurrentFile">当前文件：</sys:String>
@@ -155,7 +155,7 @@
     <!--  VAM相关  -->
     <sys:String x:Key="VAM.OpenCVCIEFile">打开CVCIE文件</sys:String>
     <sys:String x:Key="VAM.SelectCVCIEFile">选择CVCIE文件</sys:String>
-    <sys:String x:Key="VAM.PseudocolorImage">伪彩色图像 (Jet)</sys:String>
+    <sys:String x:Key="VAM.PseudocolorImage">伪彩色图像</sys:String>
     <sys:String x:Key="VAM.ViewingAngle">显示角度:</sys:String>
     <sys:String x:Key="VAM.DisplayChannel">显示通道:</sys:String>
     <sys:String x:Key="VAM.AddAngle">添加角度:</sys:String>
@@ -167,72 +167,72 @@
     <sys:String x:Key="VAM.YChannel">Y通道</sys:String>
     <sys:String x:Key="VAM.ZChannel">Z通道</sys:String>
 
-    <sys:String x:Key="Plot.Title.DiameterLine">直径线分布曲线</sys:String>
-    <sys:String x:Key="Plot.Title.RCircle">R圆分布曲线</sys:String>
+    <sys:String x:Key="Plot.Title.DiameterLine">方位角截面分布曲线</sys:String>
+    <sys:String x:Key="Plot.Title.RCircle">极角截面分布曲线</sys:String>
     <sys:String x:Key="Plot.Axis.X">Degrees</sys:String>
     <sys:String x:Key="Plot.Axis.Y">Luminance (cd/m²)</sys:String>
-    <sys:String x:Key="VAM.RCircleRadius">R圆半径:</sys:String>
-    <sys:String x:Key="VAM.ExportDiameterLineCSV">导出直径线CSV (0°~180°)</sys:String>
-    <sys:String x:Key="VAM.ExportRCircleCSV">导出R圆CSV</sys:String>
+    <sys:String x:Key="VAM.RCircleRadius">极角半径:</sys:String>
+    <sys:String x:Key="VAM.ExportDiameterLineCSV">导出方位角截面CSV (0°~180°)</sys:String>
+    <sys:String x:Key="VAM.ExportRCircleCSV">导出极角截面CSV</sys:String>
 
 
-    <sys:String x:Key="VAM.RCircle">R圆</sys:String>
-    <sys:String x:Key="VAM.CircumferentialDistributionCurve">圆周分布曲线</sys:String>
-    <sys:String x:Key="VAM.CircumferentialAngle">圆周角度 (°)</sys:String>
-    <sys:String x:Key="VAM.PixelValue">像素值</sys:String>
+    <sys:String x:Key="VAM.RCircle">极角</sys:String>
+    <sys:String x:Key="VAM.CircumferentialDistributionCurve">截面分布曲线</sys:String>
+    <!--<sys:String x:Key="VAM.CircumferentialAngle">圆周角度 (°)</sys:String>-->
+    <!--<sys:String x:Key="VAM.PixelValue">像素值</sys:String>-->
 
     <!--  EQE相关  -->
     <sys:String x:Key="EQE.luminous_flux">光通量</sys:String>
-    
-    <!-- 窗口标题 -->
+
+    <!--  窗口标题  -->
     <sys:String x:Key="SysFlowCfgWindow_Title">系统Flow配置</sys:String>
 
-    <!-- 主标题区域 -->
+    <!--  主标题区域  -->
     <sys:String x:Key="MainTitle">系统Flow配置管理</sys:String>
     <sys:String x:Key="SubTitle">配置系统的各项参数和选项</sys:String>
 
-    <!-- 数据列标题 -->
+    <!--  数据列标题  -->
     <sys:String x:Key="Column_No">序号</sys:String>
     <sys:String x:Key="Column_Name">名称</sys:String>
     <sys:String x:Key="Column_Type">类型</sys:String>
     <sys:String x:Key="Column_Timeout">超时</sys:String>
     <sys:String x:Key="Column_SelectValue">选择配置值</sys:String>
 
-    <!-- WinForms区域 -->
+    <!--  WinForms区域  -->
     <sys:String x:Key="WinFormsTitle">详细配置</sys:String>
 
-    <!-- 按钮文本 -->
+    <!--  按钮文本  -->
     <sys:String x:Key="Button_Save">保存配置</sys:String>
     <sys:String x:Key="Button_Reset">重置</sys:String>
     <sys:String x:Key="Button_Close">关闭</sys:String>
 
-    <!-- 类型本地化 -->
+    <!--  类型本地化  -->
     <sys:String x:Key="Type_String">字符串</sys:String>
     <sys:String x:Key="Type_Integer">整数</sys:String>
     <sys:String x:Key="Type_Boolean">布尔值</sys:String>
     <sys:String x:Key="Type_Double">浮点数</sys:String>
     <sys:String x:Key="Type_Enum">枚举</sys:String>
 
-    <!-- 连接设置区域 -->
+    <!--  连接设置区域  -->
     <sys:String x:Key="ProberDebugControl.ConnCfg">连接设置</sys:String>
     <sys:String x:Key="ProberDebugControl.AddrIP">地址IP:</sys:String>
     <sys:String x:Key="ProberDebugControl.Port">端口:</sys:String>
     <sys:String x:Key="ProberDebugControl.Connect">连接</sys:String>
     <sys:String x:Key="ProberDebugControl.Disconnect">断开连接</sys:String>
 
-    <!-- 状态区域 -->
+    <!--  状态区域  -->
     <sys:String x:Key="ProberDebugControl.MachineStatus">机台状态</sys:String>
     <sys:String x:Key="ProberDebugControl.MotionStatus">运动状态</sys:String>
     <sys:String x:Key="ProberDebugControl.HeaterStatus">加热吸盘状态</sys:String>
 
-    <!-- 机台状态 -->
+    <!--  机台状态  -->
     <sys:String x:Key="MachineStatus.CurrentState">当前状态:</sys:String>
     <sys:String x:Key="MachineStatus.Duration">持续时间:</sys:String>
     <sys:String x:Key="MachineStatus.WaferInfo">晶圆:</sys:String>
     <sys:String x:Key="MachineStatus.BatchInfo">批次:</sys:String>
     <sys:String x:Key="MachineStatus.MechanicalNo">机台编号:</sys:String>
 
-    <!-- 按钮文本 -->
+    <!--  按钮文本  -->
     <sys:String x:Key="Button.ManualStatusUpdate">手动状态更新[A]</sys:String>
     <sys:String x:Key="Button.MachineNo">机台编号[B]</sys:String>
     <sys:String x:Key="Button.WaferID">晶圆ID[b]</sys:String>
@@ -240,7 +240,7 @@
     <sys:String x:Key="Button.WaferInfo">Wafer信息[ku]</sys:String>
     <sys:String x:Key="Button.TotalDieCount">总测试晶粒数[Y]</sys:String>
 
-    <!-- 运动状态 -->
+    <!--  运动状态  -->
     <sys:String x:Key="MotionStatus.Status">运动状态:</sys:String>
     <sys:String x:Key="MotionStatus.CurrentCommand">当前指令:</sys:String>
     <sys:String x:Key="MotionStatus.RunTime">运行时间:</sys:String>
@@ -252,13 +252,13 @@
     <sys:String x:Key="SuccessRate">成功率:</sys:String>
     <sys:String x:Key="AvgMotionTime">平均耗时:</sys:String>
 
-    <!-- 运动按钮 -->
+    <!--  运动按钮  -->
     <sys:String x:Key="Button.FirstTestPosition">第一颗测试位置[q]</sys:String>
     <sys:String x:Key="Button.CurrentTestCoord">当前测试坐标[Q]</sys:String>
     <sys:String x:Key="Button.ProbePressure">探针压力[QP]</sys:String>
     <sys:String x:Key="Button.ResetMotion">重置运动监控</sys:String>
 
-    <!-- 运动历史记录 -->
+    <!--  运动历史记录  -->
     <sys:String x:Key="MotionHistory.Title">最近运动记录</sys:String>
     <sys:String x:Key="MotionHistory.Command">指令</sys:String>
     <sys:String x:Key="MotionHistory.TargetY">目标Y</sys:String>
@@ -268,7 +268,7 @@
     <sys:String x:Key="MotionHistory.Status">状态</sys:String>
     <sys:String x:Key="MotionHistory.ErrorMsg">错误信息</sys:String>
 
-    <!-- 加热吸盘 -->
+    <!--  加热吸盘  -->
     <sys:String x:Key="Heater.CurrentTemp">当前温度:</sys:String>
     <sys:String x:Key="Heater.SetTemp">设定温度:</sys:String>
     <sys:String x:Key="Heater.HeaterStatus">加热器状态:</sys:String>
@@ -276,7 +276,7 @@
     <sys:String x:Key="Heater.TempHistory">温度历史</sys:String>
     <sys:String x:Key="Heater.Stats">统计:</sys:String>
 
-    <!-- 加热吸盘按钮 -->
+    <!--  加热吸盘按钮  -->
     <sys:String x:Key="Button.SetTemperature">设置[f]</sys:String>
     <sys:String x:Key="Button.GetCurrentTemp">查询温度[fl]</sys:String>
     <sys:String x:Key="Button.GetHeaterStatus">查询状态[r]</sys:String>
@@ -284,7 +284,7 @@
     <sys:String x:Key="Button.StartHeaterMonitor">开启监控</sys:String>
     <sys:String x:Key="Button.StopHeaterMonitor">停止监控</sys:String>
 
-    <!-- 运动控制指令 -->
+    <!--  运动控制指令  -->
     <sys:String x:Key="MotionControl.Title">运动控制指令</sys:String>
     <sys:String x:Key="MotionControl.ZUp">扎针(ZUp)/起测[Z]</sys:String>
     <sys:String x:Key="MotionControl.ZDown">抬针(ZDown)[D]</sys:String>
@@ -294,13 +294,13 @@
     <sys:String x:Key="MotionControl.Format">格式:</sys:String>
     <sys:String x:Key="MotionControl.SendMoveCommand">发送运动指令[J+]</sys:String>
 
-    <!-- 自定义指令 -->
+    <!--  自定义指令  -->
     <sys:String x:Key="CustomCommand.Title">自定义指令</sys:String>
     <sys:String x:Key="CustomCommand.Send">发送自定义指令</sys:String>
     <sys:String x:Key="CustomCommand.InstructionFormat">指令格式:</sys:String>
     <sys:String x:Key="CustomCommand.CommandContent">指令内容:</sys:String>
     <sys:String x:Key="CustomCommand.InstructionDesc">指令格式说明</sys:String>
-    <!-- 自定义指令格式说明 -->
+    <!--  自定义指令格式说明  -->
     <sys:String x:Key="CustomCommand.HeaderPrefix">• 协议头：</sys:String>
     <sys:String x:Key="CustomCommand.Header">$</sys:String>
     <sys:String x:Key="CustomCommand.InstructionField">• 指令字段：</sys:String>
@@ -314,14 +314,14 @@
     <sys:String x:Key="CustomCommand.Example1Desc">$B# → $BS1000#</sys:String>
     <sys:String x:Key="CustomCommand.Example2">• 晶圆ID：</sys:String>
     <sys:String x:Key="CustomCommand.Example2Desc">$b# → $bWafer01#</sys:String>
-    
-    <!-- 通信日志 -->
+
+    <!--  通信日志  -->
     <sys:String x:Key="CommLog.Ready">通信日志已就绪...</sys:String>
     <sys:String x:Key="CommLog.Title">通信日志</sys:String>
     <sys:String x:Key="CommLog.Clear">清空日志</sys:String>
     <sys:String x:Key="CommLog.AutoScroll">自动滚动</sys:String>
 
-    <!-- 状态名称 -->
+    <!--  状态名称  -->
     <sys:String x:Key="State.Disconnected">未连接</sys:String>
     <sys:String x:Key="State.Connected">已连接</sys:String>
     <sys:String x:Key="State.Ready">就绪</sys:String>
@@ -335,11 +335,11 @@
     <sys:String x:Key="State.Maintenance">维护模式</sys:String>
     <sys:String x:Key="State.Unknown">未知</sys:String>
 
-    <!-- 通用文本 -->
+    <!--  通用文本  -->
     <sys:String x:Key="Common.None">无</sys:String>
     <sys:String x:Key="Common.Second">秒</sys:String>
 
-    <!-- 日志前缀 -->
+    <!--  日志前缀  -->
     <sys:String x:Key="Log.Send">发送</sys:String>
     <sys:String x:Key="Log.Receive">接收</sys:String>
     <sys:String x:Key="Log.Success">成功</sys:String>
@@ -349,7 +349,7 @@
     <sys:String x:Key="Log.StateUpdate">状态更新</sys:String>
     <sys:String x:Key="Log.Failed">失败</sys:String>
 
-    <!-- 加热器状态 -->
+    <!--  加热器状态  -->
     <sys:String x:Key="HeaterStatus.Unknown">未知</sys:String>
     <sys:String x:Key="HeaterStatus.NoHeater">无加热吸盘</sys:String>
     <sys:String x:Key="HeaterStatus.TemperatureTooHigh">温度过高</sys:String>
@@ -363,7 +363,7 @@
     <sys:String x:Key="HeaterStatus.SensorFault">传感器故障</sys:String>
     <sys:String x:Key="HeaterStatus.HeaterFault">加热器故障</sys:String>
 
-    <!-- 日志消息 -->
+    <!--  日志消息  -->
     <sys:String x:Key="Log.HeaterMonitorStopped">加热监控已停止</sys:String>
     <sys:String x:Key="Log.HeaterMonitorStarted">加热监控已启动</sys:String>
     <sys:String x:Key="Log.HeaterStatus">加热器状态</sys:String>
@@ -375,7 +375,7 @@
     <sys:String x:Key="Log.SetTemperature">设定</sys:String>
     <sys:String x:Key="Log.Deviation">偏差</sys:String>
 
-    <!-- 警告消息 -->
+    <!--  警告消息  -->
     <sys:String x:Key="Warning.TemperatureTooHigh">温度过高</sys:String>
     <sys:String x:Key="Warning.TemperatureTooLow">温度过低</sys:String>
     <sys:String x:Key="Warning.TemperatureUnstable">温度不稳定</sys:String>
@@ -384,6 +384,23 @@
     <sys:String x:Key="Warning.TemperatureDrift">温度漂移</sys:String>
     <sys:String x:Key="Warning.TemperatureWarning">温度警告</sys:String>
 
-    <!-- 图表标签 -->
+    <!--  图表标签  -->
     <sys:String x:Key="Chart.Time">时间</sys:String>
+    <!--  标题  -->
+    <sys:String x:Key="CVWaferProber">晶圆探针台</sys:String>
+    <!--  状态说明面板  -->
+    <sys:String x:Key="StatusPanel.Title">状态说明</sys:String>
+    <sys:String x:Key="StatusPanel.WAITING">未检测</sys:String>
+    <sys:String x:Key="StatusPanel.TESTING">正在检测</sys:String>
+    <sys:String x:Key="StatusPanel.OK">检测OK</sys:String>
+    <sys:String x:Key="StatusPanel.AOI_NG">AOI外观检测NG</sys:String>
+    <sys:String x:Key="StatusPanel.DW_NG">定位NG</sys:String>
+    <sys:String x:Key="StatusPanel.BLIND">完全不亮</sys:String>
+    <sys:String x:Key="StatusPanel.CAL_NG">提取失败</sys:String>
+    <sys:String x:Key="StatusPanel.I2C_NG">I2C状态异常</sys:String>
+    <sys:String x:Key="StatusPanel.AOI_LINE_NG">线缺陷检测NG</sys:String>
+    <sys:String x:Key="StatusPanel.IVL_TESTING">IVL正在检测</sys:String>
+    <sys:String x:Key="StatusPanel.IVL_COMPLETED">IVL检测完成</sys:String>
+
+
 </ResourceDictionary>

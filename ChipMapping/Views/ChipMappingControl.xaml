@@ -353,7 +353,7 @@
             ShowsPreview="True" />
         <Grid Grid.Row="1" Grid.Column="2">
             <Border
-                Margin="5,2,5,2"
+                Margin="0,2,5,2"
                 Background="White"
                 BorderBrush="#FFCCCCCC"
                 BorderThickness="1"
@@ -364,7 +364,7 @@
                         Margin="5,5,5,2"
                         FontSize="12"
                         FontWeight="Bold"
-                        Text="状态说明" />
+                        Text="{DynamicResource StatusPanel.Title}" />
                     <!--  分隔线  -->
                     <Rectangle
                         Height="1"
