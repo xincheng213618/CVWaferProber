@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text;
 using System.Windows;
+using System.Windows.Controls;
 using static CVAVMControl.CVVAMAnalyzer;
 //using CVVAMAnalyzer.xaml.cs;
 namespace CVVAMControl
@@ -34,8 +35,46 @@ namespace CVVAMControl
                 pnlLineParams.Visibility = Visibility.Collapsed;
                 pnlCircleParams.Visibility = Visibility.Visible;
             };
+            // ========== 新增：绑定采样点数TextBox的TextChanged事件 ==========
+            txtLineSampleCount.TextChanged += TxtLineSampleCount_TextChanged;
+            txtCircleSampleCount.TextChanged += TxtCircleSampleCount_TextChanged;
+
+            // 初始加载时手动触发一次，确保显示正确
+            TxtLineSampleCount_TextChanged(this, null);
+            TxtCircleSampleCount_TextChanged(this, null);
+        }
+        // ========== 新增：线条模式-极角采样点数实时更新逻辑 ==========
+        private void TxtLineSampleCount_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            string input = txtLineSampleCount.Text.Trim();
+            // 校验输入是否为正整数
+            if (!int.TryParse(input, out int sampleCount) || sampleCount <= 0)
+            {
+                LineSampleCountBook.Text = "（[-60,60]共无效点数）";
+                return;
+            }
+
+            // 同步极角范围（若txtLinePolarRHO变化，范围也会动态更新）
+            int polarRHO = int.TryParse(txtLinePolarRHO.Text.Trim(), out int rho) ? rho : 60;
+            // 更新TextBlock内容
+            LineSampleCountBook.Text = $"（[-{polarRHO},{polarRHO}]共{sampleCount}点）";
         }
 
+        // ========== 新增：圆环模式-方位角采样点数实时更新逻辑 ==========
+        private void TxtCircleSampleCount_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            string input = txtCircleSampleCount.Text.Trim();
+            // 校验输入是否为正整数
+            if (!int.TryParse(input, out int sampleCount) || sampleCount <= 0)
+            {
+                CircleSampleCountBook.Text = "（[0,360)间隔无效）";
+                return;
+            }
+            // 计算方位角间隔（360° ÷ 采样点数）
+            double interval = 360.0 / sampleCount;
+            // 更新TextBlock内容
+            CircleSampleCountBook.Text = $"（[0,360)间隔{interval:F1}°）";
+        }
         // 取消按钮
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
@@ -80,6 +119,7 @@ namespace CVVAMControl
         /// <summary>
         /// 线条（直径线）模式导出
         /// </summary>
+      
         private void ExportLineMode(List<ExportDataType> selectedChannels)
         {
             // 1. 解析参数
@@ -87,7 +127,7 @@ namespace CVVAMControl
                 throw new ArgumentException("极角范围（polar_RHO）必须为正整数！");
             if (!int.TryParse(txtLineSampleCount.Text, out int lineSampleCount) || lineSampleCount <= 0)
                 throw new ArgumentException("极角采样点数必须为正整数！");
-
+            LineSampleCountBook.Text = $"([-60,60]共{txtLineSampleCount.Text}点）)";
             // 2. 计算极角间隔和范围（[-polarRHO, polarRHO]）
             double polarStep = (2 * polarRHO) / (lineSampleCount - 1);
             var polarAngles = Enumerable.Range(0, lineSampleCount)
@@ -216,60 +256,6 @@ namespace CVVAMControl
                     }
                 }
             }
-            //// 1. 解析参数
-            //if (!int.TryParse(txtCirclePolarStart.Text, out int polarStart) || polarStart < 0)
-            //    throw new ArgumentException("极角起始值必须为非负整数！");
-            //if (!int.TryParse(txtCirclePolarEnd.Text, out int polarEnd) || polarEnd <= polarStart)
-            //    throw new ArgumentException("极角结束值必须大于起始值！");
-            //if (!int.TryParse(txtCirclePolarStep.Text, out int polarStep) || polarStep <= 0)
-            //    throw new ArgumentException("极角间隔必须为正整数！");
-            //if (!int.TryParse(txtCircleSampleCount.Text, out int circleSampleCount) || circleSampleCount <= 0)
-            //    throw new ArgumentException("方位角采样点数必须为正整数！");
-
-            //// 2. 计算极角范围：[polarStart, polarEnd]，间隔polarStep
-            //var polarAngles = new List<int>();
-            //for (int p = polarStart; p <= polarEnd; p += polarStep)
-            //    polarAngles.Add(p);
-
-            //// 3. 计算方位角间隔和范围：[0, 360)
-            //double azimuthStep = 360.0 / circleSampleCount;
-            //var azimuthAngles = Enumerable.Range(0, circleSampleCount)
-            //                            .Select(i => i * azimuthStep)
-            //                            .ToList();
-
-            //// 4. 为每个选中通道生成CSV
-            //foreach (var channel in selectedChannels)
-            //{
-            //    string csvPath = $"{_baseExportPath}_{channel}_Circle.csv";
-            //    using (var writer = new StreamWriter(csvPath, false, Encoding.UTF8))
-            //    {
-            //        // 写入表头：空列 + 方位角（0°~357°等）
-            //        writer.Write(",");
-            //        writer.WriteLine(string.Join(",", azimuthAngles.Select(a => $"{a:F1}°")));
-
-            //        // 写入数据行：极角 + 对应方位角的数值
-            //        foreach (int polar in polarAngles)
-            //        {
-            //            var circleData = _analyzer.CreateRCircleLine(polar); // 获取当前极角的圆环数据
-            //            var line = new StringBuilder();
-            //            line.Append($"{polar}°"); // 极角（Y轴）
-
-            //            for (int i = 0; i < azimuthAngles.Count; i++)
-            //            {
-            //                if (i < circleData.RgbData.Count)
-            //                {
-            //                    double value = GetChannelValueFromCircleSample(circleData.RgbData[i], channel);
-            //                    line.Append($",{value:F5}");
-            //                }
-            //                else
-            //                {
-            //                    line.Append(",");
-            //                }
-            //            }
-            //            writer.WriteLine(line.ToString());
-            //        }
-            //    }
-            //}
         }
         #endregion
 

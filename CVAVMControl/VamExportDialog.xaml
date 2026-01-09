@@ -6,7 +6,7 @@
     xmlns:local="clr-namespace:CVVAMControl"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="VAM数据导出配置"
-    Width="405"
+    Width="432"
     Height="400"
     ResizeMode="NoResize"
     WindowStartupLocation="CenterOwner"
@@ -82,7 +82,7 @@
                         x:Name="txtLineSampleCount"
                         Width="100"
                         Text="121" />
-                    <TextBlock Margin="5,0,0,0" Text="（[-60,60]共121点）" />
+                    <TextBlock x:Name="LineSampleCountBook" Margin="5,0,0,0" Text="（[-60,60]共121点）" />
                 </StackPanel>
             </StackPanel>
 
@@ -124,7 +124,7 @@
                         x:Name="txtCircleSampleCount"
                         Width="100"
                         Text="120" />
-                    <TextBlock Margin="5,0,0,0" Text="（[0,360)间隔3°）" />
+                    <TextBlock x:Name="CircleSampleCountBook" Margin="5,0,0,0" Text="（[0,360)间隔3°）" />
                 </StackPanel>
             </StackPanel>
 
@@ -132,20 +132,21 @@
             <!--  按钮  -->
 
             <StackPanel
-                Margin="0,20,0,0"
+                Margin="0,20,10,0"
                 HorizontalAlignment="Right"
                 Orientation="Horizontal">
                 <Button
-                    x:Name="btnCancel"
-                    Width="80"
-                    Margin="0,0,10,0"
-                    Click="btnCancel_Click"
-                    Content="取消" />
-                <Button
                     x:Name="btnExport"
                     Width="80"
+                    Margin="0,0,10,0"
                     Click="btnExport_Click"
                     Content="导出" />
+                <Button
+                    x:Name="btnCancel"
+                    Width="80"
+                    Click="btnCancel_Click"
+                    Content="取消" />
+
             </StackPanel>
         </StackPanel>
 
