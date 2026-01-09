@@ -429,4 +429,15 @@
     <sys:String x:Key="Anglealreadyexists">Angle already exists</sys:String>
     <sys:String x:Key="Prompt">Prompt</sys:String>
 
+    <sys:String x:Key="Nodata">No data available for export</sys:String>
+    <sys:String x:Key="Exportsuccessful">Export successful</sys:String>
+    <sys:String x:Key="Exportfailed">Export failed</sys:String>
+    <sys:String x:Key="Callparameters">Call parameters</sys:String>
+    <sys:String x:Key="Parameters">Parameters</sys:String>
+    <sys:String x:Key="Callfailed">Call failed</sys:String>
+    <sys:String x:Key="Errorcode">Error code</sys:String>
+    <sys:String x:Key="Azimuth">Azimuth</sys:String>
+    <sys:String x:Key="Pleaseenteranumber">Please enter anumber</sys:String>
+    <sys:String x:Key="Pleaseenteraninteger">Please enter an integer</sys:String>
+    <sys:String x:Key="Pleaseenterapositiveinteger">Please enter a positive integer</sys:String>
 </ResourceDictionary>
