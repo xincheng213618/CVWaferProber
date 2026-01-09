@@ -12,6 +12,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="en-US\ST.Library.UI.resources.dll" />
+    <None Remove="zh-CN\ST.Library.UI.resources.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ChipMapping\ChipMapping.csproj" />
     <ProjectReference Include="..\CVAVMControl\CVVAMControl.csproj" />
     <ProjectReference Include="..\CVDB\CVDB.csproj" />
@@ -49,6 +54,9 @@
     <Content Include="..\ScanData_sc.csv">
       <CopyToPublishDirectory>Always</CopyToPublishDirectory>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content> 
+    <Content Include="en-US\ST.Library.UI.resources.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
@@ -70,6 +78,11 @@
     <Reference Include="ST.Library.UI">
       <HintPath>..\DLL\ST.Library.UI.dll</HintPath>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="zh-CN\ST.Library.UI.resources.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

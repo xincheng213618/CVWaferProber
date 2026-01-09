@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using ST.Library.UI;
+using System.Windows;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 
@@ -42,6 +43,15 @@ namespace CVWaferProber
             catch (Exception ex)
             {
                 MessageBox.Show($"加载语言资源失败：{ex.Message}");
+            }
+            //FlowDirection ST node
+            if(language== "Chinese")
+            {
+                Lang.SetLanguage("zh-CN");
+            }
+            else
+            {
+                Lang.SetLanguage("en-US");
             }
         }
 

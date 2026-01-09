@@ -56,26 +56,6 @@
 
                 <DataGrid.Columns>
                     <!-- 序号列 -->
-                    <!--<DataGridTextColumn Header="序号" 
-                                        Binding="{Binding No}"
-                                        Width="60"
-                                        IsReadOnly="True">
-                        <DataGridTextColumn.HeaderStyle>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                                <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="Background" Value="#F5F5F5"/>
-                            </Style>
-                        </DataGridTextColumn.HeaderStyle>
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="Padding" Value="5"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>-->
-                    <!-- 序号列 -->
                     <DataGridTemplateColumn Header="No" Width="Auto" IsReadOnly="True">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>

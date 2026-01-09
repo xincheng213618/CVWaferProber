@@ -155,7 +155,7 @@
                                 </Grid>
 
                                 <!-- 运动历史记录 -->
-                                <Expander Header="{DynamicResource MotionHistory.Title}" Margin="0,10,0,0">
+                                <!--<Expander Header="{DynamicResource MotionHistory.Title}" Margin="0,10,0,0">
                                     <DataGrid x:Name="dgMotionHistory" AutoGenerateColumns="False" 
                                               IsReadOnly="True" Height="150" Margin="5">
                                         <DataGrid.Columns>
@@ -186,7 +186,7 @@
                                                                 Binding="{Binding ErrorMessage}" Width="*"/>
                                         </DataGrid.Columns>
                                     </DataGrid>
-                                </Expander>
+                                </Expander>-->
                             </StackPanel>
                         </GroupBox>
                     </StackPanel>
