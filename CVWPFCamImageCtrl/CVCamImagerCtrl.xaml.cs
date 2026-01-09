@@ -24,6 +24,7 @@ namespace CVWPFCamImageCtrl
         private int _nextImageId = 1;
         private CVCamImagerViewModel _model;
 
+        public static bool IsChineseMode = false; // false=英文，true=中文
         // 支持的图像格式
         private readonly string[] _supportedImageExtensions = {
             ".tif", ".tiff", ".jpg", ".jpeg", ".png", ".bmp",
@@ -70,7 +71,7 @@ namespace CVWPFCamImageCtrl
             {
                 var openFileDialog = new OpenFileDialog
                 {
-                    Title = "选择图像文件",
+                    Title = IsChineseMode ? "选择图像文件": "Select image file",
                     Filter = GetImageFilterString(),
                     Multiselect = true, // 支持多选
                     CheckFileExists = true
@@ -93,7 +94,7 @@ namespace CVWPFCamImageCtrl
             }
             catch (Exception ex)
             {
-                ShowErrorMessage("打开文件时发生错误", ex);
+                ShowErrorMessage(IsChineseMode ? "打开文件时发生错误": "An error occurred when opening the file.", ex);
             }
         }
         private async void LoadFolder_Click(object sender, RoutedEventArgs e)
@@ -103,7 +104,7 @@ namespace CVWPFCamImageCtrl
                 using (var dialog = new CommonOpenFileDialog())
                 {
                     dialog.IsFolderPicker = true; // 关键：设置为选择文件夹
-                    dialog.Title = "请选择一个文件夹";
+                    dialog.Title = IsChineseMode ? "请选择一个文件夹" : "Please select a folder.";
 
                     if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
                     {
@@ -136,7 +137,7 @@ namespace CVWPFCamImageCtrl
                             }
                             else
                             {
-                                MessageBox.Show("在选择的文件夹中未找到支持的图像文件。", "提示",
+                                MessageBox.Show(IsChineseMode?"在选择的文件夹中未找到支持的图像文件。": "No supported image files were found in the selected folder.", IsChineseMode ? "提示": "Prompt",
                                     MessageBoxButton.OK, MessageBoxImage.Information);
                             }
                         }
@@ -183,7 +184,7 @@ namespace CVWPFCamImageCtrl
                                     ImagePath = filePath,
                                     FileName = System.IO.Path.GetFileName(filePath),
                                     FileSizeMB = fileInfo.Length / (1024.0 * 1024.0),
-                                    Status = "待加载"
+                                    Status = IsChineseMode?"待加载": "Loading"
                                 };
                                 //results.Add(imageItem);
                                 // 在UI线程上添加项目
@@ -199,7 +200,7 @@ namespace CVWPFCamImageCtrl
                         }
                         catch (Exception ex)
                         {
-                            Debug.WriteLine($"加载文件失败 {filePath}: {ex.Message}");
+                            Debug.WriteLine(IsChineseMode?$"加载文件失败 {filePath}: {ex.Message}": $"Failed to load file {filePath}: {ex.Message}");
                         }
                     }
                 });
@@ -237,14 +238,12 @@ namespace CVWPFCamImageCtrl
             }
             else
             {
-                MessageBox.Show("请先选择一个图像文件。", "提示",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(IsChineseMode? "请先选择一个图像文件。": "Please select an image file first.", IsChineseMode ? "提示" : "Prompt", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
         private void ClearAll_Click(object sender, RoutedEventArgs e)
         {
-            var result = MessageBox.Show("确定要清除所有图像吗？这个操作不可撤销。",
-                "确认清除", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            var result = MessageBox.Show(IsChineseMode ? "确定要清除所有图像吗？这个操作不可撤销。" : "Are you sure you want to delete all images? This action cannot be undone.", IsChineseMode ? "确认清除" : "Confirm Clear", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
             if (result == MessageBoxResult.Yes)
             {
@@ -280,24 +279,24 @@ namespace CVWPFCamImageCtrl
                     // 更新图像信息显示
                     UpdateImageInfoDisplay(imageInfo.info, imageInfo.bitmapSource);
 
-                    imageItem.Status = "已加载";
+                    imageItem.Status = IsChineseMode? "已加载":"isReload";
                     //StatusText.Text = isReload ? "图像重新加载完成" : "图像加载完成";
                 }
                 else
                 {
                     ClearImageInfoDisplay();
-                    imageItem.Status = "加载失败";
+                    imageItem.Status = IsChineseMode ? "加载失败" : "Loading failed";
                     //StatusText.Text = "图像加载失败";
-                    MessageBox.Show("无法加载指定的图像文件", "错误",
+                    MessageBox.Show(IsChineseMode ? "无法加载指定的图像文件" : "Unable to load the specified image file", IsChineseMode ? "错误" : "Error",
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)
             {
                 ClearImageInfoDisplay();
-                imageItem.Status = "错误";
+                imageItem.Status = IsChineseMode ? "错误" : "Error";
                 //StatusText.Text = $"加载错误: {ex.Message}";
-                ShowErrorMessage("加载图像时发生错误", ex);
+                ShowErrorMessage(IsChineseMode ? "加载图像时发生错误" : "An error occurred while loading the image", ex);
             }
         }
         #endregion
@@ -464,7 +463,7 @@ namespace CVWPFCamImageCtrl
                                 // 更新图像信息显示
                                 UpdateImageInfoDisplay(imageInfoCV.infoCV, imageInfoCV.bitmapSourceCV);
 
-                                selectedImage.Status = "已加载";
+                                selectedImage.Status = IsChineseMode ? "已加载" : "isReload";
                                 //StatusText.Text = "图像加载完成";
                                 ImageDisplay.ZoomToFit();
                             }
@@ -472,7 +471,7 @@ namespace CVWPFCamImageCtrl
                             {
                                 ImageDisplay.CurrentImage = null;
                                 ClearImageInfoDisplay();
-                                selectedImage.Status = "加载失败";
+                                selectedImage.Status = IsChineseMode ? "加载失败" : "Loading failed";
                                 //StatusText.Text = "图像加载失败";
                             }
                         }
@@ -490,7 +489,7 @@ namespace CVWPFCamImageCtrl
                             // 更新图像信息显示
                             UpdateImageInfoDisplay(imageInfo.info, imageInfo.bitmapSource);
 
-                            selectedImage.Status = "已加载";
+                            selectedImage.Status = IsChineseMode ? "已加载" : "isReload";
                             //StatusText.Text = "图像加载完成";
                             ImageDisplay.ZoomToFit();
                         }
@@ -498,7 +497,7 @@ namespace CVWPFCamImageCtrl
                         {
                             ImageDisplay.CurrentImage = null;
                             ClearImageInfoDisplay();
-                            selectedImage.Status = "加载失败";
+                            selectedImage.Status = IsChineseMode ? "加载失败" : "Loading failed";
                             //StatusText.Text = "图像加载失败";
                         }
                     }
@@ -507,7 +506,7 @@ namespace CVWPFCamImageCtrl
                 {
                     ImageDisplay.CurrentImage = null;
                     ClearImageInfoDisplay();
-                    selectedImage.Status = "错误";
+                    selectedImage.Status = IsChineseMode ? "错误" : "Error";
                     //StatusText.Text = $"加载错误: {ex.Message}";
                 }
             }
@@ -534,14 +533,14 @@ namespace CVWPFCamImageCtrl
 
             // 显示缩放信息和可见区域
             ZoomPercentageText.Text = $"{displayInfo.Scale * 100:F0}%";
-            ZoomPercentageText.ToolTip = $"可见区域: {displayInfo.VisiblePercentage:F1}%";
+            ZoomPercentageText.ToolTip =IsChineseMode? $"可见区域: {displayInfo.VisiblePercentage:F1}%": $"Visible area: {displayInfo.VisiblePercentage:F1}%";
 
             // 显示通道信息
             if (info.channels > 0)
             {
                 string channelInfo = info.channels switch
                 {
-                    1 => "灰度",
+                    1 => IsChineseMode?"灰度":"grayscale",
                     3 => "RGB",
                     4 => "RGBA",
                     _ => $"{info.channels}通道"

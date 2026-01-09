@@ -28,28 +28,28 @@
                 <Button
                     Click="ZoomIn_Click"
                     Content="{DynamicResource Zoom in}"
-                    ToolTip="放大图像 (Ctrl + +)" />
+                    ToolTip="{DynamicResource Image.ZoomIn}" />
                 <Button
                     Click="ZoomOut_Click"
                     Content="{DynamicResource Zoom out}"
-                    ToolTip="缩小图像 (Ctrl + -)" />
+                    ToolTip="{DynamicResource Image.ZoomOut}" />
                 <Button
                     Click="ZoomOriginal_Click"
                     Content="{DynamicResource Original}"
-                    ToolTip="恢复到原始大小 (Ctrl + 0)" />
+                    ToolTip="{DynamicResource Image.RestoretoOriginal}" />
                 <Button
                     Click="ZoomFit_Click"
                     Content="{DynamicResource Fit}"
-                    ToolTip="适应窗口大小 (Ctrl + F)" />
+                    ToolTip="{DynamicResource Image.Fit}" />
                 <Separator />
                 <Button
                     Click="PreviousImage_Click"
                     Content="{DynamicResource Previous}"
-                    ToolTip="上一张图像 (Ctrl + ←)" />
+                    ToolTip="{DynamicResource Image.Previous}" />
                 <Button
                     Click="NextImage_Click"
                     Content="{DynamicResource Next}"
-                    ToolTip="下一张图像 (Ctrl + →)" />
+                    ToolTip="{DynamicResource Image.Next}" />
             </StackPanel>
 
             <Separator />
@@ -98,7 +98,7 @@
                         x:Name="ImageDimensionsText"
                         Margin="0,0,2,0"
                         Text=""
-                        ToolTip="原始图像尺寸" />
+                        ToolTip="{DynamicResource Image.OriginalSize}" />
                     <TextBlock Text="{DynamicResource Pixels}" />
                     <TextBlock
                         Margin="8,0"
@@ -111,7 +111,7 @@
                         x:Name="DisplayDimensionsText"
                         Margin="0,0,2,0"
                         Text=""
-                        ToolTip="当前显示尺寸" />
+                        ToolTip="{DynamicResource Image.CurrentViewSize}" />
                     <TextBlock Text="{DynamicResource Pixels}" />
                     <TextBlock
                         Margin="8,0"
@@ -216,19 +216,19 @@
                     <Button
                         Click="LoadFile_Click"
                         Content="{DynamicResource File}"
-                        ToolTip="加载图像文件 (Ctrl+O)" />
+                        ToolTip="{DynamicResource Image.Loadimagefile}" />
                     <Button
                         Click="LoadFolder_Click"
                         Content="{DynamicResource Folder}"
-                        ToolTip="加载文件夹中的所有图像" />
+                        ToolTip="{DynamicResource Image.Loadallimagesinfolder}" />
                     <Button
                         Click="ReloadImage_Click"
                         Content="{DynamicResource Reload}"
-                        ToolTip="重新加载当前图像 (F5)" />
+                        ToolTip="{DynamicResource Image.Reloadcurrentimage}" />
                     <Button
                         Click="ClearAll_Click"
                         Content="{DynamicResource Clear}"
-                        ToolTip="清除所有图像" />
+                        ToolTip="{DynamicResource Image.Clearallimages}" />
                 </StackPanel>
                 <DataGrid
                     x:Name="ImageDataGrid"

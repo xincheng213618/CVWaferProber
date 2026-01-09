@@ -122,6 +122,20 @@
     <sys:String x:Key="Image.GridHeader.FilePath">FilePath</sys:String>
     <sys:String x:Key="Image.GridHeader.FileSize">FileSize</sys:String>
     <sys:String x:Key="Image.GridHeader.Status">Status</sys:String>
+    <!--  ToolTip相关  -->
+    <sys:String x:Key="Image.ZoomIn">Zoom in the image (Ctrl + +)</sys:String>
+    <sys:String x:Key="Image.ZoomOut">Zoom out the image (Ctrl + -)</sys:String>
+    <sys:String x:Key="Image.RestoretoOriginal">Restore to original (Ctrl + 0)</sys:String>
+    <sys:String x:Key="Image.Fit">Fit to window (Ctrl + F)</sys:String>
+    <sys:String x:Key="Image.Previous">Previous image (Ctrl + ←)</sys:String>
+    <sys:String x:Key="Image.Next">Next image (Ctrl + →)</sys:String>
+    <sys:String x:Key="Image.OriginalSize">Original Image Size</sys:String>
+    <sys:String x:Key="Image.CurrentViewSize">Current View Size</sys:String>
+
+    <sys:String x:Key="Image.Loadimagefile">Load image file (Ctrl+F)</sys:String>
+    <sys:String x:Key="Image.Loadallimagesinfolder">Load all images in folder</sys:String>
+    <sys:String x:Key="Image.Reloadcurrentimage">Reload current image (F5)</sys:String>
+    <sys:String x:Key="Image.Clearallimages">Clear all images</sys:String>
 
     <!--  菜单相关  -->
     <sys:String x:Key="Menu.System">System(S)</sys:String>

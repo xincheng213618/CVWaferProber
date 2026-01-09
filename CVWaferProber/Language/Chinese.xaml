@@ -104,8 +104,8 @@
     <sys:String x:Key="Zoom out">🔍缩小</sys:String>
     <sys:String x:Key="Original">⭕原始</sys:String>
     <sys:String x:Key="Fit">📏适应</sys:String>
-    <sys:String x:Key="Previous">⬅上一张</sys:String>
-    <sys:String x:Key="Next">➡下一张</sys:String>
+    <sys:String x:Key="Previous">◀上一张</sys:String>
+    <sys:String x:Key="Next">下一张▶</sys:String>
     <sys:String x:Key="File">🖼️文件</sys:String>
     <sys:String x:Key="Folder">📁文件夹</sys:String>
     <sys:String x:Key="Reload">🔄重载</sys:String>
@@ -127,6 +127,20 @@
     <sys:String x:Key="Image.GridHeader.FilePath">路径</sys:String>
     <sys:String x:Key="Image.GridHeader.FileSize">大小（MB）</sys:String>
     <sys:String x:Key="Image.GridHeader.Status">状态</sys:String>
+    <!--  ToolTip相关  -->
+    <sys:String x:Key="Image.ZoomIn">放大图像 (Ctrl + +)</sys:String>
+    <sys:String x:Key="Image.ZoomOut">缩小图像 (Ctrl + -)</sys:String>
+    <sys:String x:Key="Image.RestoretoOriginal">恢复到原始大小 (Ctrl + 0)</sys:String>
+    <sys:String x:Key="Image.Fit">适应窗口大小 (Ctrl + F)</sys:String>
+    <sys:String x:Key="Image.Previous">上一张图像 (Ctrl + ←)</sys:String>
+    <sys:String x:Key="Image.Next">下一张图像 (Ctrl + →)</sys:String>
+    <sys:String x:Key="Image.OriginalSize">原始图像尺寸</sys:String>
+    <sys:String x:Key="Image.CurrentViewSize">当前显示尺寸</sys:String>
+
+    <sys:String x:Key="Image.Loadimagefile">加载图像文件 (Ctrl+F)</sys:String>
+    <sys:String x:Key="Image.Loadallimagesinfolder">加载文件夹中的所有图像</sys:String>
+    <sys:String x:Key="Image.Reloadcurrentimage">重新加载当前图像 (F5)</sys:String>
+    <sys:String x:Key="Image.Clearallimages">清除所有图像</sys:String>
 
     <!--  菜单相关  -->
     <sys:String x:Key="Menu.System">系统(S)</sys:String>
