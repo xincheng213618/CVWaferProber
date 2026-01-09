@@ -124,6 +124,9 @@
     <sys:String x:Key="Image.GridHeader.Status">Status</sys:String>
 
     <!--  菜单相关  -->
+    <sys:String x:Key="Menu.System">System(S)</sys:String>
+    <sys:String x:Key="Menu.System.CfgFlows">Flow Config</sys:String>
+    <sys:String x:Key="Menu.System.CfgExport">Export Config Summary</sys:String>
     <sys:String x:Key="Menu.View">View(V)</sys:String>
     <sys:String x:Key="Menu.Language">Language(L)</sys:String>
     <sys:String x:Key="Menu.Language.Chinese">Chinese</sys:String>
@@ -141,7 +144,6 @@
     <!--  设备调试相关  -->
     <sys:String x:Key="Menu.DeviceDebug">Device(D)</sys:String>
     <sys:String x:Key="Menu.ProberDeviceDebug">ProberDebug</sys:String>
-    <sys:String x:Key="ProberDebugControl.ConnCfg">Connection Settings</sys:String>
 
     <!--  VAM相关  -->
     <sys:String x:Key="VAM.OpenCVCIEFile">Open CVCIE File</sys:String>
@@ -170,9 +172,210 @@
     <sys:String x:Key="VAM.CircumferentialAngle">Circumferential Angle (°)</sys:String>
     <sys:String x:Key="VAM.PixelValue">Pixel Value</sys:String>
 
-
     <!--  EQE相关  -->
-
     <sys:String x:Key="EQE.luminous_flux">luminousflux</sys:String>
+    
+    <!-- 流程窗口标题 -->
+    <sys:String x:Key="SysFlowCfgWindow_Title">System Flow Configuration</sys:String>
 
+    <!-- 主标题区域 -->
+    <sys:String x:Key="MainTitle">System Flow Configuration Management</sys:String>
+    <sys:String x:Key="SubTitle">Configure system parameters and options</sys:String>
+
+    <!-- 数据列标题 -->
+    <sys:String x:Key="Column_No">No.</sys:String>
+    <sys:String x:Key="Column_Name">Name</sys:String>
+    <sys:String x:Key="Column_Type">Type</sys:String>
+    <sys:String x:Key="Column_Timeout">Timeout</sys:String>
+    <sys:String x:Key="Column_SelectValue">Select Value</sys:String>
+
+    <!-- WinForms区域 -->
+    <sys:String x:Key="WinFormsTitle">Detailed Configuration</sys:String>
+
+    <!-- 按钮文本 -->
+    <sys:String x:Key="Button_Save">Save Configuration</sys:String>
+    <sys:String x:Key="Button_Reset">Reset</sys:String>
+    <sys:String x:Key="Button_Close">Close</sys:String>
+
+    <!-- 类型本地化 -->
+    <sys:String x:Key="Type_String">String</sys:String>
+    <sys:String x:Key="Type_Integer">Integer</sys:String>
+    <sys:String x:Key="Type_Boolean">Boolean</sys:String>
+    <sys:String x:Key="Type_Double">Double</sys:String>
+    <sys:String x:Key="Type_Enum">Enum</sys:String>
+
+    <!-- 设备调试 连接设置区域 -->
+    <sys:String x:Key="ProberDebugControl.ConnCfg">Connection Configuration</sys:String>
+    <sys:String x:Key="ProberDebugControl.AddrIP">Addr IP:</sys:String>
+    <sys:String x:Key="ProberDebugControl.Port">Port:</sys:String>
+    <sys:String x:Key="ProberDebugControl.Connect">Connect</sys:String>
+    <sys:String x:Key="ProberDebugControl.Disconnect">Disconnect</sys:String>
+
+    <!-- 状态区域 -->
+    <sys:String x:Key="ProberDebugControl.MachineStatus">Machine Status</sys:String>
+    <sys:String x:Key="ProberDebugControl.MotionStatus">Motion Status</sys:String>
+    <sys:String x:Key="ProberDebugControl.HeaterStatus">Heater Chuck Status</sys:String>
+
+    <!-- 机台状态 -->
+    <sys:String x:Key="MachineStatus.CurrentState">Current State:</sys:String>
+    <sys:String x:Key="MachineStatus.Duration">Duration:</sys:String>
+    <sys:String x:Key="MachineStatus.WaferInfo">Wafer:</sys:String>
+    <sys:String x:Key="MachineStatus.BatchInfo">Batch:</sys:String>
+    <sys:String x:Key="MachineStatus.MechanicalNo">Machine No:</sys:String>
+
+    <!-- 按钮文本 -->
+    <sys:String x:Key="Button.ManualStatusUpdate">Manual Status Update[A]</sys:String>
+    <sys:String x:Key="Button.MachineNo">Machine No[B]</sys:String>
+    <sys:String x:Key="Button.WaferID">Wafer ID[b]</sys:String>
+    <sys:String x:Key="Button.BatchNo">Batch No[V]</sys:String>
+    <sys:String x:Key="Button.WaferInfo">Wafer Info[ku]</sys:String>
+    <sys:String x:Key="Button.TotalDieCount">Total Die Count[Y]</sys:String>
+
+    <!-- 运动状态 -->
+    <sys:String x:Key="MotionStatus.Status">Motion Status:</sys:String>
+    <sys:String x:Key="MotionStatus.CurrentCommand">Current Command:</sys:String>
+    <sys:String x:Key="MotionStatus.RunTime">Run Time:</sys:String>
+    <sys:String x:Key="MotionStatus.TargetPosition">Target Position:</sys:String>
+    <sys:String x:Key="MotionStatus.Progress">Progress:</sys:String>
+    <sys:String x:Key="MotionStatus.CurrentPosition">Current Position:</sys:String>
+    <sys:String x:Key="MotionStatus.ZAxisStatus">Z Axis Status:</sys:String>
+    <sys:String x:Key="MotionStats">Statistics:</sys:String>
+    <sys:String x:Key="SuccessRate">Success Rate:</sys:String>
+    <sys:String x:Key="AvgMotionTime">Average Time:</sys:String>
+
+    <!-- 运动按钮 -->
+    <sys:String x:Key="Button.FirstTestPosition">First Test Position[q]</sys:String>
+    <sys:String x:Key="Button.CurrentTestCoord">Current Test Coord[Q]</sys:String>
+    <sys:String x:Key="Button.ProbePressure">Probe Pressure[QP]</sys:String>
+    <sys:String x:Key="Button.ResetMotion">Reset Motion Monitor</sys:String>
+
+    <!-- 运动历史记录 -->
+    <sys:String x:Key="MotionHistory.Title">Recent Motion Records</sys:String>
+    <sys:String x:Key="MotionHistory.Command">Command</sys:String>
+    <sys:String x:Key="MotionHistory.TargetY">Target Y</sys:String>
+    <sys:String x:Key="MotionHistory.TargetX">Target X</sys:String>
+    <sys:String x:Key="MotionHistory.StartTime">Start Time</sys:String>
+    <sys:String x:Key="MotionHistory.Duration">Duration(s)</sys:String>
+    <sys:String x:Key="MotionHistory.Status">Status</sys:String>
+    <sys:String x:Key="MotionHistory.ErrorMsg">Error Message</sys:String>
+
+    <!-- 加热吸盘 -->
+    <sys:String x:Key="Heater.CurrentTemp">Current Temp:</sys:String>
+    <sys:String x:Key="Heater.SetTemp">Set Temp:</sys:String>
+    <sys:String x:Key="Heater.HeaterStatus">Heater Status:</sys:String>
+    <sys:String x:Key="Heater.SetTemperature">Set Temperature:</sys:String>
+    <sys:String x:Key="Heater.TempHistory">Temperature History</sys:String>
+    <sys:String x:Key="Heater.Stats">Stats:</sys:String>
+
+    <!-- 加热吸盘按钮 -->
+    <sys:String x:Key="Button.SetTemperature">Set[f]</sys:String>
+    <sys:String x:Key="Button.GetCurrentTemp">Query Temp[fl]</sys:String>
+    <sys:String x:Key="Button.GetHeaterStatus">Query Status[r]</sys:String>
+    <sys:String x:Key="Button.ResetHeaterStats">Reset Stats</sys:String>
+    <sys:String x:Key="Button.StartHeaterMonitor">Start Monitor</sys:String>
+    <sys:String x:Key="Button.StopHeaterMonitor">Stop Monitor</sys:String>
+
+    <!-- 运动控制指令 -->
+    <sys:String x:Key="MotionControl.Title">Motion Control Commands</sys:String>
+    <sys:String x:Key="MotionControl.ZUp">Z Up/Start Test[Z]</sys:String>
+    <sys:String x:Key="MotionControl.ZDown">Z Down[D]</sys:String>
+    <sys:String x:Key="MotionControl.TestComplete">Test Complete[J]</sys:String>
+    <sys:String x:Key="MotionControl.StopCommand">Stop Command[K]</sys:String>
+    <sys:String x:Key="MotionControl.AbsoluteMove">Absolute Move</sys:String>
+    <sys:String x:Key="MotionControl.Format">Format:</sys:String>
+    <sys:String x:Key="MotionControl.SendMoveCommand">Send Move Command[J+]</sys:String>
+
+    <!-- 自定义指令 -->
+    <sys:String x:Key="CustomCommand.Title">Custom Command</sys:String>
+    <sys:String x:Key="CustomCommand.Send">Send Custom Command</sys:String>
+    <sys:String x:Key="CustomCommand.InstructionFormat">Instruction Format:</sys:String>
+    <sys:String x:Key="CustomCommand.CommandContent">Command Content:</sys:String>
+    <sys:String x:Key="CustomCommand.InstructionDesc">Instruction Format Description</sys:String>
+
+    <!-- 自定义指令格式说明 -->
+    <sys:String x:Key="CustomCommand.HeaderPrefix">• Protocol Header:</sys:String>
+    <sys:String x:Key="CustomCommand.Header">$</sys:String>
+    <sys:String x:Key="CustomCommand.InstructionField">• Instruction Field:</sys:String>
+    <sys:String x:Key="CustomCommand.InstructionFieldDesc">Single character</sys:String>
+    <sys:String x:Key="CustomCommand.DataContent">• Data Content:</sys:String>
+    <sys:String x:Key="CustomCommand.DataContentDesc">Variable length</sys:String>
+    <sys:String x:Key="CustomCommand.ProtocolTail">• Protocol Tail:</sys:String>
+    <sys:String x:Key="CustomCommand.ProtocolTailChar">#</sys:String>
+    <sys:String x:Key="CustomCommand.Examples">Examples:</sys:String>
+    <sys:String x:Key="CustomCommand.Example1">• Machine No:</sys:String>
+    <sys:String x:Key="CustomCommand.Example1Desc">$B# → $BS1000#</sys:String>
+    <sys:String x:Key="CustomCommand.Example2">• Wafer ID:</sys:String>
+    <sys:String x:Key="CustomCommand.Example2Desc">$b# → $bWafer01#</sys:String>
+    
+    <!-- 通信日志 -->
+    <sys:String x:Key="CommLog.Ready">Communication log ready...</sys:String>
+    <sys:String x:Key="CommLog.Title">Communication Log</sys:String>
+    <sys:String x:Key="CommLog.Clear">Clear Log</sys:String>
+    <sys:String x:Key="CommLog.AutoScroll">Auto Scroll</sys:String>
+
+    <!-- 状态名称 -->
+    <sys:String x:Key="State.Disconnected">Disconnected</sys:String>
+    <sys:String x:Key="State.Connected">Connected</sys:String>
+    <sys:String x:Key="State.Ready">Ready</sys:String>
+    <sys:String x:Key="State.WaitingForWafer">Waiting for Wafer</sys:String>
+    <sys:String x:Key="State.WaferLoaded">Wafer Loaded</sys:String>
+    <sys:String x:Key="State.Aligning">Aligning</sys:String>
+    <sys:String x:Key="State.Testing">Testing</sys:String>
+    <sys:String x:Key="State.Paused">Paused</sys:String>
+    <sys:String x:Key="State.Stopping">Stopping</sys:String>
+    <sys:String x:Key="State.Error">Error</sys:String>
+    <sys:String x:Key="State.Maintenance">Maintenance</sys:String>
+    <sys:String x:Key="State.Unknown">Unknown</sys:String>
+
+    <!-- 通用文本 -->
+    <sys:String x:Key="Common.None">None</sys:String>
+    <sys:String x:Key="Common.Second">s</sys:String>
+
+    <!-- 日志前缀 -->
+    <sys:String x:Key="Log.Send">SEND</sys:String>
+    <sys:String x:Key="Log.Receive">RECV</sys:String>
+    <sys:String x:Key="Log.Success">SUCC</sys:String>
+    <sys:String x:Key="Log.Error">ERROR</sys:String>
+    <sys:String x:Key="Log.Info">INFO</sys:String>
+    <sys:String x:Key="Log.Invalid">INVALID</sys:String>
+    <sys:String x:Key="Log.StateUpdate">StateUpdate</sys:String>
+    <sys:String x:Key="Log.Failed">Failed</sys:String>
+
+    <!-- 加热器状态 -->
+    <sys:String x:Key="HeaterStatus.Unknown">Unknown</sys:String>
+    <sys:String x:Key="HeaterStatus.NoHeater">No Heater</sys:String>
+    <sys:String x:Key="HeaterStatus.TemperatureTooHigh">Temperature Too High</sys:String>
+    <sys:String x:Key="HeaterStatus.TemperatureTooLow">Temperature Too Low</sys:String>
+    <sys:String x:Key="HeaterStatus.Normal">Normal</sys:String>
+    <sys:String x:Key="HeaterStatus.Other">Other</sys:String>
+    <sys:String x:Key="HeaterStatus.Heating">Heating</sys:String>
+    <sys:String x:Key="HeaterStatus.Cooling">Cooling</sys:String>
+    <sys:String x:Key="HeaterStatus.TemperatureStable">Temperature Stable</sys:String>
+    <sys:String x:Key="HeaterStatus.TemperatureFluctuating">Temperature Fluctuating</sys:String>
+    <sys:String x:Key="HeaterStatus.SensorFault">Sensor Fault</sys:String>
+    <sys:String x:Key="HeaterStatus.HeaterFault">Heater Fault</sys:String>
+
+    <!-- 日志消息 -->
+    <sys:String x:Key="Log.HeaterMonitorStopped">Heater Monitor Stopped</sys:String>
+    <sys:String x:Key="Log.HeaterMonitorStarted">Heater Monitor Started</sys:String>
+    <sys:String x:Key="Log.HeaterStatus">Heater Status</sys:String>
+    <sys:String x:Key="Log.Temperature">Temperature</sys:String>
+    <sys:String x:Key="Log.HeaterStatsReset">Heater statistics reset</sys:String>
+    <sys:String x:Key="Log.HeaterStatsResetFailed">Reset heater statistics failed</sys:String>
+    <sys:String x:Key="Log.LogCleared">Log cleared</sys:String>
+    <sys:String x:Key="Log.CurrentTemperature">Current Temperature</sys:String>
+    <sys:String x:Key="Log.SetTemperature">Set</sys:String>
+    <sys:String x:Key="Log.Deviation">Deviation</sys:String>
+
+    <!-- 警告消息 -->
+    <sys:String x:Key="Warning.TemperatureTooHigh">Temperature Too High</sys:String>
+    <sys:String x:Key="Warning.TemperatureTooLow">Temperature Too Low</sys:String>
+    <sys:String x:Key="Warning.TemperatureUnstable">Temperature Unstable</sys:String>
+    <sys:String x:Key="Warning.HeaterFault">Heater Fault</sys:String>
+    <sys:String x:Key="Warning.SensorFault">Sensor Fault</sys:String>
+    <sys:String x:Key="Warning.TemperatureDrift">Temperature Drift</sys:String>
+    <sys:String x:Key="Warning.TemperatureWarning">Temperature Warning</sys:String>
+
+    <!-- 图表标签 -->
+    <sys:String x:Key="Chart.Time">Time</sys:String>
 </ResourceDictionary>

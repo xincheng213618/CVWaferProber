@@ -4,6 +4,7 @@ using CVWaferProber.ViewModels;
 using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media;
+using Brushes = System.Windows.Media.Brushes;
 
 namespace CVWaferProber.Converters
 {

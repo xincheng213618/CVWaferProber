@@ -1,6 +1,7 @@
 ﻿using CVWaferProber.External;
 using System.Windows;
 using System.Windows.Threading;
+using MessageBox = System.Windows.MessageBox;
 
 namespace CVWaferProber.Views
 {
@@ -71,8 +72,8 @@ namespace CVWaferProber.Views
             {
                 _vEysHost = new ExternalAppHost(AppPathTextBox.Text);
                 // 设置Stretch属性确保填充容器
-                _vEysHost.HorizontalAlignment = HorizontalAlignment.Stretch;
-                _vEysHost.VerticalAlignment = VerticalAlignment.Stretch;
+                //_vEysHost.HorizontalAlignment = HorizontalAlignment.Stretch;
+                //_vEysHost.VerticalAlignment = VerticalAlignment.Stretch;
 
                 HostContainer_VEye.Content = _vEysHost;
 

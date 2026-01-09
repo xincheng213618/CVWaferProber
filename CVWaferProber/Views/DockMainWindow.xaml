@@ -27,6 +27,7 @@
             FalseValue="0"
             TrueValue="300" />
         <cv:ConnectionStatusToColorConverter x:Key="StatusToColorConverter"/>
+        <cv:DeviceStatusToColorConverter x:Key="DevStatusToColorConverter"/>
 
         <Style x:Key="StatusButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
@@ -63,13 +64,15 @@
 
             -->
             <!--  系统菜单  -->
-            <MenuItem Header="系统(S)" InputGestureText="Alt+S">
-                <MenuItem Header="系统流程配置" Command="{Binding SysFlowCfgCommand}" />
+            <MenuItem Header="{DynamicResource Menu.System}" InputGestureText="Alt+S">
+                <MenuItem Header="{DynamicResource Menu.System.CfgFlows}" 
+                          Command="{Binding SysFlowCfgCommand}"
+                           InputGestureText="Alt+F"/>
                 <MenuItem
                     x:Name="MenuSummaryConfig"
                     Command="{Binding OpenSummaryConfigCommand}"
-                    Header="Summary导出配置"
-                    InputGestureText="Alt+S" />
+                    Header="{DynamicResource Menu.System.CfgExport}"
+                    InputGestureText="Alt+E" />
                 <!--<MenuItem Header="暂停测试" Command="{Binding PauseTestCommand}" />
                 <MenuItem Header="停止测试" Command="{Binding StopTestCommand}" />
                 <Separator />
@@ -133,7 +136,7 @@
                 <MenuItem
                     Command="{Binding OpenProberDeviceDebugCommand}"
                     Header="{DynamicResource Menu.ProberDeviceDebug}"
-                    InputGestureText="Alt+U" />
+                    InputGestureText="Alt+G" />
             </MenuItem>
             <!--  新增：顶级“导出”菜单  -->
             <!--<MenuItem Header="导出配置(E)" InputGestureText="Alt+E">
@@ -318,18 +321,18 @@
                     <!-- 连接状态指示器 -->
                     <Button Command="{Binding ShowConnectionSettingsCommand}"
                             Style="{StaticResource StatusButtonStyle}"
-                            Padding="5,0">
+                            Padding="0,0">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse Width="12" Height="12" 
                                      Stroke="Gray" StrokeThickness="1"
                                      Margin="0,0,8,0">
                                 <Ellipse.Fill>
-                                    <Binding Path="ConnectionInfo.Status" 
-                                             Converter="{StaticResource StatusToColorConverter}"/>
+                                    <Binding Path="ConnectionInfo.DevCurrentState" 
+                                             Converter="{StaticResource DevStatusToColorConverter}"/>
                                 </Ellipse.Fill>
                             </Ellipse>
-                            <TextBlock Text="{Binding ConnectionInfo.StatusMessage}"
-                                       VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding ConnectionInfo.DevStatusMessage}"
+                                       VerticalAlignment="Center" Width="80"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>

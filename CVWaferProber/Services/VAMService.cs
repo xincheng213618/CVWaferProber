@@ -29,8 +29,6 @@ namespace CVWaferProber.Services
                 if (result.ResultCode.HasValue && result.ResultCode.Value == 0)
                 {
                     string cieFileName = result.FileUrl;
-                    //TODO test
-                    //cieFileName = "F:\\img\\晶圆台\\VAM\\test_ND0.cvcie";
                     logger.InfoFormat("VAM result cie => {0}", cieFileName);
                     EventAggregator?.Publish(new VAMFlowCompletedEvent(cieFileName));
 

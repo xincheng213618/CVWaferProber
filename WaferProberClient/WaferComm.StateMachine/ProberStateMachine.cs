@@ -653,6 +653,16 @@ namespace WaferComm.StateMachine
         {
             return _heaterMonitor.GetTemperatureStatistics();
         }
+
+        public async Task StartHeaterMonitorAsync()
+        {
+            await _heaterMonitor.StartAsync();
+        }
+
+        public async Task StopHeaterMonitorAsync()
+        {
+            await _heaterMonitor.StopAsync();
+        }
     }
 }
 

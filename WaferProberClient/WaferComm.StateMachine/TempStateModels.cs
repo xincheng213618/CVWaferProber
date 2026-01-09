@@ -109,6 +109,14 @@ namespace WaferComm.StateMachine
         }
     }
 
+    public class HeaterMonitorStartedEvent
+    {
+
+    }  
+    public class HeaterMonitorStopedEvent
+    {
+
+    }
     /// <summary>
     /// 加热吸盘状态事件
     /// </summary>

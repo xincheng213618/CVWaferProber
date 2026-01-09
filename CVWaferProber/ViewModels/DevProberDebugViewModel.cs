@@ -5,6 +5,7 @@ using System.Windows.Input;
 using WaferComm.Client;
 using WaferComm.Core;
 using WaferComm.StateMachine;
+using MessageBox = System.Windows.MessageBox;
 
 namespace CVWaferProber.ViewModels
 {
@@ -23,7 +24,31 @@ namespace CVWaferProber.ViewModels
         public ICommand ResetStateMachineCommand { get; }
         public ICommand SendAbsoluteMoveCommand { get; }
         public ICommand SendBasicCommand { get; }
+        public ICommand SendCustomCommand { get; }
+        public ICommand SetTemperatureCommand { get; }
+        public ICommand GetCurrentTempCommand { get; }
+        public ICommand GetHeaterStatusCommand { get; }
+        public ICommand StartHeaterMonitorCommand { get; }
+        public ICommand StopHeaterMonitorCommand { get; }
 
+        private decimal _Temperature = 25.0M;
+        public decimal Temperature
+        {
+            get => _Temperature;
+            set
+            {
+                SetProperty(ref _Temperature, value);
+            }
+        }
+        private string _CustomCMD = "B";
+        public string CustomCMD
+        {
+            get => _CustomCMD;
+            set
+            {
+                SetProperty(ref _CustomCMD, value);
+            }
+        }
         private string _AbsAxisY = "+020";
         public string AbsAxisY
         {
@@ -101,14 +126,69 @@ namespace CVWaferProber.ViewModels
             SendAbsoluteMoveCommand = new RelayCommand(
                 _ => SendAbsoluteMove(),
                 _ => CanDisconnect);
+
+            SendCustomCommand = new RelayCommand(
+                _ => SendCustomCmd(),
+                _ => CanDisconnect);
+
+            SetTemperatureCommand = new RelayCommand(
+                _ => SetTemperature(),
+                _ => CanDisconnect);
+
+            GetCurrentTempCommand = new RelayCommand(
+                _ => GetCurrentTemp(),
+                _ => CanDisconnect);
+
+            GetHeaterStatusCommand = new RelayCommand(
+                _ => GetHeaterStatus(),
+                _ => CanDisconnect);
+
             SendBasicCommand = new RelayCommand(
                 (obj) => SendBasicCmd(obj),
+                _ => CanDisconnect);
+
+            StartHeaterMonitorCommand = new RelayCommand(
+                _ => StartHeaterMonitor(),
+                _ => CanDisconnect);
+
+            StopHeaterMonitorCommand = new RelayCommand(
+                _ => StopHeaterMonitor(),
                 _ => CanDisconnect);
 
             SetConnected(_client.IsConnected);
 
             // Subscribe to service events
             _client.EventAggregator.Subscribe<ConnectionStateChangedEvent>(OnConnectionStatusChanged);
+        }
+
+        private void StopHeaterMonitor()
+        {
+            _stateMachine.StopHeaterMonitorAsync();
+        }
+
+        private void StartHeaterMonitor()
+        {
+            _stateMachine.StartHeaterMonitorAsync();
+        }
+
+        private void GetHeaterStatus()
+        {
+            _client.GetHeaterStatusAsync();
+        }
+
+        private void GetCurrentTemp()
+        {
+            _client.GetCurrentTemperatureAsync();
+        }
+
+        private void SetTemperature()
+        {
+            _client.SetTemperatureAsync(_Temperature);
+        }
+
+        private void SendCustomCmd()
+        {
+            _client.SendCommandAsync(_CustomCMD);
         }
 
         private void SendAbsoluteMove()

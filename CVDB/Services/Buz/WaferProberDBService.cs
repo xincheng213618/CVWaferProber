@@ -24,11 +24,11 @@ namespace CVDB.Services.Buz
             return null;
         }
 
-        public static List<VScgdSysResourceValidAll> LoadAllFlows()
+        public static List<VScgdSysResourceFlow> LoadAllFlows()
         {
             try
             {
-                return MysqlControler.GetInstance().Sql.Select<VScgdSysResourceValidAll>().Where(a => a.Type == 21 && a.IsEnable == 1 && a.IsDelete == 0).ToList();
+                return MysqlControler.GetInstance().Sql.Select<VScgdSysResourceFlow>().Where(a => a.Type == 21 && a.IsEnable == 1 && a.IsDelete == 0).ToList();
             }
             catch (Exception e)
             {

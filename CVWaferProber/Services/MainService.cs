@@ -76,10 +76,10 @@ namespace CVWaferProber.Services
         {
             Startup(_connectionInfo.ServerIP, _connectionInfo.Port);
         }
-        public void InitializeService(string proberId, RCRestService rcService, ConnectionInfo connectionInfo)
+        public void InitializeService(string proberId, RCRestService rcService)
         {
             this.ProberId = proberId;
-            this._connectionInfo = connectionInfo;
+            //this._connectionInfo = connectionInfo;
             //
             BaseSerivce ivlService = new IVLService(proberId, mappingService.CustomVM, rcService);
             flowServices[CVWaferProberFlowType.IVL] = ivlService;
@@ -119,12 +119,13 @@ namespace CVWaferProber.Services
         {
             if (logger.IsInfoEnabled) logger.InfoFormat("StateTransition {0} => {1}", @event.FromState.ToString(), @event.ToState.ToString());
             if (logger.IsInfoEnabled) logger.InfoFormat("CurrentState = {0}", _proberState.CurrentState.ToString());
+            _connectionInfo.DevCurrentState = _proberState.CurrentState;
         }
 
         private void OnProberStateUpdated(StateUpdatedEvent @event)
         {
             if (logger.IsInfoEnabled) logger.InfoFormat("StateUpdated => {0}", @event.Status.ToString());
-
+            _connectionInfo.DevCurrentState = @event.Status.CurrentState;
             var dieVM = autoTestingItem?.GetCurrentDieVM();
             if (dieVM == null)
             {

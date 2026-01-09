@@ -10,6 +10,8 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using MessageBox = System.Windows.MessageBox;
+using TabControl = System.Windows.Controls.TabControl;
 
 namespace CVWaferProber.Views
 {
@@ -222,7 +224,7 @@ namespace CVWaferProber.Views
         }
         #endregion
 
-        private void DockMainWindow_KeyDown(object sender, KeyEventArgs e)
+        private void DockMainWindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             // 优先用 e.SystemKey（Alt 组合键的正确键值），无则用 e.Key
             Key key = e.SystemKey != Key.None ? e.SystemKey : e.Key;
