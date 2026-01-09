@@ -8,6 +8,7 @@ using System.Windows.Media;
 using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
 using Color = System.Windows.Media.Color;
+using MessageBox = System.Windows.MessageBox;
 
 namespace CVWaferProber
 {
