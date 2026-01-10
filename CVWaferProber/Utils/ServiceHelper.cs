@@ -6,7 +6,7 @@ namespace CVWaferProber.Utils
 
     public static class ServiceHelper
     {
-        public static bool IsEnglishMode = false;
+        
         public static string GetServiceExecutablePath(string serviceName)
         {
             try
@@ -30,7 +30,7 @@ namespace CVWaferProber.Utils
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{(IsEnglishMode? "Error" : "错误")}: {ex.Message}");
+                Console.WriteLine("Error: {ex.Message}");
             }
 
             return null;

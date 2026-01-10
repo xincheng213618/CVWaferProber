@@ -1,4 +1,5 @@
-﻿using ST.Library.UI;
+﻿using CVAVMControl;
+using ST.Library.UI;
 using System.Windows;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
@@ -48,10 +49,13 @@ namespace CVWaferProber
             if(language== "Chinese")
             {
                 Lang.SetLanguage("zh-CN");
+              
+
             }
             else
             {
                 Lang.SetLanguage("en-US");
+            
             }
         }
 

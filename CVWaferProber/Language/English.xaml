@@ -162,7 +162,7 @@
     <!--  VAM相关  -->
     <sys:String x:Key="VAM.OpenCVCIEFile">Open CVCIE File</sys:String>
     <sys:String x:Key="VAM.SelectCVCIEFile">Select CVCIE File</sys:String>
-    <sys:String x:Key="VAM.PseudocolorImage">Filsecolor Image</sys:String>
+    <sys:String x:Key="VAM.PseudocolorImage">Falsecolor Image</sys:String>
     <sys:String x:Key="VAM.ViewingAngle">Viewing Angle:</sys:String>
     <sys:String x:Key="VAM.DisplayChannel">Display Channel:</sys:String>
     <sys:String x:Key="VAM.AddAngle">Add Angle:</sys:String>
@@ -440,4 +440,115 @@
     <sys:String x:Key="Pleaseenteranumber">Please enter a number</sys:String>
     <sys:String x:Key="Pleaseenteraninteger">Please enter an integer</sys:String>
     <sys:String x:Key="Pleaseenterapositiveinteger">Please enter a positive integer</sys:String>
+
+    <sys:String x:Key="DA">Please first select the angle you want to delete from the dropdown menu.</sys:String>
+    <sys:String x:Key="Re-select">The selected angle option is invalid, please choose again.</sys:String>
+    <sys:String x:Key="Confirmdeletion">Confirm deletion?</sys:String>
+    <sys:String x:Key="DeleteConfirmation">Delete Confirmation</sys:String>
+    <sys:String x:Key="DeleteA">Angle deleted successfully</sys:String>
+    <sys:String x:Key="SaveAzimuth">Save azimuth section data</sys:String>
+    <sys:String x:Key="Savepolarangle">Save polar section data</sys:String>
+    <sys:String x:Key="Interfacecallfailed">VAM interface call failed, using local calculation data</sys:String>
+    <sys:String x:Key="Reopen">Data is not loaded or has been released, please reopen the CVCIE file</sys:String>
+    <sys:String x:Key="-60~60">The angle must be between -60 and 60 (negative values are supported)</sys:String>
+    <sys:String x:Key="XYZnull">XYZ Mat is null or has been released</sys:String>
+    <sys:String x:Key="Uninitialized">Image center not initialized (CVCIE file not loaded)</sys:String>
+    <sys:String x:Key="nullJSON">DLL returns an empty JSON</sys:String>
+    <sys:String x:Key="Azimuthnull">The azimuth sectional data returned by the DLL is empty</sys:String>
+    <sys:String x:Key="Azimuthdataex">Exception occurred while calling DLL to obtain azimuth cross-section data</sys:String>
+    <sys:String x:Key="Datanotloadedorimagecenternotinitialized">Data not loaded or image center not initialized</sys:String>
+
+    <sys:String x:Key="Failedtoobtainfullazimuthdata">Failed to obtain complete azimuth data</sys:String>
+    <sys:String x:Key="Thepolarangleintervalmustbepositiveinteger">The polar angle interval must be a positive integer</sys:String>
+    <sys:String x:Key="Parametererror">Parameter error</sys:String>
+    <sys:String x:Key="Azimuthsamplingpointsmustbepositiveinteger">The number of azimuth sampling points must be a positive integer</sys:String>
+    <sys:String x:Key="XYZImagedataisempty">XYZ image data is empty</sys:String>
+    <sys:String x:Key="JSONEX">JSON parsing failed</sys:String>
+    <sys:String x:Key="Executioncompleted">Execution completed</sys:String>
+    <sys:String x:Key="Angularrange">Angular range</sys:String>
+    <sys:String x:Key="interval">Interval</sys:String>
+    <sys:String x:Key="Azimuthsamplingpoints">Number of Azimuth Sampling Points</sys:String>
+    <sys:String x:Key="Valid data">Valid Data</sys:String>
+    <sys:String x:Key="nullRdata">Failed to obtain valid circular data. Please check the DLL parameters or image data.</sys:String>
+    <sys:String x:Key="Failedtobatchfetchringdata">Failed to batch fetch ring data</sys:String>
+    <sys:String x:Key="Executionexception">Execution Error</sys:String>
+    <sys:String x:Key="vamInvalid">The VAM data is no longer valid. Please reload the CVCIE file.</sys:String>
+    <sys:String x:Key="Exportcompleted">Export completed!</sys:String>
+    <sys:String x:Key="Basepath">Select export base path</sys:String>
+
+
+    <!--  DieTestStatus  -->
+    <sys:String x:Key="DieTestStatus.PassDie">PassDie</sys:String>
+    <sys:String x:Key="DieTestStatus.Fail1Die">Fail1Die</sys:String>
+    <sys:String x:Key="DieTestStatus.Fail2Die">Fail2Die</sys:String>
+    <sys:String x:Key="Marked">Marked</sys:String>
+    <sys:String x:Key="Unmarked">Unmarked</sys:String>
+    <sys:String x:Key="Checkfailed">CheckFailed</sys:String>
+    <sys:String x:Key="Checkpassed">CheckPassed</sys:String>
+    <sys:String x:Key="Notretested">NotRetested</sys:String>
+    <sys:String x:Key="RetestPassed">RetestPassed</sys:String>
+    <sys:String x:Key="Retestfailed">Retestfailed</sys:String>
+    <sys:String x:Key="Specialfailure">Specialfailure</sys:String>
+    <sys:String x:Key="MarkNG">NeedlemarkNG</sys:String>
+    <sys:String x:Key="MarkOK">NeedlemarkOK</sys:String>
+    <sys:String x:Key="SkipDie">SkipDie</sys:String>
+    <sys:String x:Key="TestDie">TestDie</sys:String>
+    <sys:String x:Key="MandatorymarkingDie">"MandatorymarkingDie</sys:String>
+    <sys:String x:Key="Scrapchip">Scrapchip</sys:String>
+    <sys:String x:Key="Normalchip">Normalchip</sys:String>
+    <sys:String x:Key="Performneedleinspection">Perform needle inspection</sys:String>
+    <sys:String x:Key="Donotperformneedleinspection">Do not perform needle inspection</sys:String>
+    <sys:String x:Key="SamplingDie">SamplingDie</sys:String>
+    <sys:String x:Key="Non-sampledDie">Non-sampledDie</sys:String>
+    <sys:String x:Key="VirtualData">VirtualData</sys:String>
+    <sys:String x:Key="Realdata">Realdata</sys:String>
+    <sys:String x:Key="Tested">Tested</sys:String>
+    <sys:String x:Key="Nottested">NotTested</sys:String>
+    <sys:String x:Key="OutTestDie">OutTestDie</sys:String>
+    <sys:String x:Key="InkDie">InkDie</sys:String>
+    <sys:String x:Key="PartP/W">PartP/W</sys:String>
+    <sys:String x:Key="Block1">Block1</sys:String>
+    <sys:String x:Key="Block2">Block2</sys:String>
+    <sys:String x:Key="Block3">Block2</sys:String>
+
+
+    <!--  SpectrumResultService  -->
+    <sys:String x:Key="Cannotbeemptyorcontainspaces">Device code cannot be empty or contain spaces</sys:String>
+    <!--  CVEQEViewModel  -->
+    <sys:String x:Key="TodisplaytheEQEcurve">Please select the measurement data to display the EQE curve</sys:String>
+    <sys:String x:Key="Cannotnull">The save path cannot be empty</sys:String>
+    <sys:String x:Key="No≤780nm">No valid wavelength point ≤780nm found!</sys:String>
+    <sys:String x:Key="Heatmap">Radial Wave Heatmap</sys:String>
+    <sys:String x:Key="SpWavechart">Spectral Data Waveform</sys:String>
+    <sys:String x:Key="WavelengthGradientWavySurface">Wavelength Gradient Wavy Surface</sys:String>
+    <sys:String x:Key="2.5D">2.5D Wavelength Gradient Wave Chart</sys:String>
+    <sys:String x:Key="SPReal-time">Real-time spectrogram</sys:String>
+    <sys:String x:Key="Intensity">Intensity</sys:String>
+    <sys:String x:Key="Pleaseselectspectral">Please select the measurement data to display the spectral curve</sys:String>
+    <sys:String x:Key="FailedtoreadFPL">Failed to read FPL file</sys:String>
+    <sys:String x:Key="Exportexecutedsuccessfully">Export executed successfully</sys:String>
+
+
+
+    <sys:String x:Key="Sureex">Are you sure you want to exit the program?</sys:String>
+    <sys:String x:Key="ExitPrompt">Exit Prompt</sys:String>
+    <sys:String x:Key="Failedopen">Failed to open</sys:String>
+    <sys:String x:Key="Pleasechecktheitems">Please check the items you want to test first.</sys:String>
+    <sys:String x:Key="CSVFile">CSV Files (*.csv)|*.csv|All Files (*.*)|*.*</sys:String>
+
+    <!--  IVLService  -->
+    <sys:String x:Key="IVLServiceonlysupportsCSV">IVLService only supports generating CSV content of the IVL type</sys:String>
+
+    <!--  VLColoredLinePlot  -->
+    <sys:String x:Key="Voltagedatacannotbenull">Voltage data cannot be null</sys:String>
+    <sys:String x:Key="Brightnessdatacannotnull">Brightness data cannot be null</sys:String>
+    <sys:String x:Key="Mustbeconsistent">The lengths of the voltage and brightness arrays must be consistent</sys:String>
+    <!--  VLWaveformPlot  -->
+    <sys:String x:Key="VoltageArraycannotbenull">The voltage array cannot be null or empty</sys:String>
+    <sys:String x:Key="BrightnessArraycannotnull">The brightness array cannot be null or empty</sys:String>
+    <sys:String x:Key="ArrayMustbeconsistent">The voltage array and the brightness array must have the same length</sys:String>
+
+    <sys:String x:Key="Hasbeeninitialized">The message handler has been initialized</sys:String>
+    <sys:String x:Key="Notinitialized">The message handler has not been initialized</sys:String>
+
 </ResourceDictionary>

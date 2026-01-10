@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace ChipMapping.Models.HZCC
 {
@@ -15,62 +16,66 @@ namespace ChipMapping.Models.HZCC
                 Index = index + 1,
                 TestResult = dieResult.TestResult switch
                 {
-                    DieTestStatus.NotTested => "未测试",
-                    DieTestStatus.PassDie => "通过",
-                    DieTestStatus.Fail1Die => "失败1",
-                    DieTestStatus.Fail2Die => "失败2",
-                    _ => "未知"
+                    DieTestStatus.NotTested =>(string)Application.Current.FindResource("StatusPanel.WAITING"),
+                    DieTestStatus.PassDie => (string)Application.Current.FindResource("DieTestStatus.PassDie"),
+                    DieTestStatus.Fail1Die => (string)Application.Current.FindResource("DieTestStatus.Fail1Die"),
+                    DieTestStatus.Fail2Die => (string)Application.Current.FindResource("DieTestStatus.Fail2Die"),
+                    _ => (string)Application.Current.FindResource("State.Unknown"),
                 },
-                MarkingStatus = dieResult.IsMarked ? "已标记" : "未标记",
-                InspectionStatus = dieResult.FailMarkInspection ? "检查失败" : "检查通过",
+                MarkingStatus = dieResult.IsMarked ? (string)Application.Current.FindResource("Marked") : (string)Application.Current.FindResource("Unmarked"),
+                InspectionStatus = dieResult.FailMarkInspection ? (string)Application.Current.FindResource("Checkfailed") : (string)Application.Current.FindResource("Checkpassed"),
                 ReProbingStatus = dieResult.ReProbingResult switch
                 {
-                    ReProbingResult.NotReProbed => "未重测",
-                    ReProbingResult.PassedAtReProbing => "重测通过",
-                    ReProbingResult.FailedAtReProbing => "重测失败",
-                    ReProbingResult.PerformFail => "特殊失败",
-                    _ => "未知"
+                    ReProbingResult.NotReProbed => (string)Application.Current.FindResource("Notretested"),
+                    ReProbingResult.PassedAtReProbing => (string)Application.Current.FindResource("RetestPassed"),
+                    ReProbingResult.FailedAtReProbing => (string)Application.Current.FindResource("Retestfailed"),
+                    ReProbingResult.PerformFail => (string)Application.Current.FindResource("Specialfailure"),
+                    _ => (string)Application.Current.FindResource("State.Unknown"),
                 },
-                NeedleMarkStatus = dieResult.NeedleMarkInspectionResult ? "针标记NG" : "针标记OK",
+                NeedleMarkStatus = dieResult.NeedleMarkInspectionResult ? (string)Application.Current.FindResource("MarkNG") : (string)Application.Current.FindResource("MarkOK"),
 
                 // 第二个字的字段
                 DieProperty = dieResult.DieProperty switch
                 {
-                    DieProperty.SkipDie => "跳过Die",
-                    DieProperty.ProbingDie => "测试Die",
-                    DieProperty.CompulsoryMarkingDie => "强制标记Die",
-                    _ => "未知"
+                    DieProperty.SkipDie => (string)Application.Current.FindResource("SkipDie"),
+                    DieProperty.ProbingDie => (string)Application.Current.FindResource("TestDie") ,
+                    DieProperty.CompulsoryMarkingDie => (string)Application.Current.FindResource("MandatorymarkingDie"),
+                    _ => (string)Application.Current.FindResource("State.Unknown"),
                 },
-                IsRejectChip = dieResult.IsRejectChip ? "废品芯片" : "正常芯片",
-                NeedleMarkingExecution = dieResult.NeedleMarkingInspectionExecution ? "执行针检" : "不执行针检",
-                IsSamplingDie = dieResult.IsSamplingDie ? "采样Die" : "非采样Die",
+                IsRejectChip = dieResult.IsRejectChip ? (string)Application.Current.FindResource("Scrapchip") : (string)Application.Current.FindResource("Normalchip"),
+                NeedleMarkingExecution = dieResult.NeedleMarkingInspectionExecution ? (string)Application.Current.FindResource("Performneedleinspection") : (string)Application.Current.FindResource("Donotperformneedleinspection"),
+                IsSamplingDie = dieResult.IsSamplingDie ? (string)Application.Current.FindResource("SamplingDie") : (string)Application.Current.FindResource("Non-sampledDie"),
                 CoordinatorXSign = dieResult.IsCoordinatorXNegative ? "-" : "+",
                 CoordinatorYSign = dieResult.IsCoordinatorYNegative ? "-" : "+",
-                IsDummyData = dieResult.IsDummyData ? "虚拟数据" : "真实数据",
+                IsDummyData = dieResult.IsDummyData ? (string)Application.Current.FindResource("VirtualData") : (string)Application.Current.FindResource("Realdata"),
 
                 // 第三个字的新字段
-                MeasurementFinishFlag = dieResult.MeasurementFinishFlag ? "已测试" : "未测试",
+                MeasurementFinishFlag = dieResult.MeasurementFinishFlag ? (string)Application.Current.FindResource("Tested") : (string)Application.Current.FindResource("Nottested"),
                 RejectChipFlag = dieResult.RejectChipFlag switch
                 {
-                    RejectChipFlag.None => "无",
-                    RejectChipFlag.PeripheralProbingDie => "外围测试Die",
-                    RejectChipFlag.InkDie => "墨水Die",
-                    RejectChipFlag.PartialPW => "部分P/W",
-                    _ => "未知"
+                    RejectChipFlag.None => "null",
+                    RejectChipFlag.PeripheralProbingDie =>(string)Application.Current.FindResource("OutTestDie"),
+                    RejectChipFlag.InkDie => (string)Application.Current.FindResource("InkDie"),
+                    RejectChipFlag.PartialPW => (string)Application.Current.FindResource("PartP/W"),
+                   
+                    _ => (string)Application.Current.FindResource("State.Unknown"),
                 },
                 TestExecutionSiteNo = dieResult.TestExecutionSiteNo.ToString(),
                 ActualSiteNo = dieResult.ActualSiteNo.ToString(),
                 BlockAreaJudgement = dieResult.BlockAreaJudgement switch
                 {
-                    BlockAreaJudgement.None => "无",
-                    BlockAreaJudgement.Block1 => "区块1",
-                    BlockAreaJudgement.Block2 => "区块2",
-                    BlockAreaJudgement.Block3 => "区块3",
-                    _ => "未知"
+                    BlockAreaJudgement.None => "null",
+                    BlockAreaJudgement.Block1 => (string)Application.Current.FindResource("Block1"),
+                  
+                    BlockAreaJudgement.Block2 => (string)Application.Current.FindResource("Block2"),
+                
+                    BlockAreaJudgement.Block3 => (string)Application.Current.FindResource("Block3"),
+                  
+                    _ => (string)Application.Current.FindResource("State.Unknown"),
                 },
                 CategoryData = dieResult.CategoryData.ToString(),
                 ActualCategoryData = dieResult.ActualCategoryData.ToString(),
-                UserSpecialData = dieResult.UserSpecialData > 0 ? dieResult.UserSpecialData.ToString("X2") : "无",
+                UserSpecialData = dieResult.UserSpecialData > 0 ? dieResult.UserSpecialData.ToString("X2") : "null",
 
                 // 坐标信息
                 RawCoordinatorX = dieResult.DieCoordinatorX,

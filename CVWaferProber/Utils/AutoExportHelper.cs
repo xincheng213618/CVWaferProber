@@ -17,7 +17,7 @@ namespace CVWaferProber.Utils
         private const string _basePath = @"D:\CVTest"; // 根目录
         private static readonly string[] _categories = { "AOI", "IVL", "EQE", "VAM" }; // 分类文件夹
 
-        public static bool IsEnglishMode = false;
+        
         /// <summary>
         /// 初始化所有分类文件夹（不存在则创建）
         /// </summary>
@@ -29,7 +29,7 @@ namespace CVWaferProber.Utils
                 if (!Directory.Exists(_basePath))
                 {
                     Directory.CreateDirectory(_basePath);
-                    _logger.Info($"{(IsEnglishMode? "Create root directory" : "创建根目录")}：{_basePath}");
+                    _logger.Info($"Create root directory：{_basePath}");//: "创建根目录")}
                 }
 
                 // 创建分类子文件夹
@@ -39,13 +39,13 @@ namespace CVWaferProber.Utils
                     if (!Directory.Exists(categoryPath))
                     {
                         Directory.CreateDirectory(categoryPath);
-                        _logger.Info($"{(IsEnglishMode ? "Create category folder" : "创建分类文件夹")}：{categoryPath}");
+                        _logger.Info($"Create category folder：{categoryPath}");//: \"创建分类文件夹\")}
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.Error($"{(IsEnglishMode ? "Failed to initialize folder" : "初始化文件夹失败")}", ex);
+                _logger.Error($"Failed to initialize folder" , ex);//: "初始化文件夹失败")}"
                 throw;
             }
         }
@@ -65,7 +65,7 @@ namespace CVWaferProber.Utils
                 // 校验类别合法性
                 if (!Array.Exists(_categories, c => c.Equals(category, StringComparison.OrdinalIgnoreCase)))
                 {
-                    throw new ArgumentException($"{(IsEnglishMode ? "Unsupported category" : "不支持的类别")}：{category}");
+                    throw new ArgumentException($"Unsupported category：{category}");//: \"不支持的类别\")}
                 }
 
                 // 构造文件名（格式：[类别]_[SerialNumber]_[时间戳].csv）
@@ -75,12 +75,12 @@ namespace CVWaferProber.Utils
 
                 // 写入CSV内容
                 File.WriteAllText(filePath, csvContent, Encoding.UTF8);
-                _logger.Info(IsEnglishMode?$"Export {category} data to: {filePath}" :$"导出{category}数据至：{filePath}");
+                _logger.Info($"Export {category} data to: {filePath}" );//:$"导出{category}数据至：{filePath}"
                 return filePath;
             }
             catch (Exception ex)
             {
-                _logger.Error(IsEnglishMode? $"Failed to export {category} data" : $"导出{category}数据失败", ex);
+                _logger.Error($"Failed to export {category} data" , ex);//: $"导出{category}数据失败"
                 throw;
             }
         }
@@ -132,11 +132,11 @@ namespace CVWaferProber.Utils
                     if (isNewFile) sw.WriteLine(header);
                     sw.WriteLine(record);
                 }
-                _logger.Info(IsEnglishMode ? $"Update Summary.csv to: {summaryPath}" : $"更新Summary.csv至：{summaryPath}");
+                _logger.Info( $"Update Summary.csv to: {summaryPath}");// : $"更新Summary.csv至：{summaryPath}"
             }
             catch (Exception ex)
             {
-                _logger.Error(IsEnglishMode? "Failed to update Summary.csv" : "更新Summary.csv失败", ex);
+                _logger.Error( "Failed to update Summary.csv", ex);// : "更新Summary.csv失败"
                 throw;
             }
         }

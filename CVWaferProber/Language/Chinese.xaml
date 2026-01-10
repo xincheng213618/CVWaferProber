@@ -420,7 +420,7 @@
     <sys:String x:Key="StatusPanel.PAUSED">未知</sys:String>
     <!--  提示信息  -->
     <sys:String x:Key="Cannotbeempty">不能为空</sys:String>
-    <sys:String x:Key="Click">请点击芯片查看详细信息(Please click the chip to view detailed information)</sys:String>
+    <sys:String x:Key="Click">请点击芯片查看详细信息</sys:String>
     <sys:String x:Key="Rendering">渲染中...</sys:String>
     <sys:String x:Key="Renderingcomplete">渲染完成 - 共</sys:String>
     <sys:String x:Key="Chip">芯片</sys:String>
@@ -430,15 +430,15 @@
     <sys:String x:Key="Returncode">返回码</sys:String>
     <sys:String x:Key="Return">返回</sys:String>
     <sys:String x:Key="Anerroroccurredwhileprocessingthefile">处理文件时出错</sys:String>
-    <sys:String x:Key="Cannotempty">输入的角度不能为空(The input angle cannot be empty)</sys:String>
+    <sys:String x:Key="Cannotempty">输入的角度不能为空</sys:String>
     <sys:String x:Key="Pleaseenteravalidintegerangle">请输入有效的整数角度</sys:String>
-    <sys:String x:Key="Shouldbe">角度范围应为(The angle range should be)</sys:String>
+    <sys:String x:Key="Shouldbe">角度范围应为</sys:String>
     <sys:String x:Key="Anglealreadyexists">角度已存在</sys:String>
     <sys:String x:Key="Prompt">提示</sys:String>
 
-    <sys:String x:Key="Nodata">没有可导出的数据(No data available for export)</sys:String>
-    <sys:String x:Key="Exportsuccessful">导出成功Export successful</sys:String>
-    <sys:String x:Key="Exportfailed">导出失败Export failed</sys:String>
+    <sys:String x:Key="Nodata">没有可导出的数据</sys:String>
+    <sys:String x:Key="Exportsuccessful">导出成功</sys:String>
+    <sys:String x:Key="Exportfailed">导出失败</sys:String>
     <sys:String x:Key="Callparameters">调用参数</sys:String>
     <sys:String x:Key="Parameters">参数</sys:String>
     <sys:String x:Key="Callfailed">调用失败</sys:String>
@@ -448,7 +448,128 @@
     <sys:String x:Key="Pleaseenteraninteger">请输入整数</sys:String>
     <sys:String x:Key="Pleaseenterapositiveinteger">请输入正整数</sys:String>
 
+    <sys:String x:Key="DA">请先从下拉框中选择要删除的角度</sys:String>
+    <sys:String x:Key="Re-select">选中的角度项无效，请重新选择</sys:String>
+    <sys:String x:Key="Confirmdeletion">确认删除?</sys:String>
+    <sys:String x:Key="DeleteConfirmation">删除确认</sys:String>
+    <sys:String x:Key="DeleteA">成功删除角度</sys:String>
+    <sys:String x:Key="SaveAzimuth">保存方位角截面数据</sys:String>
+    <sys:String x:Key="Savepolarangle">保存极角截面数据</sys:String>
+    <sys:String x:Key="Interfacecallfailed">VAM接口调用失败，使用本地计算数据</sys:String>
+    <sys:String x:Key="Reopen">数据未加载或已释放，请重新打开CVCIE文件</sys:String>
+    <sys:String x:Key="-60~60">角度需在-60~60之间（支持负数）</sys:String>
+    <sys:String x:Key="XYZnull">XYZ Mat 为空或已释放</sys:String>
+    <sys:String x:Key="Uninitialized">图像中心未初始化（未加载CVCIE文件）</sys:String>
+    <sys:String x:Key="nullJSON">DLL返回空JSON</sys:String>
+    <sys:String x:Key="Azimuthnull">DLL返回的方位角截面数据为空</sys:String>
+    <sys:String x:Key="Azimuthdataex">调用DLL获取方位角截面数据异常</sys:String>
+    <sys:String x:Key="Datanotloadedorimagecenternotinitialized">数据未加载或图像中心未初始化</sys:String>
+    
+    
+    <sys:String x:Key="Failedtoobtainfullazimuthdata">获取全量方位角数据失败</sys:String>
+    <sys:String x:Key="Thepolarangleintervalmustbepositiveinteger">极角间隔需为正整数</sys:String>
+    <sys:String x:Key="Parametererror">参数错误</sys:String>
+    <sys:String x:Key="Azimuthsamplingpointsmustbepositiveinteger">方位角采样点数需为正整数</sys:String>
+    <sys:String x:Key="XYZImagedataisempty">XYZ图像数据为空</sys:String>
+    <sys:String x:Key="JSONEX">JSON解析失败</sys:String>
+    <sys:String x:Key="Executioncompleted">执行完成</sys:String>
+    <sys:String x:Key="Angularrange">极角范围</sys:String>
+    <sys:String x:Key="interval">间隔</sys:String>
+    <sys:String x:Key="Azimuthsamplingpoints">方位角采样点数</sys:String>
+    <sys:String x:Key="Valid data">有效数据</sys:String>
+    <sys:String x:Key="nullRdata">未获取到有效圆环数据，请检查DLL参数或图像数据</sys:String>
+    <sys:String x:Key="Failedtobatchfetchringdata">批量获取圆环数据失败</sys:String>
+    <sys:String x:Key="Executionexception">执行异常</sys:String>
+    <sys:String x:Key="vamInvalid">VAM数据已失效，请重新加载CVCIE文件</sys:String>
+    <sys:String x:Key="Exportcompleted">导出完成！</sys:String>
+    <sys:String x:Key="Basepath">选择导出基础路径</sys:String>
 
+
+    <!--  DieTestStatus  -->
+    <sys:String x:Key="DieTestStatus.PassDie">通过</sys:String>
+    <sys:String x:Key="DieTestStatus.Fail1Die">失败1</sys:String>
+    <sys:String x:Key="DieTestStatus.Fail2Die">失败2</sys:String>
+    <sys:String x:Key="Marked">已标记</sys:String>
+    <sys:String x:Key="Unmarked">未标记</sys:String>
+    <sys:String x:Key="Checkfailed">检查失败</sys:String>
+    <sys:String x:Key="Checkpassed">检查通过</sys:String>
+    <sys:String x:Key="Notretested">未重测</sys:String>
+    <sys:String x:Key="RetestPassed">重测通过</sys:String>
+    <sys:String x:Key="Retestfailed">重测失败</sys:String>
+    <sys:String x:Key="Specialfailure">特殊失败</sys:String>
+    <sys:String x:Key="MarkNG">针标记NG</sys:String>
+    <sys:String x:Key="MarkOK">针标记OK</sys:String>
+    <sys:String x:Key="SkipDie">跳过Die</sys:String>
+    <sys:String x:Key="TestDie">测试Die</sys:String>
+    <sys:String x:Key="MandatorymarkingDie">"强制标记Die</sys:String>
+    <sys:String x:Key="Scrapchip">废品芯片</sys:String>
+    <sys:String x:Key="Normalchip">正常芯片</sys:String>
+    <sys:String x:Key="Performneedleinspection">执行针检</sys:String>
+    <sys:String x:Key="Donotperformneedleinspection">不执行针检</sys:String>
+    <sys:String x:Key="SamplingDie">采样Die</sys:String>
+    <sys:String x:Key="Non-sampledDie">非采样Die</sys:String>
+    <sys:String x:Key="VirtualData">虚拟数据</sys:String>
+    <sys:String x:Key="Realdata">真实数据</sys:String>
+    <sys:String x:Key="Tested">已测试</sys:String>
+    <sys:String x:Key="Nottested">未测试</sys:String>
+    <sys:String x:Key="OutTestDie">外围测试Die</sys:String>
+    <sys:String x:Key="InkDie">墨水Die</sys:String>
+    <sys:String x:Key="PartP/W">部分P/W</sys:String>
+    <sys:String x:Key="Block1">区块1</sys:String>
+    <sys:String x:Key="Block2">区块2</sys:String>
+    <sys:String x:Key="Block3">区块2</sys:String>
+
+
+    <!--  SpectrumResultService  -->
+    <sys:String x:Key="Cannotbeemptyorcontainspaces">设备编码不能为空或空格</sys:String>
+    <!--  CVEQEViewModel  -->
+    <sys:String x:Key="TodisplaytheEQEcurve">请选择测量数据以显示EQE曲线</sys:String>
+    <sys:String x:Key="Cannotnull">保存路径不能为空</sys:String>
+    <sys:String x:Key="No≤780nm">未找到≤780nm的有效波长点！</sys:String>
+    <sys:String x:Key="Heatmap">径向波浪Heatmap</sys:String>
+    <sys:String x:Key="SpWavechart">光谱数据波浪图</sys:String>
+    <sys:String x:Key="WavelengthGradientWavySurface">波长渐变波浪曲面</sys:String>
+    <sys:String x:Key="2.5D">2.5D波长渐变波浪图</sys:String>
+    <sys:String x:Key="SPReal-time">实时光谱图</sys:String>
+    <sys:String x:Key="Intensity">强度</sys:String>
+    <sys:String x:Key="Pleaseselectspectral">请选择测量数据以显示光谱曲线</sys:String>
+    <sys:String x:Key="FailedtoreadFPL">读取FPL文件失败</sys:String>
+    <sys:String x:Key="Exportexecutedsuccessfully">导出执行成功</sys:String>
+
+
+
+    <sys:String x:Key="Sureex">是否确定退出程序?</sys:String>
+    <sys:String x:Key="ExitPrompt">退出提示</sys:String>
+    <sys:String x:Key="Failedopen">打开失败</sys:String>
+    <sys:String x:Key="Pleasechecktheitems">请先勾选需要测试的项</sys:String>
+    <sys:String x:Key="CSVFile">CSV文件 (*.csv)|*.csv|所有文件 (*.*)|*.*</sys:String>
+
+    <!--  IVLService  -->
+    <sys:String x:Key="IVLServiceonlysupportsCSV">IVLService仅支持生成IVL类型的CSV内容</sys:String>
+
+    <!--  VLColoredLinePlot  -->
+    <sys:String x:Key="Voltagedatacannotbenull">电压数据不能为null</sys:String>
+    <sys:String x:Key="Brightnessdatacannotnull">亮度数据不能为null</sys:String>
+    <sys:String x:Key="Mustbeconsistent">电压和亮度数组长度必须一致</sys:String>
+    <!--  VLWaveformPlot  -->
+    <sys:String x:Key="VoltageArraycannotbenull">电压数组不能为空或空数组</sys:String>
+    <sys:String x:Key="BrightnessArraycannotnull">亮度数组不能为空或空数组</sys:String>
+    <sys:String x:Key="ArrayMustbeconsistent">电压数组和亮度数组长度必须一致</sys:String>
+
+    <sys:String x:Key="Hasbeeninitialized">消息处理器已经初始化</sys:String>
+    <sys:String x:Key="Notinitialized">消息处理器未初始化</sys:String>
+
+<!--《语言资源文件》-->
+    <sys:String x:Key="Btn.Ok">确定</sys:String>
+    <sys:String x:Key="Btn.Cancel">取消</sys:String>
+    <sys:String x:Key="Btn.Yes">是</sys:String>
+    <sys:String x:Key="Btn.No">否</sys:String>
+    <sys:String x:Key="Btn.Close">关闭</sys:String>
+    <sys:String x:Key="Btn.Save">保存</sys:String>
+    <sys:String x:Key="Btn.Open">打开</sys:String>
+    <sys:String x:Key="Btn.Select">选择</sys:String>
+    
+    
 
 
 

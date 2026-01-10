@@ -764,7 +764,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private SpectraDataViewModel CurrentSpectrum;
         public ScottPlot.IColormap VisibleSpectrumColormap { get; }
         //public object DataCollection { get; private set; }
-        public static bool IsEnglishMode = false;
+       
         public CVSpectrumViewModel()
         {
             // 提前初始化波长数组
@@ -852,12 +852,12 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                             System.Windows.MessageBox.Show($"Failed to save CSV file:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         }
                         // 直接把导出逻辑写在这里
-                        System.Windows.MessageBox.Show(IsEnglishMode? "Export executed successfully" : "导出执行成功");
+                        MessageBox.Show((string)Application.Current.FindResource("Exportexecutedsuccessfully"));
                     }
                 }
                 catch (Exception ex)
                 {
-                    System.Windows.MessageBox.Show($"{(IsEnglishMode ? "Error" : "错误")}: {ex.Message}");
+                    MessageBox.Show($"{(string)Application.Current.FindResource("Log.Error")}: {ex.Message}");
                 }
             });
             #endregion
@@ -1333,7 +1333,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             {
                 if (isNewSummary)
                 {
-                    sw.WriteLine(IsEnglishMode ? "Export Time, Serial Number, Die Location Folder, Export File List" : "导出时间,SerialNumber,DieLocation文件夹,导出文件列表");
+                    sw.WriteLine( "Export Time, Serial Number, Die Location Folder, Export File List" );
                 }
 
                 // 读取原有记录，追加EQE文件（避免覆盖其他数据）
@@ -1539,7 +1539,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             var textAnnotation = new TextAnnotation
             {
-                Text = IsEnglishMode ? "Please select the measurement data to display the EQE curve" : "请选择测量数据以显示EQE曲线",
+                Text = (string)Application.Current.FindResource("TodisplaytheEQEcurve"),
                 TextPosition = new DataPoint((AxisX.DefaultMin + AxisX.DefaultMax) / 2, 50),
                 TextColor = OxyColors.Gray,
                 FontSize = 16,
@@ -1865,11 +1865,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             {
                 if (data == null || !data.Any())
                 {
-                    System.Windows.MessageBox.Show(IsEnglishMode ? "No data available for export" : "没有数据可导出");
+                    System.Windows.MessageBox.Show((string)Application.Current.FindResource("Nodata"));
                     return;
                 }
                 if (string.IsNullOrWhiteSpace(filePath))
-                    throw new ArgumentException(IsEnglishMode ? "The save path cannot be empty" : "保存路径不能为空", nameof(filePath));
+                    throw new ArgumentException((string)Application.Current.FindResource("Cannotnull"), nameof(filePath));
 
                 var csv = new StringBuilder();
                 var properties = typeof(T).GetProperties();
@@ -1946,7 +1946,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"{(IsEnglishMode ? "Export failed" : "导出失败")}: {ex.Message}");
+                System.Windows.MessageBox.Show($"{(string)Application.Current.FindResource("Exportfailed")}: {ex.Message}");
             }
         }
         #endregion
@@ -1957,8 +1957,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             if (measurements == null || !measurements.Any() || wavelengths == null || wavelengths.Length == 0)
             {
-                System.Windows.MessageBox.Show(IsEnglishMode ? "No data available for export!" : "没有数据可导出!", IsEnglishMode ? "Prompt" : "提示!");
+                MessageBox.Show((string)Application.Current.FindResource("Nodata"), (string)Application.Current.FindResource("Prompt"));
                 return;
+               
             }
 
             const int Step = 10;
@@ -1999,7 +2000,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
                 if (waveHeaders.Count == 0)
                 {
-                    System.Windows.MessageBox.Show(IsEnglishMode ? "No valid wavelength point ≤780nm found!" : "未找到≤780nm的有效波长点！", IsEnglishMode ? "Error" : "错误");
+                    MessageBox.Show((string)Application.Current.FindResource("No≤780nm"), (string)Application.Current.FindResource("Log.Error"));
                     return;
                 }
 
@@ -2078,7 +2079,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"{(IsEnglishMode ? "Export failed" : "导出失败")}：{ex.Message}", IsEnglishMode ? "Error" : "错误");
+                System.Windows.MessageBox.Show($"{(string)Application.Current.FindResource("Exportfailed")}：{ex.Message}", (string)Application.Current.FindResource("Log.Error"));
             }
         }
         #endregion
@@ -2192,7 +2193,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             heatmap.Colormap = CreateVisibleSpectrumColormap();
             heatmap.Smooth = true;
 
-            PlotControl.Plot.Title(IsEnglishMode ? "Radial Wave Heatmap" : "径向波浪Heatmap");
+            PlotControl.Plot.Title((string)Application.Current.FindResource("Heatmap"));
             PlotControl.Plot.Axes.AutoScale();
             PlotControl.Refresh();
         }
@@ -2245,7 +2246,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             heatmap.Colormap = CreateVisibleSpectrumColormap();
             heatmap.Smooth = true;
 
-            PlotControl.Plot.Title(IsEnglishMode ? "Spectral Data Waveform Chart" : "光谱数据波浪图");
+            PlotControl.Plot.Title((string)Application.Current.FindResource("SpWavechart"));
             PlotControl.Plot.Axes.AutoScale();
             PlotControl.Refresh();
         }
@@ -2302,7 +2303,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             //surface.Lighting = true;
             //surface.Shading = ScottPlot.Plottables.SurfaceShading.HighQuality;
 
-            PlotControl.Plot.Title(IsEnglishMode ? "Wavelength Gradient Wavy Surface" : "波长渐变波浪曲面");
+            PlotControl.Plot.Title((string)Application.Current.FindResource("WavelengthGradientWavySurface"));
             PlotControl.Plot.Axes.AutoScale();
             PlotControl.Refresh();
         }
@@ -2349,7 +2350,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             //heatmap.Interpolation = ScottPlot.Interpolation.Bicubic;
             heatmap.Smooth = true;
 
-            PlotControl.Plot.Title(IsEnglishMode ? "2.5D Wavelength Gradient Wave Chart" : "2.5D波长渐变波浪图");
+            PlotControl.Plot.Title((string)Application.Current.FindResource("2.5D"));
             PlotControl.Plot.Axes.AutoScale();
             PlotControl.Refresh();
         }
@@ -2566,9 +2567,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             scatter.Color = ScottPlot.Colors.SteelBlue;
 
             // 设置图表样式
-            PlotControl.Plot.Title(IsEnglishMode ? "Real-time spectrogram" : "实时光谱图");
-            PlotControl.Plot.XLabel(IsEnglishMode ? "Wavelength (nm)" : "波长 (nm)");
-            PlotControl.Plot.YLabel(IsEnglishMode ? "Intensity" : "强度");
+            PlotControl.Plot.Title((string)Application.Current.FindResource("SPReal-time"));
+            PlotControl.Plot.XLabel((string)Application.Current.FindResource("Sp.Wavelength"));
+            PlotControl.Plot.YLabel((string)Application.Current.FindResource("Intensity"));
             PlotControl.Plot.Axes.AutoScale();
 
             // 刷新显示
@@ -2732,7 +2733,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             // 添加提示文本标注
             var textAnnotation = new TextAnnotation
             {
-                Text = IsEnglishMode ? "Please select the measurement data to display the spectral curve" : "请选择测量数据以显示光谱曲线",
+                Text = (string)Application.Current.FindResource("Pleaseselectspectral"),
                 TextPosition = new DataPoint((AxisX.DefaultMin + AxisX.DefaultMax) / 2, (AxisY.DefaultMin + AxisY.DefaultMax) / 2),
                 TextColor = OxyColors.Gray,
                 FontSize = 16,
@@ -3023,7 +3024,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 {
                     // 捕获所有文件操作/反序列化异常，避免影响主流程
                     // 可替换为项目日志框架（如log4net/NLog）
-                    Console.WriteLine($"{(IsEnglishMode ? "Failed to read FPL file" : "读取FPL文件失败")}：{ex.Message}");
+                    Console.WriteLine($"{(string)Application.Current.FindResource("FailedtoreadFPL")}：{ex.Message}");
                 }
             }
 

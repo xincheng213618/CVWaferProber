@@ -500,7 +500,7 @@ namespace CVWaferProber.ViewModels
             Warning,
             Error
         }
-        public static bool IsEnglishMode = false;
+       
         public IEventAggregator? EventAggregator;
         public MainViewModel()
         {
@@ -535,7 +535,7 @@ namespace CVWaferProber.ViewModels
             OpenProberDeviceDebugCommand = new RelayCommand(OpenProberDeviceDebug);
             ExitCommand = new CVImgRelayCommand(() =>
             {
-                var result = MessageBox.Show(IsEnglishMode? "Are you sure you want to exit the program?" : "是否确定退出程序?", IsEnglishMode ? "Exit Prompt" : "退出提示", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var result = MessageBox.Show((string)Application.Current.FindResource("Sureex"), (string)Application.Current.FindResource("ExitPrompt"), MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (result == MessageBoxResult.Yes)
                 {
                     Application.Current.Shutdown();
@@ -1112,7 +1112,7 @@ namespace CVWaferProber.ViewModels
             {
                 if (TestResults == null || !TestResults.Any())
                 {
-                    logger.Info(IsEnglishMode? "No test results, skipping Summary export" : "无测试结果，跳过Summary导出");
+                    logger.Info("No test results, skipping Summary export" );
                     return;
                 }
 
@@ -1123,7 +1123,7 @@ namespace CVWaferProber.ViewModels
                 if (!Directory.Exists(exportRootPath))
                 {
                     Directory.CreateDirectory(exportRootPath);
-                    logger.Info($"{(IsEnglishMode ? "Export directory has been created automatically" : "已自动创建导出目录")}：{exportRootPath}");
+                    logger.Info($"Export directory has been created automatically：{exportRootPath}");//已自动创建导出目录
                 }
 
                 // 拼接最终保存路径（目录 + 带时间戳的文件名）
@@ -1179,7 +1179,7 @@ namespace CVWaferProber.ViewModels
                     }
                 }
 
-                logger.Info($"{(IsEnglishMode? "The summary results have been automatically exported" : "Summary结果已自动导出")}：{savePath}");
+                logger.Info($"The summary results have been automatically exported：{savePath}");//" : "Summary结果已自动导出")}
                 //Application.Current.Dispatcher.Invoke(() =>
                 //{
                 //    MessageBox.Show($"{(IsEnglishMode ? "The summary results have been exported to" : "Summary结果已导出至")}：{savePath}", IsEnglishMode? "Export successful" : "导出成功",
@@ -1188,7 +1188,7 @@ namespace CVWaferProber.ViewModels
             }
             catch (Exception ex)
             {
-                logger.Error(IsEnglishMode ? "Failed to export Summary results" : "Summary结果导出失败", ex);
+                logger.Error( "Failed to export Summary results", ex);//" : "Summary结果导出失败"
                 //Application.Current.Dispatcher.Invoke(() =>
                 //{
                 //    MessageBox.Show($"导出失败：{ex.Message}", "错误",
@@ -1283,7 +1283,7 @@ namespace CVWaferProber.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"{(IsEnglishMode? "Failed to open help" : "打开帮助失败")}：{ex.Message}", IsEnglishMode? "Error" : "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"{(string)Application.Current.FindResource("Failedopen")}：{ex.Message}", $"{ (string)Application.Current.FindResource("State.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -1530,14 +1530,14 @@ namespace CVWaferProber.ViewModels
         {
             if (SelectedWPFlow == null)
             {
-                logger.Error(IsEnglishMode? "No test process (Flow) selected" : "未选择测试流程（Flow）");
+                logger.Error("No test process (Flow) selected");
                 return;
             }
 
             _testQueue = GetSelectedTestItems();
             if (_testQueue.Count == 0)
             {
-                MessageBox.Show(IsEnglishMode? "Please check the items you want to test first" : "请先勾选需要测试的项", IsEnglishMode? "Prompt" : "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"{(string)Application.Current.FindResource("Nodata")}", $"{ (string)Application.Current.FindResource("Prompt")}" , MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -1689,7 +1689,7 @@ namespace CVWaferProber.ViewModels
         private void OpenMappingFile(object? obj)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = IsEnglishMode? "CSV Files (*.csv)|*.csv|All Files (*.*)|*.*" : "CSV文件 (*.csv)|*.csv|所有文件 (*.*)|*.*";
+            openFileDialog.Filter = (string)Application.Current.FindResource("CSVFile");//CSV Files (*.csv)|*.csv|All Files (*.*)|*.*"
 
             if (openFileDialog.ShowDialog() == true)
             {
@@ -1817,7 +1817,7 @@ namespace CVWaferProber.ViewModels
 
             if (DockingManager == null || AnchorableSP == null)
             {
-                logger.Warn(IsEnglishMode? "SP panel not initialized, cannot activate" : "SP面板未初始化，无法激活");
+                logger.Warn( "SP panel not initialized, cannot activate" );//"SP面板未初始化，无法激活"
                 return;
             }
 
@@ -1831,7 +1831,7 @@ namespace CVWaferProber.ViewModels
                     }
                     else
                     {
-                        logger.Warn(IsEnglishMode? "AOI panel not initialized, cannot activate" : "AOI面板未初始化，无法激活");
+                        logger.Warn( "AOI panel not initialized, cannot activate"  );// "AOI面板未初始化，无法激活"
                     }
                     break;
                 case CVWaferProberFlowType.IVL_SP:

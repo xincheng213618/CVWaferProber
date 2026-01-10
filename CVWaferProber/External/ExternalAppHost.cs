@@ -39,7 +39,7 @@ namespace CVWaferProber.External
                 _hostHwndSource = null;
             }
         }
-        public static bool IsEnglishMode = false;
+        
         protected override HandleRef BuildWindowCore(HandleRef hwndParent)
         {
 
@@ -67,7 +67,7 @@ namespace CVWaferProber.External
                 }
                 else
                 {
-                    throw new Exception(IsEnglishMode? "Unable to obtain the application main window handle" : "无法获取应用程序主窗口句柄");
+                    throw new Exception( "Unable to obtain the application main window handle" );//: "无法获取应用程序主窗口句柄"
                 }
             }
             catch
@@ -106,13 +106,13 @@ namespace CVWaferProber.External
                     retries++;
                     if (_process.HasExited)
                     {
-                        throw new Exception(IsEnglishMode? "The application has exited and the window handle cannot be obtained." : "应用程序已退出，无法获取窗口句柄");
+                        throw new Exception( "The application has exited and the window handle cannot be obtained.");// : "应用程序已退出，无法获取窗口句柄"
                     }
                 }
 
                 if (_process.MainWindowHandle == IntPtr.Zero)
                 {
-                    throw new Exception(IsEnglishMode? "Unable to obtain the application main window handle" : "无法获取应用程序主窗口句柄");
+                    throw new Exception( "Unable to obtain the application main window handle");// : "无法获取应用程序主窗口句柄"
                 }
                 _hwnd = _process.MainWindowHandle;
                 // 修改窗口样式 - 去除所有边框

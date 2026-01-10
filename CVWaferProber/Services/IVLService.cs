@@ -16,7 +16,7 @@ namespace CVWaferProber.Services
         // 缓存当前测试的DieViewModel（供定时器回调使用）
         private DieViewModel _currentDieVM;
         private ChipMappingControlViewModel _chipMappingControlViewModel;
-        public static bool IsEnglishMode = false;
+    
         //
         // 存储当前测试的光谱数据（供生成CSV使用）
         private SpectrumMeasurement _currentSpectrumData;
@@ -70,7 +70,7 @@ namespace CVWaferProber.Services
                     }
                     catch (Exception ex)
                     {
-                        logger.Warn(IsEnglishMode? "Timer failed to refresh the chart" : "定时器刷新图表失败", ex);
+                        logger.Warn("Timer failed to refresh the chart", ex);//: "定时器刷新图表失败"
                     }
                 });
             };
@@ -80,7 +80,7 @@ namespace CVWaferProber.Services
             {
                 refreshTimer.Enabled = false;
                 refreshTimer.Dispose();
-                logger.Debug(IsEnglishMode ? "Test process completed, stop the refresh timer" : "测试流程结束，停止刷新定时器");
+                logger.Debug( "Test process completed, stop the refresh timer");// : "测试流程结束，停止刷新定时器"
             }, TaskScheduler.FromCurrentSynchronizationContext());
 
             return task;
@@ -133,7 +133,7 @@ namespace CVWaferProber.Services
             {
                 if (category != "IVL")
                 {
-                    throw new ArgumentException(IsEnglishMode? "IVLService only supports generating CSV content of the IVL type":"IVLService仅支持生成IVL类型的CSV内容");
+                    throw new ArgumentException((string)Application.Current.FindResource("IVLServiceonlysupportsCSV"));
                 }
 
                 // 1. IVL CSV表头（与截图/业务匹配）
@@ -165,7 +165,7 @@ namespace CVWaferProber.Services
                 }
                 else
                 {
-                    logger.Warn(IsEnglishMode? "IVL data is empty" : $"IVL数据为空，SN：{die.SerialNumber}");
+                    logger.Warn( "IVL data is empty，SN：{die.SerialNumber}");//" : $"IVL数据为空
                     csvRows.AppendLine(",,,,,,,,,,,,,,"); // 空行兜底
                 }
 
@@ -173,7 +173,7 @@ namespace CVWaferProber.Services
             }
             catch (Exception ex)
             {
-                logger.Error(IsEnglishMode? "Failed to generate IVL.CSV content" : "生成IVL.CSV内容失败", ex);
+                logger.Error( "Failed to generate IVL.CSV content", ex);// : "生成IVL.CSV内容失败"
                 throw;
             }
         }

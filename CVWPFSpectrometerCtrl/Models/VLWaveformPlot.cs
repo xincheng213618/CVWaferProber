@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace CVWPFSpectrometerCtrl.Models
 {
@@ -59,16 +60,16 @@ namespace CVWPFSpectrometerCtrl.Models
         /// <param name="voltages">电压数组（如 0~5V）</param>
         /// <param name="luminances">亮度数组（与电压一一对应）</param>
         /// <param name="colormap">色图（可选，默认Jet色图）</param>
-        public static bool IsEnglishMode = false;
+        
         public VLWaveformPlot(double[] voltages, double[] luminances, IColormap colormap =null)
         {
             // 校验参数合法性（避免后续绘图异常）
             if (voltages == null || voltages.Length == 0)
-                throw new ArgumentException(IsEnglishMode? "The voltage array cannot be null or empty" : "电压数组不能为空或空数组", nameof(voltages));
+                throw new ArgumentException((string)Application.Current.FindResource("Nodata"), nameof(voltages));
             if (luminances == null || luminances.Length == 0)
-                throw new ArgumentException(IsEnglishMode? "The brightness array cannot be null or empty" : "亮度数组不能为空或空数组", nameof(luminances));
+                throw new ArgumentException((string)Application.Current.FindResource("Nodata"), nameof(luminances));
             if (voltages.Length != luminances.Length)
-                throw new ArgumentException(IsEnglishMode? "The length of the voltage array and the brightness array must be the same." : "电压数组和亮度数组长度必须一致", nameof(luminances));
+                throw new ArgumentException((string)Application.Current.FindResource("Nodata"), nameof(luminances));
 
             Voltages = voltages;
             Luminances = luminances;

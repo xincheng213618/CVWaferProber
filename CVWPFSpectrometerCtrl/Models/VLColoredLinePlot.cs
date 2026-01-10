@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace CVWPFSpectrometerCtrl.Models
 {
@@ -105,17 +106,17 @@ namespace CVWPFSpectrometerCtrl.Models
         /// <param name="luminances">亮度数据数组（Y轴）</param>
         /// <param name="colormap">颜色映射表（默认提供V-L常用渐变）</param>
         /// <param name="mode">渐变模式（默认按电压）</param>
-        public static bool IsEnglishMode = false; 
+     
         public VLColoredLinePlot(
             double[] voltages,
             double[] luminances,
             ScottPlot.IColormap colormap = null,
             GradientMode mode = GradientMode.ByVoltage)
         {
-            Voltages = voltages ?? throw new ArgumentNullException(nameof(voltages), IsEnglishMode? "Voltage data cannot be null" : "电压数据不能为null");
-            Luminances = luminances ?? throw new ArgumentNullException(nameof(luminances), IsEnglishMode? "Brightness data cannot be null" : "亮度数据不能为null");
+            Voltages = voltages ?? throw new ArgumentNullException(nameof(voltages), (string)Application.Current.FindResource("Voltagedatacannotbenull"));
+            Luminances = luminances ?? throw new ArgumentNullException(nameof(luminances), (string)Application.Current.FindResource("Brightnessdatacannotnull"));
             if (voltages.Length != luminances.Length)
-                throw new ArgumentException(IsEnglishMode? "The lengths of the voltage and brightness arrays must be consistent." : "电压和亮度数组长度必须一致");
+                throw new ArgumentException((string)Application.Current.FindResource("Mustbeconsistent"));
 
             // 若未指定颜色映射表，默认使用「蓝→绿→黄→红」（适配V-L递增趋势）
             Colormap = colormap ?? CreateDefaultVLColormap();

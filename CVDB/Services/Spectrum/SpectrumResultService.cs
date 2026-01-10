@@ -1,5 +1,6 @@
 ﻿using ColorVision.Core.Entities;
 using CVMysql;
+using System.Windows;
 
 namespace CVDB.Services.Spectrum
 {
@@ -18,13 +19,13 @@ namespace CVDB.Services.Spectrum
             return MysqlControler.GetInstance().Sql.Select<VScgdMeasureResultEqe>().Where(a => a.BatchCode == serialNumber).ToList();
         }
         // 新增方法：根据设备编码，获取所有有效的序列号（BatchCode）
-        public static bool IsEnglishMode = false;
+      
         public static List<string> GetAllBatchCodesByDeviceCode(string deviceCode)
         {
             // 校验设备编码（避免无效查询）
             if (string.IsNullOrWhiteSpace(deviceCode))
             {
-                throw new ArgumentException(IsEnglishMode? "Device code cannot be empty or contain spaces" : "设备编码不能为空或空格", nameof(deviceCode));
+                throw new ArgumentException($"{(string)Application.Current.FindResource("Cannotbeemptyorcontainspaces")}", nameof(deviceCode));
             }
 
             // 通过 MySQL 控制器查询：筛选设备编码 + 取序列号 + 去重 + 过滤空值
