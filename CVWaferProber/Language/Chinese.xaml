@@ -464,8 +464,8 @@
     <sys:String x:Key="Azimuthnull">DLL返回的方位角截面数据为空</sys:String>
     <sys:String x:Key="Azimuthdataex">调用DLL获取方位角截面数据异常</sys:String>
     <sys:String x:Key="Datanotloadedorimagecenternotinitialized">数据未加载或图像中心未初始化</sys:String>
-    
-    
+
+
     <sys:String x:Key="Failedtoobtainfullazimuthdata">获取全量方位角数据失败</sys:String>
     <sys:String x:Key="Thepolarangleintervalmustbepositiveinteger">极角间隔需为正整数</sys:String>
     <sys:String x:Key="Parametererror">参数错误</sys:String>
@@ -559,7 +559,7 @@
     <sys:String x:Key="Hasbeeninitialized">消息处理器已经初始化</sys:String>
     <sys:String x:Key="Notinitialized">消息处理器未初始化</sys:String>
 
-<!--《语言资源文件》-->
+    <!--  《语言资源文件》  -->
     <sys:String x:Key="Btn.Ok">确定</sys:String>
     <sys:String x:Key="Btn.Cancel">取消</sys:String>
     <sys:String x:Key="Btn.Yes">是</sys:String>
@@ -569,7 +569,12 @@
     <sys:String x:Key="Btn.Open">打开</sys:String>
     <sys:String x:Key="Btn.Select">选择</sys:String>
 
-
+    <!--  新增 HandyControl 弹窗专属资源（覆盖默认值，直接复制）  -->
+    <sys:String x:Key="HC_Ok">确定</sys:String>
+    <sys:String x:Key="HC_Cancel">取消</sys:String>
+    <sys:String x:Key="HC_Yes">是</sys:String>
+    <sys:String x:Key="HC_No">否</sys:String>
+    <sys:String x:Key="HC_Close">关闭</sys:String>
 
 
 

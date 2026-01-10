@@ -36,6 +36,7 @@
 
   <ItemGroup>
     <PackageReference Include="Dirkster.AvalonDock" Version="4.72.1" />
+    <PackageReference Include="HandyControl" Version="3.5.1" />
     <PackageReference Include="log4net" Version="2.0.17" />
     <PackageReference Include="MQTTnet" Version="4.3.5.1141" />
     <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.11.0.20250507" />
@@ -75,6 +76,9 @@
     </Reference>
     <Reference Include="FlowEngineLib">
       <HintPath>..\DLL\FlowEngineLib.dll</HintPath>
+    </Reference>
+    <Reference Include="HandyControl">
+      <HintPath>..\DLL\FlowEngineLib.dll\HandyControl.dll</HintPath>
     </Reference>
     <Reference Include="ST.Library.UI">
       <HintPath>..\DLL\ST.Library.UI.dll</HintPath>

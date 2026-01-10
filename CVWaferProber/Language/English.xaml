@@ -559,4 +559,11 @@
     <sys:String x:Key="Btn.Save">Save</sys:String>
     <sys:String x:Key="Btn.Open">Open</sys:String>
     <sys:String x:Key="Btn.Select">Select</sys:String>
+
+    <!--  新增 HandyControl 弹窗专属资源（覆盖默认值，直接复制）  -->
+    <sys:String x:Key="HC_Ok">OK</sys:String>
+    <sys:String x:Key="HC_Cancel">Cancel</sys:String>
+    <sys:String x:Key="HC_Yes">Yes</sys:String>
+    <sys:String x:Key="HC_No">No</sys:String>
+    <sys:String x:Key="HC_Close">Close</sys:String>
 </ResourceDictionary>
