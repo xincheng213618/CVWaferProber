@@ -174,6 +174,8 @@
     <sys:String x:Key="VAM.YChannel">YChannel</sys:String>
     <sys:String x:Key="VAM.ZChannel">ZChannel</sys:String>
 
+    <sys:String x:Key="VAM.OperationArea">Operation Area</sys:String>
+    
     <sys:String x:Key="Plot.Title.DiameterLine">AzimuthAngle Cross-Section Distribution</sys:String>
     <sys:String x:Key="Plot.Title.RCircle">PolarAngle Cross-Section Distribution</sys:String>
     <sys:String x:Key="Plot.Axis.X">Degrees</sys:String>

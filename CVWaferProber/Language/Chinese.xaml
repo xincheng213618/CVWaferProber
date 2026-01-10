@@ -180,6 +180,7 @@
     <sys:String x:Key="VAM.XChannel">X通道</sys:String>
     <sys:String x:Key="VAM.YChannel">Y通道</sys:String>
     <sys:String x:Key="VAM.ZChannel">Z通道</sys:String>
+    <sys:String x:Key="VAM.OperationArea">操作区</sys:String>
 
     <sys:String x:Key="Plot.Title.DiameterLine">方位角截面分布曲线</sys:String>
     <sys:String x:Key="Plot.Title.RCircle">极角截面分布曲线</sys:String>
