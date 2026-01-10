@@ -568,8 +568,6 @@
     <sys:String x:Key="Btn.Save">保存</sys:String>
     <sys:String x:Key="Btn.Open">打开</sys:String>
     <sys:String x:Key="Btn.Select">选择</sys:String>
-    
-    
 
 
 

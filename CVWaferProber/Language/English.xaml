@@ -546,9 +546,17 @@
     <!--  VLWaveformPlot  -->
     <sys:String x:Key="VoltageArraycannotbenull">The voltage array cannot be null or empty</sys:String>
     <sys:String x:Key="BrightnessArraycannotnull">The brightness array cannot be null or empty</sys:String>
-    <sys:String x:Key="ArrayMustbeconsistent">The voltage array and the brightness array must have the same length</sys:String>
+    <sys:String x:Key="ArrayMustbeconsistent">The voltage array and the brightness array must have the same length.</sys:String>
 
     <sys:String x:Key="Hasbeeninitialized">The message handler has been initialized</sys:String>
     <sys:String x:Key="Notinitialized">The message handler has not been initialized</sys:String>
-
+    <!--  《语言资源文件》  -->
+    <sys:String x:Key="Btn.Ok">Ok</sys:String>
+    <sys:String x:Key="Btn.Cancel">Cancel</sys:String>
+    <sys:String x:Key="Btn.Yes">Yes</sys:String>
+    <sys:String x:Key="Btn.No">No</sys:String>
+    <sys:String x:Key="Btn.Close">Close</sys:String>
+    <sys:String x:Key="Btn.Save">Save</sys:String>
+    <sys:String x:Key="Btn.Open">Open</sys:String>
+    <sys:String x:Key="Btn.Select">Select</sys:String>
 </ResourceDictionary>

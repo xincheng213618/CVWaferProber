@@ -4,6 +4,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Interop;
 
+
 namespace CVWaferProber.External
 {
     public class ExternalAppHost : HwndHost

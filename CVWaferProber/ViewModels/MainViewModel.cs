@@ -1674,6 +1674,8 @@ namespace CVWaferProber.ViewModels
 
         private void StopAutoTest(object? obj)
         {
+            if(_testQueue==null) return;
+
             foreach (var item in _testQueue)
             {
                 item.Die.UnSelected();
