@@ -217,6 +217,7 @@ namespace CVAVMControl
             public double cie_y { get; set; }   // CIE坐标y（可选）
             public double position { get; set; } // 角度位置（对应图表X轴）
         }
+       
         // 新增：全局缓存DLL返回的所有方位角数据（0°~180°）
         public Dictionary<int, List<VamSamplePoint>> _dllAllAzimuthData = new Dictionary<int, List<VamSamplePoint>>();
         public Dictionary<(int polar, double azimuth), RgbSample> DllAllCircleData { get; private set; }
@@ -224,13 +225,19 @@ namespace CVAVMControl
         {
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             InitializeComponent();
-         
-            // 直接调用线条模式的采样点更新逻辑
-            UpdateLineSampleCountText();
-            // 直接调用圆环模式的采样点更新逻辑
-            UpdateCircleSampleCountText();
-            txtLineSampleCount.TextChanged += (s, e) => UpdateLineSampleCountText();
-            txtCircleSampleCount.TextChanged += (s, e) => UpdateCircleSampleCountText();
+
+            //// 直接调用线条模式的采样点更新逻辑
+            //UpdateLineSampleCountText();
+            //// 直接调用圆环模式的采样点更新逻辑
+            //UpdateCircleSampleCountText();
+            //txtLineSampleCount.TextChanged += (s, e) => UpdateLineSampleCountText();
+            //txtCircleSampleCount.TextChanged += (s, e) => UpdateCircleSampleCountText();
+            // 替换原有采样点更新绑定，改为间隔角度更新
+            UpdateLinePolarIntervalText();
+            UpdateAzimuthIntervalText();
+            txtLinePolarInterval.TextChanged += (s, e) => UpdateLinePolarIntervalText();
+            txtAzimuthInterval.TextChanged += (s, e) => UpdateAzimuthIntervalText();
+
             // 初始化悬浮信息面板（样式匹配目标图）
             InitializeHoverInfoPanel();
             // 初始化定时器：5分钟未使用VAM则释放资源
@@ -1880,7 +1887,10 @@ namespace CVAVMControl
                     _channels = 3,
                     data = null
                 };
-
+                // 先获取极角范围
+                int polarRHO = int.TryParse(txtLinePolarRHO.Text.Trim(), out int rho) ? rho : 60;
+                // 由间隔角度计算采样点数
+                int _pointNumLine = (int)(Math.Abs(2 * polarRHO) / _linePolarInterval) + 1;
                 // 步骤6：修复JSON参数（修正角度符号+添加通道）
                 string staticJson = JsonConvert.SerializeObject(new
                 {
@@ -2168,7 +2178,10 @@ namespace CVAVMControl
                     for (int i = 0; i < azimuthSampleCount; i++)
                     {
                         double currentAzimuth = i * azimuthStep; // 0°, 1°, 2°...359°
-
+                                                                 // 先获取极角范围
+                        int polarRHO = int.TryParse(txtLinePolarRHO.Text.Trim(), out int rho) ? rho : 60;
+                        // 由间隔角度计算采样点数
+                        int _pointNumLine = (int)(Math.Abs(2 * polarRHO) / _linePolarInterval) + 1;
                         // 步骤7.2：构建R圆模式的JSON参数（适配DLL要求）
                         string circleJson = JsonConvert.SerializeObject(new
                         {
@@ -2181,7 +2194,7 @@ namespace CVAVMControl
                             azimuthalAngle = currentAzimuth, // 方位角（0~360°）
                             polar_RHO = polarAngle,          // 极角（当前遍历的半径角度）
                             polar_Angle = 60.0,              // 固定60°（VAM业务默认值）
-                            pixelToAngle = ConoscopeCoefficient,
+                            pixelToAngle = ConoscopeCoefficient, 
                             pointNumLine = _pointNumLine,    // 全局采样点配置
                             pointNumCircle = azimuthSampleCount, // 方位角采样点数
                             center = new { x = center.X, y = center.Y },
@@ -2339,7 +2352,10 @@ namespace CVAVMControl
                     _channels = 3,
                     data = null
                 };
-
+                // 先获取极角范围
+                int polarRHO = int.TryParse(txtLinePolarRHO.Text.Trim(), out int rho) ? rho : 60;
+                // 由间隔角度计算采样点数
+                int _pointNumLine = (int)(Math.Abs(2 * polarRHO) / _linePolarInterval) + 1;
                 // 步骤5：修复R圆的JSON参数
                 string staticJson = JsonConvert.SerializeObject(new
                 {
@@ -2818,6 +2834,8 @@ namespace CVAVMControl
 
         // 全局采样点数量（默认值100，可通过按钮修改）
         private int _pointNumLine = 360;
+        private double _linePolarInterval = 1; // 极角间隔角度（默认1°）
+        private double _azimuthInterval = 3; // 方位角间隔角度（默认3°）
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             // 1. 先校验输入是否为空
@@ -2840,6 +2858,10 @@ namespace CVAVMControl
                 MessageBox.Show($"{FindResource("Pleaseenterapositiveinteger")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
+            // 先获取极角范围
+            int polarRHO = int.TryParse(txtLinePolarRHO.Text.Trim(), out int rho) ? rho : 60;
+            // 由间隔角度计算采样点数
+            int _pointNumLine = (int)(Math.Abs(2 * polarRHO) / _linePolarInterval) + 1;
             // 将合法值赋值给全局变量
             _pointNumLine = pointNumLine;
 
@@ -2883,96 +2905,99 @@ namespace CVAVMControl
                 logger.Error("Export initialization failed", ex);//: "导出初始化失败"
                 MessageBox.Show($"Export initialization failed：{ex.Message}", $"{FindResource("Log.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            //Application.Current.Dispatcher.Invoke(() =>
-            //{
-            //    try
-            //    {
-            //        if (YMat == null || YMat.Empty())
-            //        {
-            //            MessageBox.Show("没有可导出的数据", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
-            //            return;
-            //        }
-
-            //        // 核心修改：导出时主动传递最新参数（当前通道、当前采样点数量）
-            //        bool dllSuccess = CallVamDllForAllAzimuth(
-            //            exportChannel: displayChannel, // 导出时的当前通道
-            //            pointNumLine: _pointNumLine,   // 导出时的当前采样点数量
-            //            polarRHO: 60.0,                // 可根据需求改为用户输入
-            //            polarAngle: 60.0               // 可根据需求改为用户输入
-            //        );
-
-            //        if (!dllSuccess)
-            //        {
-            //            MessageBox.Show("DLL数据获取失败，无法导出", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-            //            return;
-            //        }
-
-            //        // 选择导出路径
-            //        SaveFileDialog saveFileDialog = new SaveFileDialog
-            //        {
-            //            Filter = "CSV Files (*.csv)|*.csv",
-            //            FileName = $"VAM_Export_{displayChannel}_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
-            //            Title = "保存VAM数据（0°~180°方位角）"
-            //        };
-
-            //        if (saveFileDialog.ShowDialog() != true) return;
-            //        string exportPath = saveFileDialog.FileName;
-
-            //        // 按示例表格格式导出（原有逻辑不变）
-            //        using (var writer = new StreamWriter(exportPath, false, Encoding.UTF8))
-            //        {
-            //            // 第1行：Measurement Date
-            //            writer.WriteLine($"Measurement Date,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,");
-            //            // 第2行：Instrument
-            //            writer.WriteLine($"Instrument,VAM 60°,,,,,,,,,,,,");
-            //            // 第3行：空行
-            //            writer.WriteLine();
-            //            // 第4行：列标题（径向角行标题 + 方位角0°~180°）
-            //            StringBuilder headerLine = new StringBuilder();
-            //            headerLine.Append(","); // A列空
-            //            headerLine.Append(" "); // B列：径向角
-            //            foreach (int azimuth in Enumerable.Range(0, 180)) // 0°~180°方位角
-            //            {
-            //                headerLine.Append($",{azimuth}°");
-            //            }
-            //            writer.WriteLine(headerLine.ToString());
-
-            //            // 遍历径向角-60°~60°，逐行写入数据
-            //            for (int radial = -60; radial <= 60; radial++)
-            //            {
-            //                StringBuilder dataLine = new StringBuilder();
-            //                dataLine.Append(","); // A列空
-            //                dataLine.Append($"{radial}°"); // B列：当前径向角
-
-            //                // 遍历每个方位角（0°~180°），填充对应列数据
-            //                foreach (int azimuth in Enumerable.Range(0, 180))
-            //                {
-            //                    if (_dllAllAzimuthData.TryGetValue(azimuth, out var sampleList))
-            //                    {
-            //                        // 找到当前径向角对应的采样点
-            //                        var sample = sampleList.FirstOrDefault(p => Math.Round(p.position, 0) == radial);
-            //                        double value = sample != null ? GetChannelValueFromDll(sample, displayChannel) : 0;
-            //                        dataLine.Append($",{value:F5}");
-            //                    }
-            //                    else
-            //                    {
-            //                        dataLine.Append(","); // 无数据则留空
-            //                    }
-            //                }
-            //                writer.WriteLine(dataLine.ToString());
-            //            }
-            //        }
-
-            //        MessageBox.Show($"VAM数据已按要求导出至：\n{exportPath}", "导出成功", MessageBoxButton.OK, MessageBoxImage.Information);
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        logger.Error("VAM数据导出失败", ex);
-            //        MessageBox.Show($"导出失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-            //    }
-            //});
+           
         }
+        private void BtnExportClick(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                try
+                {
+                    if (YMat == null || YMat.Empty())
+                    {
+                        MessageBox.Show("没有可导出的数据", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                        return;
+                    }
 
+                    // 核心修改：导出时主动传递最新参数（当前通道、当前采样点数量）
+                    bool dllSuccess = CallVamDllForAllAzimuth(
+                        exportChannel: displayChannel, // 导出时的当前通道
+                        pointNumLine: _pointNumLine,   // 导出时的当前采样点数量
+                        polarRHO: 60.0,                // 可根据需求改为用户输入
+                        polarAngle: 60.0               // 可根据需求改为用户输入
+                    );
+
+                    if (!dllSuccess)
+                    {
+                        MessageBox.Show("DLL数据获取失败，无法导出", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                    // 选择导出路径
+                    SaveFileDialog saveFileDialog = new SaveFileDialog
+                    {
+                        Filter = "CSV Files (*.csv)|*.csv",
+                        FileName = $"VAM_Export_{displayChannel}_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
+                        Title = "保存VAM数据（0°~180°方位角）"
+                    };
+
+                    if (saveFileDialog.ShowDialog() != true) return;
+                    string exportPath = saveFileDialog.FileName;
+
+                    // 按示例表格格式导出（原有逻辑不变）
+                    using (var writer = new StreamWriter(exportPath, false, Encoding.UTF8))
+                    {
+                        // 第1行：Measurement Date
+                        writer.WriteLine($"Measurement Date,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,");
+                        // 第2行：Instrument
+                        writer.WriteLine($"Instrument,VAM 60°,,,,,,,,,,,,");
+                        // 第3行：空行
+                        writer.WriteLine();
+                        // 第4行：列标题（径向角行标题 + 方位角0°~180°）
+                        StringBuilder headerLine = new StringBuilder();
+                        headerLine.Append(","); // A列空
+                        headerLine.Append(" "); // B列：径向角
+                        foreach (int azimuth in Enumerable.Range(0, 180)) // 0°~180°方位角
+                        {
+                            headerLine.Append($",{azimuth}°");
+                        }
+                        writer.WriteLine(headerLine.ToString());
+
+                        // 遍历径向角-60°~60°，逐行写入数据
+                        for (int radial = -60; radial <= 60; radial++)
+                        {
+                            StringBuilder dataLine = new StringBuilder();
+                            dataLine.Append(","); // A列空
+                            dataLine.Append($"{radial}°"); // B列：当前径向角
+
+                            // 遍历每个方位角（0°~180°），填充对应列数据
+                            foreach (int azimuth in Enumerable.Range(0, 180))
+                            {
+                                if (_dllAllAzimuthData.TryGetValue(azimuth, out var sampleList))
+                                {
+                                    // 找到当前径向角对应的采样点
+                                    var sample = sampleList.FirstOrDefault(p => Math.Round(p.position, 0) == radial);
+                                    double value = sample != null ? GetChannelValueFromDll(sample, displayChannel) : 0;
+                                    dataLine.Append($",{value:F5}");
+                                }
+                                else
+                                {
+                                    dataLine.Append(","); // 无数据则留空
+                                }
+                            }
+                            writer.WriteLine(dataLine.ToString());
+                        }
+                    }
+
+                    MessageBox.Show($"VAM数据已按要求导出至：\n{exportPath}", "导出成功", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error("VAM数据导出失败", ex);
+                    MessageBox.Show($"导出失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            });
+        }
 
         #region VAM导出入口方法
         // 直径线模式：获取选中的导出通道
@@ -3026,29 +3051,78 @@ namespace CVAVMControl
             };
         }
         // 单独封装采样点更新逻辑（原TextChanged事件中的代码）
-        private void UpdateLineSampleCountText()
+        /// <summary>
+        /// 更新极角间隔角度备注文本
+        /// </summary>
+        private void UpdateLinePolarIntervalText()
         {
-            string input = txtLineSampleCount.Text.Trim();
-            if (!int.TryParse(input, out int sampleCount) || sampleCount <= 0)
+            // 1. 获取极角范围（从原有txtLinePolarRHO控件读取）
+            string polarRhoInput = txtLinePolarRHO.Text.Trim();
+            if (!int.TryParse(polarRhoInput, out int polarRHO) || polarRHO <= 0)
             {
-                LineSampleCountBook.Text = "（[-60,60]共无效点数）";
+                LinePolarIntervalBook.Text = "（[-60,60]间隔无效，共0点）";
                 return;
             }
-            int polarRHO = int.TryParse(txtLinePolarRHO.Text.Trim(), out int rho) ? rho : 60;
-            LineSampleCountBook.Text = $"（[-{polarRHO},{polarRHO}]共{sampleCount}点）";
-        }
 
-        private void UpdateCircleSampleCountText()
-        {
-            string input = txtCircleSampleCount.Text.Trim();
-            if (!int.TryParse(input, out int sampleCount) || sampleCount <= 0)
+            // 2. 获取极角间隔角度
+            string intervalInput = txtLinePolarInterval.Text.Trim();
+            if (!double.TryParse(intervalInput, out double polarInterval) || polarInterval <= 0)
             {
-                CircleSampleCountBook.Text = "（[0,360)间隔无效）";
+                LinePolarIntervalBook.Text = $"（[-{polarRHO},{polarRHO}]间隔无效，共0点）";
                 return;
             }
-            double interval = 360.0 / sampleCount;
-            CircleSampleCountBook.Text = $"（[0,360)间隔{interval:F1}°）";
+
+            // 3. 计算总采样点数（总范围=2*polarRHO，点数=总范围/间隔 + 1）
+            int sampleCount = (int)(Math.Abs(2 * polarRHO) / polarInterval) + 1;
+
+            // 4. 更新备注文本
+            LinePolarIntervalBook.Text = $"（[-{polarRHO},{polarRHO}]间隔{polarInterval}°，共{sampleCount}点）";
+
+            // 5. 同步更新全局变量
+            _linePolarInterval = polarInterval;
         }
+        private void UpdateAzimuthIntervalText()
+        {
+            // 1. 获取方位角间隔角度
+            string intervalInput = txtAzimuthInterval.Text.Trim();
+            if (!double.TryParse(intervalInput, out double azimuthInterval) || azimuthInterval <= 0)
+            {
+                AzimuthIntervalBook.Text = "（[0,360)间隔无效，共0点）";
+                return;
+            }
+
+            // 2. 计算总采样点数（总范围360°，点数=360/间隔）
+            int sampleCount = (int)(360 / azimuthInterval);
+
+            // 3. 更新备注文本
+            AzimuthIntervalBook.Text = $"（[0,360)间隔{azimuthInterval}°，共{sampleCount}点）";
+
+            // 4. 同步更新全局变量
+            _azimuthInterval = azimuthInterval;
+        }
+        //private void UpdateLineSampleCountText()
+        //{
+        //    string input = txtLineSampleCount.Text.Trim();
+        //    if (!int.TryParse(input, out int sampleCount) || sampleCount <= 0)
+        //    {
+        //        LineSampleCountBook.Text = "（[-60,60]共无效点数）";
+        //        return;
+        //    }
+        //    int polarRHO = int.TryParse(txtLinePolarRHO.Text.Trim(), out int rho) ? rho : 60;
+        //    LineSampleCountBook.Text = $"（[-{polarRHO},{polarRHO}]共{sampleCount}点）";
+        //}
+
+        //private void UpdateCircleSampleCountText()
+        //{
+        //    string input = txtCircleSampleCount.Text.Trim();
+        //    if (!int.TryParse(input, out int sampleCount) || sampleCount <= 0)
+        //    {
+        //        CircleSampleCountBook.Text = "（[0,360)间隔无效）";
+        //        return;
+        //    }
+        //    double interval = 360.0 / sampleCount;
+        //    CircleSampleCountBook.Text = $"（[0,360)间隔{interval:F1}°）";
+        //}
         private void BtnExportDiameter_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -3083,71 +3157,212 @@ namespace CVAVMControl
         }
         private void ExportLineMode(List<ExportDataType> selectedChannels, string basePath)
         {
-            // 1. 解析参数（复用原代码，控件名改为CVVAMAnalyzer中的新控件）
-            if (!int.TryParse(txtLinePolarRHO.Text, out int polarRHO) || polarRHO <= 0)
-                throw new ArgumentException("极角范围（polar_RHO）必须为正整数！");
-            if (!int.TryParse(txtLineSampleCount.Text, out int lineSampleCount) || lineSampleCount <= 0)
-                throw new ArgumentException("极角采样点数必须为正整数！");
-            // 2. 原VamExportDialog的线条导出逻辑（略，直接复用，注意_analyzer改为this）
-            
-            LineSampleCountBook.Text = $"([-60,60]共{txtLineSampleCount.Text}点）)";
-            // 2. 计算极角间隔和范围（[-polarRHO, polarRHO]）
-            double polarStep = (2 * polarRHO) / (lineSampleCount - 1);
-            var polarAngles = Enumerable.Range(0, lineSampleCount)
-                                        .Select(i => -polarRHO + i * polarStep)
-                                        .ToList();
+            // 1. 从界面获取核心参数（极角范围、极角间隔）
+            int polarRHO = LinePolarRHO; // 极角范围（从txtLinePolarRHO获取）
+            double polarInterval = _linePolarInterval; // 极角间隔（从txtLinePolarInterval获取，已通过UpdateLinePolarIntervalText同步）
 
-            // 3. 方位角范围：[0, 180)，间隔1°
-            var azimuthAngles = Enumerable.Range(0, 180).Select(x => (double)x).ToList();
+            // 容错处理：确保间隔参数有效
+            if (polarInterval <= 0 || polarInterval > 2 * polarRHO)
+            {
+                polarInterval = 1; // 默认1°间隔
+                logger.Warn($"极角间隔参数无效，自动切换为默认值：{polarInterval}°");
+                MessageBox.Show($"极角间隔参数无效，已自动切换为默认值 {polarInterval}°", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
 
-            // 4. 获取所有方位角的DLL数据
+            // 2. 动态计算采样点：按间隔角度生成 [-polarRHO, polarRHO] 范围内的所有采样点
+            List<double> polarAngles = new List<double>();
+            double currentPolar = -polarRHO; // 从负向最大值开始
+
+            // 循环生成均匀分布的极角采样点（保留2位小数，避免精度误差）
+            while (currentPolar <= polarRHO + 1e-6) // 加微小偏移，避免因浮点精度丢失最后一个采样点
+            {
+                polarAngles.Add(Math.Round(currentPolar, 2));
+                currentPolar += polarInterval;
+            }
+
+            // 去重+排序：确保采样点无重复、有序排列
+            polarAngles = polarAngles.Distinct().OrderBy(p => p).ToList();
+            if (polarAngles.Count == 0)
+            {
+                polarAngles.AddRange(new List<double> { -polarRHO, 0, polarRHO }); // 兜底采样点
+            }
+            int lineSampleCount = polarAngles.Count;
+            logger.Info($"直径线模式：极角范围 [-{polarRHO},{polarRHO}]°，间隔 {polarInterval}°，共生成 {lineSampleCount} 个采样点");
+
+            // 3. 方位角范围：[0, 180°]（VAM业务标准范围，1°间隔）
+            List<double> azimuthAngles = Enumerable.Range(0, 181).Select(x => (double)x).ToList();
+
+            // 4. 调用DLL获取全量方位角数据（传入动态计算的采样点数量）
             bool dllSuccess = this.CallVamDllForAllAzimuth(
-                exportChannel: ExportChannel.Y, // 临时通道，仅用于获取全量数据
+                exportChannel: displayChannel,
                 pointNumLine: lineSampleCount,
                 polarRHO: polarRHO,
-                polarAngle: 60.0
+                polarAngle: polarRHO
             );
-            if (!dllSuccess)
-                throw new Exception("获取线条数据失败，请检查DLL调用！");
-           
 
-            // 5. 为每个选中通道生成CSV（basePath来自保存路径弹窗）
+            if (!dllSuccess || _dllAllAzimuthData == null || _dllAllAzimuthData.Count == 0)
+            {
+                throw new Exception("DLL调用失败，无法获取直径线全量数据，请先加载有效CVCIE文件！");
+            }
+
+            // 5. 为每个选中通道生成独立CSV文件（按动态采样点填充数据）
             foreach (var channel in selectedChannels)
             {
-                string csvPath = $"{basePath}_{channel}_Line.csv";
-                using (var writer = new StreamWriter(csvPath, false, Encoding.UTF8))
+                // 构建最终文件路径
+                string csvFileName = $"{basePath}_{channel}_DiameterLine.csv";
+                string fullCsvPath = Path.Combine(Path.GetDirectoryName(csvFileName) ?? "", Path.GetFileName(csvFileName));
+
+                using (var writer = new StreamWriter(fullCsvPath, false, Encoding.UTF8))
                 {
-                    // 写入表头：空列 + 方位角（0°~179°）
-                    writer.Write(",");
-                    writer.WriteLine(string.Join(",", azimuthAngles.Select(a => $"{a:F1}°")));
-
-                    // 写入数据行：极角 + 对应方位角的数值
-                    for (int i = 0; i < polarAngles.Count; i++)
+                    // 5.1 写入标准化表头（符合VAM业务格式）
+                    writer.WriteLine($"Measurement Date,,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,");
+                    writer.WriteLine($"Instrument,,VAM {polarRHO}°（极角间隔 {polarInterval}°）,,,,,,,,,,,,");
+                    writer.WriteLine(); // 空行分隔
+                    StringBuilder headerBuilder = new StringBuilder();
+                    headerBuilder.Append("Polar Angle(°)"); // 第一列：极角（径向角度）
+                    foreach (double azimuth in azimuthAngles)
                     {
-                        double polar = polarAngles[i];
-                        var line = new StringBuilder();
-                        line.Append($"{polar:F1}°"); // 极角（Y轴）
+                        headerBuilder.Append($",{azimuth:F0}°"); // 方位角列（0位小数，符合业务习惯）
+                    }
+                    writer.WriteLine(headerBuilder.ToString());
 
+                    // 5.2 写入数据行（按动态生成的极角采样点填充）
+                    foreach (double polar in polarAngles)
+                    {
+                        StringBuilder dataBuilder = new StringBuilder();
+                        dataBuilder.Append($"{polar:F2}"); // 极角（保留2位小数，不带多余符号）
+
+                        // 遍历每个方位角，填充对应数据
                         foreach (double azimuth in azimuthAngles)
                         {
-                            // 获取对应方位角的采样数据
-                            if (this._dllAllAzimuthData.TryGetValue((int)azimuth, out var sampleList))
+                            double channelValue = 0.0;
+                            // 从DLL缓存中获取对应方位角的采样列表
+                            if (_dllAllAzimuthData.TryGetValue((int)azimuth, out var sampleList) && sampleList.Count > 0)
                             {
-                                // 找到最接近当前极角的采样点
-                                var sample = sampleList.OrderBy(s => Math.Abs(s.position - polar))
-                                                      .FirstOrDefault();
-                                double value = GetChannelValue(sample, channel);
-                                line.Append($",{value:F5}");
+                                // 找到最接近当前极角的采样点（误差允许0.01°，适配浮点精度）
+                                var targetSample = sampleList
+                                    .OrderBy(s => Math.Abs(Math.Round(s.position, 2) - polar))
+                                    .FirstOrDefault();
+
+                                if (targetSample != null)
+                                {
+                                    channelValue = GetChannelValue(targetSample, channel);
+                                }
                             }
-                            else
-                            {
-                                line.Append(",");
-                            }
+
+                            // 写入通道值（保留5位小数，满足高精度测量需求）
+                            dataBuilder.Append($",{channelValue:F5}");
                         }
-                        writer.WriteLine(line.ToString());
+
+                        writer.WriteLine(dataBuilder.ToString());
                     }
                 }
+
+                logger.Info($"直径线通道 {channel} 导出成功，路径：{fullCsvPath}");
             }
+            // 1. 参数解析与校验（适配现有控件，保证容错性）
+            //    int polarRHO = 60; // 默认极角范围
+            //    if (!int.TryParse(txtLinePolarRHO.Text.Trim(), out polarRHO) || polarRHO <= 0 || polarRHO > 60)
+            //    {
+            //        polarRHO = 60;
+            //        logger.Warn($"极角范围参数无效，使用默认值：{polarRHO}°");
+            //    }
+
+            //    double polarInterval = _linePolarInterval; // 全局极角间隔
+            //    if (polarInterval <= 0 || polarInterval > 2 * polarRHO)
+            //    {
+            //        polarInterval = 1;
+            //        logger.Warn($"极角间隔参数无效，使用默认值：{polarInterval}°");
+            //    }
+
+            //    // 计算采样点数（总范围=2*polarRHO，点数=总范围/间隔 + 1，避免除零）
+            //    int lineSampleCount = (int)(Math.Abs(2 * polarRHO) / polarInterval) + 1;
+            //    if (lineSampleCount <= 0) lineSampleCount = 121; // 默认-60~60°，间隔1°，共121点
+
+            //    // 2. 计算极角和方位角范围
+            //    // 极角范围：[-polarRHO, polarRHO]，按间隔生成
+            //    var polarAngles = new List<double>();
+            //    for (int i = 0; i < lineSampleCount; i++)
+            //    {
+            //        double polar = -polarRHO + i * polarInterval;
+            //        polarAngles.Add(Math.Round(polar, 2)); // 保留2位小数，避免精度误差
+            //    }
+
+            //    // 方位角范围：[0, 180°]，步长1°（VAM业务标准范围）
+            //    var azimuthAngles = Enumerable.Range(0, 181).Select(x => (double)x).ToList();
+
+            //    // 3. 调用DLL获取全量方位角数据（确保缓存有数据）
+            //    bool dllSuccess = this.CallVamDllForAllAzimuth(
+            //        exportChannel: displayChannel,
+            //        pointNumLine: lineSampleCount,
+            //        polarRHO: polarRHO,
+            //        polarAngle: polarRHO
+            //    );
+
+            //    if (!dllSuccess || _dllAllAzimuthData == null || _dllAllAzimuthData.Count == 0)
+            //    {
+            //        throw new Exception("DLL调用失败，无法获取直径线全量数据，请先加载有效CVCIE文件！");
+            //    }
+
+            //    // 4. 为每个选中通道生成独立CSV文件
+            //    foreach (var channel in selectedChannels)
+            //    {
+            //        // 构建最终文件路径（基础路径+通道+模式）
+            //        string csvFileName = $"{basePath}_{channel}_DiameterLine.csv";
+            //        string fullCsvPath = Path.Combine(Path.GetDirectoryName(csvFileName) ?? "", Path.GetFileName(csvFileName));
+
+            //        using (var writer = new StreamWriter(fullCsvPath, false, Encoding.UTF8))
+            //        {
+            //            // 4.1 写入表头（符合VAM业务格式）
+            //            // 第1行：测量日期
+            //            writer.WriteLine($"Measurement Date,,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,");
+            //            // 第2行：仪器信息
+            //            writer.WriteLine($"Instrument,,VAM {polarRHO}°,,,,,,,,,,,,");
+            //            // 第3行：空行分隔
+            //            writer.WriteLine();
+            //            // 第4行：核心表头（空列+方位角标注）
+            //            StringBuilder headerBuilder = new StringBuilder();
+            //            headerBuilder.Append("Polar Angle"); // 第一列：极角（径向角度）
+            //            foreach (double azimuth in azimuthAngles)
+            //            {
+            //                headerBuilder.Append($",{azimuth:F0}°"); // 方位角列（保留0位小数）
+            //            }
+            //            writer.WriteLine(headerBuilder.ToString());
+
+            //            // 4.2 写入数据行（极角+对应方位角的通道值）
+            //            foreach (double polar in polarAngles)
+            //            {
+            //                StringBuilder dataBuilder = new StringBuilder();
+            //                dataBuilder.Append($"{polar:F2}°"); // 极角（保留2位小数，带°符号）
+
+            //                // 遍历每个方位角，填充对应数据
+            //                foreach (double azimuth in azimuthAngles)
+            //                {
+            //                    double channelValue = 0.0;
+            //                    // 从DLL缓存中获取对应方位角的采样列表
+            //                    if (_dllAllAzimuthData.TryGetValue((int)azimuth, out var sampleList) && sampleList.Count > 0)
+            //                    {
+            //                        // 找到最接近当前极角的采样点（误差允许0.01°）
+            //                        var targetSample = sampleList
+            //                            .OrderBy(s => Math.Abs(Math.Round(s.position, 2) - polar))
+            //                            .FirstOrDefault();
+
+            //                        if (targetSample != null)
+            //                        {
+            //                            channelValue = GetChannelValue(targetSample, channel);
+            //                        }
+            //                    }
+
+            //                    // 写入通道值（保留5位小数，符合高精度测量要求）
+            //                    dataBuilder.Append($",{channelValue:F5}");
+            //                }
+
+            //                writer.WriteLine(dataBuilder.ToString());
+            //            }
+            //        }
+
+            //        logger.Info($"直径线通道{channel}导出成功，路径：{fullCsvPath}");
+            //    }
         }
         // 圆环导出按钮（原BtnExportCircle_Click）
         private void BtnExportCircle_Click(object sender, RoutedEventArgs e)
@@ -3184,73 +3399,120 @@ namespace CVAVMControl
         }
         private void ExportCircleMode(List<ExportDataType> selectedChannels, string basePath)
         {
-            // 1. 解析参数（复用原代码，控件名改为CVVAMAnalyzer中的新控件）
-            if (!int.TryParse(txtCirclePolarStart.Text, out int polarStart) || polarStart < -60 || polarStart > 60)
-                throw new ArgumentException("极角起始值必须为-60~60之间的整数！");
-            // ...（原参数校验逻辑不变）...
+            // 1. 从界面获取核心参数（极角范围/步长、方位角间隔）
+            int polarStart = CirclePolarStart;
+            int polarEnd = CirclePolarEnd;
+            int polarStep = CirclePolarStep;
+            double azimuthInterval = _azimuthInterval; // 方位角间隔（从txtAzimuthInterval获取）
 
-            // 2. 原VamExportDialog的圆环导出逻辑（略，直接复用，注意_analyzer改为this）
-            // ...（原代码中_analyzer替换为this）...
-            if (!int.TryParse(txtCirclePolarEnd.Text, out int polarEnd) || polarEnd < -60 || polarEnd > 60 || polarEnd <= polarStart)
-                throw new ArgumentException("极角结束值必须大于起始值，且在-60~60之间！");
-            if (!int.TryParse(txtCirclePolarStep.Text, out int polarStep) || polarStep <= 0)
-                throw new ArgumentException("极角间隔必须为正整数！");
-            if (!int.TryParse(txtCircleSampleCount.Text, out int circleSampleCount) || circleSampleCount <= 0)
-                throw new ArgumentException("方位角采样点数必须为正整数！");
+            // 容错处理：确保方位角间隔有效
+            if (azimuthInterval <= 0 || azimuthInterval > 360)
+            {
+                azimuthInterval = 3; // 默认3°间隔
+                logger.Warn($"方位角间隔参数无效，自动切换为默认值：{azimuthInterval}°");
+                MessageBox.Show($"方位角间隔参数无效，已自动切换为默认值 {azimuthInterval}°", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
 
-            // 2. 计算极角范围：[polarStart, polarEnd]，间隔polarStep（支持正负极角）
-            var polarAngles = new List<int>();
+            // 2. 动态生成极角采样点（圆环半径角度）
+            List<int> polarAngles = new List<int>();
             for (int p = polarStart; p <= polarEnd; p += polarStep)
+            {
                 polarAngles.Add(p);
+            }
+            // 兜底：确保至少有一个极角采样点
+            if (polarAngles.Count == 0) polarAngles.Add(polarStart);
+            logger.Info($"圆环模式：极角范围 [{polarStart},{polarEnd}]°，步长 {polarStep}°，共生成 {polarAngles.Count} 个圆环");
 
-            // 3. 计算方位角范围和间隔：[0, 360)，按采样点数均分
-            double azimuthStep = 360.0 / circleSampleCount;
-            var azimuthAngles = Enumerable.Range(0, circleSampleCount)
-                                          .Select(i => i * azimuthStep)
-                                          .ToList();
+            // 3. 动态生成方位角采样点（按界面间隔角度，覆盖 [0, 360°)）
+            List<double> azimuthAngles = new List<double>();
+            double currentAzimuth = 0;
+            while (currentAzimuth < 360 - 1e-6) // 加微小偏移，避免因浮点精度生成360°
+            {
+                azimuthAngles.Add(Math.Round(currentAzimuth, 2));
+                currentAzimuth += azimuthInterval;
+            }
+            // 去重+排序：确保采样点无重复、有序排列
+            azimuthAngles = azimuthAngles.Distinct().OrderBy(a => a).ToList();
+            int azimuthSampleCount = azimuthAngles.Count;
+            // 兜底：确保至少有36个方位角采样点（10°间隔）
+            if (azimuthSampleCount < 36)
+            {
+                azimuthAngles = Enumerable.Range(0, 36).Select(x => (double)(x * 10)).ToList();
+                azimuthSampleCount = 36;
+            }
+            logger.Info($"圆环模式：方位角范围 [0,360)°，间隔 {azimuthInterval}°，共生成 {azimuthSampleCount} 个采样点");
 
-            // 4. 调用DLL批量获取所有极角+方位角的圆环数据
+            // 4. 调用DLL批量获取全量圆环数据（传入动态计算的采样点数量）
             bool dllSuccess = this.CallVamDllForAllCircle(
                 polarStart: polarStart,
                 polarEnd: polarEnd,
                 polarStep: polarStep,
-                azimuthSampleCount: circleSampleCount
+                azimuthSampleCount: azimuthSampleCount
             );
+
             if (!dllSuccess || DllAllCircleData == null || DllAllCircleData.Count == 0)
-                throw new Exception("获取圆环数据失败，请检查DLL调用或参数设置！");
-            // 5. 为每个选中通道生成CSV（basePath来自保存路径弹窗）
+            {
+                throw new Exception("DLL调用失败，无法获取圆环全量数据，请先加载有效CVCIE文件！");
+            }
+
+            // 5. 为每个选中通道生成独立CSV文件
             foreach (var channel in selectedChannels)
             {
-                string csvPath = $"{basePath}_{channel}_Circle.csv";
-                using (var writer = new StreamWriter(csvPath, false, Encoding.UTF8))
-                {
-                    // 写入表头：空列 + 方位角（0°~359°等，保留1位小数）
-                    writer.Write(",");
-                    writer.WriteLine(string.Join(",", azimuthAngles.Select(a => $"{a:F1}°")));
+                // 构建最终文件路径
+                string csvFileName = $"{basePath}_{channel}_RCircle.csv";
+                string fullCsvPath = Path.Combine(Path.GetDirectoryName(csvFileName) ?? "", Path.GetFileName(csvFileName));
 
-                    // 写入数据行：极角 + 对应方位角的数值
+                using (var writer = new StreamWriter(fullCsvPath, false, Encoding.UTF8))
+                {
+                    // 5.1 写入标准化表头（包含间隔角度信息）
+                    writer.WriteLine($"Measurement Date,,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,");
+                    writer.WriteLine($"Instrument,,VAM R-Circle（[{polarStart},{polarEnd}]°，极角步长 {polarStep}°，方位角间隔 {azimuthInterval}°）,,,,,,,,,,,,");
+                    writer.WriteLine(); // 空行分隔
+                    StringBuilder headerBuilder = new StringBuilder();
+                    headerBuilder.Append("Radius Angle(°)"); // 第一列：半径角度（极角）
+                    foreach (double azimuth in azimuthAngles)
+                    {
+                        headerBuilder.Append($",{azimuth:F2}°"); // 方位角列（保留2位小数）
+                    }
+                    writer.WriteLine(headerBuilder.ToString());
+
+                    // 5.2 写入数据行（按动态生成的极角/方位角采样点填充）
                     foreach (int polar in polarAngles)
                     {
-                        var line = new StringBuilder();
-                        line.Append($"{polar}°"); // 极角（Y轴）
+                        StringBuilder dataBuilder = new StringBuilder();
+                        dataBuilder.Append($"{polar}"); // 极角（整数，简洁展示）
 
+                        // 遍历每个方位角，填充对应数据
                         foreach (double azimuth in azimuthAngles)
                         {
-                            // 从DLL缓存中获取对应极角+方位角的采样点
-                            if (DllAllCircleData.TryGetValue((polar, azimuth), out var sample))
+                            double channelValue = 0.0;
+                            // 从DLL缓存中获取对应（极角+方位角）的采样点
+                            if (DllAllCircleData.TryGetValue((polar, azimuth), out var rgbSample))
                             {
-                                double value = GetChannelValueFromCircleSample(sample, channel);
-                                line.Append($",{value:F5}");
+                                channelValue = GetChannelValueFromCircleSample(rgbSample, channel);
                             }
                             else
                             {
-                                // 无数据时填充空值
-                                line.Append(",");
+                                // 容错：匹配误差范围内的方位角（适配浮点精度）
+                                var matchingKey = DllAllCircleData.Keys
+                                    .Where(k => k.polar == polar && Math.Abs(k.azimuth - azimuth) < 0.01)
+                                    .FirstOrDefault();
+
+                                if (DllAllCircleData.TryGetValue(matchingKey, out var matchingSample))
+                                {
+                                    channelValue = GetChannelValueFromCircleSample(matchingSample, channel);
+                                }
                             }
+
+                            // 写入通道值（保留5位小数，满足高精度测量需求）
+                            dataBuilder.Append($",{channelValue:F5}");
                         }
-                        writer.WriteLine(line.ToString());
+
+                        writer.WriteLine(dataBuilder.ToString());
                     }
                 }
+
+                logger.Info($"圆环通道 {channel} 导出成功，路径：{fullCsvPath}");
             }
         }
         // 从圆环采样点中获取指定通道的值（需确保RgbSample类已定义）
@@ -3271,151 +3533,86 @@ namespace CVAVMControl
                 _ => 0
             };
         }
+        /// <summary>
+        /// 圆环模式采样点数量（从界面输入推导）
+        /// </summary>
+        private int circleSampleCount
+        {
+            get
+            {
+                // 从方位角间隔计算采样点数量（360° / 间隔角度）
+                if (!double.TryParse(txtAzimuthInterval.Text.Trim(), out double azimuthInterval) || azimuthInterval <= 0)
+                {
+                    return 360; // 默认360个采样点（1°间隔）
+                }
+                int count = (int)Math.Round(360 / azimuthInterval);
+                return count < 1 ? 360 : count;
+            }
+        }
 
+        /// <summary>
+        /// 直径线模式：极角范围（从界面txtLinePolarRHO获取）
+        /// </summary>
+        private int LinePolarRHO
+        {
+            get
+            {
+                if (!int.TryParse(txtLinePolarRHO.Text.Trim(), out int rho) || rho < 0 || rho > 60)
+                {
+                    return 60; // VAM业务默认最大极角60°
+                }
+                return rho;
+            }
+        }
+
+        /// <summary>
+        /// 圆环模式：极角起始值（从界面txtCirclePolarStart获取）
+        /// </summary>
+        private int CirclePolarStart
+        {
+            get
+            {
+                if (!int.TryParse(txtCirclePolarStart.Text.Trim(), out int start) || start < -60 || start > 60)
+                {
+                    return 0;
+                }
+                return start;
+            }
+        }
+
+        /// <summary>
+        /// 圆环模式：极角结束值（从界面txtCirclePolarEnd获取）
+        /// </summary>
+        private int CirclePolarEnd
+        {
+            get
+            {
+                if (!int.TryParse(txtCirclePolarEnd.Text.Trim(), out int end) || end < -60 || end > 60)
+                {
+                    return 40;
+                }
+                // 保证结束值不小于起始值
+                return Math.Max(end, CirclePolarStart);
+            }
+        }
+
+        /// <summary>
+        /// 圆环模式：极角步长（从界面txtCirclePolarStep获取）
+        /// </summary>
+        private int CirclePolarStep
+        {
+            get
+            {
+                if (!int.TryParse(txtCirclePolarStep.Text.Trim(), out int step) || step <= 0)
+                {
+                    return 10;
+                }
+                // 保证步长不超过极角范围
+                int polarRange = CirclePolarEnd - CirclePolarStart;
+                return step > polarRange ? polarRange : step;
+            }
+        }
         #endregion
-        ///// <summary>
-        ///// 导出-60°~60°径向角度范围的CSV（核心修改方法）
-        ///// </summary>
-        //private void ExportAngleModeToCSV_60To60_Fixed(string filePath, ExportChannel channel)
-        //{
-        //    Mat? selectedMat = GetSelectedChannelMat(channel);
-        //    if (selectedMat == null || selectedMat.Empty())
-        //        return;
-
-        //    var angleLines = CreateAngleLinesForExport_60To60_Fixed(selectedMat);
-
-        //    using (StreamWriter writer = new StreamWriter(filePath, false, Encoding.UTF8))
-        //    {
-        //        if (angleLines.Count == 0)
-        //            return;
-
-        //        // 1. 保留图一的前两行固定表头
-        //        writer.WriteLine($"Measurement Date,,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,"); // 第1行
-        //        writer.WriteLine($"Instrument,,VAM 60°,,,,,,,,,,,,"); // 第2行
-        //        writer.WriteLine(); // 第3行（空行）
-
-        //        // 2. 写入核心表头（补充方位角度标注）
-        //        StringBuilder headerLine = new StringBuilder();
-        //        headerLine.Append(""); // 第一列标题（径向角度）
-        //        foreach (var line in angleLines)
-        //        {
-        //            // 列标题添加°符号（方位角度标注：0°、1°…180°）
-        //            headerLine.Append($",{line.Angle:F0}°");
-        //        }
-        //        writer.WriteLine(headerLine.ToString());
-
-        //        // 3. 写入数据行（径向角度-60°~60°）
-        //        int maxSamples = angleLines.Max(l => l.RgbData.Count);
-        //        if (maxSamples == 0) return;
-
-        //        for (int i = 0; i < maxSamples; i++)
-        //        {
-        //            StringBuilder dataLine = new StringBuilder();
-        //            // 径向角度（-60.00 ~ 60.00）
-        //            double theta = angleLines[0].RgbData.Count > i ? angleLines[0].RgbData[i].Position : 0;
-        //            dataLine.Append($"{theta:F2}");
-
-        //            // 写入每个方位角度对应的数值
-        //            foreach (var line in angleLines)
-        //            {
-        //                if (line.RgbData.Count > i)
-        //                {
-        //                    double value = GetChannelValue(line.RgbData[i], channel);
-        //                    dataLine.Append($",{value:F2}");
-        //                }
-        //                else
-        //                {
-        //                    dataLine.Append(",");
-        //                }
-        //            }
-        //            writer.WriteLine(dataLine.ToString());
-        //        }
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 创建0°~180°方位角数据（径向角度改为-60°~60°）
-        ///// </summary>
-        //private List<PolarAngleLine> CreateAngleLinesForExport_60To60_Fixed(Mat mat)
-        //{
-        //    var angleLines = new List<PolarAngleLine>();
-
-        //    // 遍历0°~180°方位角
-        //    for (int phi = 0; phi <= 180; phi++)
-        //    {
-        //        // 核心修复：180°直接复用0°的数据（反向后数据一致）
-        //        if (phi == 180)
-        //        {
-        //            // 获取0°的直径线数据
-        //            var zeroLine = ExportVAM_60To60_Fixed(0, mat);
-        //            // 180°的直径线数据 = 0°数据的径向角度反转（-60↔60），保证数值一致
-        //            var reversedData = zeroLine.RgbData.Select(s => new RgbSample
-        //            {
-        //                Position = s.Position, // 角度标签保持-60~60不变
-        //                X = s.X,
-        //                Y = s.Y,
-        //                Z = s.Z
-        //            }).Reverse().ToList(); // 数据顺序反转，保证180°和0°数值一致
-
-        //            angleLines.Add(new PolarAngleLine
-        //            {
-        //                Angle = 180,
-        //                RgbData = reversedData
-        //            });
-        //        }
-        //        else
-        //        {
-        //            // 其他角度正常生成
-        //            angleLines.Add(ExportVAM_60To60_Fixed(phi, mat));
-        //        }
-        //    }
-
-        //    return angleLines;
-        //}
-
-        ///// <summary>
-        ///// 生成-60°~60°径向角度的直径线数据（核心修改）
-        ///// </summary>
-        //private PolarAngleLine ExportVAM_60To60_Fixed(double angle, Mat mat)
-        //{
-        //    PolarAngleLine polarLine = new PolarAngleLine
-        //    {
-        //        Angle = angle
-        //    };
-
-        //    double radians = angle * Math.PI / 180.0;
-
-        //    // 径向角度从-60°循环到60°
-        //    for (int theta = -60; theta <= 60; theta++)
-        //    {
-        //        // 半径像素数取绝对值（距离中心的像素数）
-        //        double radiusPixels = Math.Abs(theta) / ConoscopeCoefficient;
-        //        // 方向控制：theta为负时向角度反方向延伸
-        //        double direction = theta >= 0 ? 1 : -1;
-
-        //        // 计算像素坐标（适配正负角度）
-        //        double x = center.X + radiusPixels * Math.Cos(radians) * direction;
-        //        double y = center.Y + radiusPixels * Math.Sin(radians) * direction;
-
-        //        // 边界校验（增强版：避免越界）
-        //        int ix = Math.Max(0, Math.Min(mat.Width - 1, (int)Math.Round(x)));
-        //        int iy = Math.Max(0, Math.Min(mat.Height - 1, (int)Math.Round(y)));
-
-        //        // 提取像素值
-        //        double X = 0, Y = 0, Z = 0;
-        //        ExtractPixelValues(ix, iy, out X, out Y, out Z);
-
-        //        // 保存采样点（Position为-60~60的角度值）
-        //        polarLine.RgbData.Add(new RgbSample
-        //        {
-        //            Position = theta,
-        //            X = X,
-        //            Y = Y,
-        //            Z = Z
-        //        });
-        //    }
-
-        //    return polarLine;
-        //}
+      
     }
 }
