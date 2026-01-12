@@ -489,19 +489,8 @@
                                             Content="{DynamicResource VAM.Add}" />
                                     </StackPanel>
 
-                                    <!--  补充空白占位/统一间距（与Panel1对齐，可选保留）  -->
-                                    <StackPanel
-                                        Margin="0,0,0,8"
-                                        HorizontalAlignment="Left"
-                                        Orientation="Horizontal"
-                                        Visibility="Hidden">
-                                        <TextBlock Width="120" Margin="0,0,5,0" />
-                                        <TextBox
-                                            Width="100"
-                                            Height="22"
-                                            Margin="0,0,8,0" />
-                                        <Button Width="80" Content="{DynamicResource VAM.Apply}" />
-                                    </StackPanel>
+
+
 
                                     <!--  导出R圆CSV按钮 - 与Panel1导出按钮对齐统一  -->
                                     <Button
@@ -647,7 +636,7 @@
                     <Button
                         x:Name="btnExport"
                         Width="380"
-                        Height="20"
+                        Height="30"
                         Margin="0,5"
                         HorizontalAlignment="Center"
                         Click=" BtnExportClick"
