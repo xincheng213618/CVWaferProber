@@ -15,7 +15,7 @@ namespace CVWaferProber
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
-    public partial class App : System.Windows.Application
+    public partial class App : Application
     {
         
         private const string LIBRARY_CV_Ali = "CV_algorithm.dll";
@@ -27,6 +27,14 @@ namespace CVWaferProber
         [DllImport(LIBRARY_CV_Ali, EntryPoint = "CV_Ali_release",
             CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
         private static extern void CV_Ali_release();
+
+        // 导入 Win32 API：设置当前线程的区域设置
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern int SetThreadLocale(int localeId);
+
+        // 语言对应的 Locale ID（常用值，可直接使用）
+        private const int LOCALE_EN_US = 0x0409; // 英文（美国）
+        private const int LOCALE_ZH_CN = 0x0804; // 中文（中国）
 
         private static readonly ILog log = LogManager.GetLogger(typeof(App));
         protected override void OnStartup(StartupEventArgs e)
@@ -52,6 +60,7 @@ namespace CVWaferProber
 
             // 初始化语言（读取Settings中的默认语言）
             AppSettingsManager.InitializeLanguage();
+            
             // 1. 定义DataGrid行的样式（覆盖选中状态）
             var rowStyle = new Style(typeof(DataGridRow))
             {

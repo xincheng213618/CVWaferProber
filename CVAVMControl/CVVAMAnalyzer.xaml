@@ -154,6 +154,8 @@
             Grid.Row="1"
             Grid.Column="1"
             Margin="5,0,0,5"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
             BorderBrush="#FF3F3F46"
             BorderThickness="1">
             <Grid>
@@ -176,202 +178,479 @@
                     FontSize="14" />
 
                 <!--  参数区  -->
-                <Grid Grid.Row="1">
-                    <!--  面板1：直径线参数（默认显示）  -->
+                <Grid
+                    Grid.Row="1"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch">
+                    <!--  面板1：直径线参数（默认显示）  Background="AliceBlue"  -->
                     <StackPanel
                         x:Name="paramPanelDiameter"
                         Margin="5"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
                         Visibility="Visible">
+                        <Grid>
+
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Border
+                                Grid.Row="0"
+                                Margin="0,0,0,5"
+                                BorderBrush="#FF3F3F46"
+                                BorderThickness="1">
+                                <StackPanel Margin="5">
+                                    <StackPanel
+                                        Margin="0,0,0,8"
+                                        HorizontalAlignment="Left"
+                                        Orientation="Horizontal">
+                                        <TextBlock
+                                            Width="120"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Text="{DynamicResource VAM.ViewingAngle}" />
+                                        <ComboBox
+                                            x:Name="cbDisplayAngle"
+                                            Width="100"
+                                            VerticalAlignment="Center"
+                                            SelectedIndex="4"
+                                            SelectionChanged="CbDisplayAngle_SelectionChanged">
+                                            <ComboBoxItem Content="0°" Tag="0" />
+                                            <ComboBoxItem Content="30°" Tag="30" />
+                                            <ComboBoxItem Content="60°" Tag="60" />
+                                            <ComboBoxItem Content="90°" Tag="90" />
+                                            <ComboBoxItem Content="120°" Tag="120" />
+                                            <ComboBoxItem Content="150°" Tag="150" />
+                                            <ComboBoxItem Content="180°" Tag="180" />
+                                        </ComboBox>
+                                        <Button
+                                            Width="80"
+                                            Margin="8,0,0,0"
+                                            Padding="0"
+                                            VerticalAlignment="Center"
+                                            Click="BtnDeleteAngle_Diameter_Click"
+                                            Content="{DynamicResource VAM.Delete}" />
+                                    </StackPanel>
+
+                                    <StackPanel
+                                        Margin="0,0,0,8"
+                                        HorizontalAlignment="Left"
+                                        Orientation="Horizontal">
+                                        <TextBlock
+                                            Width="120"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Text="{DynamicResource VAM.DisplayChannel}" />
+                                        <ComboBox
+                                            x:Name="cbDisplayChannel"
+                                            Width="188"
+                                            VerticalAlignment="Center"
+                                            SelectedIndex="1"
+                                            SelectionChanged="CbDisplayChannel_SelectionChanged">
+                                            <ComboBoxItem Content="{DynamicResource VAM.XChannel}" Tag="X" />
+                                            <ComboBoxItem Content="{DynamicResource VAM.YChannel}" Tag="Y" />
+                                            <ComboBoxItem Content="{DynamicResource VAM.ZChannel}" Tag="Z" />
+                                        </ComboBox>
+                                    </StackPanel>
+
+                                    <StackPanel
+                                        Margin="0,0,0,8"
+                                        HorizontalAlignment="Left"
+                                        Orientation="Horizontal">
+                                        <TextBlock
+                                            Width="120"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Text="{DynamicResource VAM.AddAngle}" />
+                                        <TextBox
+                                            x:Name="txtAddAngle"
+                                            Width="100"
+                                            Height="22"
+                                            Margin="0,0,8,0"
+                                            VerticalAlignment="Center" />
+                                        <Button
+                                            Width="80"
+                                            Padding="0"
+                                            VerticalAlignment="Center"
+                                            Click="BtnAddAngle_Diameter_Click"
+                                            Content="{DynamicResource VAM.Add}" />
+                                    </StackPanel>
+
+                                    <StackPanel
+                                        Margin="0,0,0,8"
+                                        HorizontalAlignment="Left"
+                                        Orientation="Horizontal">
+                                        <TextBlock
+                                            Width="120"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Text="{DynamicResource VAM.SampleCount}" />
+                                        <TextBox
+                                            x:Name="pointNumLineBox"
+                                            Width="100"
+                                            Height="22"
+                                            Margin="0,0,8,0"
+                                            VerticalAlignment="Center" />
+                                        <Button
+                                            Width="80"
+                                            Padding="0"
+                                            VerticalAlignment="Center"
+                                            Click="Button_Click"
+                                            Content="{DynamicResource VAM.Apply}" />
+                                    </StackPanel>
+                                    <!--  导出按钮单独对齐  -->
+                                    <Button
+                                        x:Name="btnExportDiameter1"
+                                        Width="361"
+                                        Height="30"
+                                        Margin="0,10,0,0"
+                                        HorizontalAlignment="Left"
+                                        Click="BtnExportDiameter_Click1"
+                                        Content="{DynamicResource VAM.ExportDiameterLineCSV}"
+                                        RenderTransformOrigin="0.5,0.5">
+                                        <Button.RenderTransform>
+                                            <TransformGroup>
+                                                <ScaleTransform />
+                                                <SkewTransform AngleY="-0.074" />
+                                                <RotateTransform />
+                                                <TranslateTransform Y="-0.221" />
+                                            </TransformGroup>
+                                        </Button.RenderTransform>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+
+                            <Border
+                                Grid.Row="1"
+                                Margin="0,0,0,5"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                BorderBrush="#FF3F3F46"
+                                BorderThickness="1">
+                                <StackPanel Margin="5">
+                                    <StackPanel
+                                        Margin="0,10,0,8"
+                                        HorizontalAlignment="Left"
+                                        Orientation="Horizontal">
+                                        <TextBlock
+                                            Width="120"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Text="导出通道:" />
+                                        <CheckBox
+                                            x:Name="cbExportX"
+                                            Margin="0,0,10,0"
+                                            Content="X通道" />
+                                        <CheckBox
+                                            x:Name="cbExportY"
+                                            Margin="0,0,10,0"
+                                            Content="Y通道"
+                                            IsChecked="True" />
+                                        <CheckBox
+                                            x:Name="cbExportZ"
+                                            Margin="0,0,10,0"
+                                            Content="Z通道" />
+
+                                    </StackPanel>
+                                    <StackPanel
+                                        Margin="0,0,0,8"
+                                        HorizontalAlignment="Left"
+                                        Orientation="Horizontal">
+                                        <TextBlock
+                                            Width="120"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center" />
+                                        <CheckBox
+                                            x:Name="cbExportCieX"
+                                            Margin="0,0,55,0"
+                                            Content="cieX通道" />
+                                        <CheckBox x:Name="cbExportCieY" Content="cieY通道" />
+                                    </StackPanel>
+                                    <!--  线条模式参数（原VamExportDialog的线条参数）  -->
+                                    <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+                                        <TextBlock
+                                            Width="120"
+                                            Margin="0,0,5,0"
+                                            Text="极角范围(polar_RHO):" />
+                                        <TextBox
+                                            x:Name="txtLinePolarRHO"
+                                            Width="100"
+                                            Text="60" />
+                                        <TextBlock Margin="5,0,0,0" Text="°（[-值,值]）" />
+                                    </StackPanel>
+                                    <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+                                        <TextBlock
+                                            Width="120"
+                                            Margin="0,0,5,0"
+                                            Text="极角间隔角度：" />
+                                        <TextBox
+                                            x:Name="txtLinePolarInterval"
+                                            Width="100"
+                                            Text="1" />
+                                        <!--  默认间隔1°，对应[-60,60]共121点  -->
+                                        <TextBlock
+                                            x:Name="LinePolarIntervalBook"
+                                            Margin="5,0,0,0"
+                                            Text="°（[-60,60]，共121点）" />
+                                    </StackPanel>
+                                    <!--  导出按钮（替换原btnExportDiameter）  -->
+                                    <Button
+                                        x:Name="btnExportDiameter"
+                                        Width="361"
+                                        Height="30"
+                                        Margin="0,10,0,0"
+                                        HorizontalAlignment="Left"
+                                        Click="BtnExportDiameter_Click"
+                                        Content="导出方位角截面CSV" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
                         <!--  统一控件尺寸：设置TextBlock宽度、控件对齐方式  -->
-                        <StackPanel
-                            Margin="0,0,0,8"
-                            HorizontalAlignment="Left"
-                            Orientation="Horizontal">
-                            <TextBlock
-                                Width="120"
-                                Margin="0,0,5,0"
-                                VerticalAlignment="Center"
-                                Text="{DynamicResource VAM.ViewingAngle}" />
-                            <ComboBox
-                                x:Name="cbDisplayAngle"
-                                Width="100"
-                                VerticalAlignment="Center"
-                                SelectedIndex="4"
-                                SelectionChanged="CbDisplayAngle_SelectionChanged">
-                                <ComboBoxItem Content="0°" Tag="0" />
-                                <ComboBoxItem Content="30°" Tag="30" />
-                                <ComboBoxItem Content="60°" Tag="60" />
-                                <ComboBoxItem Content="90°" Tag="90" />
-                                <ComboBoxItem Content="120°" Tag="120" />
-                                <ComboBoxItem Content="150°" Tag="150" />
-                                <ComboBoxItem Content="180°" Tag="180" />
-                            </ComboBox>
-                            <Button
-                                Width="80"
-                                Margin="8,0,0,0"
-                                Padding="0"
-                                VerticalAlignment="Center"
-                                Click="BtnDeleteAngle_Diameter_Click"
-                                Content="{DynamicResource VAM.Delete}" />
-                        </StackPanel>
 
-                        <StackPanel
-                            Margin="0,0,0,8"
-                            HorizontalAlignment="Left"
-                            Orientation="Horizontal">
-                            <TextBlock
-                                Width="120"
-                                Margin="0,0,5,0"
-                                VerticalAlignment="Center"
-                                Text="{DynamicResource VAM.DisplayChannel}" />
-                            <ComboBox
-                                x:Name="cbDisplayChannel"
-                                Width="188"
-                                VerticalAlignment="Center"
-                                SelectedIndex="1"
-                                SelectionChanged="CbDisplayChannel_SelectionChanged">
-                                <ComboBoxItem Content="{DynamicResource VAM.XChannel}" Tag="X" />
-                                <ComboBoxItem Content="{DynamicResource VAM.YChannel}" Tag="Y" />
-                                <ComboBoxItem Content="{DynamicResource VAM.ZChannel}" Tag="Z" />
-                            </ComboBox>
-                        </StackPanel>
 
-                        <StackPanel
-                            Margin="0,0,0,8"
-                            HorizontalAlignment="Left"
-                            Orientation="Horizontal">
-                            <TextBlock
-                                Width="120"
-                                Margin="0,0,5,0"
-                                VerticalAlignment="Center"
-                                Text="{DynamicResource VAM.AddAngle}" />
-                            <TextBox
-                                x:Name="txtAddAngle"
-                                Width="100"
-                                Height="22"
-                                Margin="0,0,8,0"
-                                VerticalAlignment="Center" />
-                            <Button
-                                Width="80"
-                                Padding="0"
-                                VerticalAlignment="Center"
-                                Click="BtnAddAngle_Diameter_Click"
-                                Content="{DynamicResource VAM.Add}" />
-                        </StackPanel>
 
-                        <StackPanel
-                            Margin="0,0,0,8"
-                            HorizontalAlignment="Left"
-                            Orientation="Horizontal">
-                            <TextBlock
-                                Width="120"
-                                Margin="0,0,5,0"
-                                VerticalAlignment="Center"
-                                Text="{DynamicResource VAM.SampleCount}" />
-                            <TextBox
-                                x:Name="pointNumLineBox"
-                                Width="100"
-                                Height="22"
-                                Margin="0,0,8,0"
-                                VerticalAlignment="Center" />
-                            <Button
-                                Width="80"
-                                Padding="0"
-                                VerticalAlignment="Center"
-                                Click="Button_Click"
-                                Content="{DynamicResource VAM.Apply}" />
-                        </StackPanel>
 
-                        <!--  导出按钮单独对齐  -->
-                        <Button
-                            x:Name="btnExportDiameter"
-                            Width="313"
-                            Height="30"
-                            Margin="0,10,0,0"
-                            HorizontalAlignment="Left"
-                            Click="BtnExportDiameter_Click"
-                            Content="{DynamicResource VAM.ExportDiameterLineCSV}" />
+
+
+
+
                     </StackPanel>
                     <!--  面板2：R圆参数（默认隐藏）  -->
                     <StackPanel
                         x:Name="paramPanelRCircle"
                         Margin="5"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
                         Visibility="Collapsed">
-                        <!--  原第二行最后一项 - 与面板一对齐风格统一  -->
-                        <StackPanel
-                            Margin="0,0,0,8"
-                            HorizontalAlignment="Left"
-                            Orientation="Horizontal">
-                            <TextBlock
-                                Width="120"
-                                Margin="0,0,5,0"
-                                VerticalAlignment="Center"
-                                Text="{DynamicResource VAM.RCircleRadius}" />
-                            <ComboBox
-                                x:Name="cbDisplayRadius"
-                                Width="100"
-                                VerticalAlignment="Center"
-                                SelectedIndex="2"
-                                SelectionChanged="CbDisplayRadius_SelectionChanged">
-                                <ComboBoxItem Content="0°" Tag="0" />
-                                <ComboBoxItem Content="20°" Tag="20" />
-                                <ComboBoxItem Content="40°" Tag="40" />
-                                <ComboBoxItem Content="60°" Tag="60" />
-                            </ComboBox>
-                            <Button
-                                Width="80"
-                                Margin="8,0,0,0"
-                                Padding="0"
-                                VerticalAlignment="Center"
-                                Click="BtnDeleteAngle_RCircle_Click"
-                                Content="{DynamicResource VAM.Delete}" />
-                        </StackPanel>
-                        <StackPanel
-                            Margin="0,0,0,8"
-                            HorizontalAlignment="Left"
-                            Orientation="Horizontal">
-                            <TextBlock
-                                Width="120"
-                                Margin="0,0,5,0"
-                                VerticalAlignment="Center"
-                                Text="{DynamicResource VAM.AddAngle}" />
-                            <TextBox
-                                x:Name="txtAddAngle1"
-                                Width="100"
-                                Height="22"
-                                MinWidth="60"
-                                Margin="0,0,8,0"
-                                VerticalAlignment="Center" />
-                            <Button
-                                Width="80"
-                                Padding="0"
-                                VerticalAlignment="Center"
-                                Click="BtnAddAngle_RCircle_Click"
-                                Content="{DynamicResource VAM.Add}" />
-                        </StackPanel>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
 
-                        <!--  导出R圆CSV按钮 - 与面板一导出按钮对齐统一  -->
-                        <Button
-                            x:Name="btnExportCircle"
-                            Width="280"
-                            Height="35"
-                            Margin="0,10,0,0"
-                            HorizontalAlignment="Left"
-                            Click="BtnExportCircle_Click"
-                            Content="{DynamicResource VAM.ExportRCircleCSV}" />
+                            <!--  上层Border：R圆核心参数操作区（对应Panel1上层）  -->
+                            <Border
+                                Grid.Row="0"
+                                Margin="0,0,0,5"
+                                BorderBrush="#FF3F3F46"
+                                BorderThickness="1">
+                                <StackPanel Margin="5">
+                                    <StackPanel
+                                        Margin="0,0,0,8"
+                                        HorizontalAlignment="Left"
+                                        Orientation="Horizontal">
+                                        <TextBlock
+                                            Width="120"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Text="{DynamicResource VAM.RCircleRadius}" />
+                                        <ComboBox
+                                            x:Name="cbDisplayRadius"
+                                            Width="100"
+                                            VerticalAlignment="Center"
+                                            SelectedIndex="2"
+                                            SelectionChanged="CbDisplayRadius_SelectionChanged">
+                                            <ComboBoxItem Content="0°" Tag="0" />
+                                            <ComboBoxItem Content="20°" Tag="20" />
+                                            <ComboBoxItem Content="40°" Tag="40" />
+                                            <ComboBoxItem Content="60°" Tag="60" />
+                                        </ComboBox>
+                                        <Button
+                                            Width="80"
+                                            Margin="8,0,0,0"
+                                            Padding="0"
+                                            VerticalAlignment="Center"
+                                            Click="BtnDeleteAngle_RCircle_Click"
+                                            Content="{DynamicResource VAM.Delete}" />
+                                    </StackPanel>
 
+                                    <StackPanel
+                                        Margin="0,0,0,8"
+                                        HorizontalAlignment="Left"
+                                        Orientation="Horizontal">
+                                        <TextBlock
+                                            Width="120"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Text="{DynamicResource VAM.AddAngle}" />
+                                        <TextBox
+                                            x:Name="txtAddAngle1"
+                                            Width="100"
+                                            Height="22"
+                                            Margin="0,0,8,0"
+                                            VerticalAlignment="Center" />
+                                        <Button
+                                            Width="80"
+                                            Padding="0"
+                                            VerticalAlignment="Center"
+                                            Click="BtnAddAngle_RCircle_Click"
+                                            Content="{DynamicResource VAM.Add}" />
+                                    </StackPanel>
+
+                                    <!--  补充空白占位/统一间距（与Panel1对齐，可选保留）  -->
+                                    <StackPanel
+                                        Margin="0,0,0,8"
+                                        HorizontalAlignment="Left"
+                                        Orientation="Horizontal"
+                                        Visibility="Hidden">
+                                        <TextBlock Width="120" Margin="0,0,5,0" />
+                                        <TextBox
+                                            Width="100"
+                                            Height="22"
+                                            Margin="0,0,8,0" />
+                                        <Button Width="80" Content="{DynamicResource VAM.Apply}" />
+                                    </StackPanel>
+
+                                    <!--  导出R圆CSV按钮 - 与Panel1导出按钮对齐统一  -->
+                                    <Button
+                                        x:Name="btnExportCircle1"
+                                        Width="361"
+                                        Height="30"
+                                        Margin="0,10,0,0"
+                                        HorizontalAlignment="Left"
+                                        Click="BtnExportCircle_Click1"
+                                        Content="{DynamicResource VAM.ExportRCircleCSV}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  下层Border：R圆导出配置区（对应Panel1下层）  -->
+                            <Border
+                                Grid.Row="1"
+                                Margin="0,0,0,5"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                BorderBrush="#FF3F3F46"
+                                BorderThickness="1">
+                                <StackPanel Margin="5">
+                                    <!--  导出通道选择  -->
+                                    <StackPanel
+                                        Margin="0,10,0,8"
+                                        HorizontalAlignment="Left"
+                                        Orientation="Horizontal">
+                                        <TextBlock
+                                            Width="120"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Text="导出通道:" />
+                                        <CheckBox
+                                            x:Name="cbCircleExportX"
+                                            Margin="0,0,10,0"
+                                            Content="X通道" />
+                                        <CheckBox
+                                            x:Name="cbCircleExportY"
+                                            Margin="0,0,10,0"
+                                            Content="Y通道"
+                                            IsChecked="True" />
+                                        <CheckBox
+                                            x:Name="cbCircleExportZ"
+                                            Margin="0,0,10,0"
+                                            Content="Z通道" />
+                                    </StackPanel>
+
+                                    <StackPanel
+                                        Margin="0,0,0,8"
+                                        HorizontalAlignment="Left"
+                                        Orientation="Horizontal">
+                                        <TextBlock
+                                            Width="120"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center" />
+                                        <CheckBox
+                                            x:Name="cbCircleExportCieX"
+                                            Margin="0,0,5,0"
+                                            Content="cieX通道" />
+                                        <CheckBox
+                                            x:Name="cbCircleExportCieY"
+                                            Margin="0,0,55,0"
+                                            Content="cieY通道" />
+                                    </StackPanel>
+
+                                    <!--  圆环模式参数（原VamExportDialog的圆环参数）  -->
+                                    <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+                                        <TextBlock
+                                            Width="120"
+                                            Margin="0,0,5,0"
+                                            Text="极角起始值：" />
+                                        <TextBox
+                                            x:Name="txtCirclePolarStart"
+                                            Width="100"
+                                            Text="10" />
+                                        <TextBlock Margin="5,0,0,0" Text="°" />
+                                    </StackPanel>
+
+                                    <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+                                        <TextBlock
+                                            Width="120"
+                                            Margin="0,0,5,0"
+                                            Text="极角结束值：" />
+                                        <TextBox
+                                            x:Name="txtCirclePolarEnd"
+                                            Width="100"
+                                            Text="80" />
+                                        <TextBlock Margin="5,0,0,0" Text="°" />
+                                    </StackPanel>
+
+                                    <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+                                        <TextBlock
+                                            Width="120"
+                                            Margin="0,0,5,0"
+                                            Text="极角间隔：" />
+                                        <TextBox
+                                            x:Name="txtCirclePolarStep"
+                                            Width="100"
+                                            Text="10" />
+                                        <TextBlock Margin="5,0,0,0" Text="°" />
+                                    </StackPanel>
+
+                                    <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+                                        <TextBlock
+                                            Width="120"
+                                            Margin="0,0,5,0"
+                                            Text="方位角间隔角度：" />
+                                        <TextBox
+                                            x:Name="txtAzimuthInterval"
+                                            Width="100"
+                                            Text="3" />
+                                        <!--  默认间隔3°，对应[0,360)共120点  -->
+                                        <TextBlock
+                                            x:Name="AzimuthIntervalBook"
+                                            Margin="5,0,0,0"
+                                            Text="（[0,360)，共120点）" />
+                                    </StackPanel>
+                                    <!--  导出按钮 - 与Panel1导出按钮对齐统一  -->
+                                    <Button
+                                        x:Name="btnExportCircle"
+                                        Width="361"
+                                        Height="30"
+                                        Margin="0,10,0,0"
+                                        HorizontalAlignment="Left"
+                                        Click="BtnExportCircle_Click"
+                                        Content="导出圆环CSV" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
                     </StackPanel>
-
                 </Grid>
-                <StackPanel Grid.Row="2" Margin="5,0,5,5">
+                <!--<StackPanel Grid.Row="2" Margin="5,0,5,5">
                     <Button
                         x:Name="btnExport"
-                        Width="313"
+                        Width="343"
                         Height="30"
                         Margin="0,5"
                         HorizontalAlignment="Left"
                         Click="BtnExport_Click"
-                        Content="{DynamicResource Export CSV }"/>
+                        Content="{DynamicResource Export CSV}" />
+                </StackPanel>-->
+                <StackPanel Grid.Row="2" Margin="5,0,5,5">
+                    <Button
+                        x:Name="btnExport"
+                        Width="361"
+                        Height="30"
+                        Margin="0,5"
+                        HorizontalAlignment="Center"
+                        Click=" BtnExportClick"
+                        Content="{DynamicResource Export CSV}" />
                 </StackPanel>
 
             </Grid>
