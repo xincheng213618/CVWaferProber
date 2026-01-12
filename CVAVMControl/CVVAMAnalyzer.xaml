@@ -302,12 +302,22 @@
                                     <!--  导出按钮单独对齐  -->
                                     <Button
                                         x:Name="btnExportDiameter1"
-                                        Width="343"
+                                        Width="361"
                                         Height="30"
                                         Margin="0,10,0,0"
                                         HorizontalAlignment="Left"
                                         Click="BtnExportDiameter_Click1"
-                                        Content="{DynamicResource VAM.ExportDiameterLineCSV}" />
+                                        Content="{DynamicResource VAM.ExportDiameterLineCSV}"
+                                        RenderTransformOrigin="0.5,0.5">
+                                        <Button.RenderTransform>
+                                            <TransformGroup>
+                                                <ScaleTransform />
+                                                <SkewTransform AngleY="-0.074" />
+                                                <RotateTransform />
+                                                <TranslateTransform Y="-0.221" />
+                                            </TransformGroup>
+                                        </Button.RenderTransform>
+                                    </Button>
                                 </StackPanel>
                             </Border>
 
@@ -387,7 +397,7 @@
                                     <!--  导出按钮（替换原btnExportDiameter）  -->
                                     <Button
                                         x:Name="btnExportDiameter"
-                                        Width="343"
+                                        Width="361"
                                         Height="30"
                                         Margin="0,10,0,0"
                                         HorizontalAlignment="Left"
@@ -495,7 +505,7 @@
                                     <!--  导出R圆CSV按钮 - 与Panel1导出按钮对齐统一  -->
                                     <Button
                                         x:Name="btnExportCircle1"
-                                        Width="343"
+                                        Width="361"
                                         Height="30"
                                         Margin="0,10,0,0"
                                         HorizontalAlignment="Left"
@@ -611,7 +621,7 @@
                                     <!--  导出按钮 - 与Panel1导出按钮对齐统一  -->
                                     <Button
                                         x:Name="btnExportCircle"
-                                        Width="343"
+                                        Width="361"
                                         Height="30"
                                         Margin="0,10,0,0"
                                         HorizontalAlignment="Left"
@@ -635,14 +645,14 @@
                 <StackPanel Grid.Row="2" Margin="5,0,5,5">
                     <Button
                         x:Name="btnExport"
-                        Width="343"
+                        Width="361"
                         Height="30"
                         Margin="0,5"
-                        HorizontalAlignment="Left"
+                        HorizontalAlignment="Center"
                         Click=" BtnExportClick"
                         Content="{DynamicResource Export CSV}" />
                 </StackPanel>
-               
+
             </Grid>
         </Border>
     </Grid>
