@@ -2975,7 +2975,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 }
                 var measurement = new SpectrumEQEMeasurement(n++)
                 {
-                    Timestamp = result.CreateDate.HasValue? result.CreateDate.Value:DateTime.Now,
+                    Timestamp = result.CreateDate,
                     Meas_Id = result.BatchCode,
                     Voltage = voltage,
                     Current = current,
