@@ -2936,8 +2936,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     }
                 }
             }
-            IL_viewModel.LoadData(lv_results, il_results);
             IV_viewModel.LoadData(serialNumber);
+            IL_viewModel.LoadData(lv_results, il_results);
             VL_viewModel.LoadData(lv_results, il_results);
             //IVLCamera_viewModel.LoadData(lv_results, il_results);
             InitializeOverviewSeries();
