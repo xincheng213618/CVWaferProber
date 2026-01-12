@@ -302,10 +302,10 @@
                                     <!--  导出按钮单独对齐  -->
                                     <Button
                                         x:Name="btnExportDiameter1"
-                                        Width="361"
+                                        Width="380"
                                         Height="30"
                                         Margin="0,10,0,0"
-                                        HorizontalAlignment="Left"
+                                        HorizontalAlignment="Center"
                                         Click="BtnExportDiameter_Click1"
                                         Content="{DynamicResource VAM.ExportDiameterLineCSV}"
                                         RenderTransformOrigin="0.5,0.5">
@@ -397,10 +397,11 @@
                                     <!--  导出按钮（替换原btnExportDiameter）  -->
                                     <Button
                                         x:Name="btnExportDiameter"
-                                        Width="361"
+                                        Width="380"
                                         Height="30"
                                         Margin="0,10,0,0"
-                                        HorizontalAlignment="Left"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
                                         Click="BtnExportDiameter_Click"
                                         Content="导出方位角截面CSV" />
                                 </StackPanel>
@@ -488,27 +489,16 @@
                                             Content="{DynamicResource VAM.Add}" />
                                     </StackPanel>
 
-                                    <!--  补充空白占位/统一间距（与Panel1对齐，可选保留）  -->
-                                    <StackPanel
-                                        Margin="0,0,0,8"
-                                        HorizontalAlignment="Left"
-                                        Orientation="Horizontal"
-                                        Visibility="Hidden">
-                                        <TextBlock Width="120" Margin="0,0,5,0" />
-                                        <TextBox
-                                            Width="100"
-                                            Height="22"
-                                            Margin="0,0,8,0" />
-                                        <Button Width="80" Content="{DynamicResource VAM.Apply}" />
-                                    </StackPanel>
+
+
 
                                     <!--  导出R圆CSV按钮 - 与Panel1导出按钮对齐统一  -->
                                     <Button
                                         x:Name="btnExportCircle1"
-                                        Width="361"
+                                        Width="380"
                                         Height="30"
                                         Margin="0,10,0,0"
-                                        HorizontalAlignment="Left"
+                                        HorizontalAlignment="Stretch"
                                         Click="BtnExportCircle_Click1"
                                         Content="{DynamicResource VAM.ExportRCircleCSV}" />
                                 </StackPanel>
@@ -621,10 +611,10 @@
                                     <!--  导出按钮 - 与Panel1导出按钮对齐统一  -->
                                     <Button
                                         x:Name="btnExportCircle"
-                                        Width="361"
+                                        Width="380"
                                         Height="30"
                                         Margin="0,10,0,0"
-                                        HorizontalAlignment="Left"
+                                        HorizontalAlignment="Center"
                                         Click="BtnExportCircle_Click"
                                         Content="导出圆环CSV" />
                                 </StackPanel>
@@ -645,7 +635,7 @@
                 <StackPanel Grid.Row="2" Margin="5,0,5,5">
                     <Button
                         x:Name="btnExport"
-                        Width="361"
+                        Width="380"
                         Height="30"
                         Margin="0,5"
                         HorizontalAlignment="Center"
