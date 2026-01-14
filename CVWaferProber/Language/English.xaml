@@ -181,7 +181,7 @@
     <sys:String x:Key="VAM.cieXChannel">cieXChannel</sys:String>
     <sys:String x:Key="VAM.cieYChannel">cieYChannel</sys:String>
     <sys:String x:Key="VAM.Polar_RHO">Polar Angle Range:</sys:String>
-   
+
     <sys:String x:Key="VAM.Value">°（[-Value,Value]）</sys:String>
     <sys:String x:Key="VAM.Angleinterval">Polar Angle Interval:</sys:String>
     <sys:String x:Key="VAM.Samplingpoint">°（[-60,60]，A total of 121 points）</sys:String>
@@ -195,6 +195,7 @@
     <sys:String x:Key="VAM.Azimuthinterval">Azimuth Angle Interval:</sys:String>
     <sys:String x:Key="VAM.FSamplingpoint">（[0,360)，A total of 120 points）</sys:String>
 
+
     <sys:String x:Key="Plot.Title.DiameterLine">AzimuthAngle Cross-Section Distribution</sys:String>
     <sys:String x:Key="Plot.Title.RCircle">PolarAngle Cross-Section Distribution</sys:String>
     <sys:String x:Key="Plot.Axis.X">Degrees</sys:String>
@@ -203,11 +204,20 @@
     <sys:String x:Key="VAM.ExportDiameterLineCSV">Export Azimuth Angle Cross-Section CSV (0°~180°)</sys:String>
     <sys:String x:Key="VAM.ExportRCircleCSV">Export Polar Angle Cross-Section CSV</sys:String>
 
+    <sys:String x:Key="VAM.SaveAzimuth">Save Azimuth Angle Section Data</sys:String>
+    <sys:String x:Key="VAM.SavePolar">Save Polar Angle Section Data</sys:String>
+    <sys:String x:Key="VAM.Switchedtodefaultvalue">The Polar Angle Interval parameter is invalid and has been automatically switched to the default value.</sys:String>
+    <sys:String x:Key="VAM.Switchedtoazimuthvalue">The Azimuth Angle Interval parameter is invalid and has been automatically switched to the default value.</sys:String>
+    <sys:String x:Key="VAM.DLLcallfailed">DLL call failed. Please load a valid CVCIE file first!</sys:String>
+    <sys:String x:Key="VAM.Noexport">Failed to obtain DLL data. Export is not possible！</sys:String>
+    <sys:String x:Key="VAM.Create">Create VAM Export Directory</sys:String>
+    <sys:String x:Key="VAM.AngleStep">Polar Angle Step</sys:String>
+
     <sys:String x:Key="VAM.RCircle">PolarAngle</sys:String>
     <sys:String x:Key="VAM.CircumferentialDistributionCurve">Cross-Section Distribution Curve</sys:String>
     <!--<sys:String x:Key="VAM.CircumferentialAngle">Circumferential Angle (°)</sys:String>
     <sys:String x:Key="VAM.PixelValue">Pixel Value</sys:String>-->
-    
+
     <sys:String x:Key="VAM.Onechannel">Please select at least one export channel!</sys:String>
     <!--  EQE相关  -->
     <sys:String x:Key="EQE.luminous_flux">luminousflux</sys:String>

@@ -187,7 +187,7 @@
     <sys:String x:Key="VAM.cieXChannel">cieX通道</sys:String>
     <sys:String x:Key="VAM.cieYChannel">cieY通道</sys:String>
     <sys:String x:Key="VAM.Polar_RHO">极角范围:</sys:String>
-   
+
     <sys:String x:Key="VAM.Value">°（[-值,值]）</sys:String>
     <sys:String x:Key="VAM.Angleinterval">极角间隔角度:</sys:String>
     <sys:String x:Key="VAM.Samplingpoint">°（[-60,60]，共121点）</sys:String>
@@ -208,6 +208,17 @@
     <sys:String x:Key="VAM.RCircleRadius">极角半径:</sys:String>
     <sys:String x:Key="VAM.ExportDiameterLineCSV">导出方位角截面CSV (0°~180°)</sys:String>
     <sys:String x:Key="VAM.ExportRCircleCSV">导出极角截面CSV</sys:String>
+
+    <sys:String x:Key="VAM.SaveAzimuth">保存方位角截面数据</sys:String>
+    <sys:String x:Key="VAM.SavePolar">保存极角截面数据</sys:String>
+    <sys:String x:Key="VAM.Switchedtodefaultvalue">极角间隔参数无效，自动切换为默认值</sys:String>
+    <sys:String x:Key="VAM.Switchedtoazimuthvalue">方位角间隔参数无效，自动切换为默认值</sys:String>
+    <sys:String x:Key="VAM.DLLcallfailed">DLL调用失败，请先加载有效CVCIE文件！</sys:String>
+    <sys:String x:Key="VAM.Noexport">DLL数据获取失败，无法导出！</sys:String>
+    <sys:String x:Key="VAM.Create">创建VAM导出目录</sys:String>
+    <sys:String x:Key="VAM.AngleStep">极角步长</sys:String>
+    <sys:String x:Key="VAM.ExportAzimuth">极角步长</sys:String>
+    
 
 
     <sys:String x:Key="VAM.RCircle">极角</sys:String>

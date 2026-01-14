@@ -3130,7 +3130,7 @@ namespace CVAVMControl
                 {
                     if (YMat == null || YMat.Empty())
                     {
-                        MessageBox.Show("没有可导出的数据", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show($"{FindResource("Nodata")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                         return;
                     }
 
@@ -3144,7 +3144,7 @@ namespace CVAVMControl
 
                     if (!dllSuccess)
                     {
-                        MessageBox.Show("DLL数据获取失败，无法导出", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show($"{FindResource("VAM.Noexport")}", $"{FindResource("Log.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
 
@@ -3156,7 +3156,7 @@ namespace CVAVMControl
                     if (!Directory.Exists(exportPath))
                     {
                         Directory.CreateDirectory(exportPath);
-                        logger.Info($"创建VAM导出目录：{exportPath}");
+                        logger.Info($"{FindResource("VAM.Create")}：{ exportPath}");
                     }
                     // 按示例表格格式导出（原有逻辑不变）
                     using (var writer = new StreamWriter(exportPath, false, Encoding.UTF8))
@@ -3203,11 +3203,11 @@ namespace CVAVMControl
                         }
                     }
 
-                    logger.Info($"VAM数据已按要求导出至：\n{exportPath}");
+                    logger.Info($"VAM data has been exported as required to：\n{exportPath}");
                 }
                 catch (Exception ex)
                 {
-                    logger.Error("VAM数据导出失败", ex);
+                    logger.Error($"{FindResource("Exportfailed")}", ex); 
                     //MessageBox.Show($"导出失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             });
@@ -3341,6 +3341,11 @@ namespace CVAVMControl
         {
             try
             {
+                if (YMat == null || YMat.Empty())
+                {
+                    MessageBox.Show($"{FindResource("Nodata")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
                 // 1. 校验通道
                 var selectedChannels = GetDiameterSelectedChannels();
                 if (selectedChannels.Count == 0)
@@ -3354,19 +3359,19 @@ namespace CVAVMControl
                 {
                     Filter = "CSV Files (*.csv)|*.csv",
                     FileName = $"VAM_Diameter_{DateTime.Now:yyyyMMdd_HHmmss}",
-                    Title = "保存直径线数据"
+                    Title = $"{FindResource("VAM.SaveAzimuth")}"
                 };
                 if (saveFileDialog.ShowDialog() != true) return;
                 string basePath = Path.ChangeExtension(saveFileDialog.FileName, null);
 
                 // 3. 执行原VamExportDialog的线条模式导出逻辑
-                ExportLineMode(selectedChannels, basePath);
+                ExportLineMode(selectedChannels, basePath); 
 
-                MessageBox.Show("直径线数据导出成功！", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"{FindResource("Exportsuccessful")}", $"{FindResource(" Log.Success")}", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"导出失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"{FindResource("Exportfailed")}：{ex.Message}", $"{FindResource("State.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         private void ExportLineMode(List<ExportDataType> selectedChannels, string basePath)
@@ -3379,8 +3384,8 @@ namespace CVAVMControl
             if (polarInterval <= 0 || polarInterval > 2 * polarRHO)
             {
                 polarInterval = 1; // 默认1°间隔
-                logger.Warn($"极角间隔参数无效，自动切换为默认值：{polarInterval}°");
-                MessageBox.Show($"极角间隔参数无效，已自动切换为默认值 {polarInterval}°", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                logger.Warn($"{FindResource("VAM.Switchedtodefaultvalue")}：{polarInterval}°");
+                //MessageBox.Show($"极角间隔参数无效，已自动切换为默认值 {polarInterval}°", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
             }
 
             // 2. 动态计算采样点：按间隔角度生成 [-polarRHO, polarRHO] 范围内的所有采样点
@@ -3401,7 +3406,7 @@ namespace CVAVMControl
                 polarAngles.AddRange(new List<double> { -polarRHO, 0, polarRHO }); // 兜底采样点
             }
             int lineSampleCount = polarAngles.Count;
-            logger.Info($"直径线模式：极角范围 [-{polarRHO},{polarRHO}]°，间隔 {polarInterval}°，共生成 {lineSampleCount} 个采样点");
+            logger.Info($" The polar angle range is [-{polarRHO}, {polarRHO}] degrees, with an interval of {polarInterval} degrees, resulting in a total of {lineSampleCount} sampling points being generated.");
 
             // 3. 方位角范围：[0, 180°]（VAM业务标准范围，1°间隔）
             List<double> azimuthAngles = Enumerable.Range(0, 181).Select(x => (double)x).ToList();
@@ -3416,7 +3421,7 @@ namespace CVAVMControl
 
             if (!dllSuccess || _dllAllAzimuthData == null || _dllAllAzimuthData.Count == 0)
             {
-                throw new Exception("DLL调用失败，无法获取直径线全量数据，请先加载有效CVCIE文件！");
+                throw new Exception($"{FindResource("VAM.DLLcallfailed")}");
             }
 
             // 5. 为每个选中通道生成独立CSV文件（按动态采样点填充数据）
@@ -3474,7 +3479,7 @@ namespace CVAVMControl
                     }
                 }
 
-                logger.Info($"直径线通道 {channel} 导出成功，路径：{fullCsvPath}");
+                logger.Info($"Channel {channel} has been exported successfully. Export path: {fullCsvPath}");
             }
             // 1. 参数解析与校验（适配现有控件，保证容错性）
             //    int polarRHO = 60; // 默认极角范围
@@ -3585,11 +3590,16 @@ namespace CVAVMControl
         {
             try
             {
+                if (YMat == null || YMat.Empty())
+                {
+                    MessageBox.Show($"{FindResource("Nodata")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
                 // 1. 校验通道
                 var selectedChannels = GetCircleSelectedChannels();
                 if (selectedChannels.Count == 0)
                 {
-                    MessageBox.Show("请至少选择一个导出通道！", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show($"{FindResource("VAM.Onechannel")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -3598,7 +3608,7 @@ namespace CVAVMControl
                 {
                     Filter = "CSV Files (*.csv)|*.csv",
                     FileName = $"VAM_Circle_{DateTime.Now:yyyyMMdd_HHmmss}",
-                    Title = "保存圆环数据"
+                    Title = $"{FindResource("VAM.SavePolar")}"
                 };
                 if (saveFileDialog.ShowDialog() != true) return;
                 string basePath = Path.ChangeExtension(saveFileDialog.FileName, null);
@@ -3606,11 +3616,11 @@ namespace CVAVMControl
                 // 3. 执行原VamExportDialog的圆环模式导出逻辑
                 ExportCircleMode(selectedChannels, basePath);
 
-                MessageBox.Show("圆环数据导出成功！", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"{FindResource("Exportsuccessful")}", $"{FindResource(" Log.Success")}", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"导出失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"{FindResource("Exportfailed")}：{ex.Message}", $"{FindResource("State.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         private void ExportCircleMode(List<ExportDataType> selectedChannels, string basePath)
@@ -3625,8 +3635,8 @@ namespace CVAVMControl
             if (azimuthInterval <= 0 || azimuthInterval > 360)
             {
                 azimuthInterval = 3; // 默认3°间隔
-                logger.Warn($"方位角间隔参数无效，自动切换为默认值：{azimuthInterval}°");
-                MessageBox.Show($"方位角间隔参数无效，已自动切换为默认值 {azimuthInterval}°", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                logger.Warn($"{FindResource("VAM.Switchedtoazimuthvalue")}：{azimuthInterval}°");
+                //MessageBox.Show($"{FindResource("VAM.Switchedtoazimuthvalue")} {azimuthInterval}°", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
             }
 
             // 2. 动态生成极角采样点（圆环半径角度）
@@ -3637,7 +3647,7 @@ namespace CVAVMControl
             }
             // 兜底：确保至少有一个极角采样点
             if (polarAngles.Count == 0) polarAngles.Add(polarStart);
-            logger.Info($"圆环模式：极角范围 [{polarStart},{polarEnd}]°，步长 {polarStep}°，共生成 {polarAngles.Count} 个圆环");
+            logger.Info($"The polar angle range is [{polarStart}, {polarEnd}] degrees, with a step size of {polarStep} degrees, resulting in a total of {polarAngles.Count} rings being generated.");
 
             // 3. 动态生成方位角采样点（按界面间隔角度，覆盖 [0, 360°)）
             List<double> azimuthAngles = new List<double>();
@@ -3656,7 +3666,7 @@ namespace CVAVMControl
                 azimuthAngles = Enumerable.Range(0, 36).Select(x => (double)(x * 10)).ToList();
                 azimuthSampleCount = 36;
             }
-            logger.Info($"圆环模式：方位角范围 [0,360)°，间隔 {azimuthInterval}°，共生成 {azimuthSampleCount} 个采样点");
+            logger.Info($"Azimuth Angle Range [0, 360)°, Interval {azimuthInterval:F2}°, a total of {azimuthSampleCount} sampling points generated.");
 
             // 4. 调用DLL批量获取全量圆环数据（传入动态计算的采样点数量）
             bool dllSuccess = this.CallVamDllForAllCircle(
@@ -3668,7 +3678,8 @@ namespace CVAVMControl
 
             if (!dllSuccess || DllAllCircleData == null || DllAllCircleData.Count == 0)
             {
-                throw new Exception("DLL调用失败，无法获取圆环全量数据，请先加载有效CVCIE文件！");
+               
+                throw new Exception($"{FindResource(" VAM.DLLcallfailed")}");
             }
 
             // 5. 为每个选中通道生成独立CSV文件
@@ -3681,8 +3692,8 @@ namespace CVAVMControl
                 using (var writer = new StreamWriter(fullCsvPath, false, Encoding.UTF8))
                 {
                     // 5.1 写入标准化表头（包含间隔角度信息）
-                    writer.WriteLine($"Measurement Date,,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,");
-                    writer.WriteLine($"Instrument,,VAM R-Circle（[{polarStart},{polarEnd}]°，极角步长 {polarStep}°，方位角间隔 {azimuthInterval}°）,,,,,,,,,,,,");
+                    writer.WriteLine($"Measurement Date,,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,"); 
+                    writer.WriteLine($"Instrument,,VAM R-Circle（[{polarStart},{polarEnd}]°，{FindResource(" VAM.AngleStep")} {polarStep}°，{FindResource(" VAM.azimuthInterval")} {azimuthInterval}°）,,,,,,,,,,,,");
                     writer.WriteLine(); // 空行分隔
                     StringBuilder headerBuilder = new StringBuilder();
                     headerBuilder.Append("Radius Angle(°)"); // 第一列：半径角度（极角）
@@ -3728,7 +3739,7 @@ namespace CVAVMControl
                     }
                 }
 
-                logger.Info($"圆环通道 {channel} 导出成功，路径：{fullCsvPath}");
+                logger.Info($"Ring Channel {channel} has been exported successfully. Export path: {fullCsvPath}");
             }
         }
         // 从圆环采样点中获取指定通道的值（需确保RgbSample类已定义）
