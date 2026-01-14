@@ -1882,7 +1882,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             {
                 if (data == null || !data.Any())
                 {
-                    System.Windows.MessageBox.Show((string)Application.Current.FindResource("Nodata"));
+                    MessageBox.Show((string)Application.Current.FindResource("Nodata"));
                     return;
                 }
                 if (string.IsNullOrWhiteSpace(filePath))
@@ -1973,13 +1973,16 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private ChipMappingControlViewModel _chipMappingControlViewModel;
         public void ExportToCsv(string fileName, ObservableCollection<SpectrumMeasurement> measurements, float[]? wavelengths, float fPlambda = 1.0f)
         {
-            if (measurements == null || !measurements.Any() || wavelengths == null || wavelengths.Length == 0)
+            if (measurements == null || !measurements.Any() )
             {
                 MessageBox.Show((string)Application.Current.FindResource("Nodata"), (string)Application.Current.FindResource("Prompt"));
                 return;
                
             }
-
+            if (wavelengths == null || wavelengths.Length == 0)
+            {
+                log.Info("No wavelength information");
+            }
             const int Step = 10;
             const int MinWave = 380;
             const int MaxWave = 780;

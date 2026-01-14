@@ -1921,7 +1921,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             {
                 if (data == null || !data.Any())
                 {
-                    System.Windows.MessageBox.Show((string)Application.Current.FindResource("Nodata"));
+                    MessageBox.Show((string)Application.Current.FindResource("Nodata"));
                     return;
                 }
                 if (string.IsNullOrWhiteSpace(filePath))
