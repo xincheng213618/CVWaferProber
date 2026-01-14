@@ -259,7 +259,7 @@ namespace CVWaferProber.Services
 
         public override void AutoExportData()
         {
-           
+            if (wpfFlowViewModel == null) return;
             if (wpfFlowViewModel.FlowType == CVWaferProberFlowType.IV)
             {
                 var IVMeasurements = CustomIVLVM.IVMeasurements;
