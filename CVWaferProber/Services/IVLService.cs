@@ -261,7 +261,7 @@ namespace CVWaferProber.Services
         //    var dataRows = BuildIVLCsvDataRows(die);
         //    return AutoExportHelper.GenerateCsvWithWavelengths(ivlHeader, dataRows, die.Wavelengths, die.Intensities);
         //}
-        /// <summary>
+        /// <summary> 
         /// 构建IVL CSV的数据行
         /// </summary>
         private List<string> BuildIVLCsvDataRows(DieViewModel die)

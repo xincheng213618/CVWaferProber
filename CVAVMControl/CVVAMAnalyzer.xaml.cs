@@ -266,10 +266,52 @@ namespace CVAVMControl
                 }
             };
             InitializeEvents();
-
+            this.IsVisibleChanged += OnCVVAMAnalyzerVisibleChanged;
             //this.Unloaded += CVVAMAnalyzer_Unloaded;
         }
+        /// <summary>
+        /// 当控件可见性发生变化时触发
+        /// </summary>
+        private void OnCVVAMAnalyzerVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            // 当控件变为可见时，重新设置图表的Autoscale
+            if (IsVisible)
+            {
+                // 延迟一小段时间确保UI已完全加载
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    ResetChartScales();
+                }), DispatcherPriority.Render);
+            }
+        }
+        /// <summary>
+        /// 重置图表缩放为AutoScale
+        /// </summary>
+        private void ResetChartScales()
+        {
+            try
+            {
+                // 重置直径线图表
+                if (wpfPlotDiameterLine != null && wpfPlotDiameterLine.Plot != null)
+                {
+                    wpfPlotDiameterLine.Plot.Axes.AutoScale();
+                    wpfPlotDiameterLine.Refresh();
+                }
 
+                // 重置R圆图表
+                if (wpfPlotRCircle != null && wpfPlotRCircle.Plot != null)
+                {
+                    wpfPlotRCircle.Plot.Axes.AutoScale();
+                    wpfPlotRCircle.Refresh();
+                }
+
+                logger.Info("图表已重置为AutoScale");
+            }
+            catch (Exception ex)
+            {
+                logger.Error("重置图表AutoScale失败", ex);
+            }
+        }
         private void InitializeEvents(IEventAggregator? eventAggregator = null)
         {
             this.EventAggregator = eventAggregator == null ? CVWPEventAggregatorInstance.Instance : eventAggregator;
@@ -552,104 +594,6 @@ namespace CVAVMControl
             }
         }
 
-        //#region 裁切Mat图像（通用接口）
-        ///// <summary>
-        ///// 裁切Mat图像（通用接口）
-        ///// </summary>
-        ///// <param name="srcMat">原始Mat</param>
-        ///// <param name="cropX">裁切起始X</param>
-        ///// <param name="cropY">裁切起始Y</param>
-        ///// <param name="cropWidth">裁切宽度</param>
-        ///// <param name="cropHeight">裁切高度</param>
-        ///// <returns>裁切后的Mat（深拷贝，避免原Mat释放后失效）</returns>
-        //private Mat CropMat(Mat srcMat, int cropX, int cropY, int cropWidth, int cropHeight)
-        //{
-        //    if (srcMat == null || srcMat.Empty())
-        //        throw new ArgumentNullException(nameof(srcMat), "原始Mat为空");
-
-        //    // 验证并修正裁切区域
-        //    Rect cropRect = new Rect(
-        //        x: Math.Max(0, cropX),
-        //        y: Math.Max(0, cropY),
-        //        width: Math.Min(cropWidth, srcMat.Width - Math.Max(0, cropX)),
-        //        height: Math.Min(cropHeight, srcMat.Height - Math.Max(0, cropY))
-        //    );
-
-        //    if (cropRect.Width <= 0 || cropRect.Height <= 0)
-        //        return srcMat.Clone(); // 无效区域返回原Mat深拷贝
-
-        //    // 执行裁切并返回深拷贝
-        //    return new Mat(srcMat, cropRect).Clone();
-        //}
-        //#endregion
-        /// <summary>
-        /// 处理CVCIE文件
-        /// </summary>
-        //private void ProcessCVCIEFile(string filename)
-        //{
-        //    try
-        //    {
-        //        XMat?.Dispose();
-        //        YMat?.Dispose();
-        //        ZMat?.Dispose();
-
-        //        CVCIEFile fileInfo = new CVCIEFile();
-        //        CVFileUtil.Read(filename, out fileInfo);
-
-        //        int channelSize = fileInfo.Cols * fileInfo.Rows * (fileInfo.Bpp / 8);
-        //        int allPixLen = fileInfo.Cols * fileInfo.Rows * (fileInfo.Bpp / 8) * fileInfo.Channels;
-        //        OpenCvSharp.MatType singleChannelType;
-        //        switch (fileInfo.Bpp)
-        //        {
-        //            case 8: singleChannelType = OpenCvSharp.MatType.CV_8UC1; break;
-        //            case 16: singleChannelType = OpenCvSharp.MatType.CV_16UC1; break;
-        //            case 32: singleChannelType = OpenCvSharp.MatType.CV_32FC1; break; // Most likely for XYZ
-        //            case 64: singleChannelType = OpenCvSharp.MatType.CV_64FC1; break;
-        //            default: throw new NotSupportedException($"Bpp {fileInfo.Bpp} not supported");
-        //        }
-        //        if (fileInfo.Channels == 3)
-        //        {
-        //            byte[] dataX = new byte[channelSize];
-        //            byte[] dataY = new byte[channelSize];
-        //            byte[] dataZ = new byte[channelSize];
-
-        //            Buffer.BlockCopy(fileInfo.Data, 0, dataX, 0, channelSize);
-        //            Buffer.BlockCopy(fileInfo.Data, channelSize, dataY, 0, channelSize);
-        //            Buffer.BlockCopy(fileInfo.Data, channelSize * 2, dataZ, 0, channelSize);
-        //            //dataXyz
-        //            if (dataXyz == null || dataXyz.Length != allPixLen)
-        //            {
-        //                dataXyz = new byte[allPixLen];
-        //            }
-        //            Buffer.BlockCopy(fileInfo.Data, 0, dataXyz, 0, allPixLen);
-        //            XMat = OpenCvSharp.Mat.FromPixelData(fileInfo.Cols, fileInfo.Rows, singleChannelType, dataX);
-        //            YMat = OpenCvSharp.Mat.FromPixelData(fileInfo.Cols, fileInfo.Rows, singleChannelType, dataY);
-        //            ZMat = OpenCvSharp.Mat.FromPixelData(fileInfo.Cols, fileInfo.Rows, singleChannelType, dataZ);
-        //        }
-        //        center = new System.Windows.Point(YMat.Width / 2.0, YMat.Height / 2.0);
-        //        imageRadius = (int)(MaxAngle / ConoscopeCoefficient);
-
-        //        // 初始化：默认选中第一个角度
-        //        if (cbDisplayAngle.Items.Count > 0 && cbDisplayAngle.Items[0] is ComboBoxItem firstItem)
-        //        {
-        //            cbDisplayAngle.SelectedItem = firstItem;
-        //            if (int.TryParse(firstItem.Tag?.ToString(), out int firstAngle))
-        //            {
-        //                _selectedAngle = firstAngle;
-        //            }
-        //        }
-        //        UpdateDisplay();
-
-        //        fileInfo.Dispose();
-        //        _isDataValid = true;
-        //    }
-
-        //    catch (Exception ex)
-        //    {
-        //        string errorMsg = (string)Application.Current.FindResource("State.Error");
-        //        MessageBox.Show($"{(string)Application.Current.FindResource("Anerroroccurredwhileprocessingthefile")}: {ex.Message}", $"{errorMsg}", MessageBoxButton.OK, MessageBoxImage.Error);
-        //    }
-        //}
         private void ProcessCVCIEFile(string filename)
         {
             try
@@ -1490,6 +1434,8 @@ namespace CVAVMControl
             ResetImageScale();
             PlotDiameterLineChart();
             PlotRCircleChart();
+            // 额外确保AutoScale
+            ResetChartScales();
         }
         /// <summary>
         /// 辅助方法：读取ComboBox中所有ComboBoxItem的Tag值（转为double）
@@ -1541,7 +1487,11 @@ namespace CVAVMControl
             wpfPlotDiameterLine.Plot.Clear();
 
             if (diameterLine.RgbData.Count == 0)
+            {
+                wpfPlotDiameterLine.Plot.Axes.SetLimits(-80, 80, 0, 600);
+                wpfPlotDiameterLine.Refresh();
                 return;
+            }
 
             // Get values for the selected channel
             double[] positions = diameterLine.RgbData.Select(s => s.Position).ToArray();
@@ -1569,6 +1519,7 @@ namespace CVAVMControl
 
             if (circleLine.RgbData.Count == 0)
             {
+                wpfPlotRCircle.Plot.Axes.AutoScale();
                 wpfPlotRCircle.Refresh();
                 return;
             }
@@ -1733,11 +1684,41 @@ namespace CVAVMControl
             _isDataValid = false;
             displayAngle = 120;
             displayRadius = 40;
-            wpfPlotDiameterLine.Plot.Clear();
-            wpfPlotRCircle.Plot.Clear();
-            wpfPlotDiameterLine.Refresh();
-            wpfPlotRCircle.Refresh();
+            // 清空图表
+            if (wpfPlotDiameterLine != null && wpfPlotDiameterLine.Plot != null)
+            {
+                wpfPlotDiameterLine.Plot.Clear();
+                wpfPlotDiameterLine.Plot.Axes.AutoScale();
+                wpfPlotDiameterLine.Refresh();
+            }
+
+            if (wpfPlotRCircle != null && wpfPlotRCircle.Plot != null)
+            {
+                wpfPlotRCircle.Plot.Clear();
+                wpfPlotRCircle.Plot.Axes.AutoScale();
+                wpfPlotRCircle.Refresh();
+            }
+
             imgDisplay.Source = null;
+        }
+        /// <summary>
+        /// 公开方法：强制刷新图表缩放
+        /// </summary>
+        public void RefreshChartsAutoScale()
+        {
+            if (!IsVisible) return;
+
+            try
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    ResetChartScales();
+                });
+            }
+            catch (Exception ex)
+            {
+                logger.Error("刷新图表AutoScale失败", ex);
+            }
         }
         public void UpdateVAMParams(double maxAngle, double conoscopeCoefficient)
         {
@@ -2734,6 +2715,7 @@ namespace CVAVMControl
 
             if (dllData.Count == 0)
             {
+                wpfPlotDiameterLine.Plot.Axes.AutoScale();
                 wpfPlotDiameterLine.Refresh();
                 return;
             }
@@ -2772,6 +2754,7 @@ namespace CVAVMControl
 
             if (dllData.Count == 0)
             {
+                wpfPlotRCircle.Plot.Axes.AutoScale();
                 wpfPlotRCircle.Refresh();
                 return;
             }
@@ -3814,7 +3797,7 @@ namespace CVAVMControl
             }
         }
         #endregion
-      
+       
     }
 
     internal class CropCenter

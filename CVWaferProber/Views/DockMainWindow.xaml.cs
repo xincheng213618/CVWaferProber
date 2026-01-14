@@ -1,4 +1,5 @@
-﻿using CVWaferProber.Log;
+﻿using CVAVMControl;
+using CVWaferProber.Log;
 using CVWaferProber.Services;
 using CVWaferProber.ViewModels;
 using CVWPFSpectrometerCtrl;
@@ -10,6 +11,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using MessageBox = System.Windows.MessageBox;
 using TabControl = System.Windows.Controls.TabControl;
 

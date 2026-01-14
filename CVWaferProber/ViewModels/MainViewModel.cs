@@ -3,6 +3,7 @@ using AvalonDock.Layout;
 using ChipMapping.Models;
 using ChipMapping.ViewModels;
 using ColorVision.Core.Entities;
+using CVAVMControl;
 using CVDB.Services.Buz;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
@@ -24,6 +25,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Threading;
 using WaferComm.Core;
 using Application = System.Windows.Application;
 using Binding = System.Windows.Data.Binding;
@@ -31,6 +33,7 @@ using CheckBox = System.Windows.Controls.CheckBox;
 using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
+using TabControl = System.Windows.Controls.TabControl;
 
 
 namespace CVWaferProber.ViewModels
@@ -543,9 +546,9 @@ namespace CVWaferProber.ViewModels
                     Application.Current.Shutdown();
                 }
             });
-
-            // 反选命令初始化
-            InvertSelectAOICommand = new RelayCommand(ExecuteInvertSelectAOI);
+           
+        // 反选命令初始化
+        InvertSelectAOICommand = new RelayCommand(ExecuteInvertSelectAOI);
             InvertSelectIVLCommand = new RelayCommand(ExecuteInvertSelectIVL);
             InvertSelectEQECommand = new RelayCommand(ExecuteInvertSelectEQE);
             InvertSelectVAMCommand = new RelayCommand(ExecuteInvertSelectVAM);
@@ -1597,6 +1600,7 @@ namespace CVWaferProber.ViewModels
         //    mainService.DoDieFlowExec(_selectedWPFlow, currentDie, false);
         //}
         public CVSpectrumAnalyzer? SpPanelView { get; set; }
+        private TabControl? _spInnerTabControl;
         private void StartManFlow()
         {
             if (SelectedWPFlow != null && SelectedItem is DieViewModel die)
@@ -1607,11 +1611,11 @@ namespace CVWaferProber.ViewModels
                 // 新增：强制切换到SP面板的Overview标签页
                 if (SelectedWPFlow.FlowType == CVWaferProberFlowType.IVL_SP && SpPanelView != null)
                 {
-                    var outerTab = SpPanelView.FindName("outerTabControl") as System.Windows.Controls.TabControl;
-                    if (outerTab != null)
+                    _spInnerTabControl = SpPanelView.FindName("innerTabControl") as System.Windows.Controls.TabControl;
+                    if (_spInnerTabControl != null)
                     {
-                        outerTab.SelectedIndex = 0; // 切换到Overview标签页
-                        outerTab.UpdateLayout();
+                        _spInnerTabControl.SelectedIndex = 0; // 切换到Overview标签页
+                        _spInnerTabControl.UpdateLayout();
                     }
                 }
 
