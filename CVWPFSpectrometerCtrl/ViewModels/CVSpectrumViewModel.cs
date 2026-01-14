@@ -1975,7 +1975,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             if (measurements == null || !measurements.Any() )
             {
-                MessageBox.Show((string)Application.Current.FindResource("Nodata"), (string)Application.Current.FindResource("Prompt"));
+                log.Info((string)Application.Current.FindResource("Nodata"));
                 return;
                
             }
