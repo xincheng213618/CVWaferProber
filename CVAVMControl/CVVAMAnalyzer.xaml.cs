@@ -26,6 +26,7 @@ using System.Windows.Shapes;
 using System.Windows.Threading;
 using WaferComm.Core;
 using Path = System.IO.Path;
+using Rect = System.Windows.Rect;
 
 
 namespace CVAVMControl
@@ -49,7 +50,7 @@ namespace CVAVMControl
         private System.Windows.Point center;
         private int imageRadius;
         private double MaxAngle = 60; // Default max angle
-        private double ConoscopeCoefficient = 0.01935; // Pixels per degree 0.02645
+        private double ConoscopeCoefficient = 0.02645; // Pixels per degree   0.01935
 
         private int displayAngle = 120; // Default display angle
         private ExportChannel displayChannel = ExportChannel.Y; // Default display channel
@@ -111,7 +112,18 @@ namespace CVAVMControl
             byte[] dstData                // 第13个参数：输出图像数据
         );
 
-        // 4. 新增封装调用方法（适配ImageData入参）
+        // 新增：裁切正方形的DLL导入（如果DLL有现成裁切接口，优先用DLL；无则用OpenCV实现）
+        [DllImport(LIBRARY_CV_Ali, EntryPoint = "CV_Ali_cutVamImage",
+          CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        private static extern CV_AliResType CV_Ali_cutVamImage(
+            IntPtr handle,       // 第1个参数：句柄
+            ref int w,           // 第2个参数：图像宽度（ref）
+            ref int h,           // 第3个参数：图像高度（ref）
+            int bpp,             // 第4个参数：每像素位数
+            int channels,        // 第5个参数：通道数
+            byte[] data,         // 第6个参数：图像数据
+            string staticJson    // 第7个参数：JSON参数
+        );
         // 2. 修正封装调用方法
         private CV_AliResType CallCV_Ali_calcVam(ImageData bgrImg, ImageData xyzImg, string paramJson, out string resultJson, out ImageData showImage)
         {
@@ -540,9 +552,105 @@ namespace CVAVMControl
             }
         }
 
+        //#region 裁切Mat图像（通用接口）
+        ///// <summary>
+        ///// 裁切Mat图像（通用接口）
+        ///// </summary>
+        ///// <param name="srcMat">原始Mat</param>
+        ///// <param name="cropX">裁切起始X</param>
+        ///// <param name="cropY">裁切起始Y</param>
+        ///// <param name="cropWidth">裁切宽度</param>
+        ///// <param name="cropHeight">裁切高度</param>
+        ///// <returns>裁切后的Mat（深拷贝，避免原Mat释放后失效）</returns>
+        //private Mat CropMat(Mat srcMat, int cropX, int cropY, int cropWidth, int cropHeight)
+        //{
+        //    if (srcMat == null || srcMat.Empty())
+        //        throw new ArgumentNullException(nameof(srcMat), "原始Mat为空");
+
+        //    // 验证并修正裁切区域
+        //    Rect cropRect = new Rect(
+        //        x: Math.Max(0, cropX),
+        //        y: Math.Max(0, cropY),
+        //        width: Math.Min(cropWidth, srcMat.Width - Math.Max(0, cropX)),
+        //        height: Math.Min(cropHeight, srcMat.Height - Math.Max(0, cropY))
+        //    );
+
+        //    if (cropRect.Width <= 0 || cropRect.Height <= 0)
+        //        return srcMat.Clone(); // 无效区域返回原Mat深拷贝
+
+        //    // 执行裁切并返回深拷贝
+        //    return new Mat(srcMat, cropRect).Clone();
+        //}
+        //#endregion
         /// <summary>
         /// 处理CVCIE文件
         /// </summary>
+        //private void ProcessCVCIEFile(string filename)
+        //{
+        //    try
+        //    {
+        //        XMat?.Dispose();
+        //        YMat?.Dispose();
+        //        ZMat?.Dispose();
+
+        //        CVCIEFile fileInfo = new CVCIEFile();
+        //        CVFileUtil.Read(filename, out fileInfo);
+
+        //        int channelSize = fileInfo.Cols * fileInfo.Rows * (fileInfo.Bpp / 8);
+        //        int allPixLen = fileInfo.Cols * fileInfo.Rows * (fileInfo.Bpp / 8) * fileInfo.Channels;
+        //        OpenCvSharp.MatType singleChannelType;
+        //        switch (fileInfo.Bpp)
+        //        {
+        //            case 8: singleChannelType = OpenCvSharp.MatType.CV_8UC1; break;
+        //            case 16: singleChannelType = OpenCvSharp.MatType.CV_16UC1; break;
+        //            case 32: singleChannelType = OpenCvSharp.MatType.CV_32FC1; break; // Most likely for XYZ
+        //            case 64: singleChannelType = OpenCvSharp.MatType.CV_64FC1; break;
+        //            default: throw new NotSupportedException($"Bpp {fileInfo.Bpp} not supported");
+        //        }
+        //        if (fileInfo.Channels == 3)
+        //        {
+        //            byte[] dataX = new byte[channelSize];
+        //            byte[] dataY = new byte[channelSize];
+        //            byte[] dataZ = new byte[channelSize];
+
+        //            Buffer.BlockCopy(fileInfo.Data, 0, dataX, 0, channelSize);
+        //            Buffer.BlockCopy(fileInfo.Data, channelSize, dataY, 0, channelSize);
+        //            Buffer.BlockCopy(fileInfo.Data, channelSize * 2, dataZ, 0, channelSize);
+        //            //dataXyz
+        //            if (dataXyz == null || dataXyz.Length != allPixLen)
+        //            {
+        //                dataXyz = new byte[allPixLen];
+        //            }
+        //            Buffer.BlockCopy(fileInfo.Data, 0, dataXyz, 0, allPixLen);
+        //            XMat = OpenCvSharp.Mat.FromPixelData(fileInfo.Cols, fileInfo.Rows, singleChannelType, dataX);
+        //            YMat = OpenCvSharp.Mat.FromPixelData(fileInfo.Cols, fileInfo.Rows, singleChannelType, dataY);
+        //            ZMat = OpenCvSharp.Mat.FromPixelData(fileInfo.Cols, fileInfo.Rows, singleChannelType, dataZ);
+        //        }
+        //        center = new System.Windows.Point(YMat.Width / 2.0, YMat.Height / 2.0);
+        //        imageRadius = (int)(MaxAngle / ConoscopeCoefficient);
+
+        //        // 初始化：默认选中第一个角度
+        //        if (cbDisplayAngle.Items.Count > 0 && cbDisplayAngle.Items[0] is ComboBoxItem firstItem)
+        //        {
+        //            cbDisplayAngle.SelectedItem = firstItem;
+        //            if (int.TryParse(firstItem.Tag?.ToString(), out int firstAngle))
+        //            {
+        //                _selectedAngle = firstAngle;
+        //            }
+        //        }
+        //        UpdateDisplay();
+
+        //        fileInfo.Dispose();
+        //        _isDataValid = true;
+        //    }
+
+        //    catch (Exception ex)
+        //    {
+        //        string errorMsg = (string)Application.Current.FindResource("State.Error");
+        //        MessageBox.Show($"{(string)Application.Current.FindResource("Anerroroccurredwhileprocessingthefile")}: {ex.Message}", $"{errorMsg}", MessageBoxButton.OK, MessageBoxImage.Error);
+        //    }
+        //}
+        // 原有方法保持不变，修改ProcessCVCIEFile方法，添加裁切逻辑
         private void ProcessCVCIEFile(string filename)
         {
             try
@@ -554,40 +662,146 @@ namespace CVAVMControl
                 CVCIEFile fileInfo = new CVCIEFile();
                 CVFileUtil.Read(filename, out fileInfo);
 
-                int channelSize = fileInfo.Cols * fileInfo.Rows * (fileInfo.Bpp / 8);
-                int allPixLen = fileInfo.Cols * fileInfo.Rows * (fileInfo.Bpp / 8) * fileInfo.Channels;
-                OpenCvSharp.MatType singleChannelType;
-                switch (fileInfo.Bpp)
+                // ========== 新增：裁切正方形核心逻辑 ==========
+                int originalCols = fileInfo.Cols;
+                int originalRows = fileInfo.Rows;
+                int bpp = fileInfo.Bpp;
+                int channelSize = originalCols * originalRows * (bpp / 8);
+                int allPixLen = originalCols * originalRows * (bpp / 8) * fileInfo.Channels;
+
+                // 1. 计算裁切后的正方形尺寸（取宽高最小值）
+                int squareSize = Math.Min(originalCols, originalRows);
+                int cropChannelSize = squareSize * squareSize * (bpp / 8);
+                int cropAllPixLen = cropChannelSize * fileInfo.Channels;
+
+                // 2. 初始化裁切后的数据缓冲区
+                byte[] croppedData = new byte[cropAllPixLen];
+                byte[] croppedX = new byte[cropChannelSize];
+                byte[] croppedY = new byte[cropChannelSize];
+                byte[] croppedZ = new byte[cropChannelSize];
+
+                string cropJson = JsonConvert.SerializeObject(new
                 {
-                    case 8: singleChannelType = OpenCvSharp.MatType.CV_8UC1; break;
-                    case 16: singleChannelType = OpenCvSharp.MatType.CV_16UC1; break;
-                    case 32: singleChannelType = OpenCvSharp.MatType.CV_32FC1; break; // Most likely for XYZ
-                    case 64: singleChannelType = OpenCvSharp.MatType.CV_64FC1; break;
-                    default: throw new NotSupportedException($"Bpp {fileInfo.Bpp} not supported");
+                    RHO = 60.0,//线条角度
+                    pixelToAngle = ConoscopeCoefficient,
+                    center = new CropCenter
+                    {
+                        x = originalCols / 2.0,
+                        y = originalRows / 2.0
+                    }
+                });
+                // 3. 优先调用DLL裁切接口；若DLL无此接口，使用OpenCV裁切
+                bool useDllCrop = true; // 可配置是否使用DLL裁切
+                if (useDllCrop)
+                {
+                    int dstW = squareSize;
+                    int dstH = squareSize;
+                    CV_AliResType cropResult = CV_Ali_cutVamImage(
+                        IntPtr.Zero,
+                        ref dstW,          // ref参数：输出裁切后宽度
+                        ref dstH,          // ref参数：输出裁切后高度
+                        bpp,
+                        fileInfo.Channels,
+                        fileInfo.Data,     // 输入图像数据
+                        cropJson           // JSON参数
+                    );
+
+                    if (cropResult == CV_AliResType.SUCCESS)
+                    {
+                        squareSize = dstW; // 以DLL返回的尺寸为准
+                        cropChannelSize = squareSize * squareSize * (bpp / 8);
+                        // 同步更新裁切后的中心坐标（DLL裁切成功后，中心为裁切后图像的中心）
+                        logger.Info($"DLL裁切成功，裁切后尺寸：{squareSize}x{squareSize}");
+
+                    }
+                    else
+                    {
+                        logger.Warn("DLL裁切正方形失败");
+                        useDllCrop = false;
+                    }
                 }
+
+                //if (!useDllCrop)
+                //{
+                //    // OpenCV裁切实现：将原始数据转为Mat，裁切为正方形
+                //    OpenCvSharp.MatType singleChannelType = bpp switch
+                //    {
+                //        8 => MatType.CV_8UC1,
+                //        16 => MatType.CV_16UC1,
+                //        32 => MatType.CV_32FC1,
+                //        64 => MatType.CV_64FC1,
+                //        _ => MatType.CV_32FC1
+                //    };
+
+                //    // 分离原始XYZ数据
+                //    byte[] originalX = new byte[channelSize];
+                //    byte[] originalY = new byte[channelSize];
+                //    byte[] originalZ = new byte[channelSize];
+                //    Buffer.BlockCopy(fileInfo.Data, 0, originalX, 0, channelSize);
+                //    Buffer.BlockCopy(fileInfo.Data, channelSize, originalY, 0, channelSize);
+                //    Buffer.BlockCopy(fileInfo.Data, channelSize * 2, originalZ, 0, channelSize);
+
+                //    // 转为Mat并裁切
+                //    using (Mat srcXMat = Mat.FromPixelData(originalCols, originalRows, singleChannelType, originalX))
+                //    using (Mat srcYMat = Mat.FromPixelData(originalCols, originalRows, singleChannelType, originalY))
+                //    using (Mat srcZMat = Mat.FromPixelData(originalCols, originalRows, singleChannelType, originalZ))
+                //    {
+                //        // 计算裁切区域（居中裁切）
+                //        int cropX = (originalCols - squareSize) / 2;
+                //        int cropY = (originalRows - squareSize) / 2;
+                //        OpenCvSharp.Rect cropRect = new OpenCvSharp.Rect(cropX, cropY, squareSize, squareSize);
+
+                //        // 执行裁切
+                //        using (Mat croppedXMat = new Mat(srcXMat, cropRect))
+                //        using (Mat croppedYMat = new Mat(srcYMat, cropRect))
+                //        using (Mat croppedZMat = new Mat(srcZMat, cropRect))
+                //        {
+                //            // 将裁切后的Mat转为字节数组
+                //            croppedX = new byte[cropChannelSize];
+                //            croppedY = new byte[cropChannelSize];
+                //            croppedZ = new byte[cropChannelSize];
+                //            Marshal.Copy(croppedXMat.Data, croppedX, 0, cropChannelSize);
+                //            Marshal.Copy(croppedYMat.Data, croppedY, 0, cropChannelSize);
+                //            Marshal.Copy(croppedZMat.Data, croppedZ, 0, cropChannelSize);
+
+                //            // 拼接裁切后的XYZ数据
+                //            croppedData = new byte[cropAllPixLen];
+                //            Buffer.BlockCopy(croppedX, 0, croppedData, 0, cropChannelSize);
+                //            Buffer.BlockCopy(croppedY, 0, croppedData, cropChannelSize, cropChannelSize);
+                //            Buffer.BlockCopy(croppedZ, 0, croppedData, cropChannelSize * 2, cropChannelSize);
+                //        }
+                //    }
+                //}
+
+                // ========== 原有逻辑适配裁切后的数据 ==========
+                OpenCvSharp.MatType singleChannelTypeFinal = bpp switch
+                {
+                    8 => MatType.CV_8UC1,
+                    16 => MatType.CV_16UC1,
+                    32 => MatType.CV_32FC1,
+                    64 => MatType.CV_64FC1,
+                    _ => throw new NotSupportedException($"Bpp {bpp} not supported")
+                };
+
                 if (fileInfo.Channels == 3)
                 {
-                    byte[] dataX = new byte[channelSize];
-                    byte[] dataY = new byte[channelSize];
-                    byte[] dataZ = new byte[channelSize];
-
-                    Buffer.BlockCopy(fileInfo.Data, 0, dataX, 0, channelSize);
-                    Buffer.BlockCopy(fileInfo.Data, channelSize, dataY, 0, channelSize);
-                    Buffer.BlockCopy(fileInfo.Data, channelSize * 2, dataZ, 0, channelSize);
-                    //dataXyz
-                    if (dataXyz == null || dataXyz.Length != allPixLen)
+                    // 使用裁切后的数据
+                    if (dataXyz == null || dataXyz.Length != cropAllPixLen)
                     {
-                        dataXyz = new byte[allPixLen];
+                        dataXyz = new byte[cropAllPixLen];
                     }
-                    Buffer.BlockCopy(fileInfo.Data, 0, dataXyz, 0, allPixLen);
-                    XMat = OpenCvSharp.Mat.FromPixelData(fileInfo.Cols, fileInfo.Rows, singleChannelType, dataX);
-                    YMat = OpenCvSharp.Mat.FromPixelData(fileInfo.Cols, fileInfo.Rows, singleChannelType, dataY);
-                    ZMat = OpenCvSharp.Mat.FromPixelData(fileInfo.Cols, fileInfo.Rows, singleChannelType, dataZ);
+                    Buffer.BlockCopy(croppedData, 0, dataXyz, 0, cropAllPixLen);
+
+                    XMat = Mat.FromPixelData(squareSize, squareSize, singleChannelTypeFinal, croppedX);
+                    YMat = Mat.FromPixelData(squareSize, squareSize, singleChannelTypeFinal, croppedY);
+                    ZMat = Mat.FromPixelData(squareSize, squareSize, singleChannelTypeFinal, croppedZ);
                 }
+
+                // 更新中心坐标为裁切后正方形的中心
                 center = new System.Windows.Point(YMat.Width / 2.0, YMat.Height / 2.0);
                 imageRadius = (int)(MaxAngle / ConoscopeCoefficient);
 
-                // 初始化：默认选中第一个角度
+                // 初始化默认选中角度
                 if (cbDisplayAngle.Items.Count > 0 && cbDisplayAngle.Items[0] is ComboBoxItem firstItem)
                 {
                     cbDisplayAngle.SelectedItem = firstItem;
@@ -596,19 +810,20 @@ namespace CVAVMControl
                         _selectedAngle = firstAngle;
                     }
                 }
-                UpdateDisplay();
 
+                UpdateDisplay();
                 fileInfo.Dispose();
                 _isDataValid = true;
-            }
 
+                logger.Info($"成功裁切为正方形，原始尺寸：{originalCols}x{originalRows}，裁切后尺寸：{squareSize}x{squareSize}");
+            }
             catch (Exception ex)
             {
                 string errorMsg = (string)Application.Current.FindResource("State.Error");
                 MessageBox.Show($"{(string)Application.Current.FindResource("Anerroroccurredwhileprocessingthefile")}: {ex.Message}", $"{errorMsg}", MessageBoxButton.OK, MessageBoxImage.Error);
+                logger.Error("处理CVCIE文件并裁切正方形失败", ex);
             }
         }
-
         #region 角度备注绘制（通用方法）
         /// <summary>
         /// 绘制角度/半径备注（通用方法，支持不同位置和样式）
@@ -2907,7 +3122,7 @@ namespace CVAVMControl
             }
            
         }
-        private void BtnExportClick(object sender, RoutedEventArgs e)
+        public void BtnExportClick()
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
@@ -2934,16 +3149,15 @@ namespace CVAVMControl
                     }
 
                     // 选择导出路径
-                    SaveFileDialog saveFileDialog = new SaveFileDialog
+                    // 1. 固定导出根路径
+                    string exportPath = @"D:\Project\VAM";
+
+                    // 2. 确保目标目录存在（不存在则自动创建，避免路径不存在异常）
+                    if (!Directory.Exists(exportPath))
                     {
-                        Filter = "CSV Files (*.csv)|*.csv",
-                        FileName = $"VAM_Export_{displayChannel}_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
-                        Title = "保存VAM数据（0°~180°方位角）"
-                    };
-
-                    if (saveFileDialog.ShowDialog() != true) return;
-                    string exportPath = saveFileDialog.FileName;
-
+                        Directory.CreateDirectory(exportPath);
+                        logger.Info($"创建VAM导出目录：{exportPath}");
+                    }
                     // 按示例表格格式导出（原有逻辑不变）
                     using (var writer = new StreamWriter(exportPath, false, Encoding.UTF8))
                     {
@@ -2989,12 +3203,12 @@ namespace CVAVMControl
                         }
                     }
 
-                    MessageBox.Show($"VAM数据已按要求导出至：\n{exportPath}", "导出成功", MessageBoxButton.OK, MessageBoxImage.Information);
+                    logger.Info($"VAM数据已按要求导出至：\n{exportPath}");
                 }
                 catch (Exception ex)
                 {
                     logger.Error("VAM数据导出失败", ex);
-                    MessageBox.Show($"导出失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    //MessageBox.Show($"导出失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             });
         }
@@ -3060,7 +3274,7 @@ namespace CVAVMControl
             string polarRhoInput = txtLinePolarRHO.Text.Trim();
             if (!int.TryParse(polarRhoInput, out int polarRHO) || polarRHO <= 0)
             {
-                LinePolarIntervalBook.Text = "（[-60,60]间隔无效，共0点）";
+                LinePolarIntervalBook.Text = (string)Application.Current.FindResource("VAM.60Point") ;
                 return;
             }
 
@@ -3068,7 +3282,7 @@ namespace CVAVMControl
             string intervalInput = txtLinePolarInterval.Text.Trim();
             if (!double.TryParse(intervalInput, out double polarInterval) || polarInterval <= 0)
             {
-                LinePolarIntervalBook.Text = $"（[-{polarRHO},{polarRHO}]间隔无效，共0点）";
+                LinePolarIntervalBook.Text = $"（[-{polarRHO},{polarRHO}]{(string)Application.Current.FindResource("VAM.InvalidInterval")}，0{(string)Application.Current.FindResource("VAM.Points")}）";
                 return;
             }
 
@@ -3076,7 +3290,7 @@ namespace CVAVMControl
             int sampleCount = (int)(Math.Abs(2 * polarRHO) / polarInterval) + 1;
 
             // 4. 更新备注文本
-            LinePolarIntervalBook.Text = $"（[-{polarRHO},{polarRHO}]间隔{polarInterval}°，共{sampleCount}点）";
+            LinePolarIntervalBook.Text = $"（[-{polarRHO},{polarRHO}]{(string)Application.Current.FindResource("VAM.Interval")}{polarInterval}°，{sampleCount}{(string)Application.Current.FindResource("VAM.Points")}）";
 
             // 5. 同步更新全局变量
             _linePolarInterval = polarInterval;
@@ -3087,7 +3301,7 @@ namespace CVAVMControl
             string intervalInput = txtAzimuthInterval.Text.Trim();
             if (!double.TryParse(intervalInput, out double azimuthInterval) || azimuthInterval <= 0)
             {
-                AzimuthIntervalBook.Text = "（[0,360)间隔无效，共0点）";
+                AzimuthIntervalBook.Text = (string)Application.Current.FindResource("VAM.360Point");
                 return;
             }
 
@@ -3095,7 +3309,7 @@ namespace CVAVMControl
             int sampleCount = (int)(360 / azimuthInterval);
 
             // 3. 更新备注文本
-            AzimuthIntervalBook.Text = $"（[0,360)间隔{azimuthInterval}°，共{sampleCount}点）";
+            AzimuthIntervalBook.Text = $"（[0,360){(string)Application.Current.FindResource("VAM.Interval")}{azimuthInterval}°，{sampleCount}{(string)Application.Current.FindResource("VAM.Points")}）";
 
             // 4. 同步更新全局变量
             _azimuthInterval = azimuthInterval;
@@ -3131,7 +3345,7 @@ namespace CVAVMControl
                 var selectedChannels = GetDiameterSelectedChannels();
                 if (selectedChannels.Count == 0)
                 {
-                    MessageBox.Show("请至少选择一个导出通道！", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show($"{FindResource("VAM.Onechannel")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -3215,8 +3429,10 @@ namespace CVAVMControl
                 using (var writer = new StreamWriter(fullCsvPath, false, Encoding.UTF8))
                 {
                     // 5.1 写入标准化表头（符合VAM业务格式）
-                    writer.WriteLine($"Measurement Date,,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,");
-                    writer.WriteLine($"Instrument,,VAM {polarRHO}°（极角间隔 {polarInterval}°）,,,,,,,,,,,,");
+                    writer.WriteLine($"Measurement Date,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,");
+                    writer.WriteLine($"Instrument,VAM {polarRHO}°,,,,,,,,,,,,");
+                    writer.WriteLine($"Channel,{channel},,,,,,,,,,,,");
+                    writer.WriteLine($"PolarInterval,{polarInterval}°,,,,,,,,,,,,,");
                     writer.WriteLine(); // 空行分隔
                     StringBuilder headerBuilder = new StringBuilder();
                     headerBuilder.Append("Polar Angle(°)"); // 第一列：极角（径向角度）
@@ -3614,5 +3830,11 @@ namespace CVAVMControl
         }
         #endregion
       
+    }
+
+    internal class CropCenter
+    {
+        public double x { get; set; }
+        public double y { get; set; }
     }
 }

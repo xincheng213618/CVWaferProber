@@ -15,6 +15,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\ChipMapping\ChipMapping.csproj" />
 		<ProjectReference Include="..\CVDB\CVDB.csproj" />
 		<ProjectReference Include="..\CVWaferProber.Core\CVWaferProber.Core.csproj" />
 		<ProjectReference Include="..\WaferProberClient\WaferComm.Client\WaferComm.Client.csproj" />

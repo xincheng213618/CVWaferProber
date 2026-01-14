@@ -90,6 +90,7 @@
 
             </Grid>
         </Border>
+        
         <!--  添加GridSplitter  -->
         <GridSplitter
             Grid.Row="2"
@@ -182,6 +183,7 @@
                     Grid.Row="1"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch">
+
                     <!--  面板1：直径线参数（默认显示）  Background="AliceBlue"  -->
                     <StackPanel
                         x:Name="paramPanelDiameter"
@@ -198,7 +200,7 @@
                             <Border
                                 Grid.Row="0"
                                 Margin="0,0,0,5"
-                                BorderBrush="#FF3F3F46"
+                                BorderBrush="#803F3F46"
                                 BorderThickness="1">
                                 <StackPanel Margin="5">
                                     <StackPanel
@@ -302,7 +304,7 @@
                                     <!--  导出按钮单独对齐  -->
                                     <Button
                                         x:Name="btnExportDiameter1"
-                                        Width="380"
+                                        Width="400"
                                         Height="30"
                                         Margin="0,10,0,0"
                                         HorizontalAlignment="Center"
@@ -320,92 +322,109 @@
                                     </Button>
                                 </StackPanel>
                             </Border>
-
-                            <Border
+                            <Expander
                                 Grid.Row="1"
-                                Margin="0,0,0,5"
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Stretch"
-                                BorderBrush="#FF3F3F46"
-                                BorderThickness="1">
-                                <StackPanel Margin="5">
-                                    <StackPanel
-                                        Margin="0,10,0,8"
-                                        HorizontalAlignment="Left"
-                                        Orientation="Horizontal">
-                                        <TextBlock
-                                            Width="120"
-                                            Margin="0,0,5,0"
-                                            VerticalAlignment="Center"
-                                            Text="导出通道:" />
-                                        <CheckBox
-                                            x:Name="cbExportX"
-                                            Margin="0,0,10,0"
-                                            Content="X通道" />
-                                        <CheckBox
-                                            x:Name="cbExportY"
-                                            Margin="0,0,10,0"
-                                            Content="Y通道"
-                                            IsChecked="True" />
-                                        <CheckBox
-                                            x:Name="cbExportZ"
-                                            Margin="0,0,10,0"
-                                            Content="Z通道" />
+                                BorderThickness="1"
+                                Header="{DynamicResource VAM.Exportparameterconfiguration}">
+                                <Border
+                                    Margin="0,5,0,5"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    BorderBrush="#803F3F49"
+                                    BorderThickness="1">
+                                    <StackPanel Margin="5,0">
+                                        <StackPanel
+                                            Margin="0,10,0,8"
+                                            HorizontalAlignment="Left"
+                                            Orientation="Horizontal">
+                                            <TextBlock
+                                                Width="120"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Text="{DynamicResource VAM.ExporChannel}" />
+                                            <CheckBox
+                                                x:Name="cbExportX"
+                                                Margin="0,0,10,0"
+                                                Content="{DynamicResource VAM.XChannel}" />
+                                            <CheckBox
+                                                x:Name="cbExportY"
+                                                Margin="0,0,10,0"
+                                                Content="{DynamicResource VAM.YChannel}"
+                                                IsChecked="True" />
+                                            <CheckBox
+                                                x:Name="cbExportZ"
+                                                Margin="0,0,10,0"
+                                                Content="{DynamicResource VAM.ZChannel}" />
 
+                                        </StackPanel>
+                                        <StackPanel
+                                            Margin="0,0,0,8"
+                                            HorizontalAlignment="Left"
+                                            Orientation="Horizontal">
+                                            <TextBlock
+                                                Width="120"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center" />
+                                            <CheckBox
+                                                x:Name="cbExportCieX"
+                                                Margin="0,0,55,0"
+                                                Content="{DynamicResource VAM.cieXChannel}" />
+                                            <CheckBox x:Name="cbExportCieY" Content="{DynamicResource VAM.cieYChannel}" />
+                                        </StackPanel>
+                                        <!--  线条模式参数（原VamExportDialog的线条参数）  -->
+                                        <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+                                            <TextBlock
+                                                Width="120"
+                                                Margin="0,0,5,0"
+                                                Text="{DynamicResource VAM.Polar_RHO}" 
+                                                ToolTip="Polar_RHO"/>
+                                                 
+                                            <TextBox
+                                                x:Name="txtLinePolarRHO"
+                                                Width="100"
+                                                Text="60" />
+                                            <TextBlock Margin="5,0,0,0" Text="{DynamicResource VAM.Value}" />
+                                        </StackPanel>
+                                        <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+                                            <TextBlock
+                                                Width="120"
+                                                Margin="0,0,5,0"
+                                                Text="{DynamicResource VAM.Angleinterval}" />
+                                            <TextBox
+                                                x:Name="txtLinePolarInterval"
+                                                Width="100"
+                                                Text="1" />
+                                            <!--  默认间隔1°，对应[-60,60]共121点  -->
+                                            <TextBlock
+                                                x:Name="LinePolarIntervalBook"
+                                                Margin="5,0,0,0"
+                                                Text="" />
+                                        </StackPanel>
+                                        <!--  导出按钮（替换原btnExportDiameter）  -->
+                                        <Button
+                                            x:Name="btnExportDiameter"
+                                            Width="400"
+                                            Height="30"
+                                            Margin="0,10,0,5"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Click="BtnExportDiameter_Click"
+                                            Content="{DynamicResource VAM.ExportDiameterLineCSV}" />
+                                        <!--<StackPanel Grid.Row="2" Margin="5,0,5,5">
+                                            <Button
+                                                x:Name="btnExport"
+                                                Width="380"
+                                                Height="30"
+                                                Margin="0,5"
+                                                HorizontalAlignment="Center"
+
+                                                Content="{DynamicResource Export CSV}" />
+                                        </StackPanel>-->
                                     </StackPanel>
-                                    <StackPanel
-                                        Margin="0,0,0,8"
-                                        HorizontalAlignment="Left"
-                                        Orientation="Horizontal">
-                                        <TextBlock
-                                            Width="120"
-                                            Margin="0,0,5,0"
-                                            VerticalAlignment="Center" />
-                                        <CheckBox
-                                            x:Name="cbExportCieX"
-                                            Margin="0,0,55,0"
-                                            Content="cieX通道" />
-                                        <CheckBox x:Name="cbExportCieY" Content="cieY通道" />
-                                    </StackPanel>
-                                    <!--  线条模式参数（原VamExportDialog的线条参数）  -->
-                                    <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
-                                        <TextBlock
-                                            Width="120"
-                                            Margin="0,0,5,0"
-                                            Text="极角范围(polar_RHO):" />
-                                        <TextBox
-                                            x:Name="txtLinePolarRHO"
-                                            Width="100"
-                                            Text="60" />
-                                        <TextBlock Margin="5,0,0,0" Text="°（[-值,值]）" />
-                                    </StackPanel>
-                                    <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
-                                        <TextBlock
-                                            Width="120"
-                                            Margin="0,0,5,0"
-                                            Text="极角间隔角度：" />
-                                        <TextBox
-                                            x:Name="txtLinePolarInterval"
-                                            Width="100"
-                                            Text="1" />
-                                        <!--  默认间隔1°，对应[-60,60]共121点  -->
-                                        <TextBlock
-                                            x:Name="LinePolarIntervalBook"
-                                            Margin="5,0,0,0"
-                                            Text="°（[-60,60]，共121点）" />
-                                    </StackPanel>
-                                    <!--  导出按钮（替换原btnExportDiameter）  -->
-                                    <Button
-                                        x:Name="btnExportDiameter"
-                                        Width="380"
-                                        Height="30"
-                                        Margin="0,10,0,0"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Click="BtnExportDiameter_Click"
-                                        Content="导出方位角截面CSV" />
-                                </StackPanel>
-                            </Border>
+                                </Border>
+
+                            </Expander>
+
                         </Grid>
                         <!--  统一控件尺寸：设置TextBlock宽度、控件对齐方式  -->
 
@@ -418,6 +437,7 @@
 
                     </StackPanel>
                     <!--  面板2：R圆参数（默认隐藏）  -->
+
                     <StackPanel
                         x:Name="paramPanelRCircle"
                         Margin="5"
@@ -434,7 +454,7 @@
                             <Border
                                 Grid.Row="0"
                                 Margin="0,0,0,5"
-                                BorderBrush="#FF3F3F46"
+                                BorderBrush="#803F3F46"
                                 BorderThickness="1">
                                 <StackPanel Margin="5">
                                     <StackPanel
@@ -495,7 +515,7 @@
                                     <!--  导出R圆CSV按钮 - 与Panel1导出按钮对齐统一  -->
                                     <Button
                                         x:Name="btnExportCircle1"
-                                        Width="380"
+                                        Width="400"
                                         Height="30"
                                         Margin="0,10,0,0"
                                         HorizontalAlignment="Stretch"
@@ -505,120 +525,126 @@
                             </Border>
 
                             <!--  下层Border：R圆导出配置区（对应Panel1下层）  -->
-                            <Border
+                            <Expander
                                 Grid.Row="1"
-                                Margin="0,0,0,5"
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Stretch"
-                                BorderBrush="#FF3F3F46"
-                                BorderThickness="1">
-                                <StackPanel Margin="5">
-                                    <!--  导出通道选择  -->
-                                    <StackPanel
-                                        Margin="0,10,0,8"
-                                        HorizontalAlignment="Left"
-                                        Orientation="Horizontal">
-                                        <TextBlock
-                                            Width="120"
-                                            Margin="0,0,5,0"
-                                            VerticalAlignment="Center"
-                                            Text="导出通道:" />
-                                        <CheckBox
-                                            x:Name="cbCircleExportX"
-                                            Margin="0,0,10,0"
-                                            Content="X通道" />
-                                        <CheckBox
-                                            x:Name="cbCircleExportY"
-                                            Margin="0,0,10,0"
-                                            Content="Y通道"
-                                            IsChecked="True" />
-                                        <CheckBox
-                                            x:Name="cbCircleExportZ"
-                                            Margin="0,0,10,0"
-                                            Content="Z通道" />
-                                    </StackPanel>
+                                BorderThickness="1"
+                                Header="{DynamicResource VAM.Exportparameterconfiguration}">
+                                <Border
+                                    Grid.Row="1"
+                                    Margin="0,5,0,5"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    BorderBrush="#803F3F46"
+                                    BorderThickness="1">
+                                    <StackPanel Margin="5">
+                                        <!--  导出通道选择  -->
+                                        <StackPanel
+                                            Margin="0,10,0,8"
+                                            HorizontalAlignment="Left"
+                                            Orientation="Horizontal">
+                                            <TextBlock
+                                                Width="140"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Text="{DynamicResource VAM.ExporChannel}" />
+                                            <CheckBox
+                                                x:Name="cbCircleExportX"
+                                                Margin="0,0,10,0"
+                                                Content="{DynamicResource VAM.XChannel}" />
+                                            <CheckBox
+                                                x:Name="cbCircleExportY"
+                                                Margin="0,0,10,0"
+                                                Content="{DynamicResource VAM.YChannel}"
+                                                IsChecked="True" />
+                                            <CheckBox
+                                                x:Name="cbCircleExportZ"
+                                                Margin="0,0,10,0"
+                                                Content="{DynamicResource VAM.ZChannel}" />
+                                        </StackPanel>
 
-                                    <StackPanel
-                                        Margin="0,0,0,8"
-                                        HorizontalAlignment="Left"
-                                        Orientation="Horizontal">
-                                        <TextBlock
-                                            Width="120"
-                                            Margin="0,0,5,0"
-                                            VerticalAlignment="Center" />
-                                        <CheckBox
-                                            x:Name="cbCircleExportCieX"
-                                            Margin="0,0,5,0"
-                                            Content="cieX通道" />
-                                        <CheckBox
-                                            x:Name="cbCircleExportCieY"
-                                            Margin="0,0,55,0"
-                                            Content="cieY通道" />
-                                    </StackPanel>
+                                        <StackPanel
+                                            Margin="0,0,0,8"
+                                            HorizontalAlignment="Left"
+                                            Orientation="Horizontal">
+                                            <TextBlock
+                                                Width="140"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center" />
+                                            <CheckBox
+                                                x:Name="cbCircleExportCieX"
+                                                Margin="0,0,5,0"
+                                                Content="{DynamicResource VAM.cieXChannel}" />
+                                            <CheckBox
+                                                x:Name="cbCircleExportCieY"
+                                                Margin="0,0,55,0"
+                                                Content="{DynamicResource VAM.cieYChannel}" />
+                                        </StackPanel>
 
-                                    <!--  圆环模式参数（原VamExportDialog的圆环参数）  -->
-                                    <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
-                                        <TextBlock
-                                            Width="120"
-                                            Margin="0,0,5,0"
-                                            Text="极角起始值：" />
-                                        <TextBox
-                                            x:Name="txtCirclePolarStart"
-                                            Width="100"
-                                            Text="10" />
-                                        <TextBlock Margin="5,0,0,0" Text="°" />
-                                    </StackPanel>
+                                        <!--  圆环模式参数（原VamExportDialog的圆环参数）  -->
+                                        <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+                                            <TextBlock
+                                                Width="140"
+                                                Margin="0,0,5,0"
+                                                Text="{DynamicResource VAM.Startingvalue}" />
+                                            <TextBox
+                                                x:Name="txtCirclePolarStart"
+                                                Width="100"
+                                                Text="10" />
+                                            <TextBlock Margin="5,0,0,0" Text="°" />
+                                        </StackPanel>
 
-                                    <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
-                                        <TextBlock
-                                            Width="120"
-                                            Margin="0,0,5,0"
-                                            Text="极角结束值：" />
-                                        <TextBox
-                                            x:Name="txtCirclePolarEnd"
-                                            Width="100"
-                                            Text="80" />
-                                        <TextBlock Margin="5,0,0,0" Text="°" />
-                                    </StackPanel>
+                                        <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+                                            <TextBlock
+                                                Width="140"
+                                                Margin="0,0,5,0"
+                                                Text="{DynamicResource VAM.Endingvalue}" />
+                                            <TextBox
+                                                x:Name="txtCirclePolarEnd"
+                                                Width="100"
+                                                Text="80" />
+                                            <TextBlock Margin="5,0,0,0" Text="°" />
+                                        </StackPanel>
 
-                                    <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
-                                        <TextBlock
-                                            Width="120"
-                                            Margin="0,0,5,0"
-                                            Text="极角间隔：" />
-                                        <TextBox
-                                            x:Name="txtCirclePolarStep"
-                                            Width="100"
-                                            Text="10" />
-                                        <TextBlock Margin="5,0,0,0" Text="°" />
-                                    </StackPanel>
+                                        <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+                                            <TextBlock
+                                                Width="140"
+                                                Margin="0,0,5,0"
+                                                Text="{DynamicResource VAM.Angleinterval}" />
+                                            <TextBox
+                                                x:Name="txtCirclePolarStep"
+                                                Width="100"
+                                                Text="10" />
+                                            <TextBlock Margin="5,0,0,0" Text="°" />
+                                        </StackPanel>
 
-                                    <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
-                                        <TextBlock
-                                            Width="120"
-                                            Margin="0,0,5,0"
-                                            Text="方位角间隔角度：" />
-                                        <TextBox
-                                            x:Name="txtAzimuthInterval"
-                                            Width="100"
-                                            Text="3" />
-                                        <!--  默认间隔3°，对应[0,360)共120点  -->
-                                        <TextBlock
-                                            x:Name="AzimuthIntervalBook"
-                                            Margin="5,0,0,0"
-                                            Text="（[0,360)，共120点）" />
+                                        <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+                                            <TextBlock
+                                                Width="140"
+                                                Margin="0,0,5,0"
+                                                Text="{DynamicResource VAM.Azimuthinterval}" />
+                                            <TextBox
+                                                x:Name="txtAzimuthInterval"
+                                                Width="100"
+                                                Text="3" />
+                                            <!--  默认间隔3°，对应[0,360)共120点  -->
+                                            <TextBlock
+                                                x:Name="AzimuthIntervalBook"
+                                                Margin="5,0,0,0"
+                                                Text="" />
+                                        </StackPanel>
+                                        <!--  导出按钮 - 与Panel1导出按钮对齐统一  -->
+                                        <Button
+                                            x:Name="btnExportCircle"
+                                            Width="400"
+                                            Height="30"
+                                            Margin="0,10,0,0"
+                                            HorizontalAlignment="Center"
+                                            Click="BtnExportCircle_Click"
+                                            Content="{DynamicResource VAM.ExportRCircleCSV}" />
                                     </StackPanel>
-                                    <!--  导出按钮 - 与Panel1导出按钮对齐统一  -->
-                                    <Button
-                                        x:Name="btnExportCircle"
-                                        Width="380"
-                                        Height="30"
-                                        Margin="0,10,0,0"
-                                        HorizontalAlignment="Center"
-                                        Click="BtnExportCircle_Click"
-                                        Content="导出圆环CSV" />
-                                </StackPanel>
-                            </Border>
+                                </Border>
+                            </Expander>
+
                         </Grid>
                     </StackPanel>
                 </Grid>
@@ -632,16 +658,7 @@
                         Click="BtnExport_Click"
                         Content="{DynamicResource Export CSV}" />
                 </StackPanel>-->
-                <StackPanel Grid.Row="2" Margin="5,0,5,5">
-                    <Button
-                        x:Name="btnExport"
-                        Width="380"
-                        Height="30"
-                        Margin="0,5"
-                        HorizontalAlignment="Center"
-                        Click=" BtnExportClick"
-                        Content="{DynamicResource Export CSV}" />
-                </StackPanel>
+
 
             </Grid>
         </Border>

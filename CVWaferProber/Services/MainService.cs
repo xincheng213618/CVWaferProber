@@ -59,6 +59,7 @@ namespace CVWaferProber.Services
             if (aoiService != null) return aoiService.CustomImageVM;
             return null;
         }
+        
         public ChipMappingControlViewModel? GetMappingVM()
         {
             if (mappingService != null) return mappingService.CustomVM;
@@ -170,6 +171,7 @@ namespace CVWaferProber.Services
         {
             autoTestingItem = null;
             TestingCompleted?.Invoke(this, e);
+
         }
 
         #region Window Message
@@ -225,6 +227,7 @@ namespace CVWaferProber.Services
                     baseSerivce = flowServices[CVWaferProberFlowType.AOI];
                     break;
                 case CVWaferProberFlowType.IVL:
+                case CVWaferProberFlowType.IV:
                 case CVWaferProberFlowType.IVL_SP:
                 case CVWaferProberFlowType.IVL_Camera:
                     baseSerivce = flowServices[CVWaferProberFlowType.IVL];

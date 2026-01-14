@@ -51,6 +51,9 @@ namespace CVWaferProber.ViewModels
                 case "Flow.VAM":
                     FlowType = CVWaferProberFlowType.VAM;
                     break;
+                case "Flow.IV":
+                    FlowType = CVWaferProberFlowType.IV;
+                    break;
             }
             if (!string.IsNullOrEmpty(flow.CfgJson))
             {
@@ -85,6 +88,7 @@ namespace CVWaferProber.ViewModels
         IVL_SP,
         IVL_Camera,
         EQE,
-        VAM
+        VAM,
+        IV
     }
 }

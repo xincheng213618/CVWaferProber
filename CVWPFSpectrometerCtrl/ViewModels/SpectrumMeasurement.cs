@@ -237,7 +237,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         public float[] Intensities { get; set; }
         public float RelativeSpectrum { get; set; }
         public float AbsoluteSpectrum { get;  set; }
-        public double EQE { get; internal set; }
+        //public double EQE { get; internal set; }
         public float LuminousFlux { get; internal set; }
         public float RadiantFlux { get; internal set; }
         public double LuminousEfficacy { get; internal set; }

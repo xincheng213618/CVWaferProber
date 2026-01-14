@@ -1,15 +1,19 @@
-﻿using CVDB.Services.Image;
+﻿using CVAVMControl;
+using CVDB.Services.Image;
+using CVVAMControl;
 using CVWaferProber.Core.Events;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
 using Newtonsoft.Json;
+using System.IO;
+using System.Text;
 
 namespace CVWaferProber.Services
 {
     public class VAMService : BaseSerivce
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(VAMService));
-
+        CVVAMAnalyzer cVVAMAnalyzer = new CVVAMAnalyzer();
         public VAMService(RCRestService rcService) : base(rcService, CVWPEventAggregatorInstance.Instance)
         {
         }
@@ -74,5 +78,11 @@ namespace CVWaferProber.Services
             Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, isEnd);
             return task;
         }
+      
+        public override void AutoExportData()
+        {
+            cVVAMAnalyzer.BtnExportClick();
+        }
+     
     }
 }

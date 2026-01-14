@@ -2,6 +2,7 @@
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
 using CVWPFSpectrometerCtrl.ViewModels;
+using System.IO;
 
 namespace CVWaferProber.Services
 {
@@ -81,7 +82,7 @@ namespace CVWaferProber.Services
             //CustomEQEVM.ClearResult();
             //CustomEQEVM.LoadEQEData(dieViewModel.SerialNumber);
             // 测试完成后自动触发导出
-            CustomEQEVM.AutoExportEQECsv();
+           
             return ChipStatus.EQE_COMPLETED; // 替换为EQE完成状态
         }
 
@@ -89,6 +90,47 @@ namespace CVWaferProber.Services
         protected override void DoEndTesting()
         {
             base.DoEndTesting(); // 调用基类触发TestingCompleted事件
+            
         }
+        public override void AutoExportData()
+        {
+            try
+            {
+                // 从CustomEQEVM获取必要数据（ViewModel中的公共属性）
+                var measurements = CustomEQEVM.Measurements;
+                var wavelengths = CustomEQEVM.Wavelengths;
+
+                if (!measurements.Any() || wavelengths == null || wavelengths.Length == 0)
+                {
+                    logger.Info("No valid EQE data available for export！");
+                    return;
+                }
+
+                // 构造导出路径：D:\Project\EQE（保持原有路径逻辑）
+                string basePath = @"F:\Projects\EQE";
+
+                // 确保目录存在（保留原有目录创建逻辑）
+                if (!Directory.Exists(basePath))
+                {
+                    Directory.CreateDirectory(basePath);
+                    logger.Info($"Create EQE export directory：{basePath}");
+                }
+
+                // 构造文件名（包含时间戳避免重复，保持原有命名规则）
+                string fileName = $"EQE_Data_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+                string fullPath = Path.Combine(basePath, fileName);
+
+                // 调用CVEQEViewModel的公共ExportToCsv方法完成核心导出
+                CustomEQEVM.ExportToCsv(fullPath, measurements, wavelengths);
+
+                logger.Info($"EQE data has been automatically exported to：{fullPath}");
+            }
+            catch (Exception ex)
+            {
+                logger.Error("EQE automatic export failed", ex);
+            }
+        }
+       
+      
     }
 }

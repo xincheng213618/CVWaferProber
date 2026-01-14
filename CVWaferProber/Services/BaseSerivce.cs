@@ -148,12 +148,18 @@ namespace CVWaferProber.Services
         {
             return SNBuilder.Build(ProberId, timestamp, dieViewModel);
         }
-
+        public bool IsAutoExportData = true;
         protected virtual void DoEndTesting()
         {
             TestingCompleted?.Invoke(this, EventArgs.Empty);
-        }
+            if (IsAutoExportData)
+            {
+                AutoExportData();
+            }
 
+           
+        }
+        public abstract void AutoExportData();
         public abstract void ResultDisplay(DieViewModel dieViewModel);
     }
 } 

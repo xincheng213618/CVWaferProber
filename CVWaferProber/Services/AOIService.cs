@@ -179,5 +179,10 @@ namespace CVWaferProber.Services
                 CustomImageVM?.UpdatePOIImage(image, POIMarkers, ImageDisplayBrightnessUniformity);             
             }
         }
+
+        public override void AutoExportData()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

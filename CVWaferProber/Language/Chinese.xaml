@@ -182,6 +182,25 @@
     <sys:String x:Key="VAM.ZChannel">Z通道</sys:String>
     <sys:String x:Key="VAM.OperationArea">操作区</sys:String>
 
+    <sys:String x:Key="VAM.Exportparameterconfiguration">导出参数配置</sys:String>
+    <sys:String x:Key="VAM.ExporChannel">导出通道:</sys:String>
+    <sys:String x:Key="VAM.cieXChannel">cieX通道</sys:String>
+    <sys:String x:Key="VAM.cieYChannel">cieY通道</sys:String>
+    <sys:String x:Key="VAM.Polar_RHO">极角范围:</sys:String>
+   
+    <sys:String x:Key="VAM.Value">°（[-值,值]）</sys:String>
+    <sys:String x:Key="VAM.Angleinterval">极角间隔角度:</sys:String>
+    <sys:String x:Key="VAM.Samplingpoint">°（[-60,60]，共121点）</sys:String>
+    <sys:String x:Key="VAM.60Point">（[-60,60]间隔无效，共0点）</sys:String>
+    <sys:String x:Key="VAM.360Point">（[0,360)间隔无效，共0点）</sys:String>
+    <sys:String x:Key="VAM.Points">点</sys:String>
+    <sys:String x:Key="VAM.Interval">间隔</sys:String>
+    <sys:String x:Key="VAM.InvalidInterval">间隔无效</sys:String>
+    <sys:String x:Key="VAM.Startingvalue">极角起始值:</sys:String>
+    <sys:String x:Key="VAM.Endingvalue">极角结束值:</sys:String>
+    <sys:String x:Key="VAM.Azimuthinterval">方位角间隔角度:</sys:String>
+    <sys:String x:Key="VAM.FSamplingpoint">（[0,360)，共120点）</sys:String>
+
     <sys:String x:Key="Plot.Title.DiameterLine">方位角截面分布曲线</sys:String>
     <sys:String x:Key="Plot.Title.RCircle">极角截面分布曲线</sys:String>
     <sys:String x:Key="Plot.Axis.X">Degrees</sys:String>
@@ -195,6 +214,7 @@
     <sys:String x:Key="VAM.CircumferentialDistributionCurve">截面分布曲线</sys:String>
     <!--<sys:String x:Key="VAM.CircumferentialAngle">圆周角度 (°)</sys:String>-->
     <!--<sys:String x:Key="VAM.PixelValue">像素值</sys:String>-->
+    <sys:String x:Key="VAM.Onechannel">请至少选择一个导出通道！</sys:String>
 
     <!--  EQE相关  -->
     <sys:String x:Key="EQE.luminous_flux">光通量</sys:String>

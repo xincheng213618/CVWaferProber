@@ -175,7 +175,26 @@
     <sys:String x:Key="VAM.ZChannel">ZChannel</sys:String>
 
     <sys:String x:Key="VAM.OperationArea">Operation Area</sys:String>
-    
+
+    <sys:String x:Key="VAM.Exportparameterconfiguration">Export Parameter Configuration</sys:String>
+    <sys:String x:Key="VAM.ExporChannel">Export Channel:</sys:String>
+    <sys:String x:Key="VAM.cieXChannel">cieXChannel</sys:String>
+    <sys:String x:Key="VAM.cieYChannel">cieYChannel</sys:String>
+    <sys:String x:Key="VAM.Polar_RHO">Polar Angle Range:</sys:String>
+   
+    <sys:String x:Key="VAM.Value">°（[-Value,Value]）</sys:String>
+    <sys:String x:Key="VAM.Angleinterval">Polar Angle Interval:</sys:String>
+    <sys:String x:Key="VAM.Samplingpoint">°（[-60,60]，A total of 121 points）</sys:String>
+    <sys:String x:Key="VAM.60Point">（Interval invalid for [-60, 60], 0 points in total）</sys:String>
+    <sys:String x:Key="VAM.360Point">（Interval invalid for [0, 360), 0 points in total）</sys:String>
+    <sys:String x:Key="VAM.Points">Points</sys:String>
+    <sys:String x:Key="VAM.Interval">Interval</sys:String>
+    <sys:String x:Key="VAM.InvalidInterval">Invalid Interval</sys:String>
+    <sys:String x:Key="VAM.Startingvalue">Polar Angle Start Value:</sys:String>
+    <sys:String x:Key="VAM.Endingvalue">Polar Angle End Value:</sys:String>
+    <sys:String x:Key="VAM.Azimuthinterval">Azimuth Angle Interval:</sys:String>
+    <sys:String x:Key="VAM.FSamplingpoint">（[0,360)，A total of 120 points）</sys:String>
+
     <sys:String x:Key="Plot.Title.DiameterLine">AzimuthAngle Cross-Section Distribution</sys:String>
     <sys:String x:Key="Plot.Title.RCircle">PolarAngle Cross-Section Distribution</sys:String>
     <sys:String x:Key="Plot.Axis.X">Degrees</sys:String>
@@ -188,7 +207,8 @@
     <sys:String x:Key="VAM.CircumferentialDistributionCurve">Cross-Section Distribution Curve</sys:String>
     <!--<sys:String x:Key="VAM.CircumferentialAngle">Circumferential Angle (°)</sys:String>
     <sys:String x:Key="VAM.PixelValue">Pixel Value</sys:String>-->
-
+    
+    <sys:String x:Key="VAM.Onechannel">Please select at least one export channel!</sys:String>
     <!--  EQE相关  -->
     <sys:String x:Key="EQE.luminous_flux">luminousflux</sys:String>
 

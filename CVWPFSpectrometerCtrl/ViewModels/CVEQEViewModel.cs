@@ -46,7 +46,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         public PlotModel OverviewVLPlotModel { get; private set; } = new PlotModel();
 
         private SpectrumEQEMeasurement _selectedMeasurement;
-        private ObservableCollection<SpectrumEQEMeasurement> _measurements;
+        public ObservableCollection<SpectrumEQEMeasurement> _measurements;
         private ObservableCollection<ILMeasurement> _ILMeasurements;
         private ObservableCollection<IVMeasurement> _IVMeasurements;
         private ObservableCollection<VLMeasurement> _VLMeasurements;
@@ -822,7 +822,6 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
                     if (saveFileDialog.ShowDialog() == true)
                     {
-
                         try
                         {
 
@@ -833,7 +832,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         catch (Exception ex)
                         {
                             log.Error("Failed to save CSV file", ex);
-                            System.Windows.MessageBox.Show($"Failed to save CSV file:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            MessageBox.Show($"Failed to save CSV file:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         }
                         // 直接把导出逻辑写在这里
                         MessageBox.Show((string)Application.Current.FindResource("Exportexecutedsuccessfully"));
@@ -841,7 +840,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    System.Windows.MessageBox.Show($"{(string)Application.Current.FindResource("Log.Error")}: {ex.Message}");
+                    MessageBox.Show($"{(string)Application.Current.FindResource("Log.Error")}: {ex.Message}");
                 }
             });
             #endregion
@@ -874,22 +873,22 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             {
                 if (!Measurements.Any() || Wavelengths == null || Wavelengths.Length == 0)
                 {
-                    System.Windows.MessageBox.Show("无有效EQE数据可导出！", "提示");
+                    log.Info("No valid EQE data available for export！");
                     return;
                 }
 
                 // 构造导出路径：D:\Project\EQE
                 string basePath = @"F:\Projects\EQE";
                 // 检查路径是否可写
-                if (!HasWritePermission(basePath))
-                {
-                    throw new UnauthorizedAccessException($"无权限写入目录：{basePath}");
-                }
+                //if (!HasWritePermission(basePath))
+                //{
+                //    throw new UnauthorizedAccessException($"无权限写入目录：{basePath}");
+                //}
                 // 确保目录存在
                 if (!Directory.Exists(basePath))
                 {
                     Directory.CreateDirectory(basePath);
-                    log.Info($"创建EQE导出目录：{basePath}");
+                    log.Info($"Create EQE export directory：{basePath}");
                 }
 
                 // 构造文件名（包含时间戳避免重复）
@@ -898,12 +897,12 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
                 // 调用已有导出方法
                 ExportToCsv(fullPath, Measurements, Wavelengths);
-                log.Info($"EQE数据已自动导出至：{fullPath}");
+                log.Info($"EQE data has been automatically exported to：{fullPath}");
             }
             catch (Exception ex)
             {
-                log.Error("EQE自动导出失败", ex);
-                System.Windows.MessageBox.Show($"EQE自动导出错误：{ex.Message}", "错误");
+                log.Error("EQE automatic export failed", ex);
+               
             }
         }
         // 辅助方法：检查目录是否可写
@@ -2008,9 +2007,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
         #endregion
 
-        #region 光谱
+        #region EQE
         // 导出CSV的方法（参数：保存路径、Measurements数据列表、波长数组）
-        private void ExportToCsv(string fileName, ObservableCollection<SpectrumEQEMeasurement> measurements, float[]? wavelengths, float fPlambda = 1.0f)
+        public void ExportToCsv(string fileName, ObservableCollection<SpectrumEQEMeasurement> measurements, float[]? wavelengths, float fPlambda = 1.0f)
         {
             if (measurements == null || !measurements.Any() || wavelengths == null || wavelengths.Length == 0)
             {
@@ -2136,7 +2135,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"{(string)Application.Current.FindResource("Exportfailed")}：{ex.Message}", (string)Application.Current.FindResource("Log.Error"));
+                MessageBox.Show($"{(string)Application.Current.FindResource("Exportfailed")}：{ex.Message}", (string)Application.Current.FindResource("Log.Error"));
             }
         }
         #endregion
