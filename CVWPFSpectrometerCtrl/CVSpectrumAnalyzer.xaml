@@ -57,7 +57,7 @@
                     IsTabStop="True"
                     KeyboardNavigation.TabNavigation="Local"
                     SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
-                    <TabItem Header="{DynamicResource Sp.Overview}">
+                    <TabItem  Header="{DynamicResource Sp.Overview}">
                         <Grid Margin="5">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="*" />
@@ -809,14 +809,14 @@
                         </Grid>
                     </TabItem>
                     <!--  IVLCamera特性Tab  -->
-                    <TabItem Header="{DynamicResource IVLCamera}">
+                    <!--<TabItem Header="{DynamicResource IVLCamera}">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="6*" />
                                 <RowDefinition Height="4*" />
                             </Grid.RowDefinitions>
 
-                            <!--  图像区域  -->
+                            --><!--  图像区域  --><!--
                             <Border
                                 Grid.Row="0"
                                 Margin="5"
@@ -824,7 +824,7 @@
                                 BorderThickness="1">
                                 <Image Source="{Binding IVLCameraImageSrc}" />
                             </Border>
-                            <!--  IVLCamera DataGrid区域  -->
+                            --><!--  IVLCamera DataGrid区域  --><!--
                             <DataGrid
                                 x:Name="ivlCameraGrid"
                                 Grid.Row="1"
@@ -881,7 +881,7 @@
                                 </DataGrid.RowStyle>
                             </DataGrid>
                         </Grid>
-                    </TabItem>
+                    </TabItem>-->
                 </TabControl>
             </Grid>
         </TabItem>

@@ -18,7 +18,7 @@ namespace CVWaferProber.Components
         {
             var mainVM = DataContext as MainViewModel;
             if (mainVM != null)
-            {
+            {   
                 mainVM.SetDataGrid(TestResultDataGrid);
                 // 初始化DataGrid列
                 mainVM.UpdateDataGridColumns();

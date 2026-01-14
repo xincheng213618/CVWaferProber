@@ -12,7 +12,9 @@ using CVWaferProber.Services;
 using CVWaferProber.Utils;
 using CVWaferProber.Views;
 using CVWPFCamImageCtrl;
+using CVWPFSpectrometerCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
+using Mysqlx.Crud;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -600,6 +602,9 @@ namespace CVWaferProber.ViewModels
             SubscribeItems_IVL(TestResults);
             SubscribeItems_EQE(TestResults);
             SubscribeItems_VAM(TestResults);
+
+            var ivlService = new IVLService(CustomIVLVM, CustomMappingVM, rcService);
+            ivlService.SetSpPanelView(SpPanelView);
             // 加载上次保存的面板状态（需先在Settings中配置）
             //IsMappingPanelVisible = Properties.Settings.Default.IsMappingPanelVisible;
             //IsCameraPanelVisible = Properties.Settings.Default.IsCameraPanelVisible;
@@ -1098,8 +1103,8 @@ namespace CVWaferProber.ViewModels
             }
             catch (Exception ex)
             {
-                logger.Error("良率计算异常", ex);
-                YieldInfo = "计算异常";
+                logger.Error("Yield Calculation Exception", ex);
+                YieldInfo = $"{(string)Application.Current.FindResource("CalculationException")}";
             }
         }
         #endregion
@@ -1591,28 +1596,46 @@ namespace CVWaferProber.ViewModels
 
         //    mainService.DoDieFlowExec(_selectedWPFlow, currentDie, false);
         //}
-
+        public CVSpectrumAnalyzer? SpPanelView { get; set; }
         private void StartManFlow()
         {
-            if (SelectedWPFlow != null)
+            if (SelectedWPFlow != null && SelectedItem is DieViewModel die)
             {
-                if (SelectedItem != null && SelectedItem is DieViewModel die)
-                {
-                    EnableBtnGUI(false);
+                EnableBtnGUI(false);
+                ManTestingReady(die);
 
-                    ManTestingReady(die);
-
-                    mainService.DoDieFlowExec(_selectedWPFlow, die);
-                }
-                else
+                // 新增：强制切换到SP面板的Overview标签页
+                if (SelectedWPFlow.FlowType == CVWaferProberFlowType.IVL_SP && SpPanelView != null)
                 {
-                    if (logger.IsErrorEnabled) logger.Error("Die not selected.");
+                    var outerTab = SpPanelView.FindName("outerTabControl") as System.Windows.Controls.TabControl;
+                    if (outerTab != null)
+                    {
+                        outerTab.SelectedIndex = 0; // 切换到Overview标签页
+                        outerTab.UpdateLayout();
+                    }
                 }
+
+                mainService.DoDieFlowExec(_selectedWPFlow, die);
             }
-            else
-            {
-                if (logger.IsErrorEnabled) logger.Error("Flow not selected.");
-            }
+            //if (SelectedWPFlow != null)
+            //{
+            //    if (SelectedItem != null && SelectedItem is DieViewModel die)
+            //    {
+            //        EnableBtnGUI(false);
+
+            //        ManTestingReady(die);
+
+            //        mainService.DoDieFlowExec(_selectedWPFlow, die);
+            //    }
+            //    else
+            //    {
+            //        if (logger.IsErrorEnabled) logger.Error("Die not selected.");
+            //    }
+            //}
+            //else
+            //{
+            //    if (logger.IsErrorEnabled) logger.Error("Flow not selected.");
+            //}
         }
 
         private void DoEndTesting()
@@ -1808,6 +1831,7 @@ namespace CVWaferProber.ViewModels
                 {
                     testQueue.Add(new TestItem { Die = die, TestType = "VAM" });
                 }
+             
             }
 
             return testQueue;
@@ -1815,6 +1839,7 @@ namespace CVWaferProber.ViewModels
 
         private void ActivateCorrespondingPanel()
         {
+            if (IsProcessing) return;
             if (SelectedWPFlow == null) return;
 
             if (DockingManager == null || AnchorableSP == null)

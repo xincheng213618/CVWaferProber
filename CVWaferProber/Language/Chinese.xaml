@@ -17,7 +17,9 @@
     <sys:String x:Key="BtnOpenVEyeWindow">VEye软件</sys:String>
     <sys:String x:Key="BtnSaveTestResult">保存测试结果</sys:String>
     <sys:String x:Key="BtnLoadTestResult">加载测试结果</sys:String>
+    <sys:String x:Key="CalculationException">计算异常</sys:String>
 
+    
     <sys:String x:Key="ChkColorStatus">启用结果状态颜色</sys:String>
     <sys:String x:Key="Auto SN">自动SN</sys:String>
     <sys:String x:Key="IsIVLCamera">是否启用IVL相机</sys:String>
@@ -217,7 +219,7 @@
     <sys:String x:Key="VAM.Noexport">DLL数据获取失败，无法导出！</sys:String>
     <sys:String x:Key="VAM.Create">创建VAM导出目录</sys:String>
     <sys:String x:Key="VAM.AngleStep">极角步长</sys:String>
-    <sys:String x:Key="VAM.ExportAzimuth">极角步长</sys:String>
+    
     
 
 

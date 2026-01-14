@@ -15,7 +15,8 @@
     <sys:String x:Key="BtnSaveTestResult">SaveTestResult</sys:String>
     <sys:String x:Key="BtnLoadTestResult">LoadTestResult</sys:String>
     <sys:String x:Key="BtnOpenVEyeWindow">OpenVEye</sys:String>
-
+    <sys:String x:Key="CalculationException">Calculation Exception</sys:String>
+    
     <sys:String x:Key="ChkColorStatus">Enable Color Status</sys:String>
     <sys:String x:Key="IsIVLCamera">Enable IVL Camera</sys:String>
     <sys:String x:Key="Auto SN">Auto SN</sys:String>

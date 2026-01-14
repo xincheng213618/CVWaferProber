@@ -2,8 +2,10 @@
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Utils;
 using CVWaferProber.ViewModels;
+using CVWPFSpectrometerCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
 using Microsoft.VisualBasic.Logging;
+using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.IO;
 using System.Text;
@@ -36,9 +38,41 @@ namespace CVWaferProber.Services
         {
             this.ProberId = proberId;
         }
-        
+        //引用SP面板的视图控件（从外部传递）
+        private CVSpectrumAnalyzer? _spPanelView;
+        private TabControl? _spInnerTabControl;
+        public void SetSpPanelView(CVSpectrumAnalyzer spPanelView)
+        {
+            _spPanelView = spPanelView;
+
+        }
+
         public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
         {
+            // 新增：强制切换到Overview标签页（修复FindName错误）
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                // 2. 双重判空：先判断_spPanelView，再判断FindName返回的outerTab
+                if (_spPanelView != null)
+                {
+                    _spInnerTabControl = _spPanelView.FindName("innerTabControl") as TabControl;
+                    if (_spInnerTabControl != null)
+                    {
+                        _spInnerTabControl.SelectedIndex = 0; // 切换到Overview标签页
+                        Debug.WriteLine("标签页已成功切换到Overview（索引0）！");
+                    }
+                    else
+                    {
+                        Debug.WriteLine("未找到x:Name=outerTabControl的TabControl控件！");
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine("无法切换标签页：_spPanelView为null！");
+                    // 可选：抛出友好异常，方便定位问题
+                    // throw new InvalidOperationException("SP面板视图控件未注入，请检查传递链路！");
+                }
+            });
             dieViewModel.ChangeStatus(ChipStatus.IVL_TESTING);
             CustomIVLVM.ClearResult();
 
@@ -260,26 +294,27 @@ namespace CVWaferProber.Services
         public override void AutoExportData()
         {
            
-            if (wpfFlowViewModel.FlowType == CVWaferProberFlowType.IV)
-            {
-                var IVMeasurements = CustomIVLVM.IVMeasurements;
-                // 1. 固定导出根路径
-                string ivRootPath = @"D:\Project\IV";
+           
+            //if (wpfFlowViewModel.FlowType == CVWaferProberFlowType.IV)
+            //{
+            //    var IVMeasurements = CustomIVLVM.IVMeasurements;
+            //    // 1. 固定导出根路径
+            //    string ivRootPath = @"D:\Project\IV";
 
-                // 2. 确保目标目录存在（不存在则自动创建，避免路径不存在异常）
-                if (!Directory.Exists(ivRootPath))
-                {
-                    Directory.CreateDirectory(ivRootPath);
-                    logger.Info($"创建IV导出目录：{ivRootPath}");
-                }
+            //    // 2. 确保目标目录存在（不存在则自动创建，避免路径不存在异常）
+            //    if (!Directory.Exists(ivRootPath))
+            //    {
+            //        Directory.CreateDirectory(ivRootPath);
+            //        logger.Info($"创建IV导出目录：{ivRootPath}");
+            //    }
                 
-                // 3. 构造文件名（包含时间戳，避免文件重名覆盖）
-                string fileName = $"IVL_Data_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-                string fullExportPath = Path.Combine(ivRootPath, fileName);
-                CustomIVLVM.ExportToCsv(IVMeasurements, fullExportPath, 1);
-            }
-            else 
-            {
+            //    // 3. 构造文件名（包含时间戳，避免文件重名覆盖）
+            //    string fileName = $"IVL_Data_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            //    string fullExportPath = Path.Combine(ivRootPath, fileName);
+            //    CustomIVLVM.ExportToCsv(IVMeasurements, fullExportPath, 1);
+            //}
+            //if (wpfFlowViewModel.FlowType == CVWaferProberFlowType.IVL)
+            //{
                 var Measurements = CustomIVLVM.Measurements;
                 var Wavelengths = CustomIVLVM.Wavelengths;
                 // 1. 固定导出根路径
@@ -296,7 +331,7 @@ namespace CVWaferProber.Services
                 string fileName = $"IVL_Data_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
                 string fullExportPath = Path.Combine(ivlRootPath, fileName);
                 CustomIVLVM.ExportToCsv(fullExportPath, Measurements, Wavelengths);
-            }
+            //}
            
         }
     }
