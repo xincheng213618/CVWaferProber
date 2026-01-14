@@ -2812,8 +2812,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
             Clear();
             if (string.IsNullOrEmpty(serialNumber)) return;
-            if (isIVLCameraEnabled) LoadCameraData(serialNumber);
-            else LoadSpectrumData(serialNumber);
+            LoadCameraData(serialNumber);
+            LoadSpectrumData(serialNumber);
         }
 
         private void ClearAllDisplays()
@@ -2894,11 +2894,12 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             foreach (var result in results)
             {
                 AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
-                if (resultType == AlgorithmResultType.POI_Y)
-                {
-                    lv_results.Add(result);
-                }
-                else if (resultType == AlgorithmResultType.PoiAnalysis)
+                //if (resultType == AlgorithmResultType.POI_Y || resultType == AlgorithmResultType.POI_XYZ)
+                //{
+                //    lv_results.Add(result);
+                //}
+                //else
+                if (resultType == AlgorithmResultType.PoiAnalysis)
                 {
                     var details = AlgResultService.GetCommDetailResult(result.Id);
                     if (details != null && details.Count == 1)
@@ -2909,6 +2910,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                             PoiAnalysis<PoiAnalysis_Avg_Result_Data> poiAnalysis = JsonConvert.DeserializeObject<PoiAnalysis<PoiAnalysis_Avg_Result_Data>>(File.ReadAllText(detailResult_Comm.ResultFileName));
                             il_results.Add((float)poiAnalysis.result.average_lum);
                         }
+                        lv_results.Add(result);
                     }
                 }
             }
