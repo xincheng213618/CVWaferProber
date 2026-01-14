@@ -1717,7 +1717,7 @@ namespace CVAVMControl
             }
             catch (Exception ex)
             {
-                logger.Error("刷新图表AutoScale失败", ex);
+                logger.Error("Failed to refresh chart AutoScale", ex);
             }
         }
         public void UpdateVAMParams(double maxAngle, double conoscopeCoefficient)

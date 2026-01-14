@@ -16,7 +16,7 @@
     <sys:String x:Key="BtnLoadTestResult">LoadTestResult</sys:String>
     <sys:String x:Key="BtnOpenVEyeWindow">OpenVEye</sys:String>
     <sys:String x:Key="CalculationException">Calculation Exception</sys:String>
-    
+
     <sys:String x:Key="ChkColorStatus">Enable Color Status</sys:String>
     <sys:String x:Key="IsIVLCamera">Enable IVL Camera</sys:String>
     <sys:String x:Key="Auto SN">Auto SN</sys:String>
@@ -473,6 +473,10 @@
     <sys:String x:Key="Pleaseenteranumber">Please enter a number</sys:String>
     <sys:String x:Key="Pleaseenteraninteger">Please enter an integer</sys:String>
     <sys:String x:Key="Pleaseenterapositiveinteger">Please enter a positive integer</sys:String>
+
+    <sys:String x:Key="Exportsucceeded">Export succeeded</sys:String>
+    <sys:String x:Key="Path">Path</sys:String>
+
 
     <sys:String x:Key="DA">Please first select the angle you want to delete from the dropdown menu.</sys:String>
     <sys:String x:Key="Re-select">The selected angle option is invalid, please choose again.</sys:String>

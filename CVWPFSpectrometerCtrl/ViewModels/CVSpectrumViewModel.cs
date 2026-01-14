@@ -2093,7 +2093,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 }
 
                 File.WriteAllText(fileName, csv.ToString(), Encoding.UTF8);
-                log.Info($"CSV导出成功！\n路径：{fileName}");
+                log.Info($"CSV{(string)Application.Current.FindResource("Exportsucceeded")}！\n{(string)Application.Current.FindResource("Path")}：{fileName}");
 
                 // 6. 写入文件
                 //File.WriteAllText(fileName, csv.ToString(), Encoding.UTF8);
