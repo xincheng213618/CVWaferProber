@@ -90,7 +90,7 @@ namespace CVWaferProber.Views
                 }
 
                 // 3. 绑定MainViewModel的切换方法
-                if (DataContext is ViewModels.MainViewModel mainVm)
+                if (DataContext is MainViewModel mainVm)
                 {
                     mainVm.SpPanelView = _spAnalyzer;
                     mainVm.ActivateSpectralInnerTabAction = ActivateSpectralInnerTab;
@@ -98,7 +98,7 @@ namespace CVWaferProber.Views
                     mainVm.ActivateEQEOuterTabAction = ActivateEQEOuterTab;
                     mainVm.SpPanelViewModel = _spAnalyzer.DataContext as CVWPFSpectrometerCtrl.ViewModels.CVSpectrumViewModel;
                 }
-            }), System.Windows.Threading.DispatcherPriority.Loaded);
+            }), DispatcherPriority.Loaded);
         }
         #region 核心切换方法（适配红框3个选项）
         /// <summary>

@@ -40,6 +40,11 @@
     <sys:String x:Key="Maping.GridHeader.Uniformity">Uniformity</sys:String>
     <sys:String x:Key="Maping.GridHeader.TotalTime">TotalTime</sys:String>
 
+
+    <sys:String x:Key="Maping.NoMeasurement">Untested</sys:String>
+    <sys:String x:Key="Maping.Measurementinprogress">Measurement in progress...</sys:String>
+    <sys:String x:Key="Maping.Automeasurementinprogress">Auto-measurement in progress...</sys:String>
+
     <sys:String x:Key="Dock.Layout.Title.Mapping">Mapping</sys:String>
     <sys:String x:Key="Dock.Layout.Title.CameraImage">CameraImage</sys:String>
     <sys:String x:Key="Dock.Layout.Title.SP">Spectral/IVL/EQE</sys:String>

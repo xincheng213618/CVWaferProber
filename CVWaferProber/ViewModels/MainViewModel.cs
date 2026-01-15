@@ -1372,8 +1372,18 @@ namespace CVWaferProber.ViewModels
                 }
                 if (WPFlows.Count > 0) SelectedWPFlow = WPFlows[0];
             }
+            else
+            {
+                
+            }
         }
 
+        private string testingStatus = $"{(string)Application.Current.FindResource("Maping.NoMeasurement")}";
+        public string TestingStatus
+        {
+            get => testingStatus;
+            set => SetProperty(ref testingStatus, value);
+        }
         private void LoadFlow()
         {
             var flows = rcService.RcLoadFlows();
@@ -1600,46 +1610,17 @@ namespace CVWaferProber.ViewModels
         //    mainService.DoDieFlowExec(_selectedWPFlow, currentDie, false);
         //}
         public CVSpectrumAnalyzer? SpPanelView { get; set; }
-        private TabControl? _spInnerTabControl;
+        private TabControl? _innerTabControl;
         private void StartManFlow()
         {
             if (SelectedWPFlow != null && SelectedItem is DieViewModel die)
             {
                 EnableBtnGUI(false);
                 ManTestingReady(die);
-
-                // 新增：强制切换到SP面板的Overview标签页
-                if (SelectedWPFlow.FlowType == CVWaferProberFlowType.IVL_SP && SpPanelView != null)
-                {
-                    _spInnerTabControl = SpPanelView.FindName("innerTabControl") as System.Windows.Controls.TabControl;
-                    if (_spInnerTabControl != null)
-                    {
-                        _spInnerTabControl.SelectedIndex = 0; // 切换到Overview标签页
-                        _spInnerTabControl.UpdateLayout();
-                    }
-                }
-
                 mainService.DoDieFlowExec(_selectedWPFlow, die);
+                ActivateCorrespondingPanel();
             }
-            //if (SelectedWPFlow != null)
-            //{
-            //    if (SelectedItem != null && SelectedItem is DieViewModel die)
-            //    {
-            //        EnableBtnGUI(false);
-
-            //        ManTestingReady(die);
-
-            //        mainService.DoDieFlowExec(_selectedWPFlow, die);
-            //    }
-            //    else
-            //    {
-            //        if (logger.IsErrorEnabled) logger.Error("Die not selected.");
-            //    }
-            //}
-            //else
-            //{
-            //    if (logger.IsErrorEnabled) logger.Error("Flow not selected.");
-            //}
+            
         }
 
         private void DoEndTesting()
@@ -1843,7 +1824,7 @@ namespace CVWaferProber.ViewModels
 
         private void ActivateCorrespondingPanel()
         {
-            if (IsProcessing) return;
+            //if (IsProcessing) return;
             if (SelectedWPFlow == null) return;
 
             if (DockingManager == null || AnchorableSP == null)

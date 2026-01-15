@@ -43,6 +43,10 @@
     <sys:String x:Key="Maping.GridHeader.Uniformity">均匀性</sys:String>
     <sys:String x:Key="Maping.GridHeader.TotalTime">总用时</sys:String>
 
+    <sys:String x:Key="Maping.NoMeasurement">未测试</sys:String>
+    <sys:String x:Key="Maping.Measurementinprogress">测量运行中...</sys:String>
+    <sys:String x:Key="Maping.Automeasurementinprogress">自动测量运行中...</sys:String>
+
 
     <sys:String x:Key="Dock.Layout.Title.Mapping">映射</sys:String>
     <sys:String x:Key="Dock.Layout.Title.CameraImage">相机图像</sys:String>
