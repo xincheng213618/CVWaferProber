@@ -201,15 +201,20 @@
     <sys:String x:Key="VAM.Azimuthinterval">Azimuth Angle Interval:</sys:String>
     <sys:String x:Key="VAM.FSamplingpoint">（[0,360)，A total of 120 points）</sys:String>
 
+    <sys:String x:Key="VAM.Choosetheangle">Please select the angle</sys:String>
 
     <sys:String x:Key="Plot.Title.DiameterLine">AzimuthAngle Cross-Section Distribution</sys:String>
     <sys:String x:Key="Plot.Title.RCircle">PolarAngle Cross-Section Distribution</sys:String>
     <sys:String x:Key="Plot.Axis.X">Degrees</sys:String>
     <sys:String x:Key="Plot.Axis.Y">Luminance (cd/m²)</sys:String>
     <sys:String x:Key="VAM.RCircleRadius">PolarAngle Radius:</sys:String>
-    <sys:String x:Key="VAM.ExportDiameterLineCSV">Export Azimuth Angle Cross-Section CSV (0°~180°)</sys:String>
+    <sys:String x:Key="VAM.ExportDiameterLineCSV">Export Azimuth Angle Cross-Section CSV</sys:String>
     <sys:String x:Key="VAM.ExportRCircleCSV">Export Polar Angle Cross-Section CSV</sys:String>
+    <sys:String x:Key="VAM.ExportAzimuthLineCSV1">Export Current  Azimuth Angle Cross-Section CSV</sys:String>
+    <sys:String x:Key="VAM.ExportRCircleCSV1">Export Current Polar Angle Cross-Section CSV</sys:String>
 
+    <sys:String x:Key="VAM.InvalidChannel">The selected channel is invalid. The default Y-channel will be used</sys:String>
+    <sys:String x:Key="VAM.PleaseSelectChannel">Please select a valid export channel first</sys:String>
     <sys:String x:Key="VAM.SaveAzimuth">Save Azimuth Angle Section Data</sys:String>
     <sys:String x:Key="VAM.SavePolar">Save Polar Angle Section Data</sys:String>
     <sys:String x:Key="VAM.Switchedtodefaultvalue">The Polar Angle Interval parameter is invalid and has been automatically switched to the default value.</sys:String>

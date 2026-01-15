@@ -212,8 +212,13 @@
     <sys:String x:Key="Plot.Axis.X">Degrees</sys:String>
     <sys:String x:Key="Plot.Axis.Y">Luminance (cd/m²)</sys:String>
     <sys:String x:Key="VAM.RCircleRadius">极角半径:</sys:String>
-    <sys:String x:Key="VAM.ExportDiameterLineCSV">导出方位角截面CSV (0°~180°)</sys:String>
+    <sys:String x:Key="VAM.ExportDiameterLineCSV">导出方位角截面CSV</sys:String>
     <sys:String x:Key="VAM.ExportRCircleCSV">导出极角截面CSV</sys:String>
+    <sys:String x:Key="VAM.ExportAzimuthLineCSV1">导出当前方位角截面CSV</sys:String>
+    <sys:String x:Key="VAM.ExportRCircleCSV1">导出当前极角截面CSV</sys:String>
+    
+    <sys:String x:Key="VAM.InvalidChannel">选中的通道无效，将使用默认Y通道</sys:String>
+    <sys:String x:Key="VAM.PleaseSelectChannel">请先选择有效的导出通道</sys:String>
 
     <sys:String x:Key="VAM.SaveAzimuth">保存方位角截面数据</sys:String>
     <sys:String x:Key="VAM.SavePolar">保存极角截面数据</sys:String>
@@ -233,6 +238,7 @@
     <!--<sys:String x:Key="VAM.CircumferentialAngle">圆周角度 (°)</sys:String>-->
     <!--<sys:String x:Key="VAM.PixelValue">像素值</sys:String>-->
     <sys:String x:Key="VAM.Onechannel">请至少选择一个导出通道！</sys:String>
+    <sys:String x:Key="VAM.Choosetheangle">请选择角度</sys:String>
 
     <!--  EQE相关  -->
     <sys:String x:Key="EQE.luminous_flux">光通量</sys:String>

@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -54,6 +55,7 @@ namespace CVAVMControl
 
         private int displayAngle = 120; // Default display angle
         private ExportChannel displayChannel = ExportChannel.Y; // Default display channel
+        private ExportDataType displayChannel1= ExportDataType.Y;
         private int displayRadius = 40; // Default display radius angle
                                         // CVVAMAnalyzer.cs 中新增定时器
         private DispatcherTimer? _resourceCleanTimer;
@@ -268,6 +270,8 @@ namespace CVAVMControl
             InitializeEvents();
             this.IsVisibleChanged += OnCVVAMAnalyzerVisibleChanged;
             //this.Unloaded += CVVAMAnalyzer_Unloaded;
+            // 新增：初始化DllAllCircleData字典
+            DllAllCircleData = new Dictionary<(int polar, double azimuth), RgbSample>();
         }
         /// <summary>
         /// 当控件可见性发生变化时触发
@@ -1766,24 +1770,59 @@ namespace CVAVMControl
         {
             try
             {
+                // 1. 基础校验
                 if (YMat == null || YMat.Empty())
                 {
                     MessageBox.Show($"{FindResource("Nodata")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
+                if (cbDisplayAngle.SelectedItem is not ComboBoxItem selectedAngleItem ||
+                    !int.TryParse(selectedAngleItem.Tag?.ToString(), out int currentAngle))
+                {
+                    MessageBox.Show($"{FindResource("VAM.Choosetheangle")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
 
+                // ========== 关键修改：从 cbDisplayChannel 获取当前选中通道 ==========
+                ExportChannel selectedExportChannel = ExportChannel.Y; // 兜底默认值
+                if (cbDisplayChannel.SelectedItem is ComboBoxItem channelItem && !string.IsNullOrEmpty(channelItem.Tag?.ToString()))
+                {
+                    // 尝试将下拉框Tag值转换为 ExportChannel 枚举
+                    if (!Enum.TryParse<ExportChannel>(channelItem.Tag.ToString(), out selectedExportChannel))
+                    {
+                        MessageBox.Show($"{FindResource("VAM.InvalidChannel")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        // 保留兜底值，继续执行（避免流程中断）
+                        selectedExportChannel = ExportChannel.Y;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show($"{FindResource("VAM.PleaseSelectChannel")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // 2. 调用DLL获取当前角度的直径线数据（传入选中的通道）
+                bool dllSuccess = CallVamDllForDiameterLine(currentAngle);
+                if (!dllSuccess || _dllAllAzimuthData == null || !_dllAllAzimuthData.ContainsKey(currentAngle))
+                {
+                    MessageBox.Show($"{FindResource("Interfacecallfailed")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                List<VamSamplePoint> currentAngleData = _dllAllAzimuthData[currentAngle];
+
+                // 3. 选择导出路径（文件名中增加通道标识，提升可读性）
                 SaveFileDialog saveFileDialog = new SaveFileDialog
                 {
                     Filter = "CSV Files (*.csv)|*.csv",
-                    FileName = $"DiameterLine_Export_{displayChannel}_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
+                    FileName = $"VAM_Azimuth_{currentAngle}°_{selectedExportChannel}_{DateTime.Now:yyyyMMdd_HHmmss}",
                     Title = $"{FindResource("SaveAzimuth")}"
                 };
+                if (saveFileDialog.ShowDialog() != true) return;
+                string exportPath = saveFileDialog.FileName;
 
-                if (saveFileDialog.ShowDialog() == true)
-                {
-                    ExportAngleModeToCSV(saveFileDialog.FileName, displayChannel);
-                    MessageBox.Show($"{FindResource("Exportsuccessful")}！", $"{FindResource("Log.Success")}", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
+                // 4. 按目标表格格式导出（传入选中的通道，不再使用默认 displayChannel）
+                ExportSingleAngleToCsv(exportPath, currentAngle, currentAngleData, selectedExportChannel);
+                MessageBox.Show($"{FindResource("Exportsuccessful")}！", $"{FindResource("Log.Success")}", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
@@ -1791,60 +1830,89 @@ namespace CVAVMControl
             }
         }
 
-
-        private void ExportAngleModeToCSV(string filePath, ExportChannel channel)
+        /// <summary>
+        /// 导出DLL返回的单个角度数据到CSV
+        /// </summary>
+        /// <summary>
+        /// 导出单个角度的DLL数据（目标表格格式）
+        /// </summary>
+        private void ExportSingleAngleToCsv(string filePath, int currentAngle, List<VamSamplePoint> angleData, ExportChannel targetChannel)
         {
-            Mat? selectedMat = GetSelectedChannelMat(channel);
-            if (selectedMat == null || selectedMat.Empty())
-                return;
-
-            // Create angle lines from 0° to 180°
-            var angleLines = CreateAngleLinesForExport(selectedMat);
 
             using (StreamWriter writer = new StreamWriter(filePath, false, Encoding.UTF8))
             {
-                if (angleLines.Count == 0)
-                    return;
+                // 第1行：Measurement Date
+                writer.WriteLine($"Measurement Date,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,");
+                // 第2行：Instrument（增加通道标识）
+                writer.WriteLine($"Instrument,VAM 60° (Channel: {targetChannel}),,,,,,,,,,,,");
+                // 第3行：空行
+                writer.WriteLine();
+                // 第4行：列标题（B列为当前角度）
+                writer.WriteLine($",,{currentAngle}°");
 
-                // Write CSV header: Phi \ Theta, followed by each Phi angle (0-180)
-                StringBuilder headerLine = new StringBuilder();
-                headerLine.Append("Phi \\ Theta");
-                foreach (var line in angleLines)
+                // 遍历数据行（径向角从-60到60，使用传入的目标通道获取值）
+                foreach (var sample in angleData.OrderBy(s => s.position))
                 {
-                    headerLine.Append($",{line.Angle:F0}");
-                }
-                writer.WriteLine(headerLine.ToString());
-
-                // Find the maximum number of samples across all lines
-                int maxSamples = angleLines.Max(l => l.RgbData.Count);
-                if (maxSamples == 0) return;
-
-                // Export each row (Theta position from 0 to MaxAngle)
-                for (int i = 0; i < maxSamples; i++)
-                {
-                    StringBuilder dataLine = new StringBuilder();
-
-                    // Get Theta position from first line
-                    double theta = angleLines[0].RgbData.Count > i ? angleLines[0].RgbData[i].Position : 0;
-                    dataLine.Append($"{theta:F2}");
-
-                    // Add value for each Phi angle
-                    foreach (var line in angleLines)
-                    {
-                        if (line.RgbData.Count > i)
-                        {
-                            double value = GetChannelValue(line.RgbData[i], channel);
-                            dataLine.Append($",{value:F2}");
-                        }
-                        else
-                        {
-                            dataLine.Append(",");
-                        }
-                    }
-                    writer.WriteLine(dataLine.ToString());
+                    double radialAngle = sample.position; // 径向角（-60~60）
+                    double value = GetChannelValueFromDll(sample, targetChannel); // 使用传入的通道，而非全局变量
+                    writer.WriteLine($",{radialAngle:F0}°,{value:F5}");
                 }
             }
         }
+        //private void ExportAngleModeToCSV(string filePath, ExportChannel channel)
+        //{
+        //    Mat? selectedMat = GetSelectedChannelMat(channel);
+        //    if (selectedMat == null || selectedMat.Empty())
+        //        return;
+
+
+        //    // Create angle lines from 0° to 180°
+        //    var angleLines = CreateAngleLinesForExport(selectedMat);
+
+        //    using (StreamWriter writer = new StreamWriter(filePath, false, Encoding.UTF8))
+        //    {
+        //        if (angleLines.Count == 0)
+        //            return;
+
+        //        // Write CSV header: Phi \ Theta, followed by each Phi angle (0-180)
+        //        StringBuilder headerLine = new StringBuilder();
+        //        headerLine.Append("Phi \\ Theta");
+        //        foreach (var line in angleLines)
+        //        {
+        //            headerLine.Append($",{line.Angle:F0}");
+        //        }
+        //        writer.WriteLine(headerLine.ToString());
+
+        //        // Find the maximum number of samples across all lines
+        //        int maxSamples = angleLines.Max(l => l.RgbData.Count);
+        //        if (maxSamples == 0) return;
+
+        //        // Export each row (Theta position from 0 to MaxAngle)
+        //        for (int i = 0; i < maxSamples; i++)
+        //        {
+        //            StringBuilder dataLine = new StringBuilder();
+
+        //            // Get Theta position from first line
+        //            double theta = angleLines[0].RgbData.Count > i ? angleLines[0].RgbData[i].Position : 0;
+        //            dataLine.Append($"{theta:F2}");
+
+        //            // Add value for each Phi angle
+        //            foreach (var line in angleLines)
+        //            {
+        //                if (line.RgbData.Count > i)
+        //                {
+        //                    double value = GetChannelValue(line.RgbData[i], channel);
+        //                    dataLine.Append($",{value:F2}");
+        //                }
+        //                else
+        //                {
+        //                    dataLine.Append(",");
+        //                }
+        //            }
+        //            writer.WriteLine(dataLine.ToString());
+        //        }
+        //    }
+        //}
 
         /// <summary>
         /// 为导出创建从0°到180°的直径线数据
@@ -1904,95 +1972,161 @@ namespace CVAVMControl
         /// </summary>
         private void BtnExportCircle_Click1(object sender, RoutedEventArgs e)
         {
+            // 1. 前置校验：确保字典已初始化且有数据
             try
             {
+                // 1. 基础数据有效性校验
                 if (YMat == null || YMat.Empty())
                 {
                     MessageBox.Show($"{FindResource("Nodata")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
 
-                SaveFileDialog saveFileDialog = new SaveFileDialog
+                // 2. 校验当前是否选中有效R圆半径角度
+                if (cbDisplayRadius.SelectedItem is not ComboBoxItem selectedRadiusItem ||
+                    !int.TryParse(selectedRadiusItem.Tag?.ToString(), out int currentRadius))
+                {
+                    MessageBox.Show($"{FindResource("VAM.Choosetheradiusangle")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                // 3. 校验R圆数据缓存是否有效（仅当前半径）
+                if (DllAllCircleData == null || !DllAllCircleData.Any(kv => kv.Key.polar == currentRadius))
+                {
+                    // 尝试调用DLL获取当前半径数据（兜底逻辑）
+                    bool dllCallSuccess = CallVamDllForRCircle(currentRadius);
+                    if (!dllCallSuccess || DllAllCircleData == null || !DllAllCircleData.Any(kv => kv.Key.polar == currentRadius))
+                    {
+                        MessageBox.Show($"{FindResource("Interfacecallfailed")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                }
+
+                // 4. 校验导出通道是否选中（复用圆环模式通道校验逻辑）
+                var selectedChannels = GetCircleSelectedChannels();
+                if (selectedChannels.Count == 0)
+                {
+                    MessageBox.Show($"{FindResource("VAM.Onechannel")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // 5. 选择保存路径（保留弹窗，文件名包含当前半径角度）
+                var saveFileDialog = new SaveFileDialog
                 {
                     Filter = "CSV Files (*.csv)|*.csv",
-                    FileName = $"RCircle_Export_{displayChannel}_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
+                    FileName = $"VAM_Polar_Angle_{currentRadius}°_{DateTime.Now:yyyyMMdd_HHmmss}",
                     Title = $"{FindResource("Savepolarangle")}"
                 };
+                if (saveFileDialog.ShowDialog() != true) return;
+                string basePath = Path.ChangeExtension(saveFileDialog.FileName, null);
 
-                if (saveFileDialog.ShowDialog() == true)
+                // 6. 提取当前半径的所有有效数据（按方位角排序）
+                var currentRadiusData = DllAllCircleData
+                    .Where(kv => kv.Key.polar == currentRadius)
+                    .Select(kv => new RadiusDataItem // 显式模型封装数据
+                    {
+                        Azimuth = kv.Key.azimuth,
+                        Value = GetChannelValueFromCircleSample(kv.Value, displayChannel1)
+                    })
+                    .OrderBy(d => d.Azimuth)
+                    .ToList();
+
+                // 7. 按1°步长补全数据（保证0°~360°完整覆盖，匹配业务需求）
+                var fullRadiusData = ComplementRadiusDataBy1Step(currentRadius, currentRadiusData);
+
+                // 8. 为每个选中通道导出独立CSV（仅当前半径）
+                foreach (var channel in selectedChannels)
                 {
-                    ExportCircleModeToCSV(saveFileDialog.FileName, displayChannel);
-                    MessageBox.Show($"{FindResource("Exportsuccessful")}！", $"{FindResource("Log.Success")}", MessageBoxButton.OK, MessageBoxImage.Information);
+                    // 构建最终文件路径（包含通道名和当前半径）
+                    string csvFileName = $"{basePath}_{channel}_RCircle_{currentRadius}°.csv";
+                    string fullCsvPath = Path.Combine(Path.GetDirectoryName(csvFileName) ?? "", Path.GetFileName(csvFileName));
+
+                    // 调用导出方法（按目标表格格式写入）
+                    ExportSingleRadiusToCsv_1Step(fullCsvPath, currentRadius, fullRadiusData, channel);
                 }
+
+                // 9. 导出成功提示
+                MessageBox.Show($"{FindResource("Exportsuccessful")}！", $"{FindResource("Log.Success")}", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
+                // 统一异常处理（对齐BtnExportCircle_Click风格）
+                logger.Error($"{FindResource("Exportfailed")}：{ex.Message}", ex);
                 MessageBox.Show($"{FindResource("Exportfailed")}: {ex.Message}", $"{FindResource("Log.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            
         }
-
-
-        private void ExportCircleModeToCSV(string filePath, ExportChannel channel)
+        /// <summary>
+        /// 补全当前半径数据为1°步长（0°~360°完整覆盖）
+        /// </summary>
+        /// <param name="currentRadius">当前选中半径</param>
+        /// <param name="sourceData">原始数据</param>
+        /// <returns>1°步长补全后的数据</returns>
+        private List<RadiusDataItem> ComplementRadiusDataBy1Step(int currentRadius, List<RadiusDataItem> sourceData)
         {
-            Mat? selectedMat = GetSelectedChannelMat(channel);
-            if (selectedMat == null || selectedMat.Empty())
-                return;
+            // 构建1°步长的完整方位角集合
+            var fullData = new List<RadiusDataItem>();
+            var sourceDataDict = sourceData.ToDictionary(d => Math.Round(d.Azimuth, 0), d => d.Value);
 
-            // Create concentric circles data
-            var concentricCircles = CreateConcentricCirclesData(selectedMat);
+            for (int azimuth = 0; azimuth < 360; azimuth++)
+            {
+                // 存在数据则取真实值，不存在则赋值0（可按需改为插值）
+                if (sourceDataDict.TryGetValue(azimuth, out double value))
+                {
+                    fullData.Add(new RadiusDataItem
+                    {
+                        Azimuth = azimuth,
+                        Value = value
+                    });
+                }
+                else
+                {
+                    fullData.Add(new RadiusDataItem
+                    {
+                        Azimuth = azimuth,
+                        Value = 0.0
+                    });
+                }
+            }
 
+            return fullData;
+        }
+        /// <summary>
+        /// 导出单个半径+单个通道的CSV（适配目标表格格式）
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        /// <param name="currentRadius">当前半径</param>
+        /// <param name="radiusData">完整数据</param>
+        /// <param name="channel">导出通道</param>
+        private void ExportSingleRadiusToCsv_1Step(string filePath, int currentRadius, List<RadiusDataItem> radiusData, ExportDataType channel)
+        {
             using (StreamWriter writer = new StreamWriter(filePath, false, Encoding.UTF8))
             {
-                if (concentricCircles.Count == 0)
-                    return;
+                // 标准化表头（包含通道信息和当前半径）
+                writer.WriteLine($"Measurement Date,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,");
+                writer.WriteLine($"Instrument,VAM R-Circle {currentRadius}° (Channel: {channel}),,,,,,,,,,,,,");
+                writer.WriteLine(); // 空行分隔
+                writer.WriteLine($",,{currentRadius}°"); // 列标题（当前半径）
 
-                // Write CSV header
-                StringBuilder headerLine = new StringBuilder();
-                headerLine.Append("Phi \\ Theta");
-                foreach (var circle in concentricCircles)
+                // 写入1°步长完整数据
+                foreach (var data in radiusData)
                 {
-                    headerLine.Append($",{circle.RadiusAngle:F0}");
-                }
-                writer.WriteLine(headerLine.ToString());
-
-                // Export each row (360 positions)
-                for (int anglePos = 0; anglePos <= 360; anglePos++)
-                {
-                    StringBuilder dataLine = new StringBuilder();
-                    dataLine.Append($"{anglePos}");
-
-                    // Add value for each radius
-                    foreach (var circle in concentricCircles)
-                    {
-                        if (circle.RgbData.Count > anglePos)
-                        {
-                            double value = GetChannelValue(circle.RgbData[anglePos], channel);
-                            dataLine.Append($",{value:F2}");
-                        }
-                        else
-                        {
-                            dataLine.Append(",");
-                        }
-                    }
-                    writer.WriteLine(dataLine.ToString());
+                    double azimuthAngle = data.Azimuth;
+                    double value = data.Value;
+                    writer.WriteLine($",{azimuthAngle:F0}°,{value:F5}");
                 }
             }
         }
-
-        /// <summary>
-        /// 创建同心圆数据（参考原始代码）
-        /// </summary>
-        private List<ConcentricCircleLine> CreateConcentricCirclesData(Mat mat)
+        // 辅助方法：获取当前选中的半径（替换为你原有业务逻辑，仅作占位）
+        //private int GetCurrentSelectedRadius()
+        //{
+        //    // 此处替换为你原有获取currentRadius的逻辑，示例返回字典中第一个有效半径
+        //    return DllAllCircleData.Select(kv => kv.Key.polar).FirstOrDefault();
+        //}
+        private class RadiusDataItem
         {
-            var concentricCircles = new List<ConcentricCircleLine>();
-
-            // Create circles from 0 to MaxAngle using the same method as plotting
-            for (int degree = 0; degree <= (int)MaxAngle; degree++)
-            {
-                concentricCircles.Add(CreateRCircleLine(degree));
-            }
-
-            return concentricCircles;
+            public double Azimuth { get; set; } // 方位角
+            public double Value { get; set; }   // 通道值
         }
 
         /// <summary>
@@ -2225,6 +2359,7 @@ namespace CVAVMControl
 
                 // 步骤12：更新图表
                 UpdateDiameterLineChartFromDll(vamResult.result.line.Data);
+                _dllAllAzimuthData[targetAngle] = vamResult.result.line.Data; // 缓存当前角度数据
                 return true;
             }
             catch (Exception ex)
@@ -2625,6 +2760,7 @@ namespace CVAVMControl
                 int polarRHO = int.TryParse(txtLinePolarRHO.Text.Trim(), out int rho) ? rho : 60;
                 // 由间隔角度计算采样点数
                 int _pointNumLine = (int)(Math.Abs(2 * polarRHO) / _linePolarInterval) + 1;
+                int azimuthSampleCount = 360;
                 // 步骤5：修复R圆的JSON参数
                 string staticJson = JsonConvert.SerializeObject(new
                 {
@@ -2639,7 +2775,7 @@ namespace CVAVMControl
                     polar_Angle = 0.0,
                     pixelToAngle = ConoscopeCoefficient,
                     pointNumLine = _pointNumLine,
-                    pointNumCircle = 60, // 还原为60
+                    pointNumCircle = azimuthSampleCount, // 还原为60
                     center = new { x = center.X, y = center.Y },
                     displayChannel = displayChannel.ToString()
                 });
@@ -2682,6 +2818,17 @@ namespace CVAVMControl
                 }
 
                 UpdateRCircleChartFromDll(vamResult.result.circle.Data);
+                // 将DLL返回的当前半径数据存入缓存
+                foreach (var sample in vamResult.result.circle.Data)
+                {
+                    DllAllCircleData[(targetRadius, sample.position)] = new RgbSample
+                    {
+                        Position = sample.position,
+                        X = sample.X,
+                        Y = sample.Y,
+                        Z = sample.Z
+                    };
+                }
                 return true;
             }
             catch (Exception ex)
@@ -3107,37 +3254,37 @@ namespace CVAVMControl
         private int _pointNumLine = 360;
         private double _linePolarInterval = 1; // 极角间隔角度（默认1°）
         private double _azimuthInterval = 3; // 方位角间隔角度（默认3°）
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            // 1. 先校验输入是否为空
-            if (string.IsNullOrWhiteSpace(pointNumLineBox.Text))
-            {
-                MessageBox.Show($"{FindResource("Pleaseenteranumber")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
+        //private void Button_Click(object sender, RoutedEventArgs e)
+        //{
+        //    // 1. 先校验输入是否为空
+        //    if (string.IsNullOrWhiteSpace(pointNumLineBox.Text))
+        //    {
+        //        MessageBox.Show($"{FindResource("Pleaseenteranumber")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
+        //        return;
+        //    }
 
-            // 2. 尝试转换为整数
-            if (!int.TryParse(pointNumLineBox.Text, out int pointNumLine))
-            {
-                MessageBox.Show($"{FindResource("Pleaseenteraninteger")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
+        //    // 2. 尝试转换为整数
+        //    if (!int.TryParse(pointNumLineBox.Text, out int pointNumLine))
+        //    {
+        //        MessageBox.Show($"{FindResource("Pleaseenteraninteger")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
+        //        return;
+        //    }
 
-            // 3. 校验是否为正整数
-            if (pointNumLine <= 0)
-            {
-                MessageBox.Show($"{FindResource("Pleaseenterapositiveinteger")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
-            // 先获取极角范围
-            int polarRHO = int.TryParse(txtLinePolarRHO.Text.Trim(), out int rho) ? rho : 60;
-            // 由间隔角度计算采样点数
-            int _pointNumLine = (int)(Math.Abs(2 * polarRHO) / _linePolarInterval) + 1;
-            // 将合法值赋值给全局变量
-            _pointNumLine = pointNumLine;
+        //    // 3. 校验是否为正整数
+        //    if (pointNumLine <= 0)
+        //    {
+        //        MessageBox.Show($"{FindResource("Pleaseenterapositiveinteger")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
+        //        return;
+        //    }
+        //    // 先获取极角范围
+        //    int polarRHO = int.TryParse(txtLinePolarRHO.Text.Trim(), out int rho) ? rho : 60;
+        //    // 由间隔角度计算采样点数
+        //    int _pointNumLine = (int)(Math.Abs(2 * polarRHO) / _linePolarInterval) + 1;
+        //    // 将合法值赋值给全局变量
+        //    _pointNumLine = pointNumLine;
 
 
-        }
+        //}
 
         private void BtnExport_Click(object sender, RoutedEventArgs e)
         {
@@ -3414,7 +3561,7 @@ namespace CVAVMControl
                 var saveFileDialog = new SaveFileDialog
                 {
                     Filter = "CSV Files (*.csv)|*.csv",
-                    FileName = $"VAM_Diameter_{DateTime.Now:yyyyMMdd_HHmmss}",
+                    FileName = $"VAM_Azimuth_{DateTime.Now:yyyyMMdd_HHmmss}",
                     Title = $"{FindResource("VAM.SaveAzimuth")}"
                 };
                 if (saveFileDialog.ShowDialog() != true) return;
@@ -3484,7 +3631,7 @@ namespace CVAVMControl
             foreach (var channel in selectedChannels)
             {
                 // 构建最终文件路径
-                string csvFileName = $"{basePath}_{channel}_DiameterLine.csv";
+                string csvFileName = $"{basePath}_{channel}.csv";
                 string fullCsvPath = Path.Combine(Path.GetDirectoryName(csvFileName) ?? "", Path.GetFileName(csvFileName));
 
                 using (var writer = new StreamWriter(fullCsvPath, false, Encoding.UTF8))
@@ -3561,7 +3708,7 @@ namespace CVAVMControl
                 var saveFileDialog = new SaveFileDialog
                 {
                     Filter = "CSV Files (*.csv)|*.csv",
-                    FileName = $"VAM_Circle_{DateTime.Now:yyyyMMdd_HHmmss}",
+                    FileName = $"VAM_Polar_Angle_{DateTime.Now:yyyyMMdd_HHmmss}",
                     Title = $"{FindResource("VAM.SavePolar")}"
                 };
                 if (saveFileDialog.ShowDialog() != true) return;
@@ -3599,7 +3746,7 @@ namespace CVAVMControl
             {
                 polarAngles.Add(p);
             }
-            // 兜底：确保至少有一个极角采样点
+            // 确保至少有一个极角采样点
             if (polarAngles.Count == 0) polarAngles.Add(polarStart);
             logger.Info($"The polar angle range is [{polarStart}, {polarEnd}] degrees, with a step size of {polarStep} degrees, resulting in a total of {polarAngles.Count} rings being generated.");
 
@@ -3640,14 +3787,14 @@ namespace CVAVMControl
             foreach (var channel in selectedChannels)
             {
                 // 构建最终文件路径
-                string csvFileName = $"{basePath}_{channel}_RCircle.csv";
+                string csvFileName = $"{basePath}_{channel}.csv";
                 string fullCsvPath = Path.Combine(Path.GetDirectoryName(csvFileName) ?? "", Path.GetFileName(csvFileName));
 
                 using (var writer = new StreamWriter(fullCsvPath, false, Encoding.UTF8))
                 {
                     // 5.1 写入标准化表头（包含间隔角度信息）
                     writer.WriteLine($"Measurement Date,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,"); 
-                    writer.WriteLine($"Instrument,VAM R-Circle（[{polarStart}°,{polarEnd}°],,,,,,,,,,,,");
+                    writer.WriteLine($"Instrument,VAM R-Circle（[{polarStart}°~{polarEnd}°],,,,,,,,,,,,");
                     writer.WriteLine($"AngleStep,{polarStep}°,,,,,,,,,,,,");///*{FindResource("VAM.AngleStep")}*/ 
                     writer.WriteLine($"AzimuthInterval, {azimuthInterval:F2}°,,,,,,,,,,,,");//{FindResource("VAM.Azimuthinterval")}
                     writer.WriteLine(); // 空行分隔
@@ -3800,7 +3947,7 @@ namespace CVAVMControl
        
     }
 
-    internal class CropCenter
+    internal class CropCenter 
     {
         public double x { get; set; }
         public double y { get; set; }
