@@ -28,7 +28,8 @@ using System.Windows.Threading;
 using WaferComm.Core;
 using Path = System.IO.Path;
 using Rect = System.Windows.Rect;
-
+using CVWaferProber.Core;
+using CVWaferProber.Core.ViewModels;
 
 namespace CVAVMControl
 {
@@ -37,7 +38,7 @@ namespace CVAVMControl
     /// </summary>
     public partial class CVVAMAnalyzer : UserControl
     {
-
+        
         private static readonly ILog logger = LogManager.GetLogger(typeof(CVVAMAnalyzer));
 
         private Mat? XMat;
@@ -3336,7 +3337,7 @@ namespace CVAVMControl
                         MessageBox.Show($"{FindResource("Nodata")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                         return;
                     }
-
+                   
                     // 核心修改：导出时主动传递最新参数（当前通道、当前采样点数量）
                     bool dllSuccess = CallVamDllForAllAzimuth(
                         exportChannel: displayChannel, // 导出时的当前通道
@@ -3352,15 +3353,15 @@ namespace CVAVMControl
                     }
 
                     // 选择导出路径
-                    // 1. 固定导出根路径
-                    string exportPath = @"D:\Project\VAM";
 
+                    // 1. 读取全局配置中的VAM导出路径
+                    string exportPath = GetVamGlobalExportPath();
                     // 2. 确保目标目录存在（不存在则自动创建，避免路径不存在异常）
-                    if (!Directory.Exists(exportPath))
-                    {
-                        Directory.CreateDirectory(exportPath);
-                        logger.Info($"{FindResource("VAM.Create")}：{ exportPath}");
-                    }
+                    //if (!Directory.Exists(exportPath))
+                    //{
+                    //    Directory.CreateDirectory(exportPath);
+                    //    logger.Info($"{FindResource("VAM.Create")}：{ exportPath}");
+                    //}
                     // 按示例表格格式导出（原有逻辑不变）
                     using (var writer = new StreamWriter(exportPath, false, Encoding.UTF8))
                     {
@@ -3944,7 +3945,46 @@ namespace CVAVMControl
             }
         }
         #endregion
-       
+        /// <summary>
+        /// 读取全局配置中的VAM导出路径
+        /// </summary>
+        private string GetVamGlobalExportPath()
+        {
+            try
+            {
+                // 配置文件路径（与GlobalConfigWindow保持一致）
+                string appDir = AppDomain.CurrentDomain.BaseDirectory;
+                string configDir = Path.Combine(appDir, "Config");
+                string configPath = Path.Combine(configDir, "GlobalConfig.json");
+
+                if (File.Exists(configPath))
+                {
+                    string configContent = File.ReadAllText(configPath);
+                    var globalConfig = Newtonsoft.Json.JsonConvert.DeserializeObject<GlobalConfigModel>(configContent);
+                    if (globalConfig != null && !string.IsNullOrWhiteSpace(globalConfig.VamExportPath))
+                    {
+                        // 确保文件夹存在
+                        if (!Directory.Exists(globalConfig.VamExportPath))
+                        {
+                            Directory.CreateDirectory(globalConfig.VamExportPath);
+                        }
+                        return globalConfig.VamExportPath;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error("读取VAM全局导出路径失败", ex);
+            }
+
+            // 兜底使用默认路径
+            string defaultPath = @"D:\Project\VAM";
+            if (!Directory.Exists(defaultPath))
+            {
+                Directory.CreateDirectory(defaultPath);
+            }
+            return defaultPath;
+        }
     }
 
     internal class CropCenter 
@@ -3952,4 +3992,6 @@ namespace CVAVMControl
         public double x { get; set; }
         public double y { get; set; }
     }
+
+
 }

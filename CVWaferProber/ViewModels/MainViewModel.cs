@@ -342,6 +342,8 @@ namespace CVWaferProber.ViewModels
         /// 打开Summary导出配置窗口命令
         /// </summary>
         public ICommand OpenSummaryConfigCommand { get; }
+        public ICommand OpenGlobalConfigCommand { get; }
+        
         #endregion
 
         #region 三态全选属性
@@ -562,6 +564,7 @@ namespace CVWaferProber.ViewModels
             //  打开Summary导出配置窗口
             // Summary配置命令
             OpenSummaryConfigCommand = new CVImgRelayCommand(OpenSummaryConfig);
+            OpenGlobalConfigCommand = new RelayCommand(ExecuteOpenGlobalConfig);
             // OpenSummaryConfigCommand = new RelayCommand(OpenSummaryConfig);
             SysFlowCfgCommand = new RelayCommand(SysFlowCfg);
 
@@ -932,7 +935,21 @@ namespace CVWaferProber.ViewModels
                 UpdateDataGridColumns();
             }
         }
+        /// <summary>
+        /// 执行打开全局配置窗口
+        /// </summary>
+        private void ExecuteOpenGlobalConfig(object obj)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var globalConfigWindow = new GlobalConfigWindow
+                {
+                    Owner = Application.Current.MainWindow
+                };
 
+                globalConfigWindow.ShowDialog();
+            });
+        }
         #region 三态全选状态更新
         private void UpdateSelectAllAOIState()
         {

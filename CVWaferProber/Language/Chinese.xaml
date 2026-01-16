@@ -160,10 +160,18 @@
     <sys:String x:Key="Menu.System">系统(S)</sys:String>
     <sys:String x:Key="Menu.System.CfgFlows">流程配置</sys:String>
     <sys:String x:Key="Menu.System.CfgExport">Summary导出配置</sys:String>
+    <sys:String x:Key="Menu.GlobalConfig">全局配置</sys:String>
     <sys:String x:Key="Menu.View">视图(V)</sys:String>
     <sys:String x:Key="Menu.Language">语言(L)</sys:String>
     <sys:String x:Key="Menu.Language.Chinese">中文</sys:String>
     <sys:String x:Key="Menu.Language.English">英文</sys:String>
+
+    <sys:String x:Key="GlobalConfig.VAMExportPath">自动导出默认路径:</sys:String>
+    <sys:String x:Key="GlobalConfig.Browse">浏览</sys:String>
+    <sys:String x:Key="GlobalConfig.Save">保存配置</sys:String>
+    <sys:String x:Key="GlobalConfig.SaveSuccess">配置保存成功！</sys:String>
+    <sys:String x:Key="GlobalConfig.PathInvalid">请选择有效的文件夹路径！</sys:String>
+
 
     <sys:String x:Key="Menu.MappingPanelVisible">Mapping面板</sys:String>
     <sys:String x:Key="Menu.Layout.Title.AOI">AOI面板</sys:String>
@@ -195,6 +203,9 @@
     <sys:String x:Key="VAM.YChannel">Y通道</sys:String>
     <sys:String x:Key="VAM.ZChannel">Z通道</sys:String>
     <sys:String x:Key="VAM.OperationArea">操作区</sys:String>
+
+
+
 
     <sys:String x:Key="VAM.Exportparameterconfiguration">导出参数配置</sys:String>
     <sys:String x:Key="VAM.ExporChannel">导出通道:</sys:String>

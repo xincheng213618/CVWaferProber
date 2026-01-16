@@ -170,7 +170,13 @@
     <!--  设备调试相关  -->
     <sys:String x:Key="Menu.DeviceDebug">Device(D)</sys:String>
     <sys:String x:Key="Menu.ProberDeviceDebug">ProberDebug</sys:String>
+    <sys:String x:Key="Menu.GlobalConfig">Global Configuration</sys:String>
 
+    <sys:String x:Key="GlobalConfig.VAMExportPath">Auto-Export Default Path:</sys:String>
+    <sys:String x:Key="GlobalConfig.Browse">Browse</sys:String>
+    <sys:String x:Key="GlobalConfig.Save">Save Configuration</sys:String>
+    <sys:String x:Key="GlobalConfig.SaveSuccess">Configuration saved successfully!</sys:String>
+    <sys:String x:Key="GlobalConfig.PathInvalid">Please select a valid folder path！</sys:String>
     <!--  VAM相关  -->
     <sys:String x:Key="VAM.OpenCVCIEFile">Open CVCIE File</sys:String>
     <sys:String x:Key="VAM.SelectCVCIEFile">Select CVCIE File</sys:String>

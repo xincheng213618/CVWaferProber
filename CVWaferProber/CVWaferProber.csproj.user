@@ -24,6 +24,9 @@
     <Compile Update="Views\ExternalWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Views\GlobalConfigWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Views\NoneMapingDockWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>

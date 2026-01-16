@@ -74,6 +74,11 @@
                     Command="{Binding OpenSummaryConfigCommand}"
                     Header="{DynamicResource Menu.System.CfgExport}"
                     InputGestureText="Alt+E" />
+                <MenuItem
+                    x:Name="MenuGlobalConfig"
+                    Command="{Binding OpenGlobalConfigCommand}"
+                    Header="{DynamicResource Menu.GlobalConfig}"
+                    InputGestureText="Alt+G" />
                 <!--<MenuItem Header="暂停测试" Command="{Binding PauseTestCommand}" />
                 <MenuItem Header="停止测试" Command="{Binding StopTestCommand}" />
                 <Separator />
