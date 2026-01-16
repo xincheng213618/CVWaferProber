@@ -50,8 +50,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OnPropertyChanged(nameof(PlotModel));
             }
         }
-        private PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 6, DefaultMaxRange = 5000000000000000000};
-        private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 10, DefaultMaxRange = 2000000000000000000 };
+        private PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = -100, DefaultMax = 6, DefaultMaxRange = 5000000000000000000};
+        private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = -100, DefaultMax = 10, DefaultMaxRange = 2000000000000000000 };
 
         private void InitializePlotModel()
         {
@@ -157,10 +157,10 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
 
             // 2. 计算X轴（电压）和Y轴（亮度）的最大值（核心）
-            double maxVoltage = V.Max() * 1.01;// 电压最大值
-            double minVoltage = Math.Max(0, V.Min() * 0.99);// 电压最小值
-            double maxLuminance = L.Max() * 1.01;// 亮度最大值
-            double minLuminance = Math.Max(0, L.Min() * 0.99);// 亮度最小值
+            double maxVoltage = Measurements.Max(m => m.Voltage) * 1.01; // 电压最大值
+            double minVoltage = Measurements.Min(m => m.Voltage) * 0.99; // 电压最小值
+            double maxLuminance = Measurements.Max(m => m.Luminance) ; // 亮度最大值
+            double minLuminance = Measurements.Min(m => m.Luminance) ;// 亮度最小值
 
             // 3. 获取初始化时创建的X轴和Y轴（通过标题匹配，确保准确性）
             var xAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Bottom);

@@ -32,6 +32,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private PlotModel _IVPlotModel;
         private PlotModel _ILPlotModel;
         private PlotModel _VLPlotModel;
+        private PlotModel _PLPlotModel;
         // 新增：EQE光谱曲线图
         //private PlotModel _eqePlotModel;
         // 总览图光谱X轴固定范围（350~800nm）
@@ -47,12 +48,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         public PlotModel OverviewIVPlotModel { get; private set; } = new PlotModel();
         public PlotModel OverviewILPlotModel { get; private set; } = new PlotModel();
         public PlotModel OverviewVLPlotModel { get; private set; } = new PlotModel();
+        public PlotModel OverviewPower_LPlotModel { get; private set; } = new PlotModel();
 
         private SpectrumMeasurement _selectedMeasurement;
         private ObservableCollection<SpectrumMeasurement> _measurements;
         private ObservableCollection<ILMeasurement> _ILMeasurements;
         private ObservableCollection<IVMeasurement> _IVMeasurements;
         private ObservableCollection<VLMeasurement> _VLMeasurements;
+        private ObservableCollection<Power_LMeasurement> _Power_LMeasurements;
         //private ObservableCollection<IVLMeasurement> _IVLMeasurements;
         private ObservableCollection<IVLCameraMeasurement> _IVLCameraMeasurements;
         private ObservableCollection<SpectralData> _SpectralData;
@@ -63,6 +66,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private ILViewModel IL_viewModel;
         private IVViewModel IV_viewModel;
         private VLViewModel VL_viewModel;
+        private Power_LViewModel Power_L_viewModel;
         private IVLCameraViewModel IVLCamera_viewModel;
 
        // private SpectrumControl _spectralCtrl;
@@ -507,6 +511,41 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 VLPlotModel.InvalidatePlot(true);
             }
         }
+        private SolidColorBrush _PLLineColor = new SolidColorBrush(Colors.Blue);
+        public SolidColorBrush PLLineColor
+        {
+            get => _PLLineColor;
+            set
+            {
+                if (_PLLineColor != value)
+                {
+                    _PLLineColor = value;
+                    OnPropertyChanged(nameof(PLLineColor));
+                    UpdatePLChartLineColor();
+                }
+            }
+        }
+        private void UpdatePLChartLineColor()
+        {
+            if (PLPlotModel?.Series != null && PLLineColor != null)
+            {
+                // 解决颜色转换错误：使用OxyColor.FromArgb转换
+                OxyColor oxyColor = OxyColor.FromArgb(
+                    PLLineColor.Color.A,
+                    PLLineColor.Color.R,
+                    PLLineColor.Color.G,
+                    PLLineColor.Color.B);
+
+                foreach (var lineSeries in PLPlotModel.Series.OfType<LineSeries>())
+                {
+                    lineSeries.Color = oxyColor;
+                    // 确保IV图表的数据点颜色也与线条一致
+                    lineSeries.MarkerFill = oxyColor;
+                    lineSeries.MarkerStroke = oxyColor;
+                }
+                PLPlotModel.InvalidatePlot(true);
+            }
+        }
         private void UpdateChartLineColor()
         {
             // 更新所有相关图表的线条颜色
@@ -553,7 +592,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             get => _VLMeasurements;
             set => SetProperty(ref _VLMeasurements, value);
         }
-
+        public ObservableCollection<Power_LMeasurement> Power_LMeasurements
+        {
+            get => _Power_LMeasurements;
+            set => SetProperty(ref _Power_LMeasurements, value);
+        }
 
 
         private void UpdateChartByShowAllState()
@@ -703,6 +746,12 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             get => _VLPlotModel;
             set => SetProperty(ref _VLPlotModel, value);
+
+        }
+        public PlotModel PLPlotModel
+        {
+            get => _PLPlotModel;
+            set => SetProperty(ref _PLPlotModel, value);
         }
         #region IVLCamera
         public IVLCameraMeasurement SelectedCameraMeasurement
@@ -782,6 +831,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             InitializeIVPlotModel();
             InitializeILPlotModel();
             InitializeVLPlotModel();
+            InitializePower_LPlotModel();
             // 新增：初始化EQE图表
             //InitializeEQEPlotModel();
             InitializeIVLCameraModel();
@@ -1025,8 +1075,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             OverviewSpectralPlotModel = ClonePlotModel(PlotModel, Title); // 克隆光谱子Tab配置
             OverviewIVPlotModel = ClonePlotModel(IVPlotModel, "IV");       // 克隆IV子Tab配置
             OverviewILPlotModel = ClonePlotModel(ILPlotModel, "IL");       // 克隆IL子Tab配置
-            OverviewVLPlotModel = ClonePlotModel(VLPlotModel, "VL");       // 克隆VL子Tab配置
-
+                                                                           // OverviewVLPlotModel = ClonePlotModel(VLPlotModel, "VL");       // 克隆VL子Tab配置
+            OverviewPower_LPlotModel = ClonePlotModel(PLPlotModel, "Power-L");
             // 2. 为总览图添加数据系列（绑定子Tab数据源）
             InitializeOverviewSeries();
 
@@ -1035,6 +1085,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             OnPropertyChanged(nameof(OverviewIVPlotModel));
             OnPropertyChanged(nameof(OverviewILPlotModel));
             OnPropertyChanged(nameof(OverviewVLPlotModel));
+            OnPropertyChanged(nameof(OverviewPower_LPlotModel));
         }
         private PlotModel ClonePlotModel(PlotModel sourceModel, string title)
         {
@@ -1134,7 +1185,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             OverviewIVPlotModel.Series.Clear();
             OverviewILPlotModel.Series.Clear();
             OverviewVLPlotModel.Series.Clear();
-
+            OverviewPower_LPlotModel.Series.Clear();
             // 2. 绑定光谱数据
 
             if (Measurements.Any())
@@ -1235,28 +1286,44 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
 
             // 5. 绑定VL数据
-            if (VLMeasurements.Any())
+            //if (VLMeasurements.Any())
+            //{
+            //    var vlSeries = new LineSeries
+            //    {
+            //        ItemsSource = VLMeasurements.Select(m => new DataPoint(m.Voltage, m.Luminance)),
+            //        Color = OxyColors.Purple,
+            //        StrokeThickness = 1.5,
+            //        MarkerType = MarkerType.Circle,
+            //        //MarkerSize = 2,
+            //        MarkerFill = OxyColors.Purple,
+            //        CanTrackerInterpolatePoints = true,
+            //        TrackerFormatString = "{0}\n {1}: {2:0.00}\n {3}: {4:0.00}"
+            //    };
+            //    OverviewVLPlotModel.Series.Add(vlSeries);
+            //    RefreshAxisRange(OverviewVLPlotModel);
+            //}
+            if (Power_LMeasurements.Any())
             {
-                var vlSeries = new LineSeries
+                var powerLSeries = new LineSeries
                 {
-                    ItemsSource = VLMeasurements.Select(m => new DataPoint(m.Voltage, m.Luminance)),
-                    Color = OxyColors.Purple,
+                    // 映射Power-L数据（根据Power_LMeasurement的实际字段调整X/Y轴）
+                    ItemsSource = Power_LMeasurements.Select(m => new DataPoint(m.Power, m.Luminance)), 
+                    Color = OxyColors.Orange, // 自定义Power-L曲线颜色，与其他图表区分
                     StrokeThickness = 1.5,
                     MarkerType = MarkerType.Circle,
-                    //MarkerSize = 2,
-                    MarkerFill = OxyColors.Purple,
+                    MarkerFill = OxyColors.Orange,
                     CanTrackerInterpolatePoints = true,
                     TrackerFormatString = "{0}\n {1}: {2:0.00}\n {3}: {4:0.00}"
                 };
-                OverviewVLPlotModel.Series.Add(vlSeries);
-                RefreshAxisRange(OverviewVLPlotModel);
+                OverviewPower_LPlotModel.Series.Add(powerLSeries);
+                RefreshAxisRange(OverviewPower_LPlotModel);
             }
-
             // 6. 强制刷新图表
             OverviewSpectralPlotModel.InvalidatePlot(true);
             OverviewIVPlotModel.InvalidatePlot(true);
             OverviewILPlotModel.InvalidatePlot(true);
             OverviewVLPlotModel.InvalidatePlot(true);
+            OverviewPower_LPlotModel.InvalidatePlot(true);
         }
         #region EQE
         // 新增：EQE值计算方法（可根据实际公式调整）
@@ -2648,6 +2715,13 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             VLMeasurements = viewModel.Measurements;
             VLPlotModel = viewModel.PlotModel;
         }
+        private void InitializePower_LPlotModel()
+        {
+            Power_LViewModel viewModel = new Power_LViewModel();
+            Power_L_viewModel = viewModel;
+            Power_LMeasurements = viewModel.Measurements;
+            PLPlotModel = viewModel.PlotModel;
+        }
         //光谱
         private void InitializePlotModel()
         {
@@ -2671,7 +2745,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var yAxis = new LinearAxis
             {
                 Position = AxisPosition.Left,
-                Title = (string)System.Windows.Application.Current.FindResource("Sp.Spectral"),
+                Title = (string)System.Windows.Application.Current.FindResource("Sp.Spectral1"),
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
             };
@@ -2836,12 +2910,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             OverviewILPlotModel.Annotations.Clear();
             OverviewVLPlotModel.Series.Clear();
             OverviewVLPlotModel.Annotations.Clear();
+            OverviewPower_LPlotModel.Series.Clear();
+            OverviewPower_LPlotModel.Annotations.Clear();
             // 刷新总览图
             OverviewSpectralPlotModel.InvalidatePlot(true);
             OverviewIVPlotModel.InvalidatePlot(true);
             OverviewILPlotModel.InvalidatePlot(true);
             OverviewVLPlotModel.InvalidatePlot(true);
-
+            OverviewPower_LPlotModel.InvalidatePlot(true); // 清空Power-L总览图
             // 清空所有数据集合
             Measurements.Clear();
             ILMeasurements.Clear();
@@ -2856,6 +2932,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             IL_viewModel.Clear();
             IV_viewModel.Clear();
             VL_viewModel.Clear();
+            Power_LMeasurements.Clear();
             IVLCamera_viewModel.Clear();
             IVLCameraImageSrc = null;
 
@@ -2921,6 +2998,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             IV_viewModel.LoadData(serialNumber);
             VL_viewModel.LoadData(lv_results, il_results);
             IVLCamera_viewModel.LoadData(lv_results, il_results);
+            Power_L_viewModel.LoadData(lv_results, il_results, il_results); // 按需传入正确的参数集合
             InitializeOverviewSeries();
 
             // 触发自动导出
@@ -2945,6 +3023,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             IL_viewModel.LoadData(results);
             VL_viewModel.LoadData(results);
+            Power_L_viewModel.LoadData(results);
             //
             int n = 1;
             foreach (var result in results)

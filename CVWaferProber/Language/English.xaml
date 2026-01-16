@@ -55,8 +55,11 @@
     <sys:String x:Key="Chart.LineColor">LineColor:</sys:String>
     <sys:String x:Key="Chart.Reset">Reset</sys:String>
     <!--  光谱曲线相关  -->
-    <sys:String x:Key="Sp.Spectral">Spectral</sys:String>
     <sys:String x:Key="Sp.Overview">Overview</sys:String>
+    <sys:String x:Key="Sp.Spectral">Spectrum</sys:String>
+
+    <sys:String x:Key="Sp.Spectral1">SPD(w/sr·m^2·nm)</sys:String>
+    <sys:String x:Key="Sp.SpectralEQE">SPD(W/nm)</sys:String>
     <sys:String x:Key="Sp.EQESpectral">EQESpectral Curve</sys:String>
     <sys:String x:Key="Sp.SpectralCurve">Spectral Curve</sys:String>
     <sys:String x:Key="Sp.Wavelength">Wavelength (nm)</sys:String>
@@ -68,7 +71,7 @@
     <!--  测量参数  -->
     <sys:String x:Key="Sp.MeasurementBatch">Measurement Batch</sys:String>
     <sys:String x:Key="Sp.Voltage">Voltage/V(V)</sys:String>
-    <sys:String x:Key="Sp.Current">Current/A(mA)</sys:String>
+    <sys:String x:Key="Sp.Current">Current/I(mA)</sys:String>
     <sys:String x:Key="Sp.Luminance">Luminance/L (cd/m²)</sys:String>
     <sys:String x:Key="Sp.Time">Time</sys:String>
     <sys:String x:Key="ColorCoordinateX">CIE x</sys:String>
@@ -87,6 +90,9 @@
 
     <!--  VL曲线相关  -->
     <sys:String x:Key="Sp.VL Curve">VL Curve</sys:String>
+    <!--  Power-L曲线相关  -->
+    <sys:String x:Key="Sp.PowerL Curve">Power-L Curve</sys:String>
+    <sys:String x:Key="Sp.Power">Power(W)</sys:String>
     <!--  Camera曲线相关  -->
     <sys:String x:Key="Sp.Camera Curve">Camera Curve</sys:String>
     <!--  EQE相关  -->

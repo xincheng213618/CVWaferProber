@@ -327,7 +327,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             }
         }
-        private bool _isShowAllEQEData;
+        private bool _isShowAllEQEData = true;
         public bool IsShowAllEQEData
         {
             get => _isShowAllEQEData;
@@ -701,6 +701,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             get => _VLPlotModel;
             set => SetProperty(ref _VLPlotModel, value);
         }
+
         //#region IVLCamera
         //public IVLCameraMeasurement SelectedCameraMeasurement
         //{
@@ -1063,8 +1064,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             OverviewSpectralPlotModel = ClonePlotModel(PlotModel, Title); // 克隆光谱子Tab配置
             OverviewIVPlotModel = ClonePlotModel(IVPlotModel, "IV");       // 克隆IV子Tab配置
             OverviewILPlotModel = ClonePlotModel(ILPlotModel, "IL");       // 克隆IL子Tab配置
-            OverviewVLPlotModel = ClonePlotModel(VLPlotModel, "VL");       // 克隆VL子Tab配置
-
+           // OverviewVLPlotModel = ClonePlotModel(VLPlotModel, "VL");       // 克隆VL子Tab配置
+           // OverviewPowerLPlotModel = ClonePlotModel(PLPlotModel, "Power-L");
             // 2. 为总览图添加数据系列（绑定子Tab数据源）
             InitializeOverviewSeries();
 
@@ -1437,7 +1438,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var yAxis = new LinearAxis
             {
                 Position = AxisPosition.Left,
-                Title = (string)System.Windows.Application.Current.FindResource("Sp.Spectral"),
+                Title = (string)System.Windows.Application.Current.FindResource("Sp.SpectralEQE"),
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
             };

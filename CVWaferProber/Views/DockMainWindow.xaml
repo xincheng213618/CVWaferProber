@@ -263,20 +263,24 @@
                                         CanDockAsTabbedDocument="False"
                                         CanFloat="False"
                                         CanHide="True">
-                                        <TextBox
+                                        <RichTextBox
                                             x:Name="LogTextBox"
                                             FontFamily="Consolas"
                                             FontSize="12"
                                             HorizontalScrollBarVisibility="Auto"
                                             IsReadOnly="True"
-                                            TextWrapping="NoWrap"
                                             VerticalScrollBarVisibility="Auto">
-                                            <TextBox.ContextMenu>
+                                            <!--  配置FlowDocument，实现“NoWrap”效果 TextWrapping="NoWrap"  -->
+                                            <RichTextBox.Document>
+                                                <FlowDocument />
+                                            </RichTextBox.Document>
+                                            <!--  上下文菜单保留  -->
+                                            <RichTextBox.ContextMenu>
                                                 <ContextMenu>
                                                     <MenuItem Click="ClearLogMenuItem_Click" Header="{DynamicResource MenuLogClear}" />
                                                 </ContextMenu>
-                                            </TextBox.ContextMenu>
-                                        </TextBox>
+                                            </RichTextBox.ContextMenu>
+                                        </RichTextBox>
                                     </avalon:LayoutAnchorable>
 
 

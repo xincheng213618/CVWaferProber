@@ -90,11 +90,17 @@
                                 Model="{Binding OverviewILPlotModel}" />
 
                             <!--  总览-VL图表  -->
+                            <!--<oxy:PlotView
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Margin="5"
+                                Model="{Binding OverviewVLPlotModel}" />-->
+                            <!--  总览-PowerL图表  -->
                             <oxy:PlotView
                                 Grid.Row="1"
                                 Grid.Column="1"
                                 Margin="5"
-                                Model="{Binding OverviewVLPlotModel}" />
+                                Model="{Binding OverviewPower_LPlotModel}" />
                         </Grid>
                     </TabItem>
                     <!--  光谱分析Tab  -->
@@ -809,16 +815,18 @@
                         </Grid>
                     </TabItem>
                     <!--  IVLCamera特性Tab  -->
-                    <!--<TabItem Header="{DynamicResource IVLCamera}">
+                    <!--<TabItem Header=" Power-L">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="6*" />
                                 <RowDefinition Height="4*" />
                             </Grid.RowDefinitions>
 
+
                     -->
                     <!--  图像区域  -->
                     <!--
+
                             <Border
                                 Grid.Row="0"
                                 Margin="5"
@@ -826,9 +834,11 @@
                                 BorderThickness="1">
                                 <Image Source="{Binding IVLCameraImageSrc}" />
                             </Border>
+
                     -->
                     <!--  IVLCamera DataGrid区域  -->
                     <!--
+
                             <DataGrid
                                 x:Name="ivlCameraGrid"
                                 Grid.Row="1"
@@ -858,20 +868,24 @@
                                         Header="{DynamicResource Sp.Time}" />
                                     <DataGridTextColumn
                                         Width="80"
-                                        Binding="{Binding V, StringFormat='F4'}"
+                                        Binding="{Binding Voltage, StringFormat='F4'}"
                                         Header="{DynamicResource Sp.Voltage}" />
-                                    <DataGridTextColumn
+                    -->
+                    <!--<DataGridTextColumn
                                         Width="80"
                                         Binding="{Binding I, StringFormat='F4'}"
-                                        Header="{DynamicResource Sp.Current}" />
+                                        Header="{DynamicResource Sp.Current}" />-->
+                    <!--
                                     <DataGridTextColumn
                                         Width="80"
                                         Binding="{Binding Luminance, StringFormat='F4'}"
                                         Header="{DynamicResource Sp.Luminance}" />
-                                    <DataGridTextColumn
+                    -->
+                    <!--<DataGridTextColumn
                                         Width="480"
                                         Binding="{Binding ImageFile}"
-                                        Header="{DynamicResource Image}" />
+                                        Header="{DynamicResource Image}" />-->
+                    <!--
                                 </DataGrid.Columns>
 
                                 <DataGrid.RowStyle>
@@ -886,6 +900,150 @@
                             </DataGrid>
                         </Grid>
                     </TabItem>-->
+                    <TabItem Header=" Power-L">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="67*" />
+                                <ColumnDefinition Width="275*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="6*" />
+                                <RowDefinition Height="4*" />
+                            </Grid.RowDefinitions>
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.ColumnSpan="2"
+                                Margin="5,2,5,2"
+                                Orientation="Horizontal">
+                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Chart.LineColor}" />
+                                <ComboBox
+                                    Width="80"
+                                    Height="20"
+                                    Margin="2"
+                                    SelectedValue="{Binding PLLineColor, Mode=TwoWay}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Rectangle
+                                                    Width="20"
+                                                    Height="20"
+                                                    Fill="{Binding}" />
+                                                <TextBlock Margin="5,0" Text="{Binding Color.Name}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                    <!--  颜色选项（与光谱选项卡相同）  -->
+                                    <!--  红色系  -->
+                                    <SolidColorBrush Color="Red" />
+                                    <SolidColorBrush Color="Maroon" />
+                                    <SolidColorBrush Color="Orange" />
+                                    <SolidColorBrush Color="Brown" />
+                                    <SolidColorBrush Color="Pink" />
+                                    <SolidColorBrush Color="Crimson" />
+                                    <SolidColorBrush Color="Tomato" />
+                                    <SolidColorBrush Color="Coral" />
+                                    <SolidColorBrush Color="Salmon" />
+                                    <SolidColorBrush Color="LightCoral" />
+                                    <!--  黄色/金色系  -->
+                                    <SolidColorBrush Color="Yellow" />
+                                    <SolidColorBrush Color="Olive" />
+                                    <SolidColorBrush Color="Gold" />
+                                    <SolidColorBrush Color="Khaki" />
+                                    <SolidColorBrush Color="LightYellow" />
+                                    <!--  绿色系  -->
+                                    <SolidColorBrush Color="Lime" />
+                                    <SolidColorBrush Color="Green" />
+                                    <SolidColorBrush Color="ForestGreen" />
+                                    <SolidColorBrush Color="LimeGreen" />
+                                    <SolidColorBrush Color="SeaGreen" />
+                                    <SolidColorBrush Color="MediumSeaGreen" />
+                                    <SolidColorBrush Color="SpringGreen" />
+                                    <SolidColorBrush Color="LightGreen" />
+                                    <!--  青色/蓝绿色系  -->
+                                    <SolidColorBrush Color="Aqua" />
+                                    <SolidColorBrush Color="Cyan" />
+                                    <SolidColorBrush Color="Teal" />
+                                    <SolidColorBrush Color="Turquoise" />
+                                    <SolidColorBrush Color="MediumTurquoise" />
+                                    <SolidColorBrush Color="LightSeaGreen" />
+                                    <SolidColorBrush Color="DarkCyan" />
+                                    <!--  蓝色系  -->
+                                    <SolidColorBrush Color="Blue" />
+                                    <SolidColorBrush Color="Navy" />
+                                    <SolidColorBrush Color="RoyalBlue" />
+                                    <SolidColorBrush Color="DodgerBlue" />
+                                    <SolidColorBrush Color="DeepSkyBlue" />
+                                    <SolidColorBrush Color="LightBlue" />
+                                    <SolidColorBrush Color="SteelBlue" />
+                                    <SolidColorBrush Color="CornflowerBlue" />
+                                    <!--  紫色系  -->
+                                    <SolidColorBrush Color="Purple" />
+                                    <SolidColorBrush Color="Magenta" />
+                                    <SolidColorBrush Color="DarkMagenta" />
+                                    <SolidColorBrush Color="MediumPurple" />
+                                    <SolidColorBrush Color="Orchid" />
+                                    <SolidColorBrush Color="Violet" />
+                                    <SolidColorBrush Color="Plum" />
+                                    <!--  中性色/灰度  -->
+                                    <SolidColorBrush Color="Black" />
+                                    <SolidColorBrush Color="DimGray" />
+                                    <SolidColorBrush Color="Gray" />
+                                    <SolidColorBrush Color="DarkGray" />
+                                    <SolidColorBrush Color="Silver" />
+                                    <SolidColorBrush Color="LightGray" />
+                                    <SolidColorBrush Color="Gainsboro" />
+                                    <SolidColorBrush Color="WhiteSmoke" />
+                                    <SolidColorBrush Color="White" />
+                                </ComboBox>
+                            </StackPanel>
+                            <!--  IL图表区域  -->
+                            <oxy:PlotView
+                                Grid.Row="1"
+                                Grid.ColumnSpan="2"
+                                Margin="5,5,5,5"
+                                Loaded="PlotView_Loaded"
+                                Model="{Binding PLPlotModel}" />
+
+                            <!--  IL DataGrid区域  -->
+                            <DataGrid
+                                Grid.Row="2"
+                                Grid.ColumnSpan="2"
+                                Margin="5,5,5,5"
+                                AutoGenerateColumns="False"
+                                CanUserAddRows="False"
+                                CanUserDeleteRows="False"
+                                CanUserReorderColumns="False"
+                                CanUserResizeRows="False"
+                                CanUserSortColumns="True"
+                                GridLinesVisibility="All"
+                                IsReadOnly="True"
+                                ItemsSource="{Binding Power_LMeasurements}"
+                                RowHeight="25"
+                                SelectionMode="Single"
+                                SelectionUnit="FullRow">
+
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn
+                                        Width="50"
+                                        Binding="{Binding No}"
+                                        Header="{DynamicResource GridHeader.No}" />
+                                    <DataGridTextColumn
+                                        Width="120"
+                                        Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}"
+                                        Header="{DynamicResource Sp.Time}" />
+                                    <DataGridTextColumn
+                                        Width="80"
+                                        Binding="{Binding Power, StringFormat='F4'}"
+                                        Header="{DynamicResource Sp.Power}" />
+                                    <DataGridTextColumn
+                                        Width="80"
+                                        Binding="{Binding Luminance, StringFormat='F4'}"
+                                        Header="{DynamicResource Sp.Luminance}" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </TabItem>
                 </TabControl>
             </Grid>
         </TabItem>

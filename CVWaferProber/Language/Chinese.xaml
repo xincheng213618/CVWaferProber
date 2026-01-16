@@ -62,9 +62,12 @@
     <!--  光谱曲线相关  -->
     <sys:String x:Key="Sp.Overview">总览图</sys:String>
     <sys:String x:Key="Sp.Spectral">光谱</sys:String>
+    <sys:String x:Key="Sp.Spectral1">SPD(w/sr·m^2·nm)</sys:String>
+    <sys:String x:Key="Sp.SpectralEQE">SPD(W/nm)</sys:String>
+
     <sys:String x:Key="Sp.EQESpectral">EQE光谱曲线</sys:String>
     <sys:String x:Key="Sp.SpectralCurve">光谱曲线</sys:String>
-    <sys:String x:Key="Sp.Wavelength">波长 (nm)</sys:String>
+    <sys:String x:Key="Sp.Wavelength">波长(nm)</sys:String>
     <sys:String x:Key="Sp.RelativeSpectrum">相对光谱</sys:String>
     <sys:String x:Key="Sp.AbsoluteSpectrum">绝对光谱</sys:String>
     <sys:String x:Key="Sp.ShowAllData">显示所有数据</sys:String>
@@ -73,12 +76,17 @@
     <!--  IV曲线相关  -->
     <sys:String x:Key="Sp.IV Curve">IV曲线</sys:String>
 
-
     <!--  IL曲线相关  -->
     <sys:String x:Key="Sp.IL Curve">IL曲线</sys:String>
 
     <!--  VL曲线相关  -->
     <sys:String x:Key="Sp.VL Curve">VL曲线</sys:String>
+
+    <!--  Power-L曲线相关  -->
+    <sys:String x:Key="Sp.PowerL Curve">Power-L曲线</sys:String>
+    <sys:String x:Key="Sp.Power">功率(W)</sys:String>
+
+
     <!--  Camera曲线相关  -->
     <sys:String x:Key="Sp.Camera Curve">相机曲线</sys:String>
     <!--  EQE相关  -->
@@ -216,7 +224,7 @@
     <sys:String x:Key="VAM.ExportRCircleCSV">导出极角截面CSV</sys:String>
     <sys:String x:Key="VAM.ExportAzimuthLineCSV1">导出当前方位角截面CSV</sys:String>
     <sys:String x:Key="VAM.ExportRCircleCSV1">导出当前极角截面CSV</sys:String>
-    
+
     <sys:String x:Key="VAM.InvalidChannel">选中的通道无效，将使用默认Y通道</sys:String>
     <sys:String x:Key="VAM.PleaseSelectChannel">请先选择有效的导出通道</sys:String>
 

@@ -309,11 +309,11 @@ namespace CVAVMControl
                     wpfPlotRCircle.Refresh();
                 }
 
-                logger.Info("图表已重置为AutoScale");
+                //logger.Info("图表已重置为AutoScale");
             }
             catch (Exception ex)
             {
-                logger.Error("重置图表AutoScale失败", ex);
+                logger.Error("Failed to reset the chart's AutoScale.", ex);
             }
         }
         private void InitializeEvents(IEventAggregator? eventAggregator = null)

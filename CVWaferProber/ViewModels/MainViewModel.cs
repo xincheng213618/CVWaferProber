@@ -1125,7 +1125,7 @@ namespace CVWaferProber.ViewModels
                 }
 
                 //固定导出根路径为 F:/Project
-                string exportRootPath = @"D:/Project";
+                string exportRootPath = @"D:\ Project";
 
                 // 自动创建目录（如果不存在）
                 if (!Directory.Exists(exportRootPath))
@@ -1847,11 +1847,8 @@ namespace CVWaferProber.ViewModels
                     }
                     break;
                 case CVWaferProberFlowType.IVL_SP:
-                    ActivateSpectralInnerTabAction?.Invoke();
-                    break;
-
                 case CVWaferProberFlowType.IVL_Camera:
-                    ActivateIVLCameraInnerTabAction?.Invoke();
+                    ActivateSpectralInnerTabAction?.Invoke();
                     break;
 
                 case CVWaferProberFlowType.EQE:
