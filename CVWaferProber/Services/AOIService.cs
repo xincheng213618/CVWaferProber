@@ -6,9 +6,12 @@ using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
 using CVWPFCamImageCtrl;
 using Newtonsoft.Json;
+using System.Diagnostics;
+using System.IO;
 
 namespace CVWaferProber.Services
 {
+
     public class AOIService : BaseSerivce
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(AOIService));
@@ -81,12 +84,37 @@ namespace CVWaferProber.Services
             //LoadImageResult(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
         }
 
-        private void AddResultImage(int id,string imgFile)
+        private void AddResultImage(int id, string imgFile, bool isRawImage = false)
         {
-            ImageItem loc = new ImageItem(id);
-            loc.FileName = System.IO.Path.GetFileName(imgFile);
-            loc.ImagePath = imgFile;
-            CustomImageVM?.AddImage(loc);
+            if (!System.IO.File.Exists(imgFile)) return;
+
+            // 检查是否是 po.dat 文件
+            string fileName = Path.GetFileNameWithoutExtension(imgFile).ToLower();
+            if (fileName.Equals("po") || fileName.Equals("po.dat"))
+            {
+                Debug.WriteLine($"跳过 po.dat 文件: {Path.GetFileName(imgFile)}");
+                return;
+            }
+
+            ImageItem loc = new ImageItem(id)
+            {
+                FileName = Path.GetFileName(imgFile),
+                ImagePath = imgFile,
+                FileSizeMB = new FileInfo(imgFile).Length / (1024.0 * 1024.0),
+                Status = "Ready"
+            };
+
+            // 根据图像类型添加到对应的集合
+            if (isRawImage)
+            {
+                // 原始相机图 → 添加到 OriginalImageResults
+                CustomImageVM?.AddOriginalImageOnly(loc);
+            }
+            else
+            {
+                // 标定后图 → 添加到 ProcessedImageResults
+                CustomImageVM?.AddImage(loc);
+            }
         }
 
         private void LoadImageResult(ChipData? chipData, string serialNumber)
@@ -167,7 +195,10 @@ namespace CVWaferProber.Services
                     ////loc.TestTime = result.CreateDate;
                     //// 在UI线程更新集合
                     //CustomImageVM?.AddImage(loc);
-                    AddResultImage(id++, result.ImgFile);
+                   // AddResultImage(id++, result.ImgFile);
+                    bool isRawImage = Path.GetExtension(result.ImgFile).ToLower() == ".cvraw";
+                    AddResultImage(id++, result.ImgFile, isRawImage);
+
                 }
             }
 

@@ -42,8 +42,9 @@ namespace CVWPFCamImageCtrl
             // 根据当前视图类型返回对应的集合
             return _currentViewType switch
             {
-                "Camera" => _model.OriginalImageResults, // Camera Measurement：原图集合
-                _ => _model.ProcessedImageResults,       // Analysis Image：处理后图像集合（默认）
+                "Camera" => _model.OriginalImageResults,   // Camera Measurement：原图集合（.cvraw）
+                "Analysis" => _model.ProcessedImageResults, // Analysis Image：处理后集合（.cvcie）
+                _ => new ObservableCollection<ImageItem>()  // 默认返回空集合
             };
         }
         // 支持的图像格式
@@ -90,7 +91,6 @@ namespace CVWPFCamImageCtrl
         #region 新增：下拉框切换 DataGrid 数据源
         private void ViewSwitchComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-          
             if (_model == null || MainImageDataGrid == null)
             {
                 Debug.WriteLine("异常：_model 或 MainImageDataGrid 为 null");
@@ -107,40 +107,134 @@ namespace CVWPFCamImageCtrl
             _currentViewType = selectedItem.Tag.ToString() ?? "Analysis";
             Debug.WriteLine($"当前视图类型：{_currentViewType}");
 
+            // 获取当前活动的集合（用于加载图像）
+            var currentActiveCollection = GetCurrentActiveCollection();
+
+            // 保存当前选中的图像（如果有）
+            ImageItem previouslySelectedImage = MainImageDataGrid.SelectedItem as ImageItem;
+            string previousImagePath = previouslySelectedImage?.ImagePath;
+
             // 核心：视图与对应分类集合绑定，仅显示对应类型图像
             switch (_currentViewType)
             {
                 case "Analysis":
-                    // 绑定处理后集合（仅 .cvcie 标定图）
+                    Debug.WriteLine($"切换到 Analysis 视图，绑定 ProcessedImageResults");
+                    // 直接绑定集合，而不是通过 ItemsSource 属性
                     MainImageDataGrid.ItemsSource = _model.ProcessedImageResults;
+
+                    // 检查绑定是否成功
+                    if (MainImageDataGrid.ItemsSource != _model.ProcessedImageResults)
+                    {
+                        Debug.WriteLine("警告：绑定 ProcessedImageResults 失败");
+                        // 强制重新绑定
+                        MainImageDataGrid.ItemsSource = null;
+                        MainImageDataGrid.ItemsSource = _model.ProcessedImageResults;
+                    }
                     break;
+
                 case "Camera":
-                    // 绑定原图集合（仅 .cvraw 相机原始图）
+                    Debug.WriteLine($"切换到 Camera 视图，绑定 OriginalImageResults");
                     MainImageDataGrid.ItemsSource = _model.OriginalImageResults;
+
+                    // 检查绑定是否成功
+                    if (MainImageDataGrid.ItemsSource != _model.OriginalImageResults)
+                    {
+                        Debug.WriteLine("警告：绑定 OriginalImageResults 失败");
+                        // 强制重新绑定
+                        MainImageDataGrid.ItemsSource = null;
+                        MainImageDataGrid.ItemsSource = _model.OriginalImageResults;
+                    }
                     break;
             }
-
-            // 调试输出：查看对应集合数据量
-            Debug.WriteLine($"ProcessedImageResults（cvcie）数量：{_model.ProcessedImageResults.Count}");
-            Debug.WriteLine($"OriginalImageResults（cvraw）数量：{_model.OriginalImageResults.Count}");
 
             // 强制刷新 DataGrid，确保数据更新
             MainImageDataGrid.Items.Refresh();
             MainImageDataGrid.UpdateLayout();
 
-            // 延迟选中第一项（确保绑定完成）
+            // 延迟选中逻辑
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (MainImageDataGrid.Items.Count > 0)
+                var currentItemsSource = MainImageDataGrid.ItemsSource as ObservableCollection<ImageItem>;
+                if (currentItemsSource == null || currentItemsSource.Count == 0)
                 {
-                    MainImageDataGrid.SelectedIndex = 0;
-                    Debug.WriteLine("视图切换后自动选中第一项");
-                }
-                else
-                {
+                    // 如果当前集合为空，清除图像显示
+                    ImageDisplay.CurrentImage = null;
+                    ClearImageInfoDisplay();
+                    CurrentFileNameText.Text = IsChineseMode ? "无图像" : "No Image";
                     Debug.WriteLine("当前视图集合无数据，无法选中");
+                    return;
                 }
+
+                // 尝试重新选中之前选中的图像（如果存在于当前集合中）
+                if (!string.IsNullOrEmpty(previousImagePath))
+                {
+                    var sameImageInNewCollection = currentItemsSource
+                        .FirstOrDefault(item => item.ImagePath.Equals(previousImagePath, StringComparison.OrdinalIgnoreCase));
+
+                    if (sameImageInNewCollection != null)
+                    {
+                        MainImageDataGrid.SelectedItem = sameImageInNewCollection;
+                        MainImageDataGrid.SelectedIndex = currentItemsSource.IndexOf(sameImageInNewCollection);
+                        Debug.WriteLine($"视图切换后重新选中同一图像: {sameImageInNewCollection.FileName}");
+                        return;
+                    }
+                }
+
+                // 如果没有找到之前的图像，选中第一项
+                MainImageDataGrid.SelectedIndex = 0;
+                Debug.WriteLine("视图切换后自动选中第一项");
+
             }), DispatcherPriority.Loaded);
+            //if (_model == null || MainImageDataGrid == null)
+            //{
+            //    Debug.WriteLine("异常：_model 或 MainImageDataGrid 为 null");
+            //    return;
+            //}
+
+            //var selectedItem = ViewSwitchComboBox.SelectedItem as ComboBoxItem;
+            //if (selectedItem == null)
+            //{
+            //    Debug.WriteLine("异常：选中项转换为 ComboBoxItem 失败");
+            //    return;
+            //}
+
+            //_currentViewType = selectedItem.Tag.ToString() ?? "Analysis";
+            //Debug.WriteLine($"当前视图类型：{_currentViewType}");
+
+            //// 核心：视图与对应分类集合绑定，仅显示对应类型图像
+            //switch (_currentViewType)
+            //{
+            //    case "Analysis":
+            //        // 绑定处理后集合（仅 .cvcie 标定图）
+            //        MainImageDataGrid.ItemsSource = _model.ProcessedImageResults;
+            //        break;
+            //    case "Camera":
+            //        // 绑定原图集合（仅 .cvraw 相机原始图）
+            //        MainImageDataGrid.ItemsSource = _model.OriginalImageResults;
+            //        break;
+            //}
+
+            //// 调试输出：查看对应集合数据量
+            //Debug.WriteLine($"ProcessedImageResults（cvcie）数量：{_model.ProcessedImageResults.Count}");
+            //Debug.WriteLine($"OriginalImageResults（cvraw）数量：{_model.OriginalImageResults.Count}");
+
+            //// 强制刷新 DataGrid，确保数据更新
+            //MainImageDataGrid.Items.Refresh();
+            //MainImageDataGrid.UpdateLayout();
+
+            //// 延迟选中第一项（确保绑定完成）
+            //Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            //{
+            //    if (MainImageDataGrid.Items.Count > 0)
+            //    {
+            //        MainImageDataGrid.SelectedIndex = 0;
+            //        Debug.WriteLine("视图切换后自动选中第一项");
+            //    }
+            //    else
+            //    {
+            //        Debug.WriteLine("当前视图集合无数据，无法选中");
+            //    }
+            //}), DispatcherPriority.Loaded);
         }
 
         #endregion
@@ -226,6 +320,7 @@ namespace CVWPFCamImageCtrl
             {
                 int loadedCount = 0;
                 int totalCount = filePaths.Length;
+
                 await System.Threading.Tasks.Task.Run(() =>
                 {
                     foreach (string filePath in filePaths)
@@ -235,13 +330,28 @@ namespace CVWPFCamImageCtrl
                             var fileInfo = new FileInfo(filePath);
                             if (fileInfo.Exists)
                             {
+                                // 获取文件扩展名
+                                string fileExt = Path.GetExtension(filePath).ToLower();
+                                string fileName = Path.GetFileNameWithoutExtension(filePath).ToLower();
+
+                                // 检查是否是 po.dat 文件
+                                bool isPoDatFile = fileName.Equals("po") || fileName.Equals("po.dat");
+
+                                // 如果是 po.dat 文件，跳过不加载到 DataGrid
+                                if (isPoDatFile)
+                                {
+                                    Debug.WriteLine($"跳过 po.dat 文件: {Path.GetFileName(filePath)}");
+                                    continue;
+                                }
+
                                 var imageItem = new ImageItem(_nextImageId++)
                                 {
                                     ImagePath = filePath,
-                                    FileName = System.IO.Path.GetFileName(filePath),
+                                    FileName = Path.GetFileName(filePath),
                                     FileSizeMB = fileInfo.Length / (1024.0 * 1024.0),
                                     Status = IsChineseMode ? "待加载" : "Loading"
                                 };
+
                                 // 调用 ViewModel 的 AddImage 方法，自动分配到对应集合
                                 _model.AddImage(imageItem);
 
@@ -251,25 +361,89 @@ namespace CVWPFCamImageCtrl
                         }
                         catch (Exception ex)
                         {
-                            Debug.WriteLine(IsChineseMode ? $"加载文件失败 {filePath}: {ex.Message}" : $"Failed to load file {filePath}: {ex.Message}");
+                            Debug.WriteLine(IsChineseMode ? $"加载文件失败 {filePath}: {ex.Message}" :
+                                $"Failed to load file {filePath}: {ex.Message}");
                         }
                     }
                 });
 
-                // 加载完成后选择第一项
-                if (MainImageDataGrid.Items.Count > 0)
+                // 加载完成后，根据当前视图类型选择第一项
+                Application.Current.Dispatcher.Invoke(() =>
                 {
-                    MainImageDataGrid.SelectedIndex = 0;
-                }
+                    var currentActiveCollection = GetCurrentActiveCollection();
+                    if (currentActiveCollection.Count > 0)
+                    {
+                        // 确保 DataGrid 绑定的是当前活动集合
+                        if (_currentViewType == "Analysis")
+                        {
+                            MainImageDataGrid.ItemsSource = _model.ProcessedImageResults;
+                        }
+                        else if (_currentViewType == "Camera")
+                        {
+                            MainImageDataGrid.ItemsSource = _model.OriginalImageResults;
+                        }
+
+                        MainImageDataGrid.SelectedIndex = 0;
+                        MainImageDataGrid.Items.Refresh();
+                    }
+                });
             }
             catch (Exception ex)
             {
-                ShowErrorMessage(IsChineseMode ? "加载图像文件时发生错误" : "An error occurred while loading the image", ex);
+                ShowErrorMessage(IsChineseMode ? "加载图像文件时发生错误" :
+                    "An error occurred while loading the image", ex);
             }
-            finally
-            {
-            }
+
             return results;
+            //List<ImageItem> results = new List<ImageItem>();
+            //try
+            //{
+            //    int loadedCount = 0;
+            //    int totalCount = filePaths.Length;
+            //    await System.Threading.Tasks.Task.Run(() =>
+            //    {
+            //        foreach (string filePath in filePaths)
+            //        {
+            //            try
+            //            {
+            //                var fileInfo = new FileInfo(filePath);
+            //                if (fileInfo.Exists)
+            //                {
+            //                    var imageItem = new ImageItem(_nextImageId++)
+            //                    {
+            //                        ImagePath = filePath,
+            //                        FileName = System.IO.Path.GetFileName(filePath),
+            //                        FileSizeMB = fileInfo.Length / (1024.0 * 1024.0),
+            //                        Status = IsChineseMode ? "待加载" : "Loading"
+            //                    };
+            //                    // 调用 ViewModel 的 AddImage 方法，自动分配到对应集合
+            //                    _model.AddImage(imageItem);
+
+            //                    loadedCount++;
+            //                    UpdateProgressText(loadedCount, totalCount);
+            //                }
+            //            }
+            //            catch (Exception ex)
+            //            {
+            //                Debug.WriteLine(IsChineseMode ? $"加载文件失败 {filePath}: {ex.Message}" : $"Failed to load file {filePath}: {ex.Message}");
+            //            }
+            //        }
+            //    });
+
+            //    // 加载完成后选择第一项
+            //    if (MainImageDataGrid.Items.Count > 0)
+            //    {
+            //        MainImageDataGrid.SelectedIndex = 0;
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    ShowErrorMessage(IsChineseMode ? "加载图像文件时发生错误" : "An error occurred while loading the image", ex);
+            //}
+            //finally
+            //{
+            //}
+            //return results;
         }
 
         private void ReloadImage_Click(object sender, RoutedEventArgs e)
@@ -657,8 +831,20 @@ namespace CVWPFCamImageCtrl
         #region 辅助方法
         private string GetImageFilterString()
         {
-            var extensions = string.Join(";", _supportedImageExtensions.Select(ext => "*" + ext));
-            return $"图像文件 ({extensions})|{extensions}|所有文件 (*.*)|*.*";
+            if (_currentViewType == "Camera")
+            {
+                // Camera Measurement 模式：只显示相机原始图格式
+                return IsChineseMode ?
+                    "相机原始图 (*.cvraw)|*.cvraw|所有文件 (*.*)|*.*" :
+                    "Camera Raw Images (*.cvraw)|*.cvraw|All Files (*.*)|*.*";
+            }
+            else
+            {
+                // Analysis Image 模式：显示标定后图和其他图像格式
+                return IsChineseMode ?
+                    "标定后图像 (*.cvcie;*.tif;*.tiff;*.jpg;*.jpeg;*.png)|*.cvcie;*.tif;*.tiff;*.jpg;*.jpeg;*.png|所有文件 (*.*)|*.*" :
+                    "Calibrated Images (*.cvcie;*.tif;*.tiff;*.jpg;*.jpeg;*.png)|*.cvcie;*.tif;*.tiff;*.jpg;*.jpeg;*.png|All Files (*.*)|*.*";
+            }
         }
         private void ShowErrorMessage(string title, Exception ex)
         {
@@ -796,38 +982,71 @@ namespace CVWPFCamImageCtrl
                 {
                     // 耗时操作放入 Task.Run，避免阻塞UI
                     
-                        string fExt = System.IO.Path.GetExtension(selectedImage.ImagePath)?.ToLower() ?? string.Empty;
+                    
+                        string fExt = Path.GetExtension(selectedImage.ImagePath)?.ToLower() ?? string.Empty;
                         BitmapSource targetBitmap = null;
                         (int width, int height, int channels) imageInfo = (0, 0, 0);
 
-                        if (fExt == ".cvcie" || fExt == ".cvraw")
+                        try
                         {
-                            CVCIEFileInfo fileInfo = new CVCIEFileInfo();
-                            if (CVImageFileUtil.LoadImgFile_Raw(selectedImage.ImagePath, ref fileInfo))
+                            // 根据文件扩展名决定加载方式
+                            if (fExt == ".cvraw")
                             {
-                                imageInfo = (fileInfo.FrameInfo.widthInt, fileInfo.FrameInfo.heightInt, fileInfo.FrameInfo.channelsInt);
-                                Mat src = OpenCvSharp.Mat.FromPixelData(
-                                    fileInfo.FrameInfo.heightInt,
-                                    fileInfo.FrameInfo.widthInt,
-                                    OpenCvMatTools.GetMatType(fileInfo.FrameInfo.bppInt, fileInfo.FrameInfo.channelsInt),
-                                    fileInfo.data
-                                );
+                                // 相机原始图（16bit LZW TIFF）
+                                CVCIEFileInfo fileInfo = new CVCIEFileInfo();
+                                if (CVImageFileUtil.LoadImgFile_Raw(selectedImage.ImagePath, ref fileInfo))
+                                {
+                                    imageInfo = (fileInfo.FrameInfo.widthInt, fileInfo.FrameInfo.heightInt, fileInfo.FrameInfo.channelsInt);
 
-                                // 专属格式归一化（保持原有逻辑，确保加载成功）
-                                Mat normalizedMat = OpenCvMatTools.ConvertImage32To8ByNorm(src);
-                                targetBitmap = OpenCVImageLoader.ConvertMatToBitmap(normalizedMat);
+                                    // 创建 Mat 并转换为8位显示
+                                    using (Mat src = Mat.FromPixelData(
+                                        fileInfo.FrameInfo.heightInt,
+                                        fileInfo.FrameInfo.widthInt,
+                                        OpenCvMatTools.GetMatType(fileInfo.FrameInfo.bppInt, fileInfo.FrameInfo.channelsInt),
+                                        fileInfo.data))
+                                    {
+                                        // 对16位图像进行归一化显示
+                                        using (Mat normalizedMat = OpenCvMatTools.ConvertImage32To8ByNorm(src))
+                                        {
+                                            targetBitmap = OpenCVImageLoader.ConvertMatToBitmap(normalizedMat);
+                                        }
+                                    }
+                                }
+                            }
+                            else if (fExt == ".cvcie")
+                            {
+                                // 标定后图（32bit float）
+                                CVCIEFileInfo fileInfo = new CVCIEFileInfo();
+                                if (CVImageFileUtil.LoadImgFile_Raw(selectedImage.ImagePath, ref fileInfo))
+                                {
+                                    imageInfo = (fileInfo.FrameInfo.widthInt, fileInfo.FrameInfo.heightInt, fileInfo.FrameInfo.channelsInt);
 
-                                // 释放 Mat 内存
-                                src.Release();
-                                normalizedMat.Release();
+                                    // 创建 Mat 并转换为8位显示
+                                    using (Mat src = Mat.FromPixelData(
+                                        fileInfo.FrameInfo.heightInt,
+                                        fileInfo.FrameInfo.widthInt,
+                                        OpenCvMatTools.GetMatType(fileInfo.FrameInfo.bppInt, fileInfo.FrameInfo.channelsInt),
+                                        fileInfo.data))
+                                    {
+                                        // 对32位浮点图像进行归一化显示
+                                        using (Mat normalizedMat = OpenCvMatTools.ConvertImage32To8ByNorm(src))
+                                        {
+                                            targetBitmap = OpenCVImageLoader.ConvertMatToBitmap(normalizedMat);
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // 其他格式图像（TIFF、JPEG、PNG等）
+                                var info = OpenCVImageLoader.GetImageInfo(selectedImage.ImagePath);
+                                targetBitmap = OpenCVImageLoader.LoadTiffImage(selectedImage.ImagePath, 0.1);
+                                imageInfo = info;
                             }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            // 其他格式加载（保持原有逻辑）
-                            var info = OpenCVImageLoader.GetImageInfo(selectedImage.ImagePath);
-                            targetBitmap = OpenCVImageLoader.LoadTiffImage(selectedImage.ImagePath, 0.1);
-                            imageInfo = info;
+                            Debug.WriteLine($"加载图像失败：{ex.Message}");
                         }
 
                         // UI 操作切回主线程
@@ -838,13 +1057,24 @@ namespace CVWPFCamImageCtrl
                                 ImageDisplay.CurrentImage = targetBitmap;
                                 UpdateImageInfoDisplay(imageInfo, targetBitmap);
                                 selectedImage.Status = IsChineseMode ? "已加载" : "Loaded";
-                                ImageDisplay.ZoomToFit();
+
+                                // 如果是 Analysis 视图，自动调整缩放以适应
+                                if (_currentViewType == "Analysis")
+                                {
+                                    ImageDisplay.ZoomToFit();
+                                }
                             }
                             else
                             {
                                 ImageDisplay.CurrentImage = null;
                                 ClearImageInfoDisplay();
                                 selectedImage.Status = IsChineseMode ? "加载失败" : "Loading failed";
+                                MessageBox.Show(
+                                    IsChineseMode ? $"无法加载图像：{selectedImage.FileName}" :
+                                    $"Cannot load image: {selectedImage.FileName}",
+                                    IsChineseMode ? "错误" : "Error",
+                                    MessageBoxButton.OK,
+                                    MessageBoxImage.Error);
                             }
                         });
                    
@@ -856,10 +1086,95 @@ namespace CVWPFCamImageCtrl
                         ImageDisplay.CurrentImage = null;
                         ClearImageInfoDisplay();
                         selectedImage.Status = IsChineseMode ? "错误" : "Error";
-                        Debug.WriteLine($"加载图像失败：{ex.Message}");
+                        MessageBox.Show(
+                            IsChineseMode ? $"加载图像时发生错误：{ex.Message}" :
+                            $"Error loading image: {ex.Message}",
+                            IsChineseMode ? "错误" : "Error",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error);
                     });
                 }
             }
+            //// 避免空选中触发事件
+            //if (e.AddedItems.Count == 0 || MainImageDataGrid.SelectedItem == null)
+            //{
+            //    return;
+            //}
+
+            //if (MainImageDataGrid.SelectedItem is ImageItem selectedImage)
+            //{
+            //    _currentImageIndex = MainImageDataGrid.SelectedIndex;
+            //    CurrentFileNameText.Text = selectedImage.FileName;
+            //    FileSizeText.Text = $"{selectedImage.FileSizeMB:F1} MB";
+
+            //    try
+            //    {
+            //        // 耗时操作放入 Task.Run，避免阻塞UI
+
+            //            string fExt = System.IO.Path.GetExtension(selectedImage.ImagePath)?.ToLower() ?? string.Empty;
+            //            BitmapSource targetBitmap = null;
+            //            (int width, int height, int channels) imageInfo = (0, 0, 0);
+
+            //            if (fExt == ".cvcie" || fExt == ".cvraw")
+            //            {
+            //                CVCIEFileInfo fileInfo = new CVCIEFileInfo();
+            //                if (CVImageFileUtil.LoadImgFile_Raw(selectedImage.ImagePath, ref fileInfo))
+            //                {
+            //                    imageInfo = (fileInfo.FrameInfo.widthInt, fileInfo.FrameInfo.heightInt, fileInfo.FrameInfo.channelsInt);
+            //                    Mat src = OpenCvSharp.Mat.FromPixelData(
+            //                        fileInfo.FrameInfo.heightInt,
+            //                        fileInfo.FrameInfo.widthInt,
+            //                        OpenCvMatTools.GetMatType(fileInfo.FrameInfo.bppInt, fileInfo.FrameInfo.channelsInt),
+            //                        fileInfo.data
+            //                    );
+
+            //                    // 专属格式归一化（保持原有逻辑，确保加载成功）
+            //                    Mat normalizedMat = OpenCvMatTools.ConvertImage32To8ByNorm(src);
+            //                    targetBitmap = OpenCVImageLoader.ConvertMatToBitmap(normalizedMat);
+
+            //                    // 释放 Mat 内存
+            //                    src.Release();
+            //                    normalizedMat.Release();
+            //                }
+            //            }
+            //            else
+            //            {
+            //                // 其他格式加载（保持原有逻辑）
+            //                var info = OpenCVImageLoader.GetImageInfo(selectedImage.ImagePath);
+            //                targetBitmap = OpenCVImageLoader.LoadTiffImage(selectedImage.ImagePath, 0.1);
+            //                imageInfo = info;
+            //            }
+
+            //            // UI 操作切回主线程
+            //            Application.Current.Dispatcher.Invoke(() =>
+            //            {
+            //                if (targetBitmap != null)
+            //                {
+            //                    ImageDisplay.CurrentImage = targetBitmap;
+            //                    UpdateImageInfoDisplay(imageInfo, targetBitmap);
+            //                    selectedImage.Status = IsChineseMode ? "已加载" : "Loaded";
+            //                    ImageDisplay.ZoomToFit();
+            //                }
+            //                else
+            //                {
+            //                    ImageDisplay.CurrentImage = null;
+            //                    ClearImageInfoDisplay();
+            //                    selectedImage.Status = IsChineseMode ? "加载失败" : "Loading failed";
+            //                }
+            //            });
+
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        Application.Current.Dispatcher.Invoke(() =>
+            //        {
+            //            ImageDisplay.CurrentImage = null;
+            //            ClearImageInfoDisplay();
+            //            selectedImage.Status = IsChineseMode ? "错误" : "Error";
+            //            Debug.WriteLine($"加载图像失败：{ex.Message}");
+            //        });
+            //    }
+            //}
         }
         private void ClearImageInfoDisplay()
         {
