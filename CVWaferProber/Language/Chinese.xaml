@@ -135,6 +135,8 @@
     <sys:String x:Key="Unselected">未选择</sys:String>
     <sys:String x:Key="FileSize">文件大小：</sys:String>
     <sys:String x:Key="Progress">进度：</sys:String>
+    <sys:String x:Key="Image.AnalysisImage">分析图</sys:String>
+    <sys:String x:Key="Image.CameraMeasurement">原图</sys:String>
 
     <sys:String x:Key="Image.GridHeader.Id">序号</sys:String>
     <sys:String x:Key="Image.GridHeader.FileName">文件名</sys:String>

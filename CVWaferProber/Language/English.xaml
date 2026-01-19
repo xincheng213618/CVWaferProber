@@ -128,6 +128,8 @@
     <sys:String x:Key="Unselected">Unselected</sys:String>
     <sys:String x:Key="FileSize">FileSize：</sys:String>
     <sys:String x:Key="Progress">Progress：</sys:String>
+    <sys:String x:Key="Image.AnalysisImage">Analysis Image</sys:String>
+    <sys:String x:Key="Image.CameraMeasurement">Camera Measurement</sys:String>
 
     <sys:String x:Key="Image.GridHeader.Id">Id</sys:String>
     <sys:String x:Key="Image.GridHeader.FileName">FileName</sys:String>
