@@ -12,6 +12,10 @@ namespace CVWPFCamImageCtrl
     {
         private ImageSource? _imageSource;
         private ObservableCollection<ImageItem> _imageResults;
+        // 新增：Analysis image - 处理后图像集合（排除 po.dat）
+        private ObservableCollection<ImageItem> _processedImageResults;
+        // 新增：Camera Measurement - 原图集合（未经处理，不排除任何文件）
+        private ObservableCollection<ImageItem> _originalImageResults;
         private ObservableCollection<POIMarker> _poiMarkers;
         private CVImager? _imageDisplay;
         private uint id = 1;
@@ -21,6 +25,9 @@ namespace CVWPFCamImageCtrl
             _imageDisplay = null;
             _poiMarkers = new ObservableCollection<POIMarker>();
             _imageResults = new ObservableCollection<ImageItem>();
+            // 初始化新增集合
+            _processedImageResults = new ObservableCollection<ImageItem>();
+            _originalImageResults = new ObservableCollection<ImageItem>();
         }
         public ObservableCollection<POIMarker> POIMarkers
         {
@@ -37,11 +44,26 @@ namespace CVWPFCamImageCtrl
             get => _imageSource;
             set => SetProperty(ref _imageSource, value);
         }
+        // 新增：Analysis image - 处理后图像集合（对外暴露，供UI绑定）
+        public ObservableCollection<ImageItem> ProcessedImageResults
+        {
+            get => _processedImageResults;
+            set => SetProperty(ref _processedImageResults, value);
+        }
+
+        // 新增：Camera Measurement - 原图集合（对外暴露，供UI绑定）
+        public ObservableCollection<ImageItem> OriginalImageResults
+        {
+            get => _originalImageResults;
+            set => SetProperty(ref _originalImageResults, value);
+        }
         public void ClearImageResult()
         {
             id = 1;
             ImageSrc = null;
             _imageResults.Clear();
+            _processedImageResults.Clear(); // 清空处理后图像
+            _originalImageResults.Clear(); // 清空原图
             if (_imageDisplay != null) _imageDisplay.CurrentImage = null;
         }
         private void DrawCircleToImage(ref Mat image, CircleMarker poi)
@@ -171,11 +193,36 @@ namespace CVWPFCamImageCtrl
             });
         }
 
+        //public void AddImage(ImageItem imageItem)
+        //{
+        //    Application.Current.Dispatcher.Invoke(() =>
+        //    {
+        //        ImageResults.Add(imageItem);
+        //    });
+        //}
+
+        // 添加图像（自动区分，同时加入对应集合，排除 po.dat 不进入 ProcessedImageResults）
         public void AddImage(ImageItem imageItem)
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                ImageResults.Add(imageItem);
+                string fileName = imageItem.FileName?.ToLower() ?? string.Empty;
+                // 1. 所有图像（除 po.dat）都进入原有集合和 ProcessedImageResults（Analysis image）
+                if (!fileName.Equals("po.dat"))
+                {
+                    _imageResults.Add(imageItem);
+                    _processedImageResults.Add(imageItem);
+                }
+                // 2. 所有图像（包含 po.dat）都进入 OriginalImageResults（Camera Measurement - 原图）
+                _originalImageResults.Add(imageItem);
+            });
+        }
+        // 新增：单独添加原图（兼容直接加载原图场景，不排除任何文件）
+        public void AddOriginalImageOnly(ImageItem imageItem)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                _originalImageResults.Add(imageItem);
             });
         }
     }

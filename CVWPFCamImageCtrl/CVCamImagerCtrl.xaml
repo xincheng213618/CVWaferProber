@@ -8,6 +8,10 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
     <UserControl.Resources>
         <cv:ZoomScaleConverter x:Key="ZoomScaleConverter" />
+        <cv:BoolToTextConverter
+            x:Key="BoolToTextConverter"
+            FalseValue="Data View:"
+            TrueValue="数据视图:" />
         <Style TargetType="Button">
             <Setter Property="Padding" Value="8,4" />
             <Setter Property="Margin" Value="2" />
@@ -229,13 +233,32 @@
                         Click="ClearAll_Click"
                         Content="{DynamicResource Clear}"
                         ToolTip="{DynamicResource Image.Clearallimages}" />
+                    <!--  新增：下拉框（红框位置）- 切换数据视图  -->
+                    <StackPanel
+                        Background="#FFF0F0F0"
+                        DockPanel.Dock="Top"
+                        Orientation="Horizontal">
+                        <TextBlock
+                            Margin="10,0,5,0"
+                            VerticalAlignment="Center"
+                            FontWeight="Bold"
+                            Text="{Binding Source={x:Static local:CVCamImagerCtrl.IsChineseMode}, Converter={StaticResource BoolToTextConverter}}" />
+                        <ComboBox
+                            x:Name="ViewSwitchComboBox"
+                            VerticalAlignment="Center"
+                            SelectedIndex="0"
+                            SelectionChanged="ViewSwitchComboBox_SelectionChanged">
+                            <ComboBoxItem Tag="Analysis">Analysis image</ComboBoxItem>
+                            <ComboBoxItem Tag="Camera">Camera Measurement</ComboBoxItem>
+                        </ComboBox>
+                    </StackPanel>
                 </StackPanel>
+                <!--  ItemsSource="{Binding ImageResults}"  -->
                 <DataGrid
-                    x:Name="ImageDataGrid"
+                    x:Name="MainImageDataGrid"
                     AutoGenerateColumns="False"
                     IsReadOnly="True"
-                    ItemsSource="{Binding ImageResults}"
-                    SelectionChanged="ImageDataGrid_SelectionChanged"
+                    SelectionChanged="MainImageDataGrid_SelectionChanged"
                     SelectionMode="Single">
                     <DataGrid.Columns>
                         <DataGridTextColumn

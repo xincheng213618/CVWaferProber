@@ -130,6 +130,15 @@
     <sys:String x:Key="Progress">Progress：</sys:String>
     <sys:String x:Key="Image.AnalysisImage">Analysis Image</sys:String>
     <sys:String x:Key="Image.CameraMeasurement">Camera Measurement</sys:String>
+    <sys:String x:Key="Image.Mode">Mode:</sys:String>
+   
+    <sys:String x:Key="AnalysisImage">Analysis Image</sys:String>
+    <sys:String x:Key="CameraMeasurement">Camera Measurement</sys:String>
+    <sys:String x:Key="Image.GridHeader.Type">Type</sys:String>
+
+    <sys:String x:Key="DisplayMode">Display Mode:</sys:String>
+    <sys:String x:Key="AnalysisImageMode">Anlysis Image</sys:String>
+    <sys:String x:Key="CameraMeasurementMode">Camera Measurement</sys:String>
 
     <sys:String x:Key="Image.GridHeader.Id">Id</sys:String>
     <sys:String x:Key="Image.GridHeader.FileName">FileName</sys:String>

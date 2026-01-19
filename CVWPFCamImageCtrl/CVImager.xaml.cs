@@ -28,8 +28,23 @@ namespace CVWPFCamImageCtrl
             get => (ImageSource)GetValue(CurrentImageProperty);
             set
             {
-                SetValue(CurrentImageProperty, value);
-                ImageChanged?.Invoke(this, EventArgs.Empty);
+                //SetValue(CurrentImageProperty, value);
+                //ImageChanged?.Invoke(this, EventArgs.Empty);
+                // 检查当前线程是否是UI线程，若不是则切换到UI线程
+                if (Application.Current.Dispatcher.CheckAccess())
+                {
+                    SetValue(CurrentImageProperty, value);
+                    ImageChanged?.Invoke(this, EventArgs.Empty);
+                }
+                else
+                {
+                    // 切换到UI线程执行操作
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        SetValue(CurrentImageProperty, value);
+                        ImageChanged?.Invoke(this, EventArgs.Empty);
+                    });
+                }
             }
         }
         // 新增属性：显示尺寸信息
