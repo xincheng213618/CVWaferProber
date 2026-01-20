@@ -9,6 +9,8 @@ using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
 using Color = System.Windows.Media.Color;
 using MessageBox = System.Windows.MessageBox;
+using CVWaferProber.ViewModels; // 新增：用于访问 MainViewModel
+using System.Windows.Threading;
 
 namespace CVWaferProber
 {
@@ -138,7 +140,34 @@ namespace CVWaferProber
                 MessageBox.Show($"DLL Initialization failed：{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown(); // 初始化失败则关闭应用
             }
+            // 新增：应用启动后尝试调用 ResetStatusCommand（通过 Dispatcher 延迟，确保 MainViewModel 已构造）
+            try
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    try
+                    {
+                        var vm = MainViewModel.Instance;
+                        if (vm != null && vm.ResetStatusCommand != null)
+                        {
+                            if (vm.ResetStatusCommand.CanExecute(null))
+                                vm.ResetStatusCommand.Execute(null);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Warn("Invoke ResetStatusCommand failed.", ex);
+                    }
+                }), DispatcherPriority.ApplicationIdle);
+            }
+            catch (Exception dex)
+            {
+                log.Warn("Failed to schedule ResetStatusCommand invocation.", dex);
+            }
         }
+        
+
+
         // 应用关闭时调用释放
         protected override void OnExit(ExitEventArgs e)
         {

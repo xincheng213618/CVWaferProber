@@ -183,7 +183,7 @@
     <sys:String x:Key="Menu.ProberDeviceDebug">ProberDebug</sys:String>
     <sys:String x:Key="Menu.GlobalConfig">Global Configuration</sys:String>
 
-    <sys:String x:Key="GlobalConfig.VAMExportPath">Auto-Export Default Path:</sys:String>
+    <sys:String x:Key="GlobalConfig.ExportPath">Auto-Export Default Path:</sys:String>
     <sys:String x:Key="GlobalConfig.Browse">Browse</sys:String>
     <sys:String x:Key="GlobalConfig.Save">Save Configuration</sys:String>
     <sys:String x:Key="GlobalConfig.SaveSuccess">Configuration saved successfully!</sys:String>

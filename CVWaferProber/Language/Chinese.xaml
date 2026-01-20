@@ -176,7 +176,7 @@
     <sys:String x:Key="Menu.Language.Chinese">中文</sys:String>
     <sys:String x:Key="Menu.Language.English">英文</sys:String>
 
-    <sys:String x:Key="GlobalConfig.VAMExportPath">自动导出默认路径:</sys:String>
+    <sys:String x:Key="GlobalConfig.ExportPath">自动导出默认路径:</sys:String>
     <sys:String x:Key="GlobalConfig.Browse">浏览</sys:String>
     <sys:String x:Key="GlobalConfig.Save">保存配置</sys:String>
     <sys:String x:Key="GlobalConfig.SaveSuccess">配置保存成功！</sys:String>

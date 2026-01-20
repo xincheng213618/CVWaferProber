@@ -568,6 +568,7 @@ namespace CVWaferProber.ViewModels
             // OpenSummaryConfigCommand = new RelayCommand(OpenSummaryConfig);
             SysFlowCfgCommand = new RelayCommand(SysFlowCfg);
 
+            LoadMappingFileCommand = new RelayCommand(LoadMappingFile);
             ShowConnectionSettingsCommand = new RelayCommand(OpenProberDeviceDebug);
             ShowRCConnectionSettingsCommand = new RelayCommand(ShowRcConnectionSettings);
 
@@ -615,6 +616,38 @@ namespace CVWaferProber.ViewModels
             //IsMappingPanelVisible = Properties.Settings.Default.IsMappingPanelVisible;
             //IsCameraPanelVisible = Properties.Settings.Default.IsCameraPanelVisible;
             //IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
+        }
+
+        private void LoadMappingFile(object obj)
+        {
+            try
+            {
+                // 支持传入文件路径：优先使用 parameter，其次使用现有 MappingCsvFilePath
+                if (obj is string path && !string.IsNullOrWhiteSpace(path))
+                {
+                    MappingCsvFilePath = path;
+                }
+
+                if (string.IsNullOrWhiteSpace(MappingCsvFilePath) || !File.Exists(MappingCsvFilePath))
+                {
+                    if (logger.IsWarnEnabled) logger.WarnFormat("Mapping file not found => {0}", MappingCsvFilePath);
+                    MessageBox.Show((string)Application.Current.FindResource("Maping.FileNotExist"), (string)Application.Current.FindResource("Prompt"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // 调用已有的加载逻辑
+                LoadMappingFileFromCsv();
+
+                // 若需要通知其它模块，可通过 EventAggregator 发布事件（可选）
+                // EventAggregator?.Publish(new MappingReloadedEvent(MappingCsvFilePath));
+
+                if (logger.IsInfoEnabled) logger.InfoFormat("Mapping file reloaded => {0}", MappingCsvFilePath);
+            }
+            catch (Exception ex)
+            {
+                if (logger.IsErrorEnabled) logger.Error("Failed to reload mapping file", ex);
+                MessageBox.Show($"{(string)Application.Current.FindResource("Maping.ReloadFailed")}: {ex.Message}", (string)Application.Current.FindResource("State.Error"), MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void InitRc()

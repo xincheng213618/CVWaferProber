@@ -1,5 +1,6 @@
 ﻿using CVDB.Services.Spectrum;
 using CVWaferProber.Core.Models.Enums;
+using CVWaferProber.Core.ViewModels;
 using CVWaferProber.ViewModels;
 using CVWPFSpectrometerCtrl.ViewModels;
 using System.IO;
@@ -18,6 +19,9 @@ namespace CVWaferProber.Services
 
         // EQE专属VM（对应IVL的CustomIVLVM）
         public CVEQEViewModel CustomEQEVM { get; private set; }
+
+        // 新增：全局配置对象（核心修改点1）
+        private readonly GlobalConfigModel _globalConfig;
 
         // 构造函数：完全复刻IVL，仅替换VM名称
         public EQEService(CVEQEViewModel customEQEVM, RCRestService rcService) : base(rcService)
@@ -96,31 +100,33 @@ namespace CVWaferProber.Services
         {
             try
             {
-                // 从CustomEQEVM获取必要数据（ViewModel中的公共属性）
+                // 1. 从CustomEQEVM获取必要数据（ViewModel中的公共属性）
                 var measurements = CustomEQEVM.Measurements;
                 var wavelengths = CustomEQEVM.Wavelengths;
 
-                if (!measurements.Any() || wavelengths == null || wavelengths.Length == 0)
+                if (measurements == null || !measurements.Any() || wavelengths == null || wavelengths.Length == 0)
                 {
-                    logger.Info("No valid EQE data available for export！");
+                    logger.Warn("No valid EQE data available for export！");
                     return;
                 }
 
-                // 构造导出路径：D:\Project\EQE（保持原有路径逻辑）
-                string basePath = @"F:\Projects\EQE";
+                // 2. 读取全局配置的EQE导出路径（核心修改点2）
+                // 优先级：配置路径 > 默认路径（保证降级兼容）
+                string basePath = _globalConfig?.EqeExportPath ?? @"D:\Project\EQE";
 
-                // 确保目录存在（保留原有目录创建逻辑）
+                // 3. 确保目录存在（自动创建，无需用户手动操作）
                 if (!Directory.Exists(basePath))
                 {
                     Directory.CreateDirectory(basePath);
                     logger.Info($"Create EQE export directory：{basePath}");
                 }
 
-                // 构造文件名（包含时间戳避免重复，保持原有命名规则）
-                string fileName = $"EQE_Data_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+                // 4. 构造文件名（包含SerialNumber+时间戳，更贴合业务场景）
+                string serialNumber = _currentDieVM?.SerialNumber ?? "Unknown";
+                string fileName = $"EQE_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
                 string fullPath = Path.Combine(basePath, fileName);
 
-                // 调用CVEQEViewModel的公共ExportToCsv方法完成核心导出
+                // 5. 调用CVEQEViewModel的公共ExportToCsv方法完成核心导出
                 CustomEQEVM.ExportToCsv(fullPath, measurements, wavelengths);
 
                 logger.Info($"EQE data has been automatically exported to：{fullPath}");
@@ -130,7 +136,42 @@ namespace CVWaferProber.Services
                 logger.Error("EQE automatic export failed", ex);
             }
         }
+        //try
+        //{
+        //    // 从CustomEQEVM获取必要数据（ViewModel中的公共属性）
+        //    var measurements = CustomEQEVM.Measurements;
+        //    var wavelengths = CustomEQEVM.Wavelengths;
+
+        //    if (!measurements.Any() || wavelengths == null || wavelengths.Length == 0)
+        //    {
+        //        logger.Info("No valid EQE data available for export！");
+        //        return;
+        //    }
+
+        //    // 构造导出路径：D:\Project\EQE（保持原有路径逻辑）
+        //    string basePath = @"D:\Projects\EQE";
+
+        //    // 确保目录存在（保留原有目录创建逻辑）
+        //    if (!Directory.Exists(basePath))
+        //    {
+        //        Directory.CreateDirectory(basePath);
+        //        logger.Info($"Create EQE export directory：{basePath}");
+        //    }
+
+        //    // 构造文件名（包含时间戳避免重复，保持原有命名规则）
+        //    string fileName = $"EQE_Data_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        //    string fullPath = Path.Combine(basePath, fileName);
+
+        //    // 调用CVEQEViewModel的公共ExportToCsv方法完成核心导出
+        //    CustomEQEVM.ExportToCsv(fullPath, measurements, wavelengths);
+
+        //    logger.Info($"EQE data has been automatically exported to：{fullPath}");
+        //}
+        //catch (Exception ex)
+        //{
+        //    logger.Error("EQE automatic export failed", ex);
+        //}
+    }
        
       
-    }
 }
