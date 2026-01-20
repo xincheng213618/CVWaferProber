@@ -3418,12 +3418,12 @@ namespace CVAVMControl
                     }
 
                     logger.Info($"VAM data has been exported to: {exportFilePath}");
-                    MessageBox.Show($"{FindResource("Exportcompleted")}\n{exportFilePath}", $"{FindResource("Log.Success")}", MessageBoxButton.OK, MessageBoxImage.Information);
+                   // MessageBox.Show($"{FindResource("Exportcompleted")}\n{exportFilePath}", $"{FindResource("Log.Success")}", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {
                     logger.Error($"{FindResource("Exportfailed")}", ex);
-                    MessageBox.Show($"{FindResource("Exportfailed")}: {ex.Message}", $"{FindResource("Log.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
+                    //MessageBox.Show($"{FindResource("Exportfailed")}: {ex.Message}", $"{FindResource("Log.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             });
         }
