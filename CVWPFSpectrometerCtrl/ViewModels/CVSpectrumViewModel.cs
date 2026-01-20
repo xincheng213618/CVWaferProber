@@ -2923,6 +2923,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             ILMeasurements.Clear();
             IVMeasurements.Clear();
             VLMeasurements.Clear();
+            Power_LMeasurements.Clear();
             IVLCameraMeasurements.Clear();
             SpectralGridItems?.Clear();
             PlotModel.Series.Clear();
@@ -2932,9 +2933,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             IL_viewModel.Clear();
             IV_viewModel.Clear();
             VL_viewModel.Clear();
-            Power_LMeasurements.Clear();
+            Power_L_viewModel.Clear();
             IVLCamera_viewModel.Clear();
-            IVLCameraImageSrc = null;
+          
 
             // 清空选中状态
             SelectedMeasurement = null;

@@ -1141,8 +1141,8 @@ namespace CVWaferProber.ViewModels
                     return;
                 }
 
-                //固定导出根路径为 F:/Project
-                string exportRootPath = @"D:\ Project";
+                //固定导出根路径为 D:/Project
+                string exportRootPath = @"D:\Project";
 
                 // 自动创建目录（如果不存在）
                 if (!Directory.Exists(exportRootPath))
@@ -1686,7 +1686,7 @@ namespace CVWaferProber.ViewModels
         }
 
         private void StartManTest(object? obj)
-        {
+        { 
             StartManFlow();
         }
 

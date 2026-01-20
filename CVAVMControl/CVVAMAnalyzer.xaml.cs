@@ -334,6 +334,7 @@ namespace CVAVMControl
             this.EventAggregator?.Unsubscribe<VAMResultGUIClearEvent>(OnResultGUIClear);
             //this.EventAggregator?.Unsubscribe<VAMAutoExportCsvEvent>(OnAutoExportCsv);
         }
+
         //private void Export_Click(object sender, RoutedEventArgs e)
         //{
         //    Application.Current.Dispatcher.Invoke(() =>
@@ -3337,13 +3338,13 @@ namespace CVAVMControl
                         MessageBox.Show($"{FindResource("Nodata")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                         return;
                     }
-                   
-                    // 核心修改：导出时主动传递最新参数（当前通道、当前采样点数量）
+
+                    // 调用 DLL 获取并填充 _dllAllAzimuthData
                     bool dllSuccess = CallVamDllForAllAzimuth(
-                        exportChannel: displayChannel, // 导出时的当前通道
-                        pointNumLine: _pointNumLine,   // 导出时的当前采样点数量
-                        polarRHO: 60.0,                // 可根据需求改为用户输入
-                        polarAngle: 60.0               // 可根据需求改为用户输入
+                        exportChannel: displayChannel,
+                        pointNumLine: _pointNumLine,
+                        polarRHO: 60.0,
+                        polarAngle: 60.0
                     );
 
                     if (!dllSuccess)
@@ -3352,30 +3353,41 @@ namespace CVAVMControl
                         return;
                     }
 
-                    // 选择导出路径
+                    // 1. 获取导出目录（GetVamGlobalExportPath 返回目录）
+                    string exportDir = GetVamGlobalExportPath();
+                    if (string.IsNullOrWhiteSpace(exportDir))
+                    {
+                        MessageBox.Show($"{FindResource("VAM.Exportfailed")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
 
-                    // 1. 读取全局配置中的VAM导出路径
-                    string exportPath = GetVamGlobalExportPath();
-                    // 2. 确保目标目录存在（不存在则自动创建，避免路径不存在异常）
-                    //if (!Directory.Exists(exportPath))
-                    //{
-                    //    Directory.CreateDirectory(exportPath);
-                    //    logger.Info($"{FindResource("VAM.Create")}：{ exportPath}");
-                    //}
-                    // 按示例表格格式导出（原有逻辑不变）
-                    using (var writer = new StreamWriter(exportPath, false, Encoding.UTF8))
+                    // 2. 确保目录存在
+                    if (!Directory.Exists(exportDir))
+                    {
+                        Directory.CreateDirectory(exportDir);
+                    }
+
+                    // 3. 生成带时间戳的文件名并合并成完整文件路径
+                    string fileName = $"VAM_Export_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+                    string exportFilePath = Path.Combine(exportDir, fileName);
+
+                    // 4. 按原有格式写入文件（确保使用文件路径）
+                    using (var writer = new StreamWriter(exportFilePath, false, Encoding.UTF8))
                     {
                         // 第1行：Measurement Date
                         writer.WriteLine($"Measurement Date,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,");
+
                         // 第2行：Instrument
                         writer.WriteLine($"Instrument,VAM 60°,,,,,,,,,,,,");
+
                         // 第3行：空行
                         writer.WriteLine();
+
                         // 第4行：列标题（径向角行标题 + 方位角0°~180°）
                         StringBuilder headerLine = new StringBuilder();
                         headerLine.Append(","); // A列空
                         headerLine.Append(" "); // B列：径向角
-                        foreach (int azimuth in Enumerable.Range(0, 180)) // 0°~180°方位角
+                        foreach (int azimuth in Enumerable.Range(0, 180)) // 0°~179°
                         {
                             headerLine.Append($",{azimuth}°");
                         }
@@ -3388,31 +3400,30 @@ namespace CVAVMControl
                             dataLine.Append(","); // A列空
                             dataLine.Append($"{radial}°"); // B列：当前径向角
 
-                            // 遍历每个方位角（0°~180°），填充对应列数据
                             foreach (int azimuth in Enumerable.Range(0, 180))
                             {
                                 if (_dllAllAzimuthData.TryGetValue(azimuth, out var sampleList))
                                 {
-                                    // 找到当前径向角对应的采样点
                                     var sample = sampleList.FirstOrDefault(p => Math.Round(p.position, 0) == radial);
                                     double value = sample != null ? GetChannelValueFromDll(sample, displayChannel) : 0;
                                     dataLine.Append($",{value:F5}");
                                 }
                                 else
                                 {
-                                    dataLine.Append(","); // 无数据则留空
+                                    dataLine.Append(",");
                                 }
                             }
                             writer.WriteLine(dataLine.ToString());
                         }
                     }
 
-                    logger.Info($"VAM data has been exported as required to：\n{exportPath}");
+                    logger.Info($"VAM data has been exported to: {exportFilePath}");
+                    MessageBox.Show($"{FindResource("Exportcompleted")}\n{exportFilePath}", $"{FindResource("Log.Success")}", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {
-                    logger.Error($"{FindResource("Exportfailed")}", ex); 
-                    //MessageBox.Show($"导出失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    logger.Error($"{FindResource("Exportfailed")}", ex);
+                    MessageBox.Show($"{FindResource("Exportfailed")}: {ex.Message}", $"{FindResource("Log.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             });
         }
