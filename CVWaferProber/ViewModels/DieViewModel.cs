@@ -147,6 +147,16 @@ namespace CVWaferProber.ViewModels
             EndTestTime = null;
             TotalTime = null;
             SerialNumber = null;
+            AOIGradeLevel = "na";
+            LightOnStatus = "na";
+            RegisterPixels = "na";
+            FinalClass = "na";
+            BlackPattern = "na";
+            Temperature = "na";
+            PixelLogic = "na";
+            Pressure = "0,0,0,0";
+            TouchDownCounts = 0;
+            ProbingCardSN = "na";
             if (chipViewModel != null && chipViewModel.ChipData != null) chipViewModel.ChipData.DataValue = null;
             FirePropertyChanged();
         }
@@ -160,6 +170,16 @@ namespace CVWaferProber.ViewModels
             OnPropertyChanged(nameof(SerialNumber));
             OnPropertyChanged(nameof(TotalTime));
             OnPropertyChanged(nameof(DataValue));
+            OnPropertyChanged(nameof(AOIGradeLevel));
+            OnPropertyChanged(nameof(LightOnStatus));
+            OnPropertyChanged(nameof(RegisterPixels));
+            OnPropertyChanged(nameof(FinalClass));
+            OnPropertyChanged(nameof(BlackPattern));
+            OnPropertyChanged(nameof(Temperature));
+            OnPropertyChanged(nameof(PixelLogic));
+            OnPropertyChanged(nameof(Pressure));
+            OnPropertyChanged(nameof(TouchDownCounts));
+            OnPropertyChanged(nameof(ProbingCardSN));
         }
 
         public (string x, string y) ToMapAxis()
@@ -170,17 +190,74 @@ namespace CVWaferProber.ViewModels
         }
 
         #region 动态属性
-        public string LightOnStatus { get; set; } = "na";
-        public string RegisterPixels { get; set; } = "na";
-        public string FinalClass { get; set; } = "na"; // 最终等级
-        public string AOIGradeLevel { get; set; } = "na";
-        public string BlackPattern { get; set; } = "na";
-        public string Temperature { get; set; } = "na";
-        public string PixelLogic { get; set; } = "na";
+        private string _aoiGradeLevel = "na"; // 默认值设为"na"
+        public string AOIGradeLevel
+        {
+            get => _aoiGradeLevel;
+            set => SetProperty(ref _aoiGradeLevel, value);
+        }
+        private string _lightOnStatus = "na"; // 默认值设为"na"
+        public string LightOnStatus
+        {
+            get => _lightOnStatus;
+            set => SetProperty(ref _lightOnStatus, value);
+        }
+        private string _registerPixels = "na"; // 默认值设为"na"
+        public string RegisterPixels
+        {
+            get => _registerPixels;
+            set => SetProperty(ref _registerPixels, value);
+        }
+       
+        private string _finalClass = "na"; // 最终等级
+        public string FinalClass
+        {
+            get => _finalClass;
+            set => SetProperty(ref _finalClass, value);
+        }
+      
+        private string _blackPattern = "na";
+        public string BlackPattern
+        {
+            get => _blackPattern;
+            set => SetProperty(ref _blackPattern, value);
+        }
+        private string _temperature = "na";
+        public string Temperature
+        {
+            get => _temperature;
+            set => SetProperty(ref _temperature, value);
+        }
+        private string _pixelLogic = "na";
+        public string PixelLogic
+        {
+            get => _pixelLogic;
+            set => SetProperty(ref _pixelLogic, value);
+        }
         //public string MeasurePin { get; set; } = "na";
-        public string Pressure { get; set; } = "na";
-        public int TouchDownCounts { get; set; } = 0;
-        public string ProbingCardSN { get; set; } = "na";
+        private string _pressure = "na";
+        public string Pressure
+        {
+            get => _pressure;
+            set => SetProperty(ref _pressure, value);
+        }
+        private int _touchDownCounts = 0;
+        public int TouchDownCounts
+        {
+            get => _touchDownCounts;
+            set
+            {
+                _touchDownCounts = value;
+                OnPropertyChanged(nameof(TouchDownCounts));
+            }
+        }
+        
+        private string _probingCardSN = "na";
+        public string ProbingCardSN
+        {
+            get => _probingCardSN;
+            set => SetProperty(ref _probingCardSN, value);
+        }
        
 
 

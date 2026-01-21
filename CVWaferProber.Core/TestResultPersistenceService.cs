@@ -79,6 +79,19 @@ namespace CVWaferProber.Core
         public DateTime? StartTestTime { get; set; }
         public DateTime? EndTestTime { get; set; }
         public string TotalTime { get; set; }
+        public string AOIGradeLevel { get; set;}
+        public string BlackPattern { get; set; }
+
+        //public string LightOnStatus { get; set;}
+        //public string RegisterPixels { get; set;}
+        //public string FinalClass { get; set;}
+        //public string BlackPattern { get; set;}
+        //public string Temperature { get; set;}
+        //public string PixelLogic { get; set;}
+        //public string Pressure { get; set;}
+        //public int TouchDownCounts { get; set;}
+        //public string ProbingCardSN { get; set;}
+
 
         public static TestResultDto FromObject(object die)
         {
@@ -98,7 +111,18 @@ namespace CVWaferProber.Core
                 DataValue = ToStr(Get("DataValue")),
                 StartTestTime = ToDate(Get("StartTestTime")),
                 EndTestTime = ToDate(Get("EndTestTime")),
-                TotalTime = ToStr(Get("TotalTime"))
+                TotalTime = ToStr(Get("TotalTime")),
+                AOIGradeLevel = ToStr(Get("AOIGradeLevel")),
+                //LightOnStatus = ToStr(Get("LightOnStatus")),
+                //RegisterPixels = ToStr(Get("RegisterPixels")),
+                //FinalClass = ToStr(Get("FinalClass")),
+                BlackPattern = ToStr(Get("BlackPattern")),
+                //Temperature = ToStr(Get("Temperature")),
+               
+                //PixelLogic = ToStr(Get("PixelLogic")),
+                //Pressure = ToStr(Get("Pressure")),
+                //TouchDownCounts = ToInt(Get("TouchDownCounts")),
+                //ProbingCardSN = ToStr(Get("ProbingCardSN"))
             };
         }
 
