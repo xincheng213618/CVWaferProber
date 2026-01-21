@@ -155,11 +155,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
 
             // 2. 计算轴范围（保留1%边距，处理最小值为0的情况）
-            double maxCurrent = I.Max() * 1.01;  
-            double minCurrent = Math.Max(0, I.Min() * 0.99); 
-            double maxLuminance = L.Max() * 1.01; 
-            double minLuminance = Math.Max(0, L.Min() * 0.99);
-            
+            double maxCurrent = Measurements.Max(m => m.Current) ; // 电流最大值（X轴）
+            double minCurrent = Measurements.Min(m => m.Current) ; //电流最小值（X轴）
+            double maxLuminance = Measurements.Max(m => m.Luminance); // 亮度最大值
+            double minLuminance = Measurements.Min(m => m.Luminance);// 亮度最小值
+
 
             // 3. 修复轴匹配：用完整标题（含单位）匹配，或用Position匹配（更稳定）
             var xAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Bottom);

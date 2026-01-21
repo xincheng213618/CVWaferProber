@@ -60,7 +60,20 @@ namespace CVWaferProber.Core.Models
                 _ => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(33, 150, 243))
             };
         }
-
+        // 新增反查方法
+        public static ChipStatus GetStatusFromDisplay(string displayText, bool isChinese)
+        {
+            // 根据显示文本和语言反查枚举（示例逻辑，需匹配你的GetStatusDisplay实现）
+            return displayText switch
+            {
+                "等待" or "Waiting" => ChipStatus.WAITING,
+                "测试中" or "Testing" => ChipStatus.TESTING,
+                "IVL完成" or "IVL Completed" => ChipStatus.IVL_COMPLETED,
+                "OK" or "合格" => ChipStatus.OK,
+                "NG" or "不合格" => ChipStatus.AOI_NG,
+                _ => ChipStatus.WAITING // 默认值
+            };
+        }
         public static string GetStatusDisplay(ChipStatus status, bool isChinese)
         {
             if(isChinese)

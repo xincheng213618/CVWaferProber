@@ -90,7 +90,7 @@ namespace CVWaferProber.Views
                 }
 
                 // 3. 绑定MainViewModel的切换方法
-                if (DataContext is ViewModels.MainViewModel mainVm)
+                if (DataContext is MainViewModel mainVm)
                 {
                     mainVm.SpPanelView = _spAnalyzer;
                     mainVm.ActivateSpectralInnerTabAction = ActivateSpectralInnerTab;
@@ -98,7 +98,7 @@ namespace CVWaferProber.Views
                     mainVm.ActivateEQEOuterTabAction = ActivateEQEOuterTab;
                     mainVm.SpPanelViewModel = _spAnalyzer.DataContext as CVWPFSpectrometerCtrl.ViewModels.CVSpectrumViewModel;
                 }
-            }), System.Windows.Threading.DispatcherPriority.Loaded);
+            }), DispatcherPriority.Loaded);
         }
         #region 核心切换方法（适配红框3个选项）
         /// <summary>
@@ -320,68 +320,33 @@ namespace CVWaferProber.Views
         private void InitializeLogging()
         {
             // 配置log4net
+            // 配置log4net
             XmlConfigurator.Configure();
 
-            // 获取TextBoxAppender并设置目标TextBox
+            // 获取TextBoxAppender并设置目标RichTextBox
             var appender = LogManager.GetRepository()
                 .GetAppenders()
                 .OfType<TextBoxAppender>()
                 .FirstOrDefault();
 
-            if (appender != null)
+            if (appender != null && LogTextBox != null)
             {
-                appender.TargetTextBox = LogTextBox;
+                // 关键修改：绑定TargetRichTextBox（替换原TargetTextBox）
+                appender.TargetRichTextBox = LogTextBox;
+                LogTextBox.Document.PageWidth = 100000; // 足够大的宽度，确保一行显示所有日志内容
             }
+
         }
        
 
         private void ClearLogMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            LogTextBox.Clear();
+            if (LogTextBox != null)
+            {
+                // 关键修改：清空FlowDocument的段落集合（替换原Clear()方法）
+                LogTextBox.Document.Blocks.Clear();
+            }
         }
-        // 窗口关闭时保存面板状态
-        //private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        //{
-        //    if (DataContext is MainViewModel vm)
-        //    {
-        //        vm.SavePanelStates();
-        //    }
-        //}
-        //private void MenuMappingPanel_Click(object sender, RoutedEventArgs e)
-        //{
-        //    var menuItem = sender as MenuItem;
-        //    menuItem.IsChecked = !menuItem.IsChecked;
-        //    PanelMapping.Visibility = menuItem.IsChecked ? Visibility.Visible : Visibility.Collapsed;
-
-        //    // 同步更新ViewModel属性（保持数据一致性）
-        //    if (DataContext is MainViewModel vm)
-        //    {
-        //        vm.IsMappingPanelVisible = menuItem.IsChecked;
-        //    }
-        //}
-        //private void MenuCameraPanel_Click(object sender, RoutedEventArgs e)
-        //{
-        //    var menuItem = sender as MenuItem;
-        //    menuItem.IsChecked = !menuItem.IsChecked;
-        //    PanelCamera.Visibility = menuItem.IsChecked ? Visibility.Visible : Visibility.Collapsed;
-
-        //    // 同步更新ViewModel属性（保持数据一致性）
-        //    if (DataContext is MainViewModel vm)
-        //    {
-        //        vm.IsCameraPanelVisible = menuItem.IsChecked;
-        //    }
-        //}
-        //private void MenuSPPanel_Click(object sender, RoutedEventArgs e)
-        //{
-        //    var menuItem = sender as MenuItem;
-        //    menuItem.IsChecked = !menuItem.IsChecked;
-        //    PanelSP.Visibility = menuItem.IsChecked ? Visibility.Visible : Visibility.Collapsed;
-
-        //    // 同步更新ViewModel属性（保持数据一致性）
-        //    if (DataContext is MainViewModel vm)
-        //    {
-        //        vm.IsSPPanelVisible = menuItem.IsChecked;
-        //    }
-        //}
+        
     }
 }

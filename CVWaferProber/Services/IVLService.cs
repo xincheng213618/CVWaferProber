@@ -1,5 +1,6 @@
 ﻿using ChipMapping.ViewModels;
 using CVWaferProber.Core.Models.Enums;
+using CVWaferProber.Core.ViewModels;
 using CVWaferProber.Utils;
 using CVWaferProber.ViewModels;
 using CVWPFSpectrometerCtrl;
@@ -21,18 +22,20 @@ namespace CVWaferProber.Services
         // 缓存当前测试的DieViewModel（供定时器回调使用）
         private DieViewModel _currentDieVM;
         private ChipMappingControlViewModel _chipMappingControlViewModel;
-    
+
         //
         // 存储当前测试的光谱数据（供生成CSV使用）
         private SpectrumMeasurement _currentSpectrumData;
         public bool IsIVLCameraEnabled { get; set; }
         public CVSpectrumViewModel CustomIVLVM { get; private set; }
+
+        private readonly GlobalConfigModel _globalConfig;
         public IVLService(CVSpectrumViewModel customIVLVM, ChipMappingControlViewModel chipMappingControlViewModel, RCRestService rcService) : base(rcService)
         {
             this.CustomIVLVM = customIVLVM;
             this._chipMappingControlViewModel = chipMappingControlViewModel;
             // 初始化导出文件夹（确保目录存在）
-            AutoExportHelper.InitFolders();
+            //AutoExportHelper.InitFolders();
         }
         public IVLService(string proberId, ChipMappingControlViewModel chipMappingControlViewModel, RCRestService rcService) : this(new CVSpectrumViewModel(), chipMappingControlViewModel, rcService)
         {
@@ -59,16 +62,16 @@ namespace CVWaferProber.Services
                     if (_spInnerTabControl != null)
                     {
                         _spInnerTabControl.SelectedIndex = 0; // 切换到Overview标签页
-                        Debug.WriteLine("标签页已成功切换到Overview（索引0）！");
+                        logger.Info("Tab page switched to Overview (index 0) successfully!");
                     }
                     else
                     {
-                        Debug.WriteLine("未找到x:Name=outerTabControl的TabControl控件！");
+                        logger.Info("TabControl with x:Name=outerTabControl not found!");
                     }
                 }
                 else
                 {
-                    Debug.WriteLine("无法切换标签页：_spPanelView为null！");
+                    logger.Info("Cannot switch tab page: _spPanelView is null!");
                     // 可选：抛出友好异常，方便定位问题
                     // throw new InvalidOperationException("SP面板视图控件未注入，请检查传递链路！");
                 }
@@ -103,7 +106,7 @@ namespace CVWaferProber.Services
                         // 循环调用刷新方法（每次都会加载最新数据）
                         ResultDisplay(_currentDieVM);
                         // 新增：加载光谱数据（供后续生成CSV）
-                       // _currentSpectrumData = CustomIVLVM.GetSpectrumData(dieViewModel.SerialNumber);
+                        // _currentSpectrumData = CustomIVLVM.GetSpectrumData(dieViewModel.SerialNumber);
                     }
                     catch (Exception ex)
                     {
@@ -117,7 +120,7 @@ namespace CVWaferProber.Services
             {
                 refreshTimer.Enabled = false;
                 refreshTimer.Dispose();
-                logger.Debug( "Test process completed, stop the refresh timer");// : "测试流程结束，停止刷新定时器"
+                logger.Info("Test process completed, stop the refresh timer");// : "测试流程结束，停止刷新定时器"
             }, TaskScheduler.FromCurrentSynchronizationContext());
 
             return task;
@@ -136,7 +139,7 @@ namespace CVWaferProber.Services
             }
             //CustomIVLVM.ClearResult();
             //CustomIVLVM.LoadData(dieViewModel.SerialNumber, dieViewModel.IsIVLCameraEnabled);
-        } 
+        }
 
         protected override ChipStatus GetResultStatus(string serialNumber)
         {
@@ -153,7 +156,7 @@ namespace CVWaferProber.Services
             //string csvContent = GenerateCsvContent(dieViewModel, "IVL");
             // 【关键修改2】构建Summary数据（对接AutoExportHelper的TestSummaryData）
             //AutoExportHelper.TestSummaryData summaryData = BuildIVLSummaryData(dieViewModel);
-           
+
             return ChipStatus.IVL_COMPLETED;
         }
         /// <summary>
@@ -250,7 +253,7 @@ namespace CVWaferProber.Services
         {
 
             base.DoEndTesting(); // 调用基类触发TestingCompleted事件
-            
+
         }
 
         // 仅暴露“生成CSV内容”的方法（不执行文件写入，只返回内容）
@@ -293,8 +296,8 @@ namespace CVWaferProber.Services
 
         public override void AutoExportData()
         {
-           
-           
+
+
             //if (wpfFlowViewModel.FlowType == CVWaferProberFlowType.IV)
             //{
             //    var IVMeasurements = CustomIVLVM.IVMeasurements;
@@ -307,7 +310,7 @@ namespace CVWaferProber.Services
             //        Directory.CreateDirectory(ivRootPath);
             //        logger.Info($"创建IV导出目录：{ivRootPath}");
             //    }
-                
+
             //    // 3. 构造文件名（包含时间戳，避免文件重名覆盖）
             //    string fileName = $"IVL_Data_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
             //    string fullExportPath = Path.Combine(ivRootPath, fileName);
@@ -315,24 +318,31 @@ namespace CVWaferProber.Services
             //}
             //if (wpfFlowViewModel.FlowType == CVWaferProberFlowType.IVL)
             //{
-                var Measurements = CustomIVLVM.Measurements;
-                var Wavelengths = CustomIVLVM.Wavelengths;
-                // 1. 固定导出根路径
-                string ivlRootPath = @"D:\Project\IVL";
+            var Measurements = CustomIVLVM.Measurements;
+            var Wavelengths = CustomIVLVM.Wavelengths;
+            if (Measurements == null || !Measurements.Any() || Wavelengths == null || Wavelengths.Length == 0)
+            {
+                logger.Info("No valid IVL data available for export");
+                return;
+            }
 
-                // 2. 确保目标目录存在（不存在则自动创建，避免路径不存在异常）
-                if (!Directory.Exists(ivlRootPath))
-                {
-                    Directory.CreateDirectory(ivlRootPath);
-                    logger.Info($"创建IVL导出目录：{ivlRootPath}");
-                }
-
-                // 3. 构造文件名（包含时间戳，避免文件重名覆盖）
-                string fileName = $"IVL_Data_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-                string fullExportPath = Path.Combine(ivlRootPath, fileName);
-                CustomIVLVM.ExportToCsv(fullExportPath, Measurements, Wavelengths);
+            // 读取全局配置的IVL导出路径（核心修改点2）
+            string ivlRootPath = _globalConfig?.IvlExportPath ?? @"D:\Project\IVL";
+            // 确保目录存在
+            if (!Directory.Exists(ivlRootPath))
+            {
+                Directory.CreateDirectory(ivlRootPath);
+                logger.Info($"Create IVL export directory：{ivlRootPath}");
+            }
+            // 构造文件名（包含SerialNumber+时间戳）
+            string serialNumber = _currentDieVM?.SerialNumber ?? "Unknown";
+            string fileName = $"IVL_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            string fullExportPath = Path.Combine(ivlRootPath, fileName);
+            // 执行导出
+            CustomIVLVM.ExportToCsv(fullExportPath, Measurements, Wavelengths);
+            logger.Info($"IVL data exported to：{fullExportPath}");
             //}
-           
+
         }
     }
 }

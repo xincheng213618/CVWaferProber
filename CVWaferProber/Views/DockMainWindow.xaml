@@ -74,6 +74,11 @@
                     Command="{Binding OpenSummaryConfigCommand}"
                     Header="{DynamicResource Menu.System.CfgExport}"
                     InputGestureText="Alt+E" />
+                <MenuItem
+                    x:Name="MenuGlobalConfig"
+                    Command="{Binding OpenGlobalConfigCommand}"
+                    Header="{DynamicResource Menu.GlobalConfig}"
+                    InputGestureText="Alt+G" />
                 <!--<MenuItem Header="暂停测试" Command="{Binding PauseTestCommand}" />
                 <MenuItem Header="停止测试" Command="{Binding StopTestCommand}" />
                 <Separator />
@@ -263,20 +268,24 @@
                                         CanDockAsTabbedDocument="False"
                                         CanFloat="False"
                                         CanHide="True">
-                                        <TextBox
+                                        <RichTextBox
                                             x:Name="LogTextBox"
                                             FontFamily="Consolas"
                                             FontSize="12"
                                             HorizontalScrollBarVisibility="Auto"
                                             IsReadOnly="True"
-                                            TextWrapping="NoWrap"
                                             VerticalScrollBarVisibility="Auto">
-                                            <TextBox.ContextMenu>
+                                            <!--  配置FlowDocument，实现“NoWrap”效果 TextWrapping="NoWrap"  -->
+                                            <RichTextBox.Document>
+                                                <FlowDocument />
+                                            </RichTextBox.Document>
+                                            <!--  上下文菜单保留  -->
+                                            <RichTextBox.ContextMenu>
                                                 <ContextMenu>
                                                     <MenuItem Click="ClearLogMenuItem_Click" Header="{DynamicResource MenuLogClear}" />
                                                 </ContextMenu>
-                                            </TextBox.ContextMenu>
-                                        </TextBox>
+                                            </RichTextBox.ContextMenu>
+                                        </RichTextBox>
                                     </avalon:LayoutAnchorable>
 
 

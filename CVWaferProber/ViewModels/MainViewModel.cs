@@ -5,6 +5,8 @@ using ChipMapping.ViewModels;
 using ColorVision.Core.Entities;
 using CVAVMControl;
 using CVDB.Services.Buz;
+using CVWaferProber.Core;
+using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
 using CVWaferProber.Models;
@@ -342,6 +344,8 @@ namespace CVWaferProber.ViewModels
         /// 打开Summary导出配置窗口命令
         /// </summary>
         public ICommand OpenSummaryConfigCommand { get; }
+        public ICommand OpenGlobalConfigCommand { get; }
+        
         #endregion
 
         #region 三态全选属性
@@ -546,9 +550,13 @@ namespace CVWaferProber.ViewModels
                     Application.Current.Shutdown();
                 }
             });
-           
-        // 反选命令初始化
-        InvertSelectAOICommand = new RelayCommand(ExecuteInvertSelectAOI);
+            if (Application.Current != null)
+            {
+                Application.Current.Exit -= Application_Exit; // 先解绑保险
+                Application.Current.Exit += Application_Exit;
+            }
+            // 反选命令初始化
+            InvertSelectAOICommand = new RelayCommand(ExecuteInvertSelectAOI);
             InvertSelectIVLCommand = new RelayCommand(ExecuteInvertSelectIVL);
             InvertSelectEQECommand = new RelayCommand(ExecuteInvertSelectEQE);
             InvertSelectVAMCommand = new RelayCommand(ExecuteInvertSelectVAM);
@@ -562,9 +570,11 @@ namespace CVWaferProber.ViewModels
             //  打开Summary导出配置窗口
             // Summary配置命令
             OpenSummaryConfigCommand = new CVImgRelayCommand(OpenSummaryConfig);
+            OpenGlobalConfigCommand = new RelayCommand(ExecuteOpenGlobalConfig);
             // OpenSummaryConfigCommand = new RelayCommand(OpenSummaryConfig);
             SysFlowCfgCommand = new RelayCommand(SysFlowCfg);
 
+            LoadMappingFileCommand = new RelayCommand(async (obj) => await LoadMappingFileAsync(obj));
             ShowConnectionSettingsCommand = new RelayCommand(OpenProberDeviceDebug);
             ShowRCConnectionSettingsCommand = new RelayCommand(ShowRcConnectionSettings);
 
@@ -608,10 +618,157 @@ namespace CVWaferProber.ViewModels
 
             var ivlService = new IVLService(CustomIVLVM, CustomMappingVM, rcService);
             ivlService.SetSpPanelView(SpPanelView);
+            // 自动加载上次会话数据（在 UI 初始化后异步执行）
+            try
+            {
+                Application.Current?.Dispatcher?.BeginInvoke(new Action(async () =>
+                {
+                    try
+                    {
+                        await LoadFromPersistenceAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        if (logger.IsErrorEnabled) logger.Error("Load previous session failed", ex);
+                    }
+                }), DispatcherPriority.Background);
+            }
+            catch { }
+
+            // 程序退出时自动保存当前会话
+            try
+            {
+                if (Application.Current != null)
+                {
+                    Application.Current.Exit += async (s, e) =>
+                    {
+                        try
+                        {
+                            await SaveLastSessionAsync();
+                        }
+                        catch { }
+                    };
+                }
+            }
+            catch { }
             // 加载上次保存的面板状态（需先在Settings中配置）
             //IsMappingPanelVisible = Properties.Settings.Default.IsMappingPanelVisible;
             //IsCameraPanelVisible = Properties.Settings.Default.IsCameraPanelVisible;
             //IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
+        }
+
+        private async Task LoadMappingFileAsync(object obj)
+        {
+            var openFileDialog = new OpenFileDialog
+            {
+                Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*",
+                DefaultExt = ".csv",
+                FileName = "result.csv",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+            };
+            if (openFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    ResultService.LoadFromCSV(openFileDialog.FileName, TestResults);
+                    _dataGrid?.Items.Refresh();
+                    if (logger.IsInfoEnabled) logger.InfoFormat("Load result ok => {0}", openFileDialog.FileName);
+                }
+                catch (Exception ex)
+                {
+                    if (logger.IsErrorEnabled) logger.Error(ex);
+                }
+            }
+            //try
+            //{
+            //    // 支持传入文件路径：优先使用 parameter，其次使用现有 MappingCsvFilePath
+            //    if (obj is string path && !string.IsNullOrWhiteSpace(path))
+            //    {
+            //        MappingCsvFilePath = path;
+            //    }
+
+            //    // 如果存在有效的 Mapping CSV，则按原逻辑加载映射
+            //    if (!string.IsNullOrWhiteSpace(MappingCsvFilePath) && File.Exists(MappingCsvFilePath))
+            //    {
+            //        // 调用已有的加载逻辑
+            //        LoadMappingFileFromCsv();
+
+            //        // 若需要通知其它模块，可通过 EventAggregator 发布事件（可选）
+            //        // EventAggregator?.Publish(new MappingReloadedEvent(MappingCsvFilePath));
+
+            //        if (logger.IsInfoEnabled) logger.InfoFormat("Mapping file reloaded => {0}", MappingCsvFilePath);
+            //        return;
+            //    }
+
+            //    // 如果没有可用的 Mapping CSV，则尝试从持久化（上次会话）加载测试结果（实现“重载/记忆”功能）
+            //    if (string.IsNullOrWhiteSpace(MappingCsvFilePath) || !File.Exists(MappingCsvFilePath))
+            //    {
+            //        if (logger.IsWarnEnabled) logger.WarnFormat("Mapping file not found => {0}", MappingCsvFilePath);
+
+            //        // 弹窗改为提供选择：用户可以选择加载持久化数据或选取文件
+            //        var result = MessageBox.Show(
+            //            (string)Application.Current.FindResource("Maping.FileNotExist") + "\n\n" +
+            //            "是否从上次会话重载测试数据？（是 = 重载上次数据；否 = 选择文件）",
+            //            (string)Application.Current.FindResource("Prompt"),
+            //            MessageBoxButton.YesNoCancel,
+            //            MessageBoxImage.Question);
+
+            //        // Yes -> 从持久化加载
+            //        if (result == MessageBoxResult.Yes)
+            //        {
+            //            try
+            //            {
+            //                await LoadFromPersistenceAsync();
+
+            //                Application.Current?.Dispatcher?.Invoke(() =>
+            //                {
+            //                    _dataGrid?.Items.Refresh();
+            //                    if (logger.IsInfoEnabled) logger.Info("Loaded last session test results from persistence (LoadMappingFile).");
+            //                });
+            //            }
+            //            catch (Exception ex)
+            //            {
+            //                if (logger.IsErrorEnabled) logger.Error("Failed to load persisted test results", ex);
+            //                MessageBox.Show((string)Application.Current.FindResource("Maping.ReloadFailed") + $": {ex.Message}", (string)Application.Current.FindResource("State.Error"), MessageBoxButton.OK, MessageBoxImage.Error);
+            //            }
+
+            //            return;
+            //        }
+            //        // No -> 打开文件对话框让用户选择 Mapping CSV（保留原行为）
+            //        if (result == MessageBoxResult.No)
+            //        {
+            //            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            //            {
+            //                Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*",
+            //                DefaultExt = ".csv",
+            //                Title = (string)Application.Current.FindResource("Maping.OpenMappingFile")
+            //            };
+            //            if (openFileDialog.ShowDialog() == true)
+            //            {
+            //                MappingCsvFilePath = openFileDialog.FileName;
+            //                if (!string.IsNullOrWhiteSpace(MappingCsvFilePath) && File.Exists(MappingCsvFilePath))
+            //                {
+            //                    LoadMappingFileFromCsv();
+            //                    if (logger.IsInfoEnabled) logger.InfoFormat("Mapping file loaded => {0}", MappingCsvFilePath);
+            //                }
+            //                else
+            //                {
+            //                    MessageBox.Show((string)Application.Current.FindResource("Maping.FileNotExist"), (string)Application.Current.FindResource("Prompt"), MessageBoxButton.OK, MessageBoxImage.Warning);
+            //                }
+            //            }
+
+            //            return;
+            //        }
+
+            //        // Cancel -> 直接返回
+            //        return;
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    if (logger.IsErrorEnabled) logger.Error("Failed to reload mapping file or load persistence", ex);
+            //    MessageBox.Show($"{(string)Application.Current.FindResource("Maping.ReloadFailed")}: {ex.Message}", (string)Application.Current.FindResource("State.Error"), MessageBoxButton.OK, MessageBoxImage.Error);
+            //}
         }
 
         private void InitRc()
@@ -932,7 +1089,21 @@ namespace CVWaferProber.ViewModels
                 UpdateDataGridColumns();
             }
         }
+        /// <summary>
+        /// 执行打开全局配置窗口
+        /// </summary>
+        private void ExecuteOpenGlobalConfig(object obj)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var globalConfigWindow = new GlobalConfigWindow
+                {
+                    Owner = Application.Current.MainWindow
+                };
 
+                globalConfigWindow.ShowDialog();
+            });
+        }
         #region 三态全选状态更新
         private void UpdateSelectAllAOIState()
         {
@@ -1124,8 +1295,8 @@ namespace CVWaferProber.ViewModels
                     return;
                 }
 
-                //固定导出根路径为 F:/Project
-                string exportRootPath = @"D:/Project";
+                //固定导出根路径为 D:/Project
+                string exportRootPath = @"D:\Project";
 
                 // 自动创建目录（如果不存在）
                 if (!Directory.Exists(exportRootPath))
@@ -1372,8 +1543,18 @@ namespace CVWaferProber.ViewModels
                 }
                 if (WPFlows.Count > 0) SelectedWPFlow = WPFlows[0];
             }
+            else
+            {
+                
+            }
         }
 
+        private string testingStatus = $"{(string)Application.Current.FindResource("Maping.NoMeasurement")}";
+        public string TestingStatus
+        {
+            get => testingStatus;
+            set => SetProperty(ref testingStatus, value);
+        }
         private void LoadFlow()
         {
             var flows = rcService.RcLoadFlows();
@@ -1415,6 +1596,49 @@ namespace CVWaferProber.ViewModels
 
         private void LoadTestResult(object? obj)
         {
+            // 支持三种用法：
+            // 1) obj is string path -> 打开对话框或直接加载该CSV（保持原逻辑）
+            // 2) obj == null -> 从上次会话持久化文件加载（用户点击“重载”且未选择文件）
+            // 3) 保持原有打开文件对话框行为
+            if (obj is string path && !string.IsNullOrWhiteSpace(path))
+            {
+                // 通过指定路径加载 CSV
+                try
+                {
+                    ResultService.LoadFromCSV(path, TestResults);
+                    _dataGrid?.Items.Refresh();
+                    if (logger.IsInfoEnabled) logger.InfoFormat("Load result ok => {0}", path);
+                }
+                catch (Exception ex)
+                {
+                    if (logger.IsErrorEnabled) logger.Error(ex);
+                }
+                return;
+            }
+
+            if (obj == null)
+            {
+                // 从持久化位置加载上次数据
+                Task.Run(async () =>
+                {
+                    try
+                    {
+                        await LoadFromPersistenceAsync();
+                        Application.Current?.Dispatcher?.Invoke(() =>
+                        {
+                            _dataGrid?.Items.Refresh();
+                            if (logger.IsInfoEnabled) logger.Info("Loaded last session test results from persistence.");
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        if (logger.IsErrorEnabled) logger.Error("Failed to load persisted test results", ex);
+                    }
+                });
+                return;
+            }
+
+            // 旧行为：打开对话框让用户选择文件
             var openFileDialog = new OpenFileDialog
             {
                 Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*",
@@ -1434,6 +1658,237 @@ namespace CVWaferProber.ViewModels
                 {
                     if (logger.IsErrorEnabled) logger.Error(ex);
                 }
+            }
+        }
+        // 新增：从持久化文件加载 DTO 并应用到 TestResults（不覆盖 Mapping 布局，只覆盖属性/结果）
+        private async Task LoadFromPersistenceAsync()
+        {
+            try
+            {
+                var dtos = await TestResultPersistenceService.LoadAsync();
+                if (dtos == null || dtos.Count == 0) return;
+
+                Application.Current?.Dispatcher?.Invoke(() =>
+                {
+                    ApplyDtosToTestResults(dtos);
+                    _dataGrid?.Items.Refresh();
+                    BuildSNIndex();
+                    CalculateYieldBySerialNumber();
+
+                    // 自动选中：优先选中 DTO 中第一个有 SerialNumber 且在 TestResults 中存在的记录，
+                    // 若没有则选中 TestResults 的第一项（保证 UI 有选中项）
+                    try
+                    {
+                        DieViewModel? toSelect = null;
+
+                        var dtoWithSN = dtos.FirstOrDefault(d => !string.IsNullOrWhiteSpace(d.SerialNumber));
+                        if (dtoWithSN != null)
+                        {
+                            toSelect = TestResults.FirstOrDefault(t =>
+                                !string.IsNullOrWhiteSpace(t.SerialNumber) &&
+                                t.SerialNumber.Equals(dtoWithSN.SerialNumber, System.StringComparison.OrdinalIgnoreCase));
+                        }
+
+                        if (toSelect == null && TestResults.Count > 0)
+                        {
+                            toSelect = TestResults[0];
+                        }
+
+                        if (toSelect != null)
+                        {
+                            selfClick = false; // 防止触发外部关联选中逻辑误判
+                            SelectedItem = toSelect;
+                            ManScrollToItem(toSelect);
+                            if (logger.IsInfoEnabled) logger.InfoFormat("Auto-selected item after loading persistence => Id={0}, SN={1}", toSelect.Id, toSelect.SerialNumber);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        if (logger.IsWarnEnabled) logger.Warn("Auto-select after LoadFromPersistenceAsync failed", ex);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                if (logger.IsErrorEnabled) logger.Error("LoadFromPersistenceAsync failed", ex);
+            }
+        }
+
+        private void ApplyDtosToTestResults(List<TestResultDto> dtos)
+        {
+            if (dtos == null || dtos.Count == 0) return;
+            foreach (var dto in dtos)
+            {
+                try
+                {
+                    DieViewModel? die = null;
+                    if (dto.Id != 0)
+                        die = TestResults.FirstOrDefault(d => d.Id == dto.Id);
+                    if (die == null && !string.IsNullOrEmpty(dto.SerialNumber))
+                    {
+                        var sn = dto.SerialNumber.Trim();
+                        die = TestResults.FirstOrDefault(d => !string.IsNullOrEmpty(d.SerialNumber) &&
+                            d.SerialNumber.Trim().Equals(sn, System.StringComparison.OrdinalIgnoreCase));
+                    }
+                    if (die == null && dto.MapX.HasValue && dto.MapY.HasValue)
+                        die = TestResults.FirstOrDefault(d => d.MapX == dto.MapX && d.MapY == dto.MapY);
+
+                    if (die == null) continue;
+
+                    // 只覆盖测试结果相关字段，保留 mapping 中的其它信息
+                    die.IsAOIEnabled = dto.IsAOIEnabled;
+                    die.IsIVLEnabled = dto.IsIVLEnabled;
+                    die.IsEQEEnabled = dto.IsEQEEnabled;
+                    die.IsVAMEnabled = dto.IsVAMEnabled;
+                    die.SerialNumber = dto.SerialNumber;
+
+                    // 解析 DisplayStatus：增强容错
+                    if (!string.IsNullOrWhiteSpace(dto.DisplayStatus))
+                    {
+                        string raw = dto.DisplayStatus.Trim().Trim('"').Trim();
+                        bool applied = false;
+
+                        // 1) 尝试按枚举名解析（例如 "OK", "WAITING"）
+                        if (Enum.TryParse<ChipStatus>(raw, true, out var enumStatus))
+                        {
+                            die.ChangeStatusOnly(enumStatus);
+                            applied = true;
+                        }
+
+                        if (!applied)
+                        {
+                            // 2) 先使用当前语言尝试解析
+                            try
+                            {
+                                var targetStatus = ChipStatusTool.GetStatusFromDisplay(raw, die.IsChinese);
+                                // 有些实现可能返回默认值 - 只在明显不同的时候应用
+                                die.ChangeStatusOnly(targetStatus);
+                                applied = true;
+                            }
+                            catch
+                            {
+                                applied = false;
+                            }
+                        }
+
+                        if (!applied)
+                        {
+                            // 3) 再尝试使用另一种语言解析作为回退
+                            try
+                            {
+                                var targetStatus2 = ChipStatusTool.GetStatusFromDisplay(raw, !die.IsChinese);
+                                die.ChangeStatusOnly(targetStatus2);
+                                applied = true;
+                            }
+                            catch { applied = false; }
+                        }
+
+                        // 如果仍未成功，则忽略（保持原状态），并记录日志
+                        if (!applied && logger.IsWarnEnabled)
+                        {
+                            logger.WarnFormat("Failed to parse DisplayStatus '{0}' for Die Id={1}, SN={2}", dto.DisplayStatus, die.Id, die.SerialNumber);
+                        }
+                    }
+
+                    // 修复：更新DataValue（修改底层ChipData）
+                    if (die.chipViewModel?.ChipData != null && !string.IsNullOrEmpty(dto.DataValue))
+                    {
+                        if (double.TryParse(dto.DataValue, out double dataValue))
+                        {
+                            die.chipViewModel.ChipData.DataValue = dataValue;
+                            die.RefreshDataValue();
+                        }
+                    }
+
+                    die.StartTestTime = dto.StartTestTime;
+                    die.EndTestTime = dto.EndTestTime;
+                    die.TotalTime = dto.TotalTime;
+                }
+                catch (Exception ex)
+                {
+                    if (logger.IsWarnEnabled) logger.Warn("Apply DTO to TestResults failed for one item", ex);
+                }
+            }
+        }
+        // 新增：应用退出事件处理（同步调用以确保在进程退出前执行保存）
+        private void Application_Exit(object? sender, ExitEventArgs e)
+        {
+            try
+            {
+                // 在线程池运行保存任务并等待有限时间，避免 UI 线程死锁
+                var saveTask = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await SaveLastSessionAsync().ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (logger.IsWarnEnabled) logger.Warn("SaveLastSessionAsync failed on Exit", ex);
+                    }
+
+                    try
+                    {
+                        // CSV 导出也放到线程池内执行
+                        SaveTestResultsToDefaultFile();
+                    }
+                    catch (Exception ex)
+                    {
+                        if (logger.IsWarnEnabled) logger.Warn("Auto CSV save failed on Exit", ex);
+                    }
+                });
+
+                // 等待保存任务完成，但不要无限期阻塞，5 秒超时可避免长时间卡死
+                if (!saveTask.Wait(TimeSpan.FromSeconds(5)))
+                {
+                    if (logger.IsWarnEnabled) logger.Warn("Saving last session timed out on Exit.");
+                }
+            }
+            catch (Exception ex)
+            {
+                // 确保不抛出异常阻塞退出流程
+                if (logger.IsErrorEnabled) logger.Error("Application_Exit unexpected error", ex);
+            }
+        }
+
+        // 新增：把 TestResults 自动保存为 CSV 的默认位置（Documents\CVWaferProber\AutoSaves）
+        private void SaveTestResultsToDefaultFile()
+        {
+            try
+            {
+                if (TestResults == null || !TestResults.Any())
+                {
+                    if (logger.IsInfoEnabled) logger.Info("No test results to auto-save on exit.");
+                    return;
+                }
+
+                string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "CVWaferProber", "AutoSaves");
+                Directory.CreateDirectory(folder);
+                string fileName = $"TestResults_Auto_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+                string fullPath = Path.Combine(folder, fileName);
+
+                // 使用已有 ResultService 写 CSV（此方法会同步写文件）
+                ResultService.SaveToCSV(fullPath, TestResults);
+
+                if (logger.IsInfoEnabled) logger.InfoFormat("Auto-saved test results to => {0}", fullPath);
+            }
+            catch (Exception ex)
+            {
+                if (logger.IsErrorEnabled) logger.Error("SaveTestResultsToDefaultFile failed", ex);
+            }
+        }
+        // 在程序退出时保存当前 TestResults 到持久化文件
+        private async Task SaveLastSessionAsync()
+        {
+            try
+            {
+                var dtos = TestResults.Select(r => TestResultDto.FromObject(r)).Where(x => x != null).ToList();
+                await TestResultPersistenceService.SaveAsync(dtos);
+                if (logger.IsInfoEnabled) logger.Info("Saved last session test results to persistence.");
+            }
+            catch (Exception ex)
+            {
+                if (logger.IsErrorEnabled) logger.Error("SaveLastSessionAsync failed", ex);
             }
         }
 
@@ -1600,46 +2055,17 @@ namespace CVWaferProber.ViewModels
         //    mainService.DoDieFlowExec(_selectedWPFlow, currentDie, false);
         //}
         public CVSpectrumAnalyzer? SpPanelView { get; set; }
-        private TabControl? _spInnerTabControl;
+        private TabControl? _innerTabControl;
         private void StartManFlow()
         {
             if (SelectedWPFlow != null && SelectedItem is DieViewModel die)
             {
                 EnableBtnGUI(false);
                 ManTestingReady(die);
-
-                // 新增：强制切换到SP面板的Overview标签页
-                if (SelectedWPFlow.FlowType == CVWaferProberFlowType.IVL_SP && SpPanelView != null)
-                {
-                    _spInnerTabControl = SpPanelView.FindName("innerTabControl") as System.Windows.Controls.TabControl;
-                    if (_spInnerTabControl != null)
-                    {
-                        _spInnerTabControl.SelectedIndex = 0; // 切换到Overview标签页
-                        _spInnerTabControl.UpdateLayout();
-                    }
-                }
-
                 mainService.DoDieFlowExec(_selectedWPFlow, die);
+                ActivateCorrespondingPanel();
             }
-            //if (SelectedWPFlow != null)
-            //{
-            //    if (SelectedItem != null && SelectedItem is DieViewModel die)
-            //    {
-            //        EnableBtnGUI(false);
-
-            //        ManTestingReady(die);
-
-            //        mainService.DoDieFlowExec(_selectedWPFlow, die);
-            //    }
-            //    else
-            //    {
-            //        if (logger.IsErrorEnabled) logger.Error("Die not selected.");
-            //    }
-            //}
-            //else
-            //{
-            //    if (logger.IsErrorEnabled) logger.Error("Flow not selected.");
-            //}
+            
         }
 
         private void DoEndTesting()
@@ -1688,7 +2114,7 @@ namespace CVWaferProber.ViewModels
         }
 
         private void StartManTest(object? obj)
-        {
+        { 
             StartManFlow();
         }
 
@@ -1843,7 +2269,7 @@ namespace CVWaferProber.ViewModels
 
         private void ActivateCorrespondingPanel()
         {
-            if (IsProcessing) return;
+            //if (IsProcessing) return;
             if (SelectedWPFlow == null) return;
 
             if (DockingManager == null || AnchorableSP == null)
@@ -1866,11 +2292,8 @@ namespace CVWaferProber.ViewModels
                     }
                     break;
                 case CVWaferProberFlowType.IVL_SP:
-                    ActivateSpectralInnerTabAction?.Invoke();
-                    break;
-
                 case CVWaferProberFlowType.IVL_Camera:
-                    ActivateIVLCameraInnerTabAction?.Invoke();
+                    ActivateSpectralInnerTabAction?.Invoke();
                     break;
 
                 case CVWaferProberFlowType.EQE:
@@ -2054,5 +2477,6 @@ namespace CVWaferProber.ViewModels
         }
         #endregion
         #endregion
+      
     }
 }

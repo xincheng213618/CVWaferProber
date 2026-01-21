@@ -19,7 +19,7 @@
     <sys:String x:Key="BtnLoadTestResult">加载测试结果</sys:String>
     <sys:String x:Key="CalculationException">计算异常</sys:String>
 
-    
+
     <sys:String x:Key="ChkColorStatus">启用结果状态颜色</sys:String>
     <sys:String x:Key="Auto SN">自动SN</sys:String>
     <sys:String x:Key="IsIVLCamera">是否启用IVL相机</sys:String>
@@ -43,6 +43,10 @@
     <sys:String x:Key="Maping.GridHeader.Uniformity">均匀性</sys:String>
     <sys:String x:Key="Maping.GridHeader.TotalTime">总用时</sys:String>
 
+    <sys:String x:Key="Maping.NoMeasurement">未测试</sys:String>
+    <sys:String x:Key="Maping.Measurementinprogress">测量运行中...</sys:String>
+    <sys:String x:Key="Maping.Automeasurementinprogress">自动测量运行中...</sys:String>
+
 
     <sys:String x:Key="Dock.Layout.Title.Mapping">映射</sys:String>
     <sys:String x:Key="Dock.Layout.Title.CameraImage">相机图像</sys:String>
@@ -58,9 +62,12 @@
     <!--  光谱曲线相关  -->
     <sys:String x:Key="Sp.Overview">总览图</sys:String>
     <sys:String x:Key="Sp.Spectral">光谱</sys:String>
+    <sys:String x:Key="Sp.Spectral1">SPD(w/sr·m^2·nm)</sys:String>
+    <sys:String x:Key="Sp.SpectralEQE">SPD(W/nm)</sys:String>
+
     <sys:String x:Key="Sp.EQESpectral">EQE光谱曲线</sys:String>
     <sys:String x:Key="Sp.SpectralCurve">光谱曲线</sys:String>
-    <sys:String x:Key="Sp.Wavelength">波长 (nm)</sys:String>
+    <sys:String x:Key="Sp.Wavelength">波长(nm)</sys:String>
     <sys:String x:Key="Sp.RelativeSpectrum">相对光谱</sys:String>
     <sys:String x:Key="Sp.AbsoluteSpectrum">绝对光谱</sys:String>
     <sys:String x:Key="Sp.ShowAllData">显示所有数据</sys:String>
@@ -69,12 +76,17 @@
     <!--  IV曲线相关  -->
     <sys:String x:Key="Sp.IV Curve">IV曲线</sys:String>
 
-
     <!--  IL曲线相关  -->
     <sys:String x:Key="Sp.IL Curve">IL曲线</sys:String>
 
     <!--  VL曲线相关  -->
     <sys:String x:Key="Sp.VL Curve">VL曲线</sys:String>
+
+    <!--  Power-L曲线相关  -->
+    <sys:String x:Key="Sp.PowerL Curve">Power-L曲线</sys:String>
+    <sys:String x:Key="Sp.Power">功率(W)</sys:String>
+
+
     <!--  Camera曲线相关  -->
     <sys:String x:Key="Sp.Camera Curve">相机曲线</sys:String>
     <!--  EQE相关  -->
@@ -123,6 +135,16 @@
     <sys:String x:Key="Unselected">未选择</sys:String>
     <sys:String x:Key="FileSize">文件大小：</sys:String>
     <sys:String x:Key="Progress">进度：</sys:String>
+    <sys:String x:Key="Image.AnalysisImage">分析图</sys:String>
+    <sys:String x:Key="Image.CameraMeasurement">原图</sys:String>
+    <sys:String x:Key="Image.Mode">模式:</sys:String>
+    <sys:String x:Key="AnalysisImage">分析图像</sys:String>
+    <sys:String x:Key="CameraMeasurement">相机测量</sys:String>
+    <sys:String x:Key="Image.GridHeader.Type">类型</sys:String>
+
+    <sys:String x:Key="DisplayMode">Display Mode:</sys:String>
+    <sys:String x:Key="AnalysisImageMode">Anlysis Image</sys:String>
+    <sys:String x:Key="CameraMeasurementMode">Camera Measurement</sys:String>
 
     <sys:String x:Key="Image.GridHeader.Id">序号</sys:String>
     <sys:String x:Key="Image.GridHeader.FileName">文件名</sys:String>
@@ -148,10 +170,18 @@
     <sys:String x:Key="Menu.System">系统(S)</sys:String>
     <sys:String x:Key="Menu.System.CfgFlows">流程配置</sys:String>
     <sys:String x:Key="Menu.System.CfgExport">Summary导出配置</sys:String>
+    <sys:String x:Key="Menu.GlobalConfig">全局配置</sys:String>
     <sys:String x:Key="Menu.View">视图(V)</sys:String>
     <sys:String x:Key="Menu.Language">语言(L)</sys:String>
     <sys:String x:Key="Menu.Language.Chinese">中文</sys:String>
     <sys:String x:Key="Menu.Language.English">英文</sys:String>
+
+    <sys:String x:Key="GlobalConfig.ExportPath">自动导出默认路径:</sys:String>
+    <sys:String x:Key="GlobalConfig.Browse">浏览</sys:String>
+    <sys:String x:Key="GlobalConfig.Save">保存配置</sys:String>
+    <sys:String x:Key="GlobalConfig.SaveSuccess">配置保存成功！</sys:String>
+    <sys:String x:Key="GlobalConfig.PathInvalid">请选择有效的文件夹路径！</sys:String>
+
 
     <sys:String x:Key="Menu.MappingPanelVisible">Mapping面板</sys:String>
     <sys:String x:Key="Menu.Layout.Title.AOI">AOI面板</sys:String>
@@ -184,6 +214,9 @@
     <sys:String x:Key="VAM.ZChannel">Z通道</sys:String>
     <sys:String x:Key="VAM.OperationArea">操作区</sys:String>
 
+
+
+
     <sys:String x:Key="VAM.Exportparameterconfiguration">导出参数配置</sys:String>
     <sys:String x:Key="VAM.ExporChannel">导出通道:</sys:String>
     <sys:String x:Key="VAM.cieXChannel">cieX通道</sys:String>
@@ -208,8 +241,13 @@
     <sys:String x:Key="Plot.Axis.X">Degrees</sys:String>
     <sys:String x:Key="Plot.Axis.Y">Luminance (cd/m²)</sys:String>
     <sys:String x:Key="VAM.RCircleRadius">极角半径:</sys:String>
-    <sys:String x:Key="VAM.ExportDiameterLineCSV">导出方位角截面CSV (0°~180°)</sys:String>
+    <sys:String x:Key="VAM.ExportDiameterLineCSV">导出方位角截面CSV</sys:String>
     <sys:String x:Key="VAM.ExportRCircleCSV">导出极角截面CSV</sys:String>
+    <sys:String x:Key="VAM.ExportAzimuthLineCSV1">导出当前方位角截面CSV</sys:String>
+    <sys:String x:Key="VAM.ExportRCircleCSV1">导出当前极角截面CSV</sys:String>
+
+    <sys:String x:Key="VAM.InvalidChannel">选中的通道无效，将使用默认Y通道</sys:String>
+    <sys:String x:Key="VAM.PleaseSelectChannel">请先选择有效的导出通道</sys:String>
 
     <sys:String x:Key="VAM.SaveAzimuth">保存方位角截面数据</sys:String>
     <sys:String x:Key="VAM.SavePolar">保存极角截面数据</sys:String>
@@ -219,8 +257,9 @@
     <sys:String x:Key="VAM.Noexport">DLL数据获取失败，无法导出！</sys:String>
     <sys:String x:Key="VAM.Create">创建VAM导出目录</sys:String>
     <sys:String x:Key="VAM.AngleStep">极角步长</sys:String>
-    
-    
+
+    <sys:String x:Key="Exportsucceeded">导出成功</sys:String>
+    <sys:String x:Key="Path">路径</sys:String>
 
 
     <sys:String x:Key="VAM.RCircle">极角</sys:String>
@@ -228,6 +267,7 @@
     <!--<sys:String x:Key="VAM.CircumferentialAngle">圆周角度 (°)</sys:String>-->
     <!--<sys:String x:Key="VAM.PixelValue">像素值</sys:String>-->
     <sys:String x:Key="VAM.Onechannel">请至少选择一个导出通道！</sys:String>
+    <sys:String x:Key="VAM.Choosetheangle">请选择角度</sys:String>
 
     <!--  EQE相关  -->
     <sys:String x:Key="EQE.luminous_flux">光通量</sys:String>
@@ -615,6 +655,15 @@
     <sys:String x:Key="HC_Yes">是</sys:String>
     <sys:String x:Key="HC_No">否</sys:String>
     <sys:String x:Key="HC_Close">关闭</sys:String>
+
+
+
+
+
+
+
+
+    <sys:String x:Key="Createdexportdirectory">创建导出目录</sys:String>
 
 
 

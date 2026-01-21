@@ -162,50 +162,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
         public void UpdateIVData(bool isSourceV)
         {
-            /*var lineSeries = new LineSeries
-            {
-                Title = "IV曲线",
-                Color = OxyColors.Blue,
-                StrokeThickness = 1.5,
-                MarkerType = MarkerType.Circle,  // 标记类型
-                MarkerSize = 4,                  // 标记大小
-                MarkerFill = OxyColors.Blue,      // 标记填充颜色
-                MarkerStroke = OxyColors.Blue,  // 标记边框颜色
-                MarkerStrokeThickness = 1.5,     // 标记边框厚度
-                LineStyle = LineStyle.Solid,
-                //TrackerFormatString = "{1:0.00}V, {2:0.00}A",
-            };
-
-            for (int i = 0; i < Measurements.Count; i++)
-            {
-                if (isSourceV)
-                {
-                    lineSeries.Points.Add(new DataPoint(Measurements[i].Current, Measurements[i].Voltage));
-                }
-                else
-                {
-                    lineSeries.Points.Add(new DataPoint(Measurements[i].Current, Measurements[i].Voltage));
-                }
-            }
-
-            // 保持最近的50个数据点
-            if (lineSeries.Points.Count > 50)
-            {
-                lineSeries.Points.RemoveAt(0);
-            }
-            var timer = new System.Windows.Threading.DispatcherTimer();
-            timer.Interval = TimeSpan.FromMilliseconds(500);
-            timer.Tick += (sender, e) =>
-            {
-                UpdateIVData(isSourceV);
-            };
-            timer.Start();
-            // 自动调整轴范围
-
-            //PlotModel.Series.Clear();
-            //PlotModel.Series.Add(lineSeries);
-            //PlotModel.InvalidatePlot(true);*/
-
+         
             // 1. 数据校验：避免空集合
             if (Measurements == null || Measurements.Count == 0)
             {

@@ -1,21 +1,28 @@
-﻿using System.Windows.Controls;
-using log4net.Appender;
+﻿using log4net.Appender;
 using log4net.Core;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Threading;
+using RichTextBox = System.Windows.Controls.RichTextBox;
 using TextBox = System.Windows.Controls.TextBox;
+using System.Windows.Media;
+using Brushes = System.Windows.Media.Brushes;
 
 namespace CVWaferProber.Log
 {
     public class TextBoxAppender : AppenderSkeleton
     {
-        private TextBox _textBox;
+        // 1. 替换原 TargetTextBox 为 TargetRichTextBox（RichTextBox类型）
+        private RichTextBox _richTextBox;
         private ScrollViewer _scrollViewer;
         private int _maxLines = 1000;
 
-        public TextBox TargetTextBox
+        // 2. 定义 TargetRichTextBox 属性（用于绑定RichTextBox控件）
+        public RichTextBox TargetRichTextBox
         {
-            get { return _textBox; }
-            set { _textBox = value; }
+            get { return _richTextBox; }
+            set { _richTextBox = value; }
         }
 
         public ScrollViewer TargetScrollViewer
@@ -30,32 +37,53 @@ namespace CVWaferProber.Log
             set { _maxLines = value; }
         }
 
+        // 3. 后续 Append 方法保持不变（已适配RichTextBox）
         protected override void Append(LoggingEvent loggingEvent)
         {
-            if (_textBox == null) return;
+            if (_richTextBox == null) return;
 
             string logMessage = RenderLoggingEvent(loggingEvent);
+            bool isErrorLevel = loggingEvent.Level == Level.Error;
 
-            // 在UI线程上执行更新
-            _textBox.Dispatcher.BeginInvoke(new Action(() =>
+            _richTextBox.Dispatcher.BeginInvoke(new Action(() =>
             {
-                // 添加新日志
-                _textBox.AppendText(logMessage + Environment.NewLine);
-
-                // 限制日志行数
-                if (_textBox.LineCount > _maxLines)
+                Paragraph logParagraph = new Paragraph
                 {
-                    int removeCount = _textBox.LineCount - _maxLines;
-                    string[] lines = _textBox.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-                    _textBox.Text = string.Join(Environment.NewLine, lines.Skip(removeCount));
-                }
+                    // 1. 合理行高：14（匹配12号字体，紧凑不重叠），禁止设为0
+                    LineHeight = 14,
+                    // 2. 强制行堆叠策略，确保LineHeight生效
+                    LineStackingStrategy = LineStackingStrategy.BlockLineHeight,
+                    // 3. 核心：消除段落间默认边距，让日志整体紧凑
+                    Margin = new Thickness(0) // 上下左右边距均为0，移除段落间空隙
+                };
+                Run logRun = new Run(logMessage) // 移除末尾的Environment.NewLine（避免额外换行，段落已自带换行）
+                {
+                    Foreground = isErrorLevel ? Brushes.Red : Brushes.Black,
+                    FontSize = 12 // 明确字体大小，保证行高匹配
+                };
+                logParagraph.Inlines.Add(logRun);
 
-                // 自动滚动到底部
-                _textBox.ScrollToEnd();
-
-                // 如果有ScrollViewer，也滚动到底部
+                _richTextBox.Document.Blocks.Add(logParagraph);
+                LimitLogLines();
+                _richTextBox.ScrollToEnd();
                 _scrollViewer?.ScrollToBottom();
             }), DispatcherPriority.Background);
+        }
+
+        // 4. 保留原有 LimitLogLines 方法（适配RichTextBox）
+        private void LimitLogLines()
+        {
+            if (_richTextBox.Document.Blocks.Count <= _maxLines) return;
+
+            int removeCount = _richTextBox.Document.Blocks.Count - _maxLines;
+            for (int i = 0; i < removeCount; i++)
+            {
+                var firstParagraph = _richTextBox.Document.Blocks.FirstOrDefault();
+                if (firstParagraph != null)
+                {
+                    _richTextBox.Document.Blocks.Remove(firstParagraph);
+                }
+            }
         }
     }
 }

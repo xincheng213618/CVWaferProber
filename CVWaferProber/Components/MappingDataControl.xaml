@@ -326,14 +326,14 @@
                                                                   Background="#FF6C757D"
                                                                   Foreground="White"
                                                                   BorderThickness="0"/>-->
-
+                                        <!--LoadTestResultCommand  BtnLoadTestResult IsNotProcessing-->
                                         <Button
                                             x:Name="BtnReload"
                                             Width="80"
                                             Margin="0,0,0,0"
                                             Background="#FF0D6EFD"
                                             BorderThickness="0"
-                                            Command="{Binding LoadMappingFileCommand}"
+                                            Command="{Binding LoadTestResultCommand}"
                                             Content="{DynamicResource BtnReload}"
                                             DockPanel.Dock="Right"
                                             Foreground="White"
@@ -353,7 +353,232 @@
                                 </Border>
 
                                 <!--  测量操作区域  -->
+                                <!--  测量操作区域（红框区域）- 两行布局，每行占满整行  -->
                                 <Border
+                                    Height="90"
+                                    Margin="0,0,0,0"
+                                    Background="#FFFFFFFF"
+                                    CornerRadius="6">
+                                    <!--  外层StackPanel垂直排列两行  -->
+                                    <StackPanel
+                                        Margin="5"
+                                        HorizontalAlignment="Stretch"
+                                        Orientation="Vertical">
+                                        <!--  ============= 第一行：下拉框 + PN/SN + 搜索 =============  -->
+                                        <Grid
+                                            Height="30"
+                                            Margin="0,0,0,5"
+                                            HorizontalAlignment="Stretch">
+                                            <!--  列宽按功能分配权重，*表示按比例瓜分整行宽度  -->
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="2*" />
+                                                <!--  下拉框（占2份）  -->
+                                                <ColumnDefinition Width="*" />
+                                                <!--  FlowLoad按钮（占1份）  -->
+                                                <ColumnDefinition Width="auto" />
+                                                <!--  PN文本（自适应宽度）  -->
+                                                <ColumnDefinition Width="1.5*" />
+                                                <!--  PN输入框（占1.5份）  -->
+                                                <ColumnDefinition Width="auto" />
+                                                <!--  SN文本（自适应宽度）  -->
+                                                <ColumnDefinition Width="1.5*" />
+                                                <!--  SN输入框（占1.5份）  -->
+                                                <ColumnDefinition Width="*" />
+                                                <!--  搜索按钮（占1份）  -->
+                                            </Grid.ColumnDefinitions>
+
+                                            <!--  下拉框 - 第0列，拉伸填充列宽  -->
+                                            <ComboBox
+                                                x:Name="cbLeftSelector"
+                                                Grid.Column="0"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Center"
+                                                IsEnabled="{Binding IsNotProcessing}"
+                                                ItemsSource="{Binding WPFlows}"
+                                                SelectedItem="{Binding SelectedWPFlow}">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Width="100" Text="{Binding Name}" />
+                                                            <TextBlock Foreground="Blue" Text=" (Type: " />
+                                                            <TextBlock Foreground="Blue" Text="{Binding FlowType}" />
+                                                            <TextBlock Foreground="Blue" Text=")" />
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+
+                                            <!--  FlowLoad按钮 - 第1列  -->
+                                            <Button
+                                                Grid.Column="1"
+                                                Height="25"
+                                                Margin="5,0,0,0"
+                                                Padding="5,1"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Center"
+                                                Command="{Binding FlowLoadCommand}"
+                                                Content="{DynamicResource BtnFlowLoad}"
+                                                IsEnabled="{Binding IsNotProcessing}"
+                                                ToolTip="{DynamicResource BtnFlowLoad}" />
+
+                                            <!--  PN文本 - 第2列（自适应宽度，不抢占空间）  -->
+                                            <TextBlock
+                                                Grid.Column="2"
+                                                Margin="10,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Text="PN" />
+
+                                            <!--  PN输入框 - 第3列  -->
+                                            <TextBox
+                                                Grid.Column="3"
+                                                Margin="0,0,5,0"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Center"
+                                                IsEnabled="{Binding IsNotProcessing}"
+                                                Text="{Binding ProberId}" />
+
+                                            <!--  SN文本 - 第4列  -->
+                                            <TextBlock
+                                                Grid.Column="4"
+                                                Margin="10,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Text="SN" />
+
+                                            <!--  SN输入框 - 第5列  -->
+                                            <TextBox
+                                                Grid.Column="5"
+                                                Margin="0,0,5,0"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Center"
+                                                IsEnabled="{Binding IsNotProcessing}"
+                                                IsReadOnly="{Binding IsAutoSN}"
+                                                Text="{Binding SearchSN, UpdateSourceTrigger=PropertyChanged}" />
+
+                                            <!--  搜索按钮 - 第6列  -->
+                                            <Button
+                                                Grid.Column="6"
+                                                Height="25"
+                                                Margin="5,0,0,0"
+                                                Padding="5,1"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Center"
+                                                BorderThickness="0"
+                                                Command="{Binding SearchCommand}"
+                                                Content="{DynamicResource BtnSearch}"
+                                                ToolTip="{DynamicResource BtnSearch}" />
+                                        </Grid>
+
+                                        <!--  ============= 第二行：功能按钮 + 保存/加载 =============  -->
+                                        <Grid Height="30" HorizontalAlignment="Stretch">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <!--  自动测试  -->
+                                                <ColumnDefinition Width="*" />
+                                                <!--  停止测试  -->
+                                                <ColumnDefinition Width="*" />
+                                                <!--  刷新状态  -->
+                                                <ColumnDefinition Width="auto" />
+                                                <!--  颜色复选框  -->
+                                                <ColumnDefinition Width="*" />
+                                                <!--  手动测试  -->
+                                                <ColumnDefinition Width="*" />
+                                                <!--  保存结果  -->
+                                                <ColumnDefinition Width="*" />
+                                                <!--  加载结果  -->
+                                            </Grid.ColumnDefinitions>
+
+                                            <!--  自动测试按钮 - 第0列  -->
+                                            <Button
+                                                Grid.Column="0"
+                                                Height="25"
+                                                Padding="5,1"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Center"
+                                                BorderThickness="0"
+                                                Command="{Binding StartAutoTestCommand}"
+                                                Content="{DynamicResource BtnStartAutoTest}"
+                                                IsEnabled="{Binding IsNotProcessing}"
+                                                ToolTip="{DynamicResource BtnStartAutoTest}" />
+
+                                            <!--  停止测试按钮 - 第1列  -->
+                                            <Button
+                                                Grid.Column="1"
+                                                Height="25"
+                                                Margin="5,0,0,0"
+                                                Padding="5,1"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Center"
+                                                BorderThickness="0"
+                                                Command="{Binding StopAutoTestCommand}"
+                                                Content="{DynamicResource BtnStopAutoTest}"
+                                                ToolTip="{DynamicResource BtnStopAutoTest}" />
+
+                                            <!--  刷新状态按钮 - 第2列  -->
+                                            <Button
+                                                Grid.Column="2"
+                                                Height="25"
+                                                Margin="5,0,0,0"
+                                                Padding="5,1"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Center"
+                                                BorderThickness="0"
+                                                Command="{Binding RefreshStatusCommand}"
+                                                Content="{DynamicResource BtnRefreshStatus}"
+                                                ToolTip="{DynamicResource BtnRefreshStatus}" />
+
+                                            <!--  颜色状态复选框 - 第3列（自适应宽度）  -->
+                                            <CheckBox
+                                                Grid.Column="3"
+                                                Margin="10,0,10,0"
+                                                VerticalAlignment="Center"
+                                                Content="{DynamicResource ChkColorStatus}"
+                                                IsChecked="{Binding IsColorEnabled}" />
+
+                                            <!--  手动测试按钮 - 第4列  -->
+                                            <Button
+                                                Grid.Column="4"
+                                                Height="25"
+                                                Margin="5,0,0,0"
+                                                Padding="5,1"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Center"
+                                                BorderThickness="0"
+                                                Command="{Binding StartManTestCommand}"
+                                                Content="{DynamicResource BtnStartManTest}"
+                                                IsEnabled="{Binding IsNotProcessing}"
+                                                ToolTip="{DynamicResource BtnStartManTest}" />
+
+                                            <!--  保存测试结果按钮 - 第5列  -->
+                                            <Button
+                                                Grid.Column="5"
+                                                Height="25"
+                                                Margin="5,0,0,0"
+                                                Padding="5,1"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Center"
+                                                BorderThickness="0"
+                                                Command="{Binding SaveTestResultCommand}"
+                                                Content="{DynamicResource BtnSaveTestResult}"
+                                                IsEnabled="{Binding IsNotProcessing}"
+                                                ToolTip="{DynamicResource BtnSaveTestResult}" />
+
+                                            <!--  加载测试结果按钮 - 第6列  -->
+                                            <Button
+                                                Grid.Column="6"
+                                                Height="25"
+                                                Margin="5,0,0,0"
+                                                Padding="5,1"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Center"
+                                                BorderThickness="0"
+                                                Command="{Binding LoadMappingFileCommand}"
+                                                Content="{DynamicResource BtnLoadTestResult}"
+                                                ToolTip="{DynamicResource BtnLoadTestResult}"
+                                                IsEnabled="{Binding IsNotProcessing}" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                                <!--<Border
                                     Height="90"
                                     Margin="0,0,0,0"
                                     Background="#FFFFFFFF"
@@ -403,12 +628,14 @@
                                                     IsEnabled="{Binding IsNotProcessing}"
                                                     IsReadOnly="{Binding IsAutoSN}"
                                                     Text="{Binding SearchSN, UpdateSourceTrigger=PropertyChanged}" />
-                                                <!--<CheckBox
+                                -->
+                                <!--<CheckBox
                                                 Text="{Binding Timestamp}"
                                                     x:Name="ChkIsAutoSN"
                                                     Content="{DynamicResource Auto SN}"
                                                     IsChecked="{Binding IsAutoSN}"
                                                     IsEnabled="{Binding IsNotProcessing}" RenderTransformOrigin="0.572,0.675" />-->
+                                <!--
                                                 <Button
                                                     Width="110"
                                                     Margin="0,0,10,0"
@@ -419,7 +646,9 @@
                                             </StackPanel>
                                         </StackPanel>
                                         <DockPanel Height="30" Margin="5,5">
-                                            <!--  使用Margin来设置间距  -->
+                                -->
+                                <!--  使用Margin来设置间距  -->
+                                <!--
                                             <Button
                                                 Width="100"
                                                 Margin="0,0,10,0"
@@ -454,7 +683,9 @@
                                                 Command="{Binding StartManTestCommand}"
                                                 Content="{DynamicResource BtnStartManTest}"
                                                 IsEnabled="{Binding IsNotProcessing}" />
-                                            <!--<Button Content="{DynamicResource BtnOpenVEyeWindow}" Width="110" Command="{Binding OpenVEyeWindowCommand}" Margin="0,0,10,0" BorderThickness="0"/>-->
+                                -->
+                                <!--<Button Content="{DynamicResource BtnOpenVEyeWindow}" Width="110" Command="{Binding OpenVEyeWindowCommand}" Margin="0,0,10,0" BorderThickness="0"/>-->
+                                <!--
 
                                             <DockPanel Width="230" HorizontalAlignment="Right">
                                                 <Button
@@ -473,7 +704,7 @@
                                             </DockPanel>
                                         </DockPanel>
                                     </StackPanel>
-                                </Border>
+                                </Border>-->
 
                                 <!--  状态指示  -->
                                 <Border
@@ -506,10 +737,11 @@
                                             </Ellipse.Triggers>
                                         </Ellipse>
                                         <TextBlock
+                                            Name="TestingStatus"
                                             Margin="8,0,0,0"
                                             VerticalAlignment="Center"
                                             Foreground="#FF666666"
-                                            Text="测量运行中..." />
+                                            Text="{DynamicResource Maping.Measurementinprogress}" />
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
@@ -531,9 +763,18 @@
                                 SelectionUnit="FullRow"
                                 VerticalScrollBarVisibility="Auto">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Binding="{Binding Id, Mode=OneWay}" Header="{DynamicResource GridHeader.No}" IsReadOnly="True"/>
-                                    <DataGridTextColumn Binding="{Binding MapY, Mode=OneWay}" Header="{DynamicResource Maping.GridHeader.Row}" IsReadOnly="True"/>
-                                    <DataGridTextColumn Binding="{Binding MapX, Mode=OneWay}" Header="{DynamicResource Maping.GridHeader.Col}" IsReadOnly="True"/>
+                                    <DataGridTextColumn
+                                        Binding="{Binding Id, Mode=OneWay}"
+                                        Header="{DynamicResource GridHeader.No}"
+                                        IsReadOnly="True" />
+                                    <DataGridTextColumn
+                                        Binding="{Binding MapY, Mode=OneWay}"
+                                        Header="{DynamicResource Maping.GridHeader.Row}"
+                                        IsReadOnly="True" />
+                                    <DataGridTextColumn
+                                        Binding="{Binding MapX, Mode=OneWay}"
+                                        Header="{DynamicResource Maping.GridHeader.Col}"
+                                        IsReadOnly="True" />
 
                                     <!--  1. AOI列（全选/反选改为按钮）  -->
                                     <DataGridTemplateColumn>
@@ -697,12 +938,27 @@
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridTextColumn Binding="{Binding SerialNumber, Mode=TwoWay}" Header="{DynamicResource Maping.GridHeader.SerialNumber}" />
-                                    <DataGridTextColumn Binding="{Binding DisplayStatus, Mode=OneWay}" Header="{DynamicResource Maping.GridHeader.TestStatus}" IsReadOnly="True"/>
-                                    <DataGridTextColumn Binding="{Binding DataValue, Mode=OneWay}" Header="{DynamicResource Maping.GridHeader.Uniformity}" IsReadOnly="True"/>
-                                    <DataGridTextColumn Binding="{Binding StartTestTime, Mode=OneWay}" Header="{DynamicResource Maping.GridHeader.StartTestTime}" IsReadOnly="True"/>
-                                    <DataGridTextColumn Binding="{Binding EndTestTime, Mode=OneWay}" Header="{DynamicResource Maping.GridHeader.EndTestTime}" IsReadOnly="True"/>
+                                    <DataGridTextColumn
+                                        Binding="{Binding DisplayStatus, Mode=OneWay}"
+                                        Header="{DynamicResource Maping.GridHeader.TestStatus}"
+                                        IsReadOnly="True" />
+                                    <DataGridTextColumn
+                                        Binding="{Binding DataValue, Mode=OneWay}"
+                                        Header="{DynamicResource Maping.GridHeader.Uniformity}"
+                                        IsReadOnly="True" />
+                                    <DataGridTextColumn
+                                        Binding="{Binding StartTestTime, Mode=OneWay}"
+                                        Header="{DynamicResource Maping.GridHeader.StartTestTime}"
+                                        IsReadOnly="True" />
+                                    <DataGridTextColumn
+                                        Binding="{Binding EndTestTime, Mode=OneWay}"
+                                        Header="{DynamicResource Maping.GridHeader.EndTestTime}"
+                                        IsReadOnly="True" />
 
-                                    <DataGridTextColumn Binding="{Binding TotalTime, Mode=OneWay}" Header="{DynamicResource Maping.GridHeader.TotalTime}" IsReadOnly="True"/>
+                                    <DataGridTextColumn
+                                        Binding="{Binding TotalTime, Mode=OneWay}"
+                                        Header="{DynamicResource Maping.GridHeader.TotalTime}"
+                                        IsReadOnly="True" />
                                 </DataGrid.Columns>
 
                                 <DataGrid.RowStyle>
