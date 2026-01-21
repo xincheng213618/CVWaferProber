@@ -327,6 +327,7 @@
     <sys:String x:Key="Button.BatchNo">批次号[V]</sys:String>
     <sys:String x:Key="Button.WaferInfo">Wafer信息[ku]</sys:String>
     <sys:String x:Key="Button.TotalDieCount">总测试晶粒数[Y]</sys:String>
+    <sys:String x:Key="Button.ReadMapping">读取Mapping[rr]</sys:String>
 
     <!--  运动状态  -->
     <sys:String x:Key="MotionStatus.Status">运动状态:</sys:String>
@@ -381,6 +382,11 @@
     <sys:String x:Key="MotionControl.AbsoluteMove">绝对运动</sys:String>
     <sys:String x:Key="MotionControl.Format">格式:</sys:String>
     <sys:String x:Key="MotionControl.SendMoveCommand">发送运动指令[J+]</sys:String>
+    <sys:String x:Key="MotionControl.LZAllUp">龙门Z抬起[gu]</sys:String>
+    <sys:String x:Key="MotionControl.ZPosMainCamera">移主相机位[gm]</sys:String>
+    <sys:String x:Key="MotionControl.ZPosAUXCamera">移辅相机位[ga]</sys:String>
+    <sys:String x:Key="MotionControl.ZPosINT">移积分球位[gi]</sys:String>
+    <sys:String x:Key="MotionControl.ZPosQ">龙门Z位置查询[gc]</sys:String>
 
     <!--  自定义指令  -->
     <sys:String x:Key="CustomCommand.Title">自定义指令</sys:String>

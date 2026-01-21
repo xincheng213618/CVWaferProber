@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using System.Net.Http;
 using System.Net.Sockets;
 using System.Text;
 using WaferComm.Core;
@@ -384,8 +383,15 @@ namespace WaferComm.Client
 
         public Task SetTemperatureAsync(decimal temperature)
         {
+            if (temperature > 999)
+            {
+                EventAggregator.Publish(new CommunicationErrorEvent("连接失败"));
+                return Task.CompletedTask;
+            }
             int temp = (int)(temperature * 10);
-            string tempStr = temp.ToString("D4"); // 4位，如 0250
+            string tempStr;
+            if (temp>=0) tempStr = temp.ToString("+D4"); // 4位，如 0250
+            else tempStr = temp.ToString("D4"); // 4位，如 0250
             return SendCommandAsync($"f{tempStr}");
         }
 
