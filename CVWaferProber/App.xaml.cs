@@ -52,7 +52,12 @@ namespace CVWaferProber
             var configFile = new System.IO.FileInfo("log4net.config");
             XmlConfigurator.Configure(logRepository, configFile);
 
-           
+            int RegisterAddress = 0x08;
+            byte iAddr = Convert.ToByte(RegisterAddress);
+            //int indexFrame = 0x40;
+            //byte[] bytes = BitConverter.GetBytes(indexFrame);
+            //byte iAddr = bytes[1];
+            //byte nValue = bytes[0];
 
             log.Info("Application starting...");
 

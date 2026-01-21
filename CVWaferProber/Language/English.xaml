@@ -278,6 +278,7 @@
     <sys:String x:Key="Button.BatchNo">Batch No[V]</sys:String>
     <sys:String x:Key="Button.WaferInfo">Wafer Info[ku]</sys:String>
     <sys:String x:Key="Button.TotalDieCount">Total Die Count[Y]</sys:String>
+    <sys:String x:Key="Button.ReadMapping">ReadMapping[rr]</sys:String>
 
     <!--  运动状态  -->
     <sys:String x:Key="MotionStatus.Status">Motion Status:</sys:String>
@@ -332,6 +333,11 @@
     <sys:String x:Key="MotionControl.AbsoluteMove">Absolute Move</sys:String>
     <sys:String x:Key="MotionControl.Format">Format:</sys:String>
     <sys:String x:Key="MotionControl.SendMoveCommand">Send Move Command[J+]</sys:String>
+    <sys:String x:Key="MotionControl.LZAllUp">ZAll Up[gu]</sys:String>
+    <sys:String x:Key="MotionControl.ZPosMainCamera">Main Camera Pos[gm]</sys:String>
+    <sys:String x:Key="MotionControl.ZPosAUXCamera">Auxiliary Camera Pos[ga]</sys:String>
+    <sys:String x:Key="MotionControl.ZPosINT">Integrating sphere Pos[gi]</sys:String>
+    <sys:String x:Key="MotionControl.ZPosQ">Query Pos[gc]</sys:String>
 
     <!--  自定义指令  -->
     <sys:String x:Key="CustomCommand.Title">Custom Command</sys:String>

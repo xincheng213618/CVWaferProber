@@ -13,6 +13,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Resources\**" />
+    <EmbeddedResource Remove="Resources\**" />
+    <None Remove="Resources\**" />
+    <Page Remove="Resources\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="en-US\ST.Library.UI.resources.dll" />
     <None Remove="zh-CN\ST.Library.UI.resources.dll" />
   </ItemGroup>
@@ -28,10 +35,6 @@
     <ProjectReference Include="..\WaferProberClient\WaferComm.Core\WaferComm.Core.csproj" />
     <ProjectReference Include="..\WaferProberClient\WaferComm.Processors\WaferComm.Processors.csproj" />
     <ProjectReference Include="..\WaferProberClient\WaferComm.StateMachine\WaferComm.StateMachine.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Resources\" />
   </ItemGroup>
 
   <ItemGroup>

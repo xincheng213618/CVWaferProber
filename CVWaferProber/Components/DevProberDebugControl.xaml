@@ -47,7 +47,7 @@
                                             <TextBlock x:Name="tbCurrentState" 
                                                        Text="{DynamicResource MachineStatus.CurrentState}" 
                                                        FontWeight="Bold" FontSize="14" Margin="0,0,10,5"/>
-                                            <TextBlock x:Name="tbStateDuration" 
+                                            <TextBlock x:Name="tbStateDuration" Visibility="Hidden"
                                                        Text="{DynamicResource MachineStatus.Duration}" 
                                                        Foreground="Gray" VerticalAlignment="Center"/>
                                         </StackPanel>
@@ -67,6 +67,10 @@
                                                     Command="{Binding ManualStatusUpdateCommand}" Tag="A" />
                                             <Button Content="{DynamicResource Button.MachineNo}" 
                                                     Width="120" Margin="0,0,5,0" Tag="B" 
+                                                    Command="{Binding SendBasicCommand}"
+                                                    CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/> 
+                                            <Button Content="{DynamicResource Button.ReadMapping}" 
+                                                    Width="120" Margin="0,0,5,0" Tag="rr" 
                                                     Command="{Binding SendBasicCommand}"
                                                     CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
                                             <Button Content="{DynamicResource Button.WaferID}" 
@@ -283,8 +287,25 @@
                                 <Button Width="150" Content="{DynamicResource MotionControl.ZDown}" Margin="5" Tag="D" 
                                         Command="{Binding SendBasicCommand}"
                                         CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
+                                <Button Width="150" Content="{DynamicResource MotionControl.LZAllUp}" Margin="5" Tag="gu" 
+                                        Command="{Binding SendBasicCommand}"
+                                        CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
                             </StackPanel>
                             <StackPanel Margin="5" Orientation="Horizontal">
+                                    <Button Width="150" Content="{DynamicResource MotionControl.ZPosMainCamera}" Margin="5" Tag="gm" 
+                                        Command="{Binding SendBasicCommand}"
+                                        CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
+                                <Button Width="150" Content="{DynamicResource MotionControl.ZPosAUXCamera}" Margin="5" Tag="ga" 
+                                        Command="{Binding SendBasicCommand}"
+                                        CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
+                                <Button Width="150" Content="{DynamicResource MotionControl.ZPosINT}" Margin="5" Tag="gi" 
+                                        Command="{Binding SendBasicCommand}"
+                                        CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
+                            </StackPanel>
+                            <StackPanel Margin="5" Orientation="Horizontal">
+                                <Button Width="150" Content="{DynamicResource MotionControl.ZPosQ}" Margin="5" Tag="gc" 
+                                        Command="{Binding SendBasicCommand}"
+                                        CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
                                 <Button Width="150" Content="{DynamicResource MotionControl.TestComplete}" Margin="5" Tag="J" 
                                         Command="{Binding SendBasicCommand}"
                                         CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
