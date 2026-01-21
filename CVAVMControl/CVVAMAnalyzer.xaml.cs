@@ -1,6 +1,6 @@
 ﻿using ColorVision.FileIO;
 using ConoscopeDemo;
-using CVVAMControl;
+using CVAVMControl;
 using CVWaferProber.Core.Events;
 using log4net;
 using Microsoft.Win32;
@@ -3288,45 +3288,45 @@ namespace CVAVMControl
 
         //}
 
-        private void BtnExport_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (YMat == null || YMat.Empty())
-                {
-                    MessageBox.Show($"{FindResource("Nodata")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
-                    return;
-                }
+        //private void BtnExport_Click(object sender, RoutedEventArgs e)
+        //{
+        //    try
+        //    {
+        //        if (YMat == null || YMat.Empty())
+        //        {
+        //            MessageBox.Show($"{FindResource("Nodata")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
+        //            return;
+        //        }
 
-                // 选择导出基础路径
-                var saveFileDialog = new SaveFileDialog
-                {
-                    Filter = "CSV Files (*.csv)|*.csv",
-                    FileName = $"VAM_Export_{DateTime.Now:yyyyMMdd_HHmmss}",
-                    Title = $"{FindResource("Basepath")}"
-                };
+        //        // 选择导出基础路径
+        //        var saveFileDialog = new SaveFileDialog
+        //        {
+        //            Filter = "CSV Files (*.csv)|*.csv",
+        //            FileName = $"VAM_Export_{DateTime.Now:yyyyMMdd_HHmmss}",
+        //            Title = $"{FindResource("Basepath")}"
+        //        };
 
-                if (saveFileDialog.ShowDialog() != true) return;
-                string basePath = System.IO.Path.ChangeExtension(saveFileDialog.FileName, null); // 去除.csv后缀
+        //        if (saveFileDialog.ShowDialog() != true) return;
+        //        string basePath = System.IO.Path.ChangeExtension(saveFileDialog.FileName, null); // 去除.csv后缀
 
-                // 打开导出配置弹窗
-                var exportDialog = new VamExportDialog(this, basePath)
-                {
-                    Owner = System.Windows.Window.GetWindow(this) // 设置父窗口，保证居中
-                };
+        //        // 打开导出配置弹窗
+        //        var exportDialog = new VamExportDialog(this, basePath)
+        //        {
+        //            Owner = System.Windows.Window.GetWindow(this) // 设置父窗口，保证居中
+        //        };
 
-                if (exportDialog.ShowDialog() == true)
-                {
-                    MessageBox.Show($"{FindResource("Exportcompleted")}", $"{FindResource("Log.Success")}", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.Error("Export initialization failed", ex);//: "导出初始化失败"
-                MessageBox.Show($"Export initialization failed：{ex.Message}", $"{FindResource("Log.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+        //        if (exportDialog.ShowDialog() == true)
+        //        {
+        //            MessageBox.Show($"{FindResource("Exportcompleted")}", $"{FindResource("Log.Success")}", MessageBoxButton.OK, MessageBoxImage.Information);
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        logger.Error("Export initialization failed", ex);//: "导出初始化失败"
+        //        MessageBox.Show($"Export initialization failed：{ex.Message}", $"{FindResource("Log.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
+        //    }
            
-        }
+        //}
         public void BtnExportClick()
         {
             Application.Current.Dispatcher.Invoke(() =>

@@ -71,7 +71,7 @@ namespace CVWaferProber.ViewModels
             this.IsIVLCameraEnabled = false;
             this.IsChinese = GetCurrentLanguage() == "Chinese";
 
-            }
+        }
 
         public ChipStatus? Status => chipViewModel?.Status;
         //public ChipStatus? Status => ChipStatus.IVL_COMPLETED;
@@ -83,7 +83,10 @@ namespace CVWaferProber.ViewModels
         public string? TotalTime { get; set; }
         public ChipViewModel? chipViewModel { get; set; }
         public string? DataValue => string.Format("{0:F4}",chipViewModel?.DataValue);
-
+        public void RefreshDataValue()
+        {
+            OnPropertyChanged(nameof(DataValue));
+        }
         public static string GetCurrentLanguage()
         {
             var app = Application.Current;
