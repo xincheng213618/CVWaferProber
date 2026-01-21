@@ -141,7 +141,7 @@
     <sys:String x:Key="AnalysisImage">分析图像</sys:String>
     <sys:String x:Key="CameraMeasurement">相机测量</sys:String>
     <sys:String x:Key="Image.GridHeader.Type">类型</sys:String>
-    
+
     <sys:String x:Key="DisplayMode">Display Mode:</sys:String>
     <sys:String x:Key="AnalysisImageMode">Anlysis Image</sys:String>
     <sys:String x:Key="CameraMeasurementMode">Camera Measurement</sys:String>
@@ -649,6 +649,15 @@
     <sys:String x:Key="HC_Yes">是</sys:String>
     <sys:String x:Key="HC_No">否</sys:String>
     <sys:String x:Key="HC_Close">关闭</sys:String>
+
+
+
+
+
+
+
+
+    <sys:String x:Key="Createdexportdirectory">创建导出目录</sys:String>
 
 
 

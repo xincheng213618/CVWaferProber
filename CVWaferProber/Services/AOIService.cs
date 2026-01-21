@@ -92,7 +92,7 @@ namespace CVWaferProber.Services
             string fileName = Path.GetFileNameWithoutExtension(imgFile).ToLower();
             if (fileName.Equals("po") || fileName.Equals("po.dat"))
             {
-                Debug.WriteLine($"跳过 po.dat 文件: {Path.GetFileName(imgFile)}");
+                Debug.WriteLine($"Skipping po.dat file: {Path.GetFileName(imgFile)}");
                 return;
             }
 

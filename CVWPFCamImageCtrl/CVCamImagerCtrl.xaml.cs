@@ -93,19 +93,19 @@ namespace CVWPFCamImageCtrl
         {
             if (_model == null || MainImageDataGrid == null)
             {
-                Debug.WriteLine("异常：_model 或 MainImageDataGrid 为 null");
+                logger.Info("异常：_model 或 MainImageDataGrid 为 null");
                 return;
             }
 
             var selectedItem = ViewSwitchComboBox.SelectedItem as ComboBoxItem;
             if (selectedItem == null)
             {
-                Debug.WriteLine("异常：选中项转换为 ComboBoxItem 失败");
+                logger.Info("异常：选中项转换为 ComboBoxItem 失败");
                 return;
             }
 
             _currentViewType = selectedItem.Tag.ToString() ?? "Analysis";
-            Debug.WriteLine($"当前视图类型：{_currentViewType}");
+            logger.Info($"当前视图类型：{_currentViewType}");
 
             // 获取当前活动的集合（用于加载图像）
             var currentActiveCollection = GetCurrentActiveCollection();
@@ -118,14 +118,14 @@ namespace CVWPFCamImageCtrl
             switch (_currentViewType)
             {
                 case "Analysis":
-                    Debug.WriteLine($"切换到 Analysis 视图，绑定 ProcessedImageResults");
+                    logger.Info($"切换到 Analysis 视图，绑定 ProcessedImageResults");
                     // 直接绑定集合，而不是通过 ItemsSource 属性
                     MainImageDataGrid.ItemsSource = _model.ProcessedImageResults;
 
                     // 检查绑定是否成功
                     if (MainImageDataGrid.ItemsSource != _model.ProcessedImageResults)
                     {
-                        Debug.WriteLine("警告：绑定 ProcessedImageResults 失败");
+                        logger.Info("警告：绑定 ProcessedImageResults 失败");
                         // 强制重新绑定
                         MainImageDataGrid.ItemsSource = null;
                         MainImageDataGrid.ItemsSource = _model.ProcessedImageResults;
@@ -133,13 +133,13 @@ namespace CVWPFCamImageCtrl
                     break;
 
                 case "Camera":
-                    Debug.WriteLine($"切换到 Camera 视图，绑定 OriginalImageResults");
+                    logger.Info($"切换到 Camera 视图，绑定 OriginalImageResults");
                     MainImageDataGrid.ItemsSource = _model.OriginalImageResults;
 
                     // 检查绑定是否成功
                     if (MainImageDataGrid.ItemsSource != _model.OriginalImageResults)
                     {
-                        Debug.WriteLine("警告：绑定 OriginalImageResults 失败");
+                        logger.Info("警告：绑定 OriginalImageResults 失败");
                         // 强制重新绑定
                         MainImageDataGrid.ItemsSource = null;
                         MainImageDataGrid.ItemsSource = _model.OriginalImageResults;
@@ -161,7 +161,7 @@ namespace CVWPFCamImageCtrl
                     ImageDisplay.CurrentImage = null;
                     ClearImageInfoDisplay();
                     CurrentFileNameText.Text = IsChineseMode ? "无图像" : "No Image";
-                    Debug.WriteLine("当前视图集合无数据，无法选中");
+                    logger.Info("当前视图集合无数据，无法选中");
                     return;
                 }
 
@@ -175,14 +175,14 @@ namespace CVWPFCamImageCtrl
                     {
                         MainImageDataGrid.SelectedItem = sameImageInNewCollection;
                         MainImageDataGrid.SelectedIndex = currentItemsSource.IndexOf(sameImageInNewCollection);
-                        Debug.WriteLine($"视图切换后重新选中同一图像: {sameImageInNewCollection.FileName}");
+                        logger.Info($"视图切换后重新选中同一图像: {sameImageInNewCollection.FileName}");
                         return;
                     }
                 }
 
                 // 如果没有找到之前的图像，选中第一项
                 MainImageDataGrid.SelectedIndex = 0;
-                Debug.WriteLine("视图切换后自动选中第一项");
+                logger.Info("视图切换后自动选中第一项");
 
             }), DispatcherPriority.Loaded);
             //if (_model == null || MainImageDataGrid == null)
@@ -309,7 +309,7 @@ namespace CVWPFCamImageCtrl
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"加载文件夹失败：{ex.Message}");
+                logger.Info($"加载文件夹失败：{ex.Message}");
             }
         }
 
@@ -340,7 +340,7 @@ namespace CVWPFCamImageCtrl
                                 // 如果是 po.dat 文件，跳过不加载到 DataGrid
                                 if (isPoDatFile)
                                 {
-                                    Debug.WriteLine($"跳过 po.dat 文件: {Path.GetFileName(filePath)}");
+                                    logger.Info($"Skipping po.dat file: {Path.GetFileName(filePath)}");
                                     continue;
                                 }
 
@@ -361,7 +361,7 @@ namespace CVWPFCamImageCtrl
                         }
                         catch (Exception ex)
                         {
-                            Debug.WriteLine(IsChineseMode ? $"加载文件失败 {filePath}: {ex.Message}" :
+                            logger.Info(IsChineseMode ? $"加载文件失败 {filePath}: {ex.Message}" :
                                 $"Failed to load file {filePath}: {ex.Message}");
                         }
                     }
@@ -1253,7 +1253,7 @@ namespace CVWPFCamImageCtrl
         {
             if (_model.ImageResults.Any() && _currentImageIndex > 0)
             {
-                MainImageDataGrid.SelectedIndex = _currentImageIndex - 1;
+                MainImageDataGrid.SelectedIndex = _currentImageIndex - 1; 
             }
         }
 

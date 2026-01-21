@@ -131,7 +131,7 @@
     <sys:String x:Key="Image.AnalysisImage">Analysis Image</sys:String>
     <sys:String x:Key="Image.CameraMeasurement">Camera Measurement</sys:String>
     <sys:String x:Key="Image.Mode">Mode:</sys:String>
-   
+
     <sys:String x:Key="AnalysisImage">Analysis Image</sys:String>
     <sys:String x:Key="CameraMeasurement">Camera Measurement</sys:String>
     <sys:String x:Key="Image.GridHeader.Type">Type</sys:String>
@@ -636,4 +636,8 @@
     <sys:String x:Key="HC_Yes">Yes</sys:String>
     <sys:String x:Key="HC_No">No</sys:String>
     <sys:String x:Key="HC_Close">Close</sys:String>
+
+
+
+    <sys:String x:Key="Createdexportdirectory">Created export directory</sys:String>
 </ResourceDictionary>

@@ -35,7 +35,7 @@ namespace CVWaferProber.Services
             this.CustomIVLVM = customIVLVM;
             this._chipMappingControlViewModel = chipMappingControlViewModel;
             // 初始化导出文件夹（确保目录存在）
-            AutoExportHelper.InitFolders();
+            //AutoExportHelper.InitFolders();
         }
         public IVLService(string proberId, ChipMappingControlViewModel chipMappingControlViewModel, RCRestService rcService) : this(new CVSpectrumViewModel(), chipMappingControlViewModel, rcService)
         {
@@ -62,16 +62,16 @@ namespace CVWaferProber.Services
                     if (_spInnerTabControl != null)
                     {
                         _spInnerTabControl.SelectedIndex = 0; // 切换到Overview标签页
-                        Debug.WriteLine("标签页已成功切换到Overview（索引0）！");
+                        logger.Info("Tab page switched to Overview (index 0) successfully!");
                     }
                     else
                     {
-                        Debug.WriteLine("未找到x:Name=outerTabControl的TabControl控件！");
+                        logger.Info("TabControl with x:Name=outerTabControl not found!");
                     }
                 }
                 else
                 {
-                    Debug.WriteLine("无法切换标签页：_spPanelView为null！");
+                    logger.Info("Cannot switch tab page: _spPanelView is null!");
                     // 可选：抛出友好异常，方便定位问题
                     // throw new InvalidOperationException("SP面板视图控件未注入，请检查传递链路！");
                 }
@@ -120,7 +120,7 @@ namespace CVWaferProber.Services
             {
                 refreshTimer.Enabled = false;
                 refreshTimer.Dispose();
-                logger.Debug("Test process completed, stop the refresh timer");// : "测试流程结束，停止刷新定时器"
+                logger.Info("Test process completed, stop the refresh timer");// : "测试流程结束，停止刷新定时器"
             }, TaskScheduler.FromCurrentSynchronizationContext());
 
             return task;
@@ -322,7 +322,7 @@ namespace CVWaferProber.Services
             var Wavelengths = CustomIVLVM.Wavelengths;
             if (Measurements == null || !Measurements.Any() || Wavelengths == null || Wavelengths.Length == 0)
             {
-                logger.Warn("No valid IVL data available for export");
+                logger.Info("No valid IVL data available for export");
                 return;
             }
 

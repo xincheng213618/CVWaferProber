@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace CVWaferProber.Core.ViewModels
 {
@@ -57,7 +58,7 @@ namespace CVWaferProber.Core.ViewModels
             if (!string.IsNullOrWhiteSpace(path) && !Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);
-                log4net.LogManager.GetLogger(typeof(GlobalConfigModel)).Info($"创建导出目录：{path}");
+                log4net.LogManager.GetLogger(typeof(GlobalConfigModel)).Info($"{(string)Application.Current.FindResource("Createdexportdirectory")}：{path}");
             }
         }
     }
