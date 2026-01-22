@@ -24,7 +24,5 @@ namespace CVWaferProber.Components
                 mainVM.UpdateDataGridColumns();
             }
         }
-
-    
     }
 }
