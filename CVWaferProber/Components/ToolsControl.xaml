@@ -7,39 +7,39 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
     <UserControl.Resources>
-        <!-- 与界面原生按钮完全一致的配色 -->
+        <!--  与界面原生按钮完全一致的配色  -->
         <SolidColorBrush x:Key="NativeButton.Background" Color="#E6E6E6" />
         <SolidColorBrush x:Key="NativeButton.Foreground" Color="#333333" />
         <SolidColorBrush x:Key="NativeButton.Border" Color="#999999" />
         <SolidColorBrush x:Key="NativeButton.HoverBackground" Color="#D9D9D9" />
         <SolidColorBrush x:Key="NativeButton.PressedBackground" Color="#CCCCCC" />
 
-        <!-- 工具栏样式：适配放大后的按钮高度 -->
+        <!--  工具栏样式：适配放大后的按钮高度  -->
         <Style x:Key="NativeToolbarStyle" TargetType="ToolBar">
             <Setter Property="Background" Value="#F0F0F0" />
             <Setter Property="Foreground" Value="#333333" />
             <Setter Property="BorderBrush" Value="#CCCCCC" />
             <Setter Property="BorderThickness" Value="0,0,0,1" />
             <Setter Property="Height" Value="48" />
-            <!-- 适配大按钮高度 -->
+            <!--  适配大按钮高度  -->
             <Setter Property="Padding" Value="8,0" />
         </Style>
 
-        <!-- 放大版原生风格按钮（核心修改） -->
+        <!--  放大版原生风格按钮（核心修改）  -->
         <Style x:Key="NativeToolbarButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="{DynamicResource NativeButton.Background}" />
             <Setter Property="Foreground" Value="{DynamicResource NativeButton.Foreground}" />
             <Setter Property="BorderBrush" Value="{DynamicResource NativeButton.Border}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Margin" Value="4,0" />
-            <!-- 增加左右间距，避免拥挤 -->
+            <!--  增加左右间距，避免拥挤  -->
             <Setter Property="Padding" Value="18,8" />
-            <!-- 大幅增加内边距，放大按钮 -->
+            <!--  大幅增加内边距，放大按钮  -->
             <Setter Property="FontSize" Value="13" />
-            <!-- 字体放大1号，更醒目 -->
+            <!--  字体放大1号，更醒目  -->
             <Setter Property="FontWeight" Value="Medium" />
             <Setter Property="MinWidth" Value="100" />
-            <!-- 给按钮设置最小宽度，保证统一大小 -->
+            <!--  给按钮设置最小宽度，保证统一大小  -->
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -52,15 +52,15 @@
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
-                            <!-- 鼠标悬浮：背景变深 -->
+                            <!--  鼠标悬浮：背景变深  -->
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="{DynamicResource NativeButton.HoverBackground}" />
                             </Trigger>
-                            <!-- 点击按下：背景进一步变深 -->
+                            <!--  点击按下：背景进一步变深  -->
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="{DynamicResource NativeButton.PressedBackground}" />
                             </Trigger>
-                            <!-- 禁用状态：浅灰背景+浅灰文字 -->
+                            <!--  禁用状态：浅灰背景+浅灰文字  -->
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Foreground" Value="#999999" />
                                 <Setter TargetName="border" Property="Background" Value="#F0F0F0" />
@@ -73,15 +73,16 @@
         </Style>
     </UserControl.Resources>
     <Grid>
-        <!-- 顶部工具栏 -->
-        <ToolBar
-            Style="{StaticResource NativeToolbarStyle}"
-            ToolBarTray.IsLocked="True">
 
-            <!-- 操作按钮组 -->
+        <!--  顶部工具栏  -->
+
+
+        <ToolBar Style="{StaticResource NativeToolbarStyle}" ToolBarTray.IsLocked="True">
+
+            <!--  操作按钮组  -->
             <Button
-                 Height="30"
                 x:Name="btnLiftAll"
+                Height="30"
                 Command="{Binding LiftAllCommand}"
                 Content="{DynamicResource Toolbar.LiftAll}"
                 Style="{StaticResource NativeToolbarButtonStyle}" />
@@ -89,17 +90,17 @@
             <Separator Margin="10,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
             <Button
-                 Height="30"
-                Width="120"
                 x:Name="btnToMainCamera"
+                Width="120"
+                Height="30"
                 Command="{Binding ToMainCameraCommand}"
                 Content="{DynamicResource Toolbar.ToMainCamera}"
                 Style="{StaticResource NativeToolbarButtonStyle}" />
 
             <Button
                 x:Name="btnToAuxCamera"
+                Width="120"
                 Height="30"
-                 Width="120"
                 Padding="5"
                 Click="BtnToAuxCamera_Click"
                 Command="{Binding ToAuxCameraCommand}"
@@ -107,15 +108,18 @@
                 Style="{StaticResource NativeToolbarButtonStyle}" />
 
             <Button
-                 Width="150"
-                 Height="30"
                 x:Name="btnToIntegratingSphere"
+                Width="150"
+                Height="30"
                 Command="{Binding ToIntegratingSphereCommand}"
                 Content="{DynamicResource Toolbar.ToIntegratingSphere}"
                 Style="{StaticResource NativeToolbarButtonStyle}" />
 
-            <!-- 右侧语言切换和功能区 -->
+            <!--  右侧语言切换和功能区  -->
             <!--<Separator Margin="10,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />-->
+
+
+
         </ToolBar>
     </Grid>
 </UserControl>
