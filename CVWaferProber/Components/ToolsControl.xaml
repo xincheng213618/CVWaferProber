@@ -78,7 +78,7 @@
             Style="{StaticResource NativeToolbarStyle}"
             ToolBarTray.IsLocked="True">
 
-            <!-- 操作按钮组（放大版） -->
+            <!-- 操作按钮组 -->
             <Button
                  Height="30"
                 x:Name="btnLiftAll"
