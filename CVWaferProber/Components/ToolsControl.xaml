@@ -103,11 +103,6 @@
         </Style>
     </UserControl.Resources>
     <Grid>
-        <!--  主要布局  -->
-        <!--<Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>-->
-
         <!--  顶部工具栏  -->
         <ToolBar
             Grid.Row="0"
@@ -117,7 +112,7 @@
             <!--  操作按钮组  -->
             <Button
                 x:Name="btnLiftAll"
-                Click="BtnLiftAll_Click"
+                Command="{Binding LiftAllCommand}"
                 Content="{DynamicResource Toolbar.LiftAll}"
                 Style="{StaticResource IndustrialToolbarButtonStyle}" />
 
@@ -125,45 +120,21 @@
 
             <Button
                 x:Name="btnToMainCamera"
-                Click="BtnToMainCamera_Click"
+                Command="{Binding ToMainCameraCommand}"
                 Content="{DynamicResource Toolbar.ToMainCamera}"
                 Style="{StaticResource IndustrialToolbarButtonStyle}" />
 
             <Button
                 x:Name="btnToAuxCamera"
-                Click="BtnToAuxCamera_Click"
+                Command="{Binding ToAuxCameraCommand}"
                 Content="{DynamicResource Toolbar.ToAuxCamera}"
                 Style="{StaticResource IndustrialToolbarButtonStyle}" />
 
             <Button
                 x:Name="btnToIntegratingSphere"
-                Click="BtnToIntegratingSphere_Click"
+                Command="{Binding ToIntegratingSphereCommand}"
                 Content="{DynamicResource Toolbar.ToIntegratingSphere}"
                 Style="{StaticResource IndustrialToolbarButtonStyle}" />
-
-            <!--  右侧语言切换和功能区  -->
-            <Separator Margin="10,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
-
-            <!--<StackPanel
-                Margin="0,0,10,0"
-                HorizontalAlignment="Right"
-                Orientation="Horizontal">
-                <Button
-                    x:Name="btnEnglish"
-                    Width="40"
-                    Click="BtnEnglish_Click"
-                    Content="EN"
-                    Style="{StaticResource IndustrialToolbarButtonStyle}" />
-                <Button
-                    x:Name="btnChinese"
-                    Width="50"
-                    Click="BtnChinese_Click"
-                    Content="中文"
-                    Style="{StaticResource IndustrialToolbarButtonStyle}" />
-            </StackPanel>-->
         </ToolBar>
-
-        <!--  主内容区域  -->
-
     </Grid>
 </UserControl>

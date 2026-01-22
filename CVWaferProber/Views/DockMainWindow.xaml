@@ -176,8 +176,9 @@
                 InputGestureText="Alt+F4" />
         </Menu>
 
+        <!--  顶部工具栏  -->
         <DockPanel Grid.Row="1" x:Name="PanelToolbar" >
-            <comp:ToolsControl x:Name="MyToolbar" />
+            <comp:ToolsControl x:Name="MyToolbar" DataContext="{Binding ToolsVM}"/>
         </DockPanel>
         
         <avalon:DockingManager x:Name="DockingManager" Grid.Row="2">
