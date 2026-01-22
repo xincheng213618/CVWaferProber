@@ -412,6 +412,7 @@ namespace WaferComm.Client
         public Task SendHeartbeatAsync() => SendCommandAsync("E");
         public Task QueryStatusAsync() => SendCommandAsync("A");
 
+        public Task GetMappingAsync() => SendCommandAsync("rr");
         #endregion
 
         public void Dispose()
@@ -421,5 +422,6 @@ namespace WaferComm.Client
             _tcpClient?.Dispose();
             _receiveCts?.Dispose();
         }
+
     }
 }
