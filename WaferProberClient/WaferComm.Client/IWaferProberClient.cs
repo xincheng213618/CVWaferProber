@@ -55,5 +55,6 @@ namespace WaferComm.Client
         Task StopAsync();
         Task SendHeartbeatAsync();
         Task QueryStatusAsync();
+        Task GetMappingAsync();
     }
 }

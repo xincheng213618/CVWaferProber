@@ -168,14 +168,14 @@ namespace WaferComm.StateMachine
         {
             await base.StartAsync();
             await _motionMonitor.StartAsync();
-            //await _heaterMonitor.StartAsync();
+            await _heaterMonitor.StartAsync();
             StartMonitoring();
         }
 
         public override async Task StopAsync()
         {
             StopMonitoring();
-            //await _heaterMonitor.StopAsync();
+            await _heaterMonitor.StopAsync();
             await _motionMonitor.StopAsync();
             await base.StopAsync();
         }
@@ -314,7 +314,7 @@ namespace WaferComm.StateMachine
         }
 
         #endregion
-        private async void OnStatusTimerElapsed(object sender, ElapsedEventArgs e)
+        private async void OnStatusTimerElapsed(object? sender, ElapsedEventArgs e)
         {
             if (_monitoringCts?.IsCancellationRequested == true) return;
 
@@ -504,24 +504,33 @@ namespace WaferComm.StateMachine
             else if (command.StartsWith("V") && command.Length > 1)
             {
                 _currentStatus.CurrentLotId = command.Substring(1);
+            }else if (command.StartsWith("rr") && command.Length > 1)
+            {
+                _currentStatus.CurrentMappingFile = command.Substring(2);
             }
         }
 
         private void ProcessStateTransition(string command)
         {
+            if (command == "70") // 晶圆加载完成
+            {
+                TransitionToAsync(ProberState.Ready).Wait();
+                return;
+            }
+            if (command.StartsWith("rr") && command.Length > 5) // 晶圆加载完成
+            {
+                TransitionToAsync(ProberState.WaferLoaded).Wait();
+                return;
+            }
             switch (CurrentState)
             {
                 case ProberState.Connected:
-                    if (command == "70") // 晶圆加载完成
-                    {
-                        TransitionToAsync(ProberState.Ready).Wait();
-                    }
                     break;
 
                 case ProberState.Ready:
                     if (command.StartsWith("b") && command.Length > 1) // 收到晶圆ID
                     {
-                        TransitionToAsync(ProberState.WaferLoaded).Wait();
+                        //TransitionToAsync(ProberState.WaferLoaded).Wait();
                     }
                     break;
 
@@ -632,6 +641,7 @@ namespace WaferComm.StateMachine
                     MotionStatus = _currentStatus.MotionStatus,
                     CurrentPosition = _currentStatus.CurrentPosition,
                     ZAxisStatus = _currentStatus.ZAxisStatus,
+                    CurrentMappingFile = _currentStatus.CurrentMappingFile,
                 };
                 status.HeaterInfo = _heaterMonitor.GetHeaterInfo();
                 status.LastHeaterCheck = DateTime.Now;

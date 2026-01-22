@@ -80,7 +80,6 @@ namespace CVWaferProber.Services
         public void InitializeService(string proberId, RCRestService rcService)
         {
             this.ProberId = proberId;
-            //this._connectionInfo = connectionInfo;
             //
             BaseSerivce ivlService = new IVLService(proberId, mappingService.CustomVM, rcService);
             flowServices[CVWaferProberFlowType.IVL] = ivlService;
@@ -104,7 +103,7 @@ namespace CVWaferProber.Services
         }
         private void InitializeClientProber()
         {
-            this._connectionInfo = new ConnectionInfo() { ServerIP = "192.168.1.100", Port = 8898 };
+            this._connectionInfo = new ConnectionInfo() { ServerIP = "127.0.0.1", Port = 8898 };
             this._clientProber = new WaferProberTCPClient();
             var eventAggregator = _clientProber.EventAggregator;
             eventAggregator.Subscribe<ConnectionStateChangedEvent>(OnClientProberStateChanged);
@@ -118,6 +117,13 @@ namespace CVWaferProber.Services
 
         private void OnStateTransition(StateTransitionEvent @event)
         {
+            if (@event.ToState == ProberState.Ready)
+            {
+                _clientProber.GetMappingAsync();
+            }else if (@event.ToState == ProberState.WaferLoaded)
+            {
+                MainViewModel.Instance?.LoadMappingFile(_proberState.GetStatus().CurrentMappingFile);
+            }
             if (logger.IsInfoEnabled) logger.InfoFormat("StateTransition {0} => {1}", @event.FromState.ToString(), @event.ToState.ToString());
             if (logger.IsInfoEnabled) logger.InfoFormat("CurrentState = {0}", _proberState.CurrentState.ToString());
             _connectionInfo.DevCurrentState = _proberState.CurrentState;

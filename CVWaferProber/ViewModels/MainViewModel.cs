@@ -3,7 +3,6 @@ using AvalonDock.Layout;
 using ChipMapping.Models;
 using ChipMapping.ViewModels;
 using ColorVision.Core.Entities;
-using CVAVMControl;
 using CVDB.Services.Buz;
 using CVWaferProber.Core;
 using CVWaferProber.Core.Models;
@@ -17,7 +16,6 @@ using CVWaferProber.Views;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
-using Mysqlx.Crud;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -139,7 +137,15 @@ namespace CVWaferProber.ViewModels
         public ObservableCollection<DieViewModel> TestResults { get; } = new ObservableCollection<DieViewModel>();
         public RangeEnabledObservableCollection<FlowViewModel> FlowItems { get; } = new RangeEnabledObservableCollection<FlowViewModel>();
         public ObservableCollection<WPFlowViewModel> WPFlows { get; } = new ObservableCollection<WPFlowViewModel>();
-        public string MappingCsvFilePath { get; set; }
+        public string _MappingCsvFilePath;
+        public string MappingCsvFilePath 
+        { 
+            get => _MappingCsvFilePath;
+            set
+            {
+                SetProperty(ref _MappingCsvFilePath, value);
+            }
+        }
         public string ProberId { get; set; }
         public bool IsColorEnabled { get; set; }
 
@@ -2173,6 +2179,12 @@ namespace CVWaferProber.ViewModels
             CustomMappingVM.Cleanup();
             CustomMappingVM.Chips.Clear();
             TestResults.Clear();
+        }
+
+        public void LoadMappingFile(string  mappingFile)
+        {
+            MappingCsvFilePath = mappingFile;
+            LoadMappingFileFromCsv();
         }
 
         private void LoadMappingFileFromCsv()

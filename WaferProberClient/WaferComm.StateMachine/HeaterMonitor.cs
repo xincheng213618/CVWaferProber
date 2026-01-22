@@ -90,16 +90,16 @@ namespace WaferComm.StateMachine
 
         public override async Task StartAsync()
         {
-            await base.StartAsync();
-            StartMonitoring();
-            _eventAggregator?.Publish(new HeaterMonitorStartedEvent());
+            //await base.StartAsync();
+            //StartMonitoring();
+            //_eventAggregator?.Publish(new HeaterMonitorStartedEvent());
         }
 
         public override async Task StopAsync()
         {
-            StopMonitoring();
-            await base.StopAsync();
-            _eventAggregator?.Publish(new HeaterMonitorStopedEvent());
+            //StopMonitoring();
+            //await base.StopAsync();
+            //_eventAggregator?.Publish(new HeaterMonitorStopedEvent());
         }
 
         private void StartMonitoring()

@@ -374,6 +374,7 @@ namespace WaferComm.StateMachine
         public TimeSpan CurrentStateDuration => DateTime.Now - LastStateChange;
         public string CurrentWaferId { get; set; }
         public string CurrentLotId { get; set; }
+        public string CurrentMappingFile { get; set; }
         public int TestedDies { get; set; }
         public int TotalDies { get; set; }
         public decimal ProgressPercentage => TotalDies > 0 ? (decimal)TestedDies / TotalDies * 100 : 0;

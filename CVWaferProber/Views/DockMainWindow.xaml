@@ -35,6 +35,7 @@
             <Setter Property="Cursor" Value="Hand" />
             <!--<Setter Property="ToolTip" Value="{Binding ConnectionInfo.ServerTipInfo}"/>-->
         </Style>
+        <!-- 工具栏 -->
     </Window.Resources>
 
     <Grid>
