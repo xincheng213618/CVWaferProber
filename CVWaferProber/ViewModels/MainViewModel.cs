@@ -840,6 +840,7 @@ namespace CVWaferProber.ViewModels
             {
                 // 创建事件聚合器
                  EventAggregator = new EventAggregator();
+
                 // 订阅事件
                 //eventAggregator.Subscribe<CommandSentEvent>(OnCommandSent);
             }

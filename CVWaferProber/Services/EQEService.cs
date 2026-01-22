@@ -45,7 +45,7 @@ namespace CVWaferProber.Services
 
             // 缓存当前DieVM
             _currentDieVM = dieViewModel;
-
+           
             // 启动测试异步任务
             Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, isEnd);
 
