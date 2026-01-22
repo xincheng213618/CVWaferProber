@@ -10,6 +10,8 @@ namespace WaferComm.Client
     /// </summary>
     public class WaferProberTCPClient : IWaferProberClient
     {
+        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(WaferProberTCPClient));
+
         private TcpClient _tcpClient;
         private NetworkStream _stream;
         private double readTimeout = 10;//Second
@@ -32,7 +34,9 @@ namespace WaferComm.Client
             {
                 if (IsConnected)
                 {
-                    throw new InvalidOperationException("已经连接到服务器");
+                    logger.Error("Connected to the server.");
+                    return;
+                    //throw new InvalidOperationException("已经连接到服务器");
                 }
 
                 _tcpClient = new TcpClient();
@@ -77,7 +81,9 @@ namespace WaferComm.Client
         {
             if (!IsConnected)
             {
-                throw new InvalidOperationException("未连接到服务器");
+                logger.Error("Unable to connect to the server.");
+                return;
+                //throw new InvalidOperationException("未连接到服务器");
             }
 
             string fullCommand = command.StartsWith("$") ? command : $"${command}#";

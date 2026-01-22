@@ -52,6 +52,10 @@ namespace CVWaferProber.ViewModels
         public LayoutAnchorable? AnchorableCamera { get; set; }
         public LayoutAnchorable? AnchorableSP { get; set; }
         public LayoutAnchorable? AnchorableVAM { get; set; }
+        /// <summary>
+        /// 工具栏
+        /// </summary>
+        public ToolsViewModel? ToolsVM { get; set; }
         // SP面板ViewModel引用
         public CVSpectrumViewModel? SpPanelViewModel { get; set; }
 
@@ -661,6 +665,8 @@ namespace CVWaferProber.ViewModels
             //IsMappingPanelVisible = Properties.Settings.Default.IsMappingPanelVisible;
             //IsCameraPanelVisible = Properties.Settings.Default.IsCameraPanelVisible;
             //IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
+
+            ToolsVM = new ToolsViewModel(mainService.ProberClient);
         }
 
       
