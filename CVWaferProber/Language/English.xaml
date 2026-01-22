@@ -646,4 +646,8 @@
 
 
     <sys:String x:Key="Createdexportdirectory">Created export directory</sys:String>
+    <sys:String x:Key="Toolbar.LiftAll">Lift All</sys:String>
+    <sys:String x:Key="Toolbar.ToMainCamera">To Main Camera</sys:String>
+    <sys:String x:Key="Toolbar.ToAuxCamera">To Aux Camera</sys:String>
+    <sys:String x:Key="Toolbar.ToIntegratingSphere">To Integrating Sphere</sys:String>
 </ResourceDictionary>

@@ -664,7 +664,10 @@
 
 
     <sys:String x:Key="Createdexportdirectory">创建导出目录</sys:String>
-
+    <sys:String x:Key="Toolbar.LiftAll">抬起所有</sys:String>
+    <sys:String x:Key="Toolbar.ToMainCamera">移至主相机位</sys:String>
+    <sys:String x:Key="Toolbar.ToAuxCamera">移至辅相机位</sys:String>
+    <sys:String x:Key="Toolbar.ToIntegratingSphere">移至积分球位</sys:String>
 
 
 
