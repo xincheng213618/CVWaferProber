@@ -1,12 +1,170 @@
-﻿<UserControl x:Class="CVWaferProber.Components.ToolsControl"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:CVWaferProber.Components"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+﻿<UserControl
+    x:Class="CVWaferProber.Components.ToolsControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:CVWaferProber.Components"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="Industrial.Background" Color="#2B2B2B" />
+        <SolidColorBrush x:Key="Industrial.Foreground" Color="#E0E0E0" />
+        <SolidColorBrush x:Key="Industrial.Border" Color="#404040" />
+        <SolidColorBrush x:Key="Industrial.Accent" Color="#007ACC" />
+        <SolidColorBrush x:Key="Industrial.Button.Hover" Color="#3E3E42" />
+        <SolidColorBrush x:Key="Industrial.Button.Pressed" Color="#007ACC" />
+        <SolidColorBrush x:Key="Industrial.Button.Border" Color="#555555" />
+
+        <!--  工具栏样式  -->
+        <Style x:Key="IndustrialToolbarStyle" TargetType="ToolBar">
+            <Setter Property="Background" Value="{DynamicResource Industrial.Background}" />
+            <Setter Property="Foreground" Value="{DynamicResource Industrial.Foreground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Industrial.Border}" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Height" Value="40" />
+        </Style>
+
+        <!--  工具栏按钮样式  -->
+        <Style x:Key="IndustrialToolbarButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource Industrial.Foreground}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Margin" Value="2,0" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="2">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Industrial.Button.Hover}" />
+                                <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource Industrial.Button.Border}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Industrial.Button.Pressed}" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style
+            x:Key="IndustrialToolbarButtonWithIconStyle"
+            BasedOn="{StaticResource IndustrialToolbarButtonStyle}"
+            TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="2">
+                            <StackPanel
+                                Margin="8,4"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                                <ContentControl
+                                    x:Name="icon"
+                                    Margin="0,0,6,0"
+                                    Content="{TemplateBinding Tag}"
+                                    Foreground="{TemplateBinding Foreground}" />
+                                <TextBlock
+                                    x:Name="text"
+                                    VerticalAlignment="Center"
+                                    Text="{TemplateBinding Content}" />
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Industrial.Button.Hover}" />
+                                <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource Industrial.Button.Border}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Industrial.Button.Pressed}" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
     <Grid>
-            
+        <!--  主要布局  -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!--  顶部工具栏  -->
+        <ToolBar
+            Grid.Row="0"
+            Style="{StaticResource IndustrialToolbarStyle}"
+            ToolBarTray.IsLocked="True">
+
+            <!--  操作按钮组  -->
+            <Button
+                x:Name="btnLiftAll"
+                Click="BtnLiftAll_Click"
+                Content="{DynamicResource Toolbar.LiftAll}"
+                Style="{StaticResource IndustrialToolbarButtonStyle}" />
+
+            <Separator Margin="10,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+
+            <Button
+                x:Name="btnToMainCamera"
+                Click="BtnToMainCamera_Click"
+                Content="{DynamicResource Toolbar.ToMainCamera}"
+                Style="{StaticResource IndustrialToolbarButtonStyle}" />
+
+            <Button
+                x:Name="btnToAuxCamera"
+                Click="BtnToAuxCamera_Click"
+                Content="{DynamicResource Toolbar.ToAuxCamera}"
+                Style="{StaticResource IndustrialToolbarButtonStyle}" />
+
+            <Button
+                x:Name="btnToIntegratingSphere"
+                Click="BtnToIntegratingSphere_Click"
+                Content="{DynamicResource Toolbar.ToIntegratingSphere}"
+                Style="{StaticResource IndustrialToolbarButtonStyle}" />
+
+            <!--  右侧语言切换和功能区  -->
+            <Separator Margin="10,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+
+            <!--<StackPanel
+                Margin="0,0,10,0"
+                HorizontalAlignment="Right"
+                Orientation="Horizontal">
+                <Button
+                    x:Name="btnEnglish"
+                    Width="40"
+                    Click="BtnEnglish_Click"
+                    Content="EN"
+                    Style="{StaticResource IndustrialToolbarButtonStyle}" />
+                <Button
+                    x:Name="btnChinese"
+                    Width="50"
+                    Click="BtnChinese_Click"
+                    Content="中文"
+                    Style="{StaticResource IndustrialToolbarButtonStyle}" />
+            </StackPanel>-->
+        </ToolBar>
+
+        <!--  主内容区域  -->
+
     </Grid>
 </UserControl>
