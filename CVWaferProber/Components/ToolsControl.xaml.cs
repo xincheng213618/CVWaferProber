@@ -19,7 +19,7 @@ namespace CVWaferProber.Components
     /// <summary>
     /// ToolsControl.xaml 的交互逻辑
     /// </summary>
-    public partial class ToolsControl : tUserControl
+    public partial class ToolsControl : UserControl
     {
         public ToolsControl()
         {
