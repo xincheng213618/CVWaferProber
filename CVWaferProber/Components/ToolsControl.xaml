@@ -116,7 +116,7 @@
             <Button
                 x:Name="btnLiftAll"
                 Height="30"
-                Click="BtnLiftAll_Click"
+                Command="{Binding LiftAllCommand}"
                 Content="{DynamicResource Toolbar.LiftAll}"
                 Style="{StaticResource IndustrialToolbarButtonStyle}" />
 
@@ -126,7 +126,7 @@
                 x:Name="btnToMainCamera"
                 Width="120"
                 Height="30"
-                Click="BtnToMainCamera_Click"
+                Command="{Binding ToMainCameraCommand}"
                 Content="{DynamicResource Toolbar.ToMainCamera}"
                 Style="{StaticResource IndustrialToolbarButtonStyle}" />
 
@@ -134,7 +134,7 @@
                 x:Name="btnToAuxCamera"
                 Width="120"
                 Height="30"
-                Click="BtnToAuxCamera_Click"
+                Command="{Binding ToAuxCameraCommand}"
                 Content="{DynamicResource Toolbar.ToAuxCamera}"
                 Style="{StaticResource IndustrialToolbarButtonStyle}" />
 
@@ -142,7 +142,7 @@
                 x:Name="btnToIntegratingSphere"
                 Width="150"
                 Height="30"
-                Click="BtnToIntegratingSphere_Click"
+                Command="{Binding ToIntegratingSphereCommand}"
                 Content="{DynamicResource Toolbar.ToIntegratingSphere}"
                 Style="{StaticResource IndustrialToolbarButtonStyle}" />
         </ToolBar>

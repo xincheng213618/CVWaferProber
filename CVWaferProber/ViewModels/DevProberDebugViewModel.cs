@@ -12,6 +12,7 @@ namespace CVWaferProber.ViewModels
     public class DevProberDebugViewModel : ViewModelBase
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(DevProberDebugViewModel));
+
         private IWaferProberClient _client;
         private IStateMachine _stateMachine;
         private ConnectionInfo ConnectionInfo;
@@ -116,13 +117,11 @@ namespace CVWaferProber.ViewModels
 
             DevProberDisconnectCommand = new RelayCommand(
                 _ => Disconnect(),
-                _ => CanDisconnect
-            );
+                _ => CanDisconnect);
 
             ManualStatusUpdateCommand = new RelayCommand(
                 _ => ManualStatusUpdate(),
-                _ => CanDisconnect
-                );
+                _ => CanDisconnect);
             //ResetStateMachineCommand = new RelayCommand(
             //    _ => ResetStateMachine(),
             //    _ => CanDisconnect

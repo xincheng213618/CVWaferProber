@@ -1,7 +1,5 @@
 ﻿using CVWaferProber.ViewModels;
-using MySqlX.XDevAPI.Common;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
