@@ -275,6 +275,7 @@ namespace CVWaferProber.Services
                 {
                     if (logger.IsInfoEnabled) logger.InfoFormat("Process Current Die={0}[isFirst:{1}/isEnd:{2}] => {3}", die.ToMapAxis().ToString(), isFirst, isEnd,die.SerialNumber);
                     var isOK = await MoveAbsoluteAxisAsync(die);
+                    //第一die时需要发送扎针
                     if (isFirst) isOK = isOK && await ZUpAsync(die);
                     if (isOK) await DoDieFlowExec(_selectedWPFlow, die, isEnd);
                     else
@@ -478,6 +479,7 @@ namespace CVWaferProber.Services
         public void StopAutoTesting()
         {
             autoTestingItem = null;
+            _clientProber?.StopAsync();
         }
     }
 }
