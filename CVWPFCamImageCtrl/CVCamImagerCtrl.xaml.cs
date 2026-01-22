@@ -93,19 +93,19 @@ namespace CVWPFCamImageCtrl
         {
             if (_model == null || MainImageDataGrid == null)
             {
-                logger.Info("异常：_model 或 MainImageDataGrid 为 null");
+                logger.Info("Error: _model or MainImageDataGrid is null");
                 return;
             }
 
             var selectedItem = ViewSwitchComboBox.SelectedItem as ComboBoxItem;
             if (selectedItem == null)
             {
-                logger.Info("异常：选中项转换为 ComboBoxItem 失败");
+                logger.Info("Error: Failed to convert selected item to ComboBoxItem");
                 return;
             }
 
             _currentViewType = selectedItem.Tag.ToString() ?? "Analysis";
-            logger.Info($"当前视图类型：{_currentViewType}");
+            logger.Info($"Current view type：{_currentViewType}");
 
             // 获取当前活动的集合（用于加载图像）
             var currentActiveCollection = GetCurrentActiveCollection();

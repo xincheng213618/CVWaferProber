@@ -33,10 +33,50 @@ namespace CVWaferProber.Services
 
         protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
         {
+            var results = AlgResultService.LoadAlgResultByBatchCode(dieViewModel.SerialNumber!);
+            if (results != null && results.Count > 0)
+            {
+                foreach (var result in results)
+                {
+                    var aoiDetails = AlgResultService.GetCommDetailResult(result.Id);
+                    if (aoiDetails != null && aoiDetails.Count == 1)
+                    {
+                        var resultJson = aoiDetails[0].Result;
+                        if (!string.IsNullOrEmpty(resultJson))
+                        {
+                            // 解析 Common 表中的 Result 字段，获取 JSON 文件路径
+                            var detailResult = JsonConvert.DeserializeObject<DetailResult_CommFile_V2>(resultJson);
+                            if (detailResult != null && !string.IsNullOrEmpty(detailResult.ResultFileName) && File.Exists(detailResult.ResultFileName))
+                            {
+                                // 读取并解析 Darkresult.json 文件
+                                string darkResultJson = File.ReadAllText(detailResult.ResultFileName);
+                                var darkResult = JsonConvert.DeserializeObject<DarkResultDto>(darkResultJson);
+
+                                // 提取 GradeLevel
+                                dieViewModel.AOIGradeLevel = darkResult?.GradeLevel ?? "na";
+                                dieViewModel.BlackPattern = darkResult?.GradeLevel ?? "na";
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
             //AOIResultDisplay(dieViewModel);
             //EventAggregator?.Publish(new EQEFlowCompletedEvent(results));
             LoadImageResult(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
             return ChipStatus.OK;
+        }
+        public class DetailResult_CommFile_V2
+        {
+            public string ResultFileName { get; set; }
+          
+        }
+
+        // 用于解析 Darkresult.json 的 DTO
+        public class DarkResultDto
+        {
+            public string GradeLevel { get; set; }
+          
         }
         public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
         {

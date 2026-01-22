@@ -529,7 +529,7 @@ namespace CVWaferProber.ViewModels
             _rcConnectionInfo = rcService.ConnectionInfo;
             //
             InitializeMainServive();
-            //
+           
             // 初始化重置布局命令
             SearchCommand = new RelayCommand(ExecuteSearch);
 
@@ -662,6 +662,8 @@ namespace CVWaferProber.ViewModels
             //IsCameraPanelVisible = Properties.Settings.Default.IsCameraPanelVisible;
             //IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
         }
+
+      
 
         private async Task LoadMappingFileAsync(object obj)
         {
@@ -912,7 +914,7 @@ namespace CVWaferProber.ViewModels
                 {
                     ColumnHeader = "AOI GradeLevel",
                     ColumnBindingPath = "AOIGradeLevel",
-                    IsSelected = false,
+                    IsSelected = true,
                     IsOptional = true,
                     ColumnType = ColumnType.Text,
                     ColumnKey = ColumnKey.Other
@@ -947,7 +949,7 @@ namespace CVWaferProber.ViewModels
                 new ColumnConfig
                 {
                     ColumnHeader = "Current(mA)",
-                    ColumnBindingPath = "Voltage",
+                    ColumnBindingPath = "Current",
                     IsSelected = false,
                     IsOptional = true,
                     ColumnType = ColumnType.Text,
@@ -956,7 +958,7 @@ namespace CVWaferProber.ViewModels
                 new ColumnConfig
                 {
                     ColumnHeader = "Dominant Wavelength",
-                    ColumnBindingPath = "FinalClass",
+                    ColumnBindingPath = "DominantWavelength",
                     IsSelected = false,
                     IsOptional = true,
                     ColumnType = ColumnType.Text,
@@ -965,7 +967,7 @@ namespace CVWaferProber.ViewModels
                 new ColumnConfig
                 {
                     ColumnHeader = "Temperature(℃)",
-                    ColumnBindingPath = "AOIGradeLevel",
+                    ColumnBindingPath = "Temperature",
                     IsSelected = false,
                     IsOptional = true,
                     ColumnType = ColumnType.Text,
@@ -974,7 +976,7 @@ namespace CVWaferProber.ViewModels
                 new ColumnConfig
                 {
                     ColumnHeader = "Pixel Logic",
-                    ColumnBindingPath = "BlackPattern",
+                    ColumnBindingPath = "PixelLogic",
                     IsSelected = false,
                     IsOptional = true,
                     ColumnType = ColumnType.Text,
@@ -983,7 +985,7 @@ namespace CVWaferProber.ViewModels
                 new ColumnConfig
                 {
                     ColumnHeader = "Pin Pressure",
-                    ColumnBindingPath = "Luminance",
+                    ColumnBindingPath = "Pressure",
                     IsSelected = false,
                     IsOptional = true,
                     ColumnType = ColumnType.Text,
@@ -992,7 +994,7 @@ namespace CVWaferProber.ViewModels
                 new ColumnConfig
                 {
                     ColumnHeader = "TouchDown Counts",
-                    ColumnBindingPath = "Voltage",
+                    ColumnBindingPath = "TouchDownCounts",
                     IsSelected = false,
                     IsOptional = true,
                     ColumnType = ColumnType.Text,
@@ -1001,7 +1003,7 @@ namespace CVWaferProber.ViewModels
                 new ColumnConfig
                 {
                     ColumnHeader = "Probing Card SN",
-                    ColumnBindingPath = "Voltage",
+                    ColumnBindingPath = "ProbingCardSN",
                     IsSelected = false,
                     IsOptional = true,
                     ColumnType = ColumnType.Text,
@@ -1809,6 +1811,18 @@ namespace CVWaferProber.ViewModels
                     die.StartTestTime = dto.StartTestTime;
                     die.EndTestTime = dto.EndTestTime;
                     die.TotalTime = dto.TotalTime;
+
+                    die.AOIGradeLevel = dto.AOIGradeLevel;
+                    //die.LightOnStatus = dto.LightOnStatus;
+                    //die.RegisterPixels = dto.RegisterPixels;
+                    //die.FinalClass = dto.FinalClass;
+                    die.BlackPattern = dto.BlackPattern;
+                    //die.Temperature = dto.Temperature;
+                    //die.PixelLogic = dto.PixelLogic;
+                    //die.Pressure = dto.Pressure;
+                    //die.TouchDownCounts = dto.TouchDownCounts;
+                    //die.ProbingCardSN = dto.ProbingCardSN;
+
                 }
                 catch (Exception ex)
                 {
@@ -2188,6 +2202,11 @@ namespace CVWaferProber.ViewModels
                 foreach (var map in CustomMappingVM.Chips)
                 {
                     DieViewModel dieViewModel = new DieViewModel(map);
+                    // 从CustomMappingVM获取值并赋值给DieViewModel
+                    dieViewModel.Temperature = CustomMappingVM.Temperatures.ToString("F1"); // double转string（保留1位小数）
+                    dieViewModel.Pressure = CustomMappingVM.Pressure;                      // 直接赋值
+                    dieViewModel.ProbingCardSN = CustomMappingVM.SN;                       // SN对应ProbingCardSN
+                    dieViewModel.TouchDownCounts = CustomMappingVM.TDCount;
                     _TestResults.Add(dieViewModel);
                 }
                 var sorted = _TestResults.OrderByDescending(x => x.Id).ToList();
