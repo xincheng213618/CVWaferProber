@@ -1,9 +1,4 @@
 ﻿using CVWaferProber.Core.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Input;
 using WaferComm.Client;
 
@@ -17,33 +12,46 @@ namespace CVWaferProber.ViewModels
         public ICommand ToAuxCameraCommand { get; }
         public ICommand ToIntegratingSphereCommand { get; }
 
+        public bool CanLiftAll => true;
+        public bool CanToMainCamera => true;
+        public bool CanToAuxCamera => true;
+        public bool CanToIntegratingSphere => true;
+
         public ToolsViewModel(IWaferProberClient client)
         {
             _client = client;
-            LiftAllCommand = new RelayCommand(_ => LiftAll());
-            ToMainCameraCommand = new RelayCommand(_ => ToMainCamera());
-            ToAuxCameraCommand = new RelayCommand(_ => ToAuxCamera());
-            ToIntegratingSphereCommand = new RelayCommand(_ => ToIntegratingSphere());
+            LiftAllCommand = new RelayCommand(
+                 _ => LiftAll(),
+                _ => CanLiftAll);
+            ToMainCameraCommand = new RelayCommand(
+                _ => ToMainCamera(),
+                _ => CanToMainCamera);
+            ToAuxCameraCommand = new RelayCommand(
+                _ => ToAuxCamera(),
+                 _ => CanToAuxCamera);
+            ToIntegratingSphereCommand = new RelayCommand(
+                _ => ToIntegratingSphere(),
+                _ => CanToIntegratingSphere);
         }
 
-        private void ToIntegratingSphere()
+        private async void ToIntegratingSphere()
         {
-            _client?.ZToIntegratingSphereAsync();
+            await _client?.ZToIntegratingSphereAsync();
         }
 
-        private void ToAuxCamera()
+        private async void ToAuxCamera()
         {
-            _client?.ZToAuxCameraAsync();
+            await _client?.ZToAuxCameraAsync();
         }
 
-        private void ToMainCamera()
+        private async void ToMainCamera()
         {
-            _client?.ZToMainCameraAsync();
+            await _client?.ZToMainCameraAsync();
         }
 
-        private void LiftAll()
+        private async void LiftAll()
         {
-            _client?.ZAllUpAsync();
+           await _client?.ZAllUpAsync();
         }
     }
 }

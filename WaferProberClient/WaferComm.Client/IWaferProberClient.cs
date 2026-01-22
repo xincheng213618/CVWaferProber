@@ -56,9 +56,9 @@ namespace WaferComm.Client
         Task SendHeartbeatAsync();
         Task QueryStatusAsync();
         Task GetMappingAsync();
-        void ZAllUpAsync();
-        void ZToMainCameraAsync();
-        void ZToAuxCameraAsync();
-        void ZToIntegratingSphereAsync();
+        Task ZAllUpAsync();
+        Task ZToMainCameraAsync();
+        Task ZToAuxCameraAsync();
+        Task ZToIntegratingSphereAsync();
     }
 }

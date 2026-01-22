@@ -104,10 +104,9 @@
     </UserControl.Resources>
     <Grid>
         <!--  主要布局  -->
-        <Grid.RowDefinitions>
+        <!--<Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+        </Grid.RowDefinitions>-->
 
         <!--  顶部工具栏  -->
         <ToolBar

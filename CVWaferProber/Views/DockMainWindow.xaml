@@ -8,7 +8,6 @@
     xmlns:cvimg="clr-namespace:CVWPFCamImageCtrl;assembly=CVWPFCamImageCtrl"
     xmlns:cvsp="clr-namespace:CVWPFSpectrometerCtrl;assembly=CVWPFSpectrometerCtrl"
     xmlns:cvvam="clr-namespace:CVAVMControl;assembly=CVVAMControl"
-    xmlns:cvt=""
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CVWaferProber.ViewModels"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -43,6 +42,7 @@
         <!--  第1行：顶部菜单栏  -->
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <!--  菜单高度自适应  -->
             <RowDefinition Height="*" />
 
@@ -51,7 +51,7 @@
         </Grid.RowDefinitions>
 
         <!--  顶部菜单栏  -->
-        <Menu Background="#F0F0F0">
+        <Menu Grid.Row="0" Background="#F0F0F0">
             <!--  文件菜单  -->
             <!--<MenuItem Header="文件(F)" InputGestureText="Alt+F">
                 <MenuItem Header="新建项目" Command="{Binding NewProjectCommand}" />
@@ -176,8 +176,11 @@
                 InputGestureText="Alt+F4" />
         </Menu>
 
-
-        <avalon:DockingManager x:Name="DockingManager" Grid.Row="1">
+        <DockPanel Grid.Row="1" x:Name="PanelToolbar" >
+            <comp:ToolsControl x:Name="MyToolbar" />
+        </DockPanel>
+        
+        <avalon:DockingManager x:Name="DockingManager" Grid.Row="2">
             <avalon:DockingManager.Theme>
                 <avalon:GenericTheme />
             </avalon:DockingManager.Theme>
@@ -185,31 +188,6 @@
             <avalon:LayoutRoot>
                 <!--  垂直布局面板：新增顶部行 + 原有水平布局  -->
                 <avalon:LayoutPanel Orientation="Vertical">
-                    <!--  ========== 新增的顶部行 ==========  -->
-                    <avalon:LayoutAnchorablePaneGroup
-                        x:Name="TopPaneGroup"
-                        DockHeight="Auto"
-                        Orientation="Horizontal">
-                        <avalon:LayoutAnchorablePane>
-
-                            <avalon:LayoutAnchorable
-                                x:Name="AnchorableTopToolbar"
-                                Title="顶部工具栏"
-                                CanAutoHide="False"
-                                CanClose="False"
-                                CanDockAsTabbedDocument="False"
-                                CanFloat="False"
-                                CanHide="False">
-                                <DockPanel x:Name="PanelToolbar" >
-                                    <cvt:Tool x:Name="MyToolbar" />
-                                </DockPanel>
-                                <!--  固定显示不隐藏  -->
-                                <!--  示例：放入你之前的ToolsControl作为顶部内容  -->
-                               
-                            </avalon:LayoutAnchorable>
-                        </avalon:LayoutAnchorablePane>
-                    </avalon:LayoutAnchorablePaneGroup>
-
                     <!--  ========== 原有水平布局部分（左+右面板） ==========  -->
                     <avalon:LayoutPanel Orientation="Horizontal">
                         <!--  左半部分面板  -->
@@ -312,7 +290,7 @@
             </avalon:LayoutRoot>
         </avalon:DockingManager>
 
-        <StatusBar Grid.Row="2">
+        <StatusBar Grid.Row="3">
             <!--<StatusBarItem Width="150">
                 <TextBlock Text="{Binding ConnectionInfo.StatusMessage}" />
             </StatusBarItem>

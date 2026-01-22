@@ -390,7 +390,7 @@ namespace WaferComm.Client
             }
             int temp = (int)(temperature * 10);
             string tempStr;
-            if (temp>=0) tempStr = temp.ToString("+D4"); // 4位，如 0250
+            if (temp >= 0) tempStr = temp.ToString("+D4"); // 4位，如 0250
             else tempStr = temp.ToString("D4"); // 4位，如 0250
             return SendCommandAsync($"f{tempStr}");
         }
@@ -411,8 +411,16 @@ namespace WaferComm.Client
         public Task StopAsync() => SendCommandAsync("K");
         public Task SendHeartbeatAsync() => SendCommandAsync("E");
         public Task QueryStatusAsync() => SendCommandAsync("A");
-
         public Task GetMappingAsync() => SendCommandAsync("rr");
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public Task ZAllUpAsync() => SendCommandAsync("gu");
+        public Task ZToMainCameraAsync() => SendCommandAsync("gm");
+        public Task ZToAuxCameraAsync() => SendCommandAsync("ga");
+        public Task ZToIntegratingSphereAsync() => SendCommandAsync("gi");
+
         #endregion
 
         public void Dispose()
@@ -422,6 +430,5 @@ namespace WaferComm.Client
             _tcpClient?.Dispose();
             _receiveCts?.Dispose();
         }
-
     }
 }
