@@ -7,39 +7,51 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
     <UserControl.Resources>
-        <!--  与界面原生按钮完全一致的配色  -->
-        <SolidColorBrush x:Key="NativeButton.Background" Color="#E6E6E6" />
-        <SolidColorBrush x:Key="NativeButton.Foreground" Color="#333333" />
-        <SolidColorBrush x:Key="NativeButton.Border" Color="#999999" />
-        <SolidColorBrush x:Key="NativeButton.HoverBackground" Color="#D9D9D9" />
-        <SolidColorBrush x:Key="NativeButton.PressedBackground" Color="#CCCCCC" />
+        <!--  工业风配色：保留原生灰度，增加工业质感  -->
+        <SolidColorBrush x:Key="Industrial.Button.Background" Color="#E6E6E6" />
+        <SolidColorBrush x:Key="Industrial.Button.Foreground" Color="#333333" />
+        <SolidColorBrush x:Key="Industrial.Button.Border" Color="#888888" />
+        <SolidColorBrush x:Key="Industrial.Button.HoverBorder" Color="#666666" />
+        <SolidColorBrush x:Key="Industrial.Button.PressedBorder" Color="#555555" />
 
-        <!--  工具栏样式：适配放大后的按钮高度  -->
-        <Style x:Key="NativeToolbarStyle" TargetType="ToolBar">
+        <!--  工业风渐变背景：轻微渐变提升质感  -->
+        <LinearGradientBrush x:Key="Industrial.Button.Gradient" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Offset="0" Color="#F0F0F0" />
+            <GradientStop Offset="1" Color="#E0E0E0" />
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="Industrial.Button.HoverGradient" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Offset="0" Color="#E8E8E8" />
+            <GradientStop Offset="1" Color="#D0D0D0" />
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="Industrial.Button.PressedGradient" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Offset="0" Color="#D8D8D8" />
+            <GradientStop Offset="1" Color="#C8C8C8" />
+        </LinearGradientBrush>
+
+        <!--  工具栏样式：适配按钮高度，工业风浅灰背景  -->
+        <Style x:Key="IndustrialToolbarStyle" TargetType="ToolBar">
             <Setter Property="Background" Value="#F0F0F0" />
             <Setter Property="Foreground" Value="#333333" />
             <Setter Property="BorderBrush" Value="#CCCCCC" />
             <Setter Property="BorderThickness" Value="0,0,0,1" />
-            <Setter Property="Height" Value="48" />
-            <!--  适配大按钮高度  -->
+            <Setter Property="Height" Value="40" />
+            <!--  适配30高度按钮，留少量上下间距  -->
             <Setter Property="Padding" Value="8,0" />
         </Style>
 
-        <!--  放大版原生风格按钮（核心修改）  -->
-        <Style x:Key="NativeToolbarButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="{DynamicResource NativeButton.Background}" />
-            <Setter Property="Foreground" Value="{DynamicResource NativeButton.Foreground}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource NativeButton.Border}" />
+        <!--  工业风美化按钮样式（增加字体加粗）  -->
+        <Style x:Key="IndustrialToolbarButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource Industrial.Button.Gradient}" />
+            <Setter Property="Foreground" Value="{DynamicResource Industrial.Button.Foreground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Industrial.Button.Border}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Margin" Value="4,0" />
-            <!--  增加左右间距，避免拥挤  -->
-            <Setter Property="Padding" Value="18,8" />
-            <!--  大幅增加内边距，放大按钮  -->
+            <Setter Property="Padding" Value="10,2" />
+            <!--  适配30高度按钮的内边距  -->
             <Setter Property="FontSize" Value="13" />
-            <!--  字体放大1号，更醒目  -->
-            <Setter Property="FontWeight" Value="Medium" />
-            <Setter Property="MinWidth" Value="100" />
-            <!--  给按钮设置最小宽度，保证统一大小  -->
+            <!--  核心修改：字体加粗为Bold  -->
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -48,44 +60,65 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="0">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            CornerRadius="2">
+                            <Border.Effect>
+                                <DropShadowEffect
+                                    BlurRadius="1"
+                                    Opacity="0.2"
+                                    ShadowDepth="1"
+                                    Color="#666666" />
+                            </Border.Effect>
+                            <!--  轻微阴影提升层次  -->
+                            <ContentPresenter
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
-                            <!--  鼠标悬浮：背景变深  -->
+                            <!--  鼠标悬浮：加深边框+hover渐变  -->
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="{DynamicResource NativeButton.HoverBackground}" />
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Industrial.Button.HoverGradient}" />
+                                <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource Industrial.Button.HoverBorder}" />
                             </Trigger>
-                            <!--  点击按下：背景进一步变深  -->
+                            <!--  点击按下：按压渐变+深色边框  -->
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="{DynamicResource NativeButton.PressedBackground}" />
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource Industrial.Button.PressedGradient}" />
+                                <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource Industrial.Button.PressedBorder}" />
+                                <Setter TargetName="border" Property="Effect" Value="{x:Null}" />
+                                <!--  按下取消阴影，模拟按压  -->
                             </Trigger>
-                            <!--  禁用状态：浅灰背景+浅灰文字  -->
+                            <!--  禁用状态：浅灰风格  -->
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Foreground" Value="#999999" />
                                 <Setter TargetName="border" Property="Background" Value="#F0F0F0" />
                                 <Setter TargetName="border" Property="BorderBrush" Value="#EEEEEE" />
+                                <Setter TargetName="border" Property="Effect" Value="{x:Null}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!--  工业风轻微阴影：提升层次，不浮夸  -->
+        <!--<DropShadowEffect
+            x:Key="ButtonShadow"
+            BlurRadius="1"
+            Opacity="0.2"
+            ShadowDepth="1"
+            Color="#666666" />-->
     </UserControl.Resources>
     <Grid>
-
         <!--  顶部工具栏  -->
+        <ToolBar Style="{StaticResource IndustrialToolbarStyle}" ToolBarTray.IsLocked="True">
 
-
-        <ToolBar Style="{StaticResource NativeToolbarStyle}" ToolBarTray.IsLocked="True">
-
-            <!--  操作按钮组  -->
+            <!--  操作按钮组（保留你的尺寸设置）  -->
             <Button
                 x:Name="btnLiftAll"
                 Height="30"
-                Command="{Binding LiftAllCommand}"
+                Click="BtnLiftAll_Click"
                 Content="{DynamicResource Toolbar.LiftAll}"
-                Style="{StaticResource NativeToolbarButtonStyle}" />
+                Style="{StaticResource IndustrialToolbarButtonStyle}" />
 
             <Separator Margin="10,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
@@ -93,33 +126,25 @@
                 x:Name="btnToMainCamera"
                 Width="120"
                 Height="30"
-                Command="{Binding ToMainCameraCommand}"
+                Click="BtnToMainCamera_Click"
                 Content="{DynamicResource Toolbar.ToMainCamera}"
-                Style="{StaticResource NativeToolbarButtonStyle}" />
+                Style="{StaticResource IndustrialToolbarButtonStyle}" />
 
             <Button
                 x:Name="btnToAuxCamera"
                 Width="120"
                 Height="30"
-                Padding="5"
                 Click="BtnToAuxCamera_Click"
-                Command="{Binding ToAuxCameraCommand}"
                 Content="{DynamicResource Toolbar.ToAuxCamera}"
-                Style="{StaticResource NativeToolbarButtonStyle}" />
+                Style="{StaticResource IndustrialToolbarButtonStyle}" />
 
             <Button
                 x:Name="btnToIntegratingSphere"
                 Width="150"
                 Height="30"
-                Command="{Binding ToIntegratingSphereCommand}"
+                Click="BtnToIntegratingSphere_Click"
                 Content="{DynamicResource Toolbar.ToIntegratingSphere}"
-                Style="{StaticResource NativeToolbarButtonStyle}" />
-
-            <!--  右侧语言切换和功能区  -->
-            <!--<Separator Margin="10,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />-->
-
-
-
+                Style="{StaticResource IndustrialToolbarButtonStyle}" />
         </ToolBar>
     </Grid>
 </UserControl>
