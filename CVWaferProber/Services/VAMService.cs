@@ -1,12 +1,9 @@
 ﻿using CVAVMControl;
 using CVDB.Services.Image;
-
 using CVWaferProber.Core.Events;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
 using Newtonsoft.Json;
-using System.IO;
-using System.Text;
 
 namespace CVWaferProber.Services
 {
@@ -17,7 +14,6 @@ namespace CVWaferProber.Services
         public VAMService(RCRestService rcService) : base(rcService, CVWPEventAggregatorInstance.Instance)
         {
         }
-
         protected override ChipStatus GetResultStatus(string serialNumber)
         {
             return ChipStatus.FAILED;
@@ -52,7 +48,7 @@ namespace CVWaferProber.Services
             }
             else
             {
-                if (logger.IsErrorEnabled) logger.ErrorFormat("VAM result is empty or count>1 => {0}", results != null ? results.Count : 0);
+                if (logger.IsErrorEnabled) logger.ErrorFormat("VAM result is empty or count > 1 => {0}", results != null ? results.Count : 0);
             }
             return ChipStatus.VAM_COMPLETED;
         }

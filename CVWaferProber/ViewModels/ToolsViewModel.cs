@@ -1,6 +1,7 @@
 ﻿using CVWaferProber.Core.ViewModels;
 using System.Windows.Input;
 using WaferComm.Client;
+using WaferComm.Core;
 
 namespace CVWaferProber.ViewModels
 {
@@ -17,9 +18,19 @@ namespace CVWaferProber.ViewModels
         public bool CanToAuxCamera => true;
         public bool CanToIntegratingSphere => true;
 
-        public ToolsViewModel(IWaferProberClient client)
+        private IEventAggregator? _EventAggregator;
+
+        public event EventHandler ToIntegratingSpherePos;
+        public event EventHandler ToAuxCameraPos;
+        public event EventHandler ToMainCameraPos;
+        public event EventHandler LiftAllPos;
+
+        public ToolsViewModel(IWaferProberClient client, IEventAggregator? eventAggregator = null)
         {
             _client = client;
+            _client.EventAggregator.Subscribe<ZAxisPosChangedEvent>(OnZAxisPosChanged);
+
+            _EventAggregator = eventAggregator;
             LiftAllCommand = new RelayCommand(
                  _ => LiftAll(),
                 _ => CanLiftAll);
@@ -32,6 +43,10 @@ namespace CVWaferProber.ViewModels
             ToIntegratingSphereCommand = new RelayCommand(
                 _ => ToIntegratingSphere(),
                 _ => CanToIntegratingSphere);
+        }
+
+        private void OnZAxisPosChanged(ZAxisPosChangedEvent @event)
+        {
         }
 
         private async void ToIntegratingSphere()

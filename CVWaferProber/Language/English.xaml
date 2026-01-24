@@ -27,8 +27,8 @@
     <sys:String x:Key="MenuLogClear">ClearLog</sys:String>
 
     <sys:String x:Key="GridHeader.No">No</sys:String>
-    <sys:String x:Key="Maping.GridHeader.Row">Row</sys:String>
-    <sys:String x:Key="Maping.GridHeader.Col">Col</sys:String>
+    <sys:String x:Key="Maping.GridHeader.Row">Row/Y</sys:String>
+    <sys:String x:Key="Maping.GridHeader.Col">Col/X</sys:String>
     <sys:String x:Key="Maping.GridHeader.ScreenX">ScreenX</sys:String>
     <sys:String x:Key="Maping.GridHeader.ScreenY">ScreenY</sys:String>
     <sys:String x:Key="Maping.GridHeader.SelectAll">SelectAll</sys:String>

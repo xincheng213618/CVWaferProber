@@ -675,8 +675,8 @@ namespace ChipMapping.ViewModels
                         RawY = posMath.AxisPosY,
                         Status = status,
                         DataValue = lv,
-                        Row = posMath.MapY,
-                        Column = posMath.MapX,
+                        Row = posMath.DataMapY,
+                        Column = posMath.DataMapX,
                     };
 
                     var chipViewModel = new ChipViewModel(chipData)

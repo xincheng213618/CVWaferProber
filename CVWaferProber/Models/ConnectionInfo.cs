@@ -8,6 +8,7 @@ namespace CVWaferProber.Models
         public readonly string ConnectedMsg;
         public readonly string DisconnectedMsg;
         private string _serverIP = "127.0.0.1";
+        //private string _serverIP = "192.168.1.100";
         private int _port = 8898;
         private string _serverTipInfo = "127.0.0.1:8898";
         private ConnectionStatus _status = ConnectionStatus.Disconnected;

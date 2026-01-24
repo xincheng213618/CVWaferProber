@@ -99,7 +99,8 @@ namespace WaferComm.StateMachine
             // 移除协议头和尾
             string cmd = command.Trim('$', '#');
 
-            return cmd == "J" || // 绝对运动
+            return cmd.StartsWith("J") || // 绝对运动
+                                          //cmd.StartsWith("S") ||  // 相对运动
                                           //cmd.StartsWith("S") ||  // 相对运动
                                           //cmd.StartsWith("A") ||  // 微米运动
                    cmd == "Z" ||            // 起测确认（Z轴运动）

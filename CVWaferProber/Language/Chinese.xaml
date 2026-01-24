@@ -29,8 +29,8 @@
     <sys:String x:Key="MenuLogClear">清空日志</sys:String>
 
     <sys:String x:Key="GridHeader.No">序号</sys:String>
-    <sys:String x:Key="Maping.GridHeader.Row">行</sys:String>
-    <sys:String x:Key="Maping.GridHeader.Col">列</sys:String>
+    <sys:String x:Key="Maping.GridHeader.Row">行/Y</sys:String>
+    <sys:String x:Key="Maping.GridHeader.Col">列/X</sys:String>
     <sys:String x:Key="Maping.GridHeader.ScreenX">屏幕X</sys:String>
     <sys:String x:Key="Maping.GridHeader.ScreenY">屏幕Y</sys:String>
     <sys:String x:Key="Maping.GridHeader.SelectAll">全选</sys:String>

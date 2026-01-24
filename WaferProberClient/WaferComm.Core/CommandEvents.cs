@@ -83,7 +83,10 @@ namespace WaferComm.Core
             return rawData.Trim('$', '#');
         }
     }
+    public class ZAxisPosChangedEvent
+    {
 
+    }
     /// <summary>
     /// 连接状态改变事件
     /// </summary>

@@ -60,5 +60,6 @@ namespace WaferComm.Client
         Task ZToMainCameraAsync();
         Task ZToAuxCameraAsync();
         Task ZToIntegratingSphereAsync();
+        Task SendResultAsync(int result);
     }
 }

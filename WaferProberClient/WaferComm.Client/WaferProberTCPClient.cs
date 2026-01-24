@@ -400,7 +400,11 @@ namespace WaferComm.Client
             else tempStr = temp.ToString("D4"); // 4位，如 0250
             return SendCommandAsync($"f{tempStr}");
         }
-
+        public Task SendResultAsync(int result)
+        {
+            string resu = result == 1 ? "bin1" : "bin2";
+            return SendCommandAsync($"{resu}");
+        }
         public Task GetCurrentTemperatureAsync() => SendCommandAsync("fl");
         public Task GetWaferInfoAsync() => SendCommandAsync("ku");
         public Task GetTotalDiceCountAsync() => SendCommandAsync("Y");

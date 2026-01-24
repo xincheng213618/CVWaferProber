@@ -81,7 +81,10 @@ namespace CVWaferProber.Services
         public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
         {
             dieViewModel.ChangeStatus(ChipStatus.TESTING);
-            CustomImageVM?.ClearImageResult();
+            System.Windows.Application.Current?.Dispatcher?.Invoke(() =>
+            {
+                CustomImageVM?.ClearImageResult();
+            });
             Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, isEnd);
             return task;
         }

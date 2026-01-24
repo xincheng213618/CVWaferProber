@@ -46,7 +46,6 @@ namespace CVWaferProber.ViewModels
         public ChipMappingControlViewModel? CustomMappingVM { get; set; }
         public CVCamImagerViewModel? CustomImageVM { get; set; }
         public CVSpectrumViewModel? CustomIVLVM { get; set; }
-        //public CVEQEViewModel? CustomEQEVM { get; set; }
         // AvalonDock面板引用
         public DockingManager? DockingManager { get; set; }
         public LayoutAnchorable? AnchorableCamera { get; set; }
@@ -110,7 +109,6 @@ namespace CVWaferProber.ViewModels
         public ICommand OpenCommand { get; }
         //打开机台设备调试窗口
         public ICommand OpenProberDeviceDebugCommand { get; }
-
         // 打开关于命令
         public ICommand OpenAboutCommand { get; }
 
@@ -608,8 +606,8 @@ namespace CVWaferProber.ViewModels
             // 初始化服务
             InitMysqlCfg();
             ProberId = "CVProber01";
-            MappingCsvFilePath = "E:\\work\\cv\\New版\\晶圆台\\CVWaferProber\\ChipMapping\\ScanData_sc.csv";
-            if (!System.IO.File.Exists(MappingCsvFilePath)) MappingCsvFilePath = "ScanData_sc.csv";
+            //MappingCsvFilePath = "E:\\work\\cv\\New版\\晶圆台\\CVWaferProber\\ChipMapping\\ScanData_sc.csv";
+            //if (!System.IO.File.Exists(MappingCsvFilePath)) MappingCsvFilePath = "ScanData_sc.csv";
             Snowflake.Instance.SnowflakesInit(1, 1);
             //InitializeSimAutoTestTimer();
 
@@ -666,7 +664,7 @@ namespace CVWaferProber.ViewModels
             //IsCameraPanelVisible = Properties.Settings.Default.IsCameraPanelVisible;
             //IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
 
-            ToolsVM = new ToolsViewModel(mainService.ProberClient);
+            ToolsVM = new ToolsViewModel(mainService.ProberClient, EventAggregator);
         }
 
       
@@ -2041,7 +2039,7 @@ namespace CVWaferProber.ViewModels
         private List<DieViewModel> GetSelectedDieTestItems()
         {
             var testQueue = new List<DieViewModel>();
-            var fType = _selectedWPFlow.FlowType;
+            var fType = _selectedWPFlow?.FlowType;
             foreach (var die in TestResults)
             {
                 if (die.IsAOIEnabled && fType == CVWaferProberFlowType.AOI)
@@ -2064,23 +2062,7 @@ namespace CVWaferProber.ViewModels
 
             return testQueue;
         }
-        //private void StartNextTestItem()
-        //{
-        //    if (_currentTestIndex >= _testQueue.Count)
-        //    {
-        //        StopAutoTest(null);
-        //        MessageBox.Show("所有勾选项测试完成", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
-        //        return;
-        //    }
 
-        //    var currentTest = _testQueue[_currentTestIndex];
-        //    DieViewModel currentDie = currentTest.Die;
-        //    CurTestDieIdx = TestResults.IndexOf(currentDie);
-
-        //    ScrollToItem(currentDie);
-
-        //    mainService.DoDieFlowExec(_selectedWPFlow, currentDie, false);
-        //}
         public CVSpectrumAnalyzer? SpPanelView { get; set; }
         private TabControl? _innerTabControl;
         private void StartManFlow()
@@ -2112,18 +2094,6 @@ namespace CVWaferProber.ViewModels
         private void TestingReady(List<TestItem> testItems)
         {
             CustomMappingVM.DisabledInput = IsProcessing = true;
-            //CustomMappingVM.Cleanup();
-            //foreach (var item in CustomMappingVM.Chips)
-            //{
-            //    item.SetStatus(ChipStatus.WAITING);
-            //}
-            //foreach (var item in TestResults)
-            //{
-            //    item.EndTestTime = null;
-            //    item.SerialNumber = null;
-            //    item.StartTestTime = null;
-            //    item.TotalTime = null;
-            //}
 
             CurTestDieIdx = 0;
             string timestamp = DateTime.Now.ToString("yyyyMMdd'T'HHmmss.fff");
@@ -2132,7 +2102,6 @@ namespace CVWaferProber.ViewModels
             {
                 itemT.Die.TestingReady(ProberId, timestamp);
             }
-            //_dataGrid?.Items.Refresh();
         }
 
         private void StartAutoTest(object? obj)
@@ -2182,7 +2151,7 @@ namespace CVWaferProber.ViewModels
 
         private void ClearMapping()
         {
-            CustomMappingVM.Cleanup();
+            CustomMappingVM?.Cleanup();
             CustomMappingVM.Chips.Clear();
             TestResults.Clear();
         }
@@ -2190,7 +2159,10 @@ namespace CVWaferProber.ViewModels
         public void LoadMappingFile(string  mappingFile)
         {
             MappingCsvFilePath = mappingFile;
-            LoadMappingFileFromCsv();
+            Application.Current?.Dispatcher?.Invoke(() =>
+            {
+                LoadMappingFileFromCsv();
+            });
         }
 
         private void LoadMappingFileFromCsv()
@@ -2307,7 +2279,6 @@ namespace CVWaferProber.ViewModels
 
         private void ActivateCorrespondingPanel()
         {
-            //if (IsProcessing) return;
             if (SelectedWPFlow == null) return;
 
             if (DockingManager == null || AnchorableSP == null)

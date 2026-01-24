@@ -22,6 +22,7 @@ namespace CVWaferProber.Services
         #endregion
         private MappingService mappingService;
         private GSWMProcessor? _wmProcessor;
+        private ProberClientService proberClientService;
         private IWaferProberClient _clientProber;
         private IStateMachine _proberState;
         private readonly Dictionary<CVWaferProberFlowType, BaseSerivce> flowServices =
@@ -33,7 +34,6 @@ namespace CVWaferProber.Services
         {
             mappingService = new MappingService();
             mappingService.ChipSelected += MappingService_ChipSelected;
-
             InitializeClientProber();
         }
 
@@ -103,7 +103,9 @@ namespace CVWaferProber.Services
         }
         private void InitializeClientProber()
         {
-            this._connectionInfo = new ConnectionInfo() { ServerIP = "127.0.0.1", Port = 8898 };
+            proberClientService = ProberClientService.Instance;
+            //this._connectionInfo = new ConnectionInfo() { ServerIP = "127.0.0.1", Port = 8898 };
+            this._connectionInfo = new ConnectionInfo() { ServerIP = "192.168.1.100", Port = 8898 };
             this._clientProber = new WaferProberTCPClient();
             var eventAggregator = _clientProber.EventAggregator;
             eventAggregator.Subscribe<ConnectionStateChangedEvent>(OnClientProberStateChanged);
@@ -113,6 +115,8 @@ namespace CVWaferProber.Services
             _proberState = proberState;
             eventAggregator.Subscribe<StateUpdatedEvent>(OnProberStateUpdated);
             _proberState.StartAsync().Wait();
+
+            proberClientService.Initialize(_clientProber, _proberState);
         }
 
         private void OnStateTransition(StateTransitionEvent @event)
@@ -164,6 +168,8 @@ namespace CVWaferProber.Services
         /// <param name="e"></param>
         private void OnAutoTestingNextCompleted(object? sender, DieViewModel e)
         {
+            //
+            _clientProber.SendResultAsync(2);
             if (autoTestingItem != null) DoDieFlowExec(autoTestingItem);
             else TestingCompleted?.Invoke(this, new EventArgs());
         }
@@ -315,6 +321,8 @@ namespace CVWaferProber.Services
             if (logger.IsInfoEnabled) logger.InfoFormat("Prober client Moving Absolute Axis => {0}", absAxis.ToString());
             _clientProber?.MoveAbsoluteAsync(absAxis.y, absAxis.x);
             return await WaitingMotionMoveAsync(die);
+            //Task.Delay(2000).Wait();
+            //return true;
         }  
         private async Task<bool> ZUpAsync(DieViewModel die)
         {
