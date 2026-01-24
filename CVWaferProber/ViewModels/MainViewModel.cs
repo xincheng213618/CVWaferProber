@@ -664,7 +664,7 @@ namespace CVWaferProber.ViewModels
             //IsCameraPanelVisible = Properties.Settings.Default.IsCameraPanelVisible;
             //IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
 
-            ToolsVM = new ToolsViewModel(mainService.ProberClient, EventAggregator);
+            ToolsVM = new ToolsViewModel(ProberClientService.Instance.ProberClient, EventAggregator);
         }
 
       
@@ -809,7 +809,7 @@ namespace CVWaferProber.ViewModels
             {
                 var window = new ConnectionSettingsWindow
                 {
-                    DataContext = new ConnectionSettingsViewModel(mainService.ProberClient, _connectionInfo),
+                    DataContext = new ConnectionSettingsViewModel(ProberClientService.Instance.ProberClient, _connectionInfo),
                     Owner = Application.Current.MainWindow
                 };
 
@@ -820,7 +820,7 @@ namespace CVWaferProber.ViewModels
         private void InitializeMainServive()
         {
             mainService = MainService.Instance;
-            _connectionInfo = mainService.ConnectionInfo;
+            _connectionInfo = ProberClientService.Instance.ConnectionInfo;
             mainService.InitializeService(ProberId, rcService);
             //
             mainService.TestingCompleted += OnTestingCompleted;
@@ -1399,7 +1399,8 @@ namespace CVWaferProber.ViewModels
             {
                 var window = new DevProberDebugWindow
                 {
-                    DataContext = new DevProberDebugViewModel(mainService.ProberClient, mainService.StateMachine, _connectionInfo),
+                    DataContext = new DevProberDebugViewModel(ProberClientService.Instance.ProberClient,
+                    ProberClientService.Instance.StateMachine, _connectionInfo),
                     Owner = Application.Current.MainWindow
                 };
 
