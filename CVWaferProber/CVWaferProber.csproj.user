@@ -12,7 +12,7 @@
     <Compile Update="Components\DevProberDebugControl.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Components\ToolsControl.xaml.cs">
+    <Compile Update="Components\ToolsBarControl.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Views\ConnectionSettingsWindow.xaml.cs">
@@ -50,7 +50,7 @@
     <Page Update="Components\DevProberDebugControl.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="Components\ToolsControl.xaml">
+    <Page Update="Components\ToolsBarControl.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Language\Chinese.xaml">

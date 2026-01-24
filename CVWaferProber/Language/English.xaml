@@ -7,6 +7,7 @@
     <sys:String x:Key="BtnReload">Reload</sys:String>
     <sys:String x:Key="BtnResetStatus">ResetStatus</sys:String>
     <sys:String x:Key="BtnStartAutoTest">StartAutoTest</sys:String>
+    <sys:String x:Key="BtnContinuAutoTest">ContinuAutoTest</sys:String>
     <sys:String x:Key="BtnStopAutoTest">StopAutoTest</sys:String>
     <sys:String x:Key="BtnStartManTest">ManualTest</sys:String>
     <sys:String x:Key="BtnRefreshStatus">StatusRefresh</sys:String>
@@ -647,7 +648,7 @@
 
     <sys:String x:Key="Createdexportdirectory">Created export directory</sys:String>
     <sys:String x:Key="Toolbar.LiftAll">Lift All</sys:String>
-    <sys:String x:Key="Toolbar.ToMainCamera">To Main Camera</sys:String>
-    <sys:String x:Key="Toolbar.ToAuxCamera">To Aux Camera</sys:String>
+    <sys:String x:Key="Toolbar.ToMainCamera">To AOI Camera</sys:String>
+    <sys:String x:Key="Toolbar.ToAuxCamera">To VAM Camera</sys:String>
     <sys:String x:Key="Toolbar.ToIntegratingSphere">To Integrating Sphere</sys:String>
 </ResourceDictionary>

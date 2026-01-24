@@ -5,10 +5,10 @@ namespace CVWaferProber.Components
     /// <summary>
     /// ToolsControl.xaml 的交互逻辑
     /// </summary>
-    public partial class ToolsControl : UserControl
+    public partial class ToolsBarControl : UserControl
     {
-        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(ToolsControl));
-        public ToolsControl()
+        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(ToolsBarControl));
+        public ToolsBarControl()
         {
             InitializeComponent();
         }

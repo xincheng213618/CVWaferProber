@@ -305,7 +305,7 @@
                                             Foreground="White"
                                             IsEnabled="{Binding IsNotProcessing}" />
 
-                                        <Button
+                                        <!--  <Button
                                             x:Name="BtnResetStatus"
                                             Width="80"
                                             Margin="8,0,0,0"
@@ -317,7 +317,7 @@
                                             Foreground="White"
                                             IsEnabled="{Binding IsNotProcessing}" />
 
-                                        <!--<Button x:Name="BtnClear" Content="{DynamicResource BtnClear}"
+                                        <Button x:Name="BtnClear" Content="{DynamicResource BtnClear}"
                                                                   Width="80"
                                                                   IsEnabled="{Binding IsNotProcessing}"
                                                                   Command="{Binding ClearMappingCommand}"
@@ -487,7 +487,7 @@
                                                 <!--  加载结果  -->
                                             </Grid.ColumnDefinitions>
 
-                                            <!--  自动测试按钮 - 第0列  -->
+                                            <!--  自动测试按钮 - 第0列
                                             <Button
                                                 Grid.Column="0"
                                                 Height="25"
@@ -497,10 +497,10 @@
                                                 BorderThickness="0"
                                                 Command="{Binding StartAutoTestCommand}"
                                                 Content="{DynamicResource BtnStartAutoTest}"
-                                                IsEnabled="{Binding IsNotProcessing}"
                                                 ToolTip="{DynamicResource BtnStartAutoTest}" />
+                                              -->
 
-                                            <!--  停止测试按钮 - 第1列  -->
+                                            <!--  停止测试按钮 - 第1列  
                                             <Button
                                                 Grid.Column="1"
                                                 Height="25"
@@ -512,7 +512,8 @@
                                                 Command="{Binding StopAutoTestCommand}"
                                                 Content="{DynamicResource BtnStopAutoTest}"
                                                 ToolTip="{DynamicResource BtnStopAutoTest}" />
-
+                                            -->
+            
                                             <!--  刷新状态按钮 - 第2列  -->
                                             <Button
                                                 Grid.Column="2"

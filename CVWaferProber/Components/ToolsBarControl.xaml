@@ -1,5 +1,5 @@
 ﻿<UserControl
-    x:Class="CVWaferProber.Components.ToolsControl"
+    x:Class="CVWaferProber.Components.ToolsBarControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -110,7 +110,7 @@
     </UserControl.Resources>
     <Grid>
         <!--  顶部工具栏  -->
-        <ToolBar Style="{StaticResource IndustrialToolbarStyle}" ToolBarTray.IsLocked="True">
+        <ToolBar Style="{StaticResource IndustrialToolbarStyle}" ToolBarTray.IsLocked="True" Height="60">
 
             <!--  操作按钮组（保留你的尺寸设置）  -->
             <Button
@@ -144,6 +144,33 @@
                 Height="30"
                 Command="{Binding ToIntegratingSphereCommand}"
                 Content="{DynamicResource Toolbar.ToIntegratingSphere}"
+                Style="{StaticResource IndustrialToolbarButtonStyle}" />
+
+            <Separator Margin="10,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+            <!-- 联机测试 -->
+            <Button
+                Width="150"
+                Height="30"
+                Command="{Binding StartAutoTestCommand}"
+                Content="{DynamicResource BtnStartAutoTest}"
+                Style="{StaticResource IndustrialToolbarButtonStyle}" />
+           <Button
+                Width="150"
+                Height="30"
+                Command="{Binding ContinuAutoTestCommand}"
+                Content="{DynamicResource BtnContinuAutoTest}"
+                Style="{StaticResource IndustrialToolbarButtonStyle}" />
+           <Button
+                Width="150"
+                Height="30"
+                Command="{Binding StopAutoTestCommand}"
+                Content="{DynamicResource BtnStopAutoTest}"
+                Style="{StaticResource IndustrialToolbarButtonStyle}" />
+          <Button
+                Width="150"
+                Height="30"
+                Command="{Binding PauseAutoTestCommand}"
+                Content="{DynamicResource BtnPauseAutoTest}"
                 Style="{StaticResource IndustrialToolbarButtonStyle}" />
         </ToolBar>
     </Grid>

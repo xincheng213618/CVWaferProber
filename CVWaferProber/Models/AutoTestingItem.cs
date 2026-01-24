@@ -17,6 +17,8 @@ namespace CVWaferProber.Models
 
         public bool IsEnd { get => TestingDieVMList.Count == CurTestingIndex; }
 
+        public bool IsPaused { get; set; }
+
         public (DieViewModel? pre, DieViewModel? next) GetNextDieVM()
         {
             DieViewModel? pre = null;

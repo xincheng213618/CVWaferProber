@@ -51,6 +51,11 @@ namespace WaferComm.StateMachine
         /// 停止中
         /// </summary>
         Stopping,
+                
+        /// <summary>
+        /// 停止中
+        /// </summary>
+        Stoped,
 
         /// <summary>
         /// 错误

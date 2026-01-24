@@ -27,8 +27,8 @@ namespace CVWaferProber.Services
         }
         private ProberClientService()
         {
-            this._connectionInfo = new ConnectionInfo() { ServerIP = "192.168.1.100", Port = 8898 };
-            //this._connectionInfo = new ConnectionInfo() { ServerIP = "127.0.0.1", Port = 8898 };
+            //this._connectionInfo = new ConnectionInfo() { ServerIP = "192.168.1.100", Port = 8898 };
+            this._connectionInfo = new ConnectionInfo() { ServerIP = "127.0.0.1", Port = 8898 };
             this._clientProber = new WaferProberTCPClient();
             var eventAggregator = _clientProber.EventAggregator;
             eventAggregator.Subscribe<ConnectionStateChangedEvent>(OnClientProberStateChanged);
@@ -55,7 +55,10 @@ namespace CVWaferProber.Services
         ////
         //eventAggregator.Subscribe<StateUpdatedEvent>(OnProberStateUpdated);
         //}
-
+        public void ContinuAutoTest()
+        {
+            _proberState?.TransitionToAsync(ProberState.Testing);
+        }
         private void OnProberStateUpdated(StateUpdatedEvent @event)
         {
             if (logger.IsInfoEnabled) logger.InfoFormat("StateUpdated => {0}", @event.Status.ToString());
@@ -227,11 +230,21 @@ namespace CVWaferProber.Services
             }
         }
 
+        public void PausedAutoTest()
+        {
+            _proberState?.TransitionToAsync(ProberState.Paused);
+        }
         public async Task<bool> StopTestAsync()
         {
             if (logger.IsInfoEnabled) logger.Info("Prober client StopTest");
             _clientProber?.StopAsync();
+            _proberState?.TransitionToAsync(ProberState.WaitingForWafer);
             return await WaitingStopTestAsync();
+        }
+        public void TestingCompleted()
+        {
+            _proberState?.TransitionToAsync(ProberState.Stoped);
+            _connectionInfo.DevCurrentState = _proberState.CurrentState;
         }
         private async Task<bool> WaitingStopTestAsync(CancellationToken cancellationToken = default)
         {
@@ -288,5 +301,9 @@ namespace CVWaferProber.Services
             return await Task.FromResult(false);
         }
 
+        public void StartAutoTest()
+        {
+            _proberState?.TransitionToAsync( ProberState.Testing);
+        }
     }
 }

@@ -5,7 +5,6 @@ using CVWaferProber.ViewModels;
 using CVWaferProber.WinMsg;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
-using WaferComm.Client;
 using WaferComm.Core;
 using WaferComm.StateMachine;
 
@@ -23,12 +22,9 @@ namespace CVWaferProber.Services
         private MappingService mappingService;
         private GSWMProcessor? _wmProcessor;
         private ProberClientService proberClientService;
-        //private IWaferProberClient _clientProber;
-        //private IStateMachine _proberState;
         private readonly Dictionary<CVWaferProberFlowType, BaseSerivce> flowServices =
             new Dictionary<CVWaferProberFlowType, BaseSerivce>();
         public AutoTestingItem? autoTestingItem { get; private set; }
-        //private ConnectionInfo _connectionInfo;
 
         private MainService()
         {
@@ -133,7 +129,10 @@ namespace CVWaferProber.Services
         {
             //TODO
             proberClientService.SendResultAsync(2);
-            if (autoTestingItem != null) DoDieFlowExec(autoTestingItem);
+            if (autoTestingItem != null)
+            {
+               if(!autoTestingItem.IsPaused) DoDieFlowExec(autoTestingItem);
+            }
             else TestingCompleted?.Invoke(this, new EventArgs());
         }
 
@@ -146,7 +145,7 @@ namespace CVWaferProber.Services
         {
             autoTestingItem = null;
             TestingCompleted?.Invoke(this, e);
-
+            proberClientService?.TestingCompleted();
         }
 
         #region Window Message
@@ -253,7 +252,7 @@ namespace CVWaferProber.Services
                     }
                     if (isEnd) 
                     {
-                        isOK = await proberClientService.StopTestAsync();
+                        await proberClientService.StopTestAsync();
                     }
             //    }
             //    else
@@ -270,6 +269,7 @@ namespace CVWaferProber.Services
 
         public void StartAutoTesting(WPFlowViewModel? _selectedWPFlow, List<DieViewModel> dieVMList)
         {
+            proberClientService?.StartAutoTest();
             autoTestingItem = new AutoTestingItem(dieVMList, _selectedWPFlow);
             DoDieFlowExec(autoTestingItem);
         }
@@ -279,6 +279,25 @@ namespace CVWaferProber.Services
             autoTestingItem = null;
             //_clientProber?.StopAsync();
             proberClientService?.StopTestAsync();
+        }
+
+        public void PauseAutoTesting()
+        {
+            if (autoTestingItem != null) 
+            {
+                autoTestingItem.IsPaused = true;
+                proberClientService?.PausedAutoTest();
+            }
+        }
+
+        public void ContinuAutoTesting()
+        {
+            if (autoTestingItem != null)
+            {
+                autoTestingItem.IsPaused = false;
+                proberClientService?.ContinuAutoTest();
+                DoDieFlowExec(autoTestingItem);
+            }
         }
     }
 }

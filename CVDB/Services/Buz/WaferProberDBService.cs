@@ -54,7 +54,7 @@ namespace CVDB.Services.Buz
             }
             if (master.Id > 0)
             {
-                List<string> listType = new List<string> { "Flow.AOI", "Flow.IVL.SP", "Flow.IVL.Camera", "Flow.EQE", "Flow.VAM" };
+                List<string> listType = new List<string> { "Flow.AOI", "Flow.IVL", "Flow.EQE", "Flow.VAM" };
                 var buzDetails = MysqlControler.GetInstance().Sql.Select<TScgdBuzProductDetail>().Where(a => a.Pid == master.Id).ToList();
                 if (buzDetails == null || buzDetails.Count == 0)
                 {

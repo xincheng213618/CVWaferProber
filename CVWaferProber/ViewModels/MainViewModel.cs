@@ -54,7 +54,7 @@ namespace CVWaferProber.ViewModels
         /// <summary>
         /// 工具栏
         /// </summary>
-        public ToolsViewModel? ToolsVM { get; set; }
+        public ToolsBarViewModel? ToolsVM { get; set; }
         // SP面板ViewModel引用
         public CVSpectrumViewModel? SpPanelViewModel { get; set; }
 
@@ -517,7 +517,11 @@ namespace CVWaferProber.ViewModels
             Warning,
             Error
         }
-       
+
+        public bool CanStartAuto => 
+            _connectionInfo.DevCurrentState == WaferComm.StateMachine.ProberState.WaferLoaded ;
+
+
         public IEventAggregator? EventAggregator;
         public MainViewModel()
         {
@@ -538,7 +542,8 @@ namespace CVWaferProber.ViewModels
             OpenVEyeWindowCommand = new RelayCommand(OpenVEyeWindow);
             RefreshStatusCommand = new RelayCommand(RefreshStatus);
             OpenMappingFileCommand = new RelayCommand(OpenMappingFile);
-            StartAutoTestCommand = new RelayCommand(StartAutoTest);
+            //StartAutoTestCommand = new RelayCommand(_ => StartAutoTest(),
+            //    _ => CanStartAuto);
             StopAutoTestCommand = new RelayCommand(StopAutoTest);
             StartManTestCommand = new RelayCommand(StartManTest);
             SaveTestResultCommand = new RelayCommand(SaveTestResult);
@@ -664,7 +669,7 @@ namespace CVWaferProber.ViewModels
             //IsCameraPanelVisible = Properties.Settings.Default.IsCameraPanelVisible;
             //IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
 
-            ToolsVM = new ToolsViewModel(ProberClientService.Instance.ProberClient, EventAggregator);
+            ToolsVM = new ToolsBarViewModel(ProberClientService.Instance.ProberClient, ProberClientService.Instance.StateMachine, EventAggregator);
         }
 
       
@@ -2015,7 +2020,7 @@ namespace CVWaferProber.ViewModels
         private List<TestItem> _testQueue;
         private int _currentTestIndex;
 
-        private void StartAutoFlow()
+        public void StartAutoFlow()
         {
             if (SelectedWPFlow == null)
             {
@@ -2105,7 +2110,7 @@ namespace CVWaferProber.ViewModels
             }
         }
 
-        private void StartAutoTest(object? obj)
+        private void StartAutoTest()
         {
             StartAutoFlow();
         }
@@ -2124,18 +2129,7 @@ namespace CVWaferProber.ViewModels
 
         private void StopAutoTest(object? obj)
         {
-            if(_testQueue==null) return;
 
-            foreach (var item in _testQueue)
-            {
-                item.Die.UnSelected();
-
-            }
-            //EnableBtn(true);
-
-            mainService.StopAutoTesting();
-
-            CalculateYieldBySerialNumber();
         }
 
         private void OpenMappingFile(object? obj)
@@ -2148,6 +2142,29 @@ namespace CVWaferProber.ViewModels
                 MappingCsvFilePath = openFileDialog.FileName;
                 LoadMappingFileFromCsv();
             }
+        }
+        public void PauseAutoFlow()
+        {
+            mainService.PauseAutoTesting();
+        }
+        public void ContinuAutoFlow()
+        {
+            mainService.ContinuAutoTesting();
+        }
+        public void StopAutoFlow()
+        {
+            if (_testQueue == null) return;
+
+            foreach (var item in _testQueue)
+            {
+                item.Die.UnSelected();
+
+            }
+            //EnableBtn(true);
+
+            mainService.StopAutoTesting();
+
+            CalculateYieldBySerialNumber();
         }
 
         private void ClearMapping()
@@ -2485,8 +2502,8 @@ namespace CVWaferProber.ViewModels
                 UpdateSelectAllVAMState();
             }
         }
+
         #endregion
         #endregion
-      
     }
 }

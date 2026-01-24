@@ -664,7 +664,8 @@ namespace ChipMapping.ViewModels
                     double x = StartX + posSc.X;
                     double y = StartY + posSc.Y;
 
-                    var status = (ChipStatus)_random.Next(0, 8);
+                    //var status = (ChipStatus)_random.Next(0, 8);
+                    var status = ChipStatus.WAITING;
                     var lv = _random.Next(30, 100);
                     var chipData = new ChipData
                     {
