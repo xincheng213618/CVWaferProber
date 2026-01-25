@@ -133,7 +133,7 @@ namespace CVWaferProber.Services
         {
             var absAxis = die.ToMapAxis();
             die.MStatus = MotionStatus.MovingAbsolute;
-            if (logger.IsInfoEnabled) logger.InfoFormat("Prober client Moving Absolute Axis => {0}", absAxis.ToString());
+            if (logger.IsInfoEnabled) logger.InfoFormat("Prober client Moving Absolute Axis => {0}", die.MapAxisToString());
             _clientProber?.MoveAbsoluteAsync(absAxis.y, absAxis.x);
             return await WaitingMotionMoveAsync(die);
             //Task.Delay(2000).Wait();

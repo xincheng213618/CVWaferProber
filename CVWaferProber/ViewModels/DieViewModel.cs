@@ -189,6 +189,11 @@ namespace CVWaferProber.ViewModels
             return (x, y);
         }
 
+        public string MapAxisToString()
+        {
+            return string.Format("Y{0}{1:D3}X{2}{3:D3}", this.MapY >= 0 ? "+" : "", this.MapY, this.MapX >= 0 ? "+" : "", this.MapX);
+        }
+
         #region 动态属性
         private string _aoiGradeLevel = "na"; // 默认值设为"na"
         public string AOIGradeLevel

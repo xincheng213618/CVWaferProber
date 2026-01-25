@@ -391,6 +391,7 @@
                                             <ComboBox
                                                 x:Name="cbLeftSelector"
                                                 Grid.Column="0"
+                                                Grid.ColumnSpan="2"
                                                 HorizontalAlignment="Stretch"
                                                 VerticalAlignment="Center"
                                                 IsEnabled="{Binding IsNotProcessing}"
@@ -407,19 +408,6 @@
                                                     </DataTemplate>
                                                 </ComboBox.ItemTemplate>
                                             </ComboBox>
-
-                                            <!--  FlowLoad按钮 - 第1列  -->
-                                            <Button
-                                                Grid.Column="1"
-                                                Height="25"
-                                                Margin="5,0,0,0"
-                                                Padding="5,1"
-                                                HorizontalAlignment="Stretch"
-                                                VerticalAlignment="Center"
-                                                Command="{Binding FlowLoadCommand}"
-                                                Content="{DynamicResource BtnFlowLoad}"
-                                                IsEnabled="{Binding IsNotProcessing}"
-                                                ToolTip="{DynamicResource BtnFlowLoad}" />
 
                                             <!--  PN文本 - 第2列（自适应宽度，不抢占空间）  -->
                                             <TextBlock
@@ -486,7 +474,18 @@
                                                 <ColumnDefinition Width="*" />
                                                 <!--  加载结果  -->
                                             </Grid.ColumnDefinitions>
-
+                                            <!--  FlowLoad按钮 - 第1列  -->
+                                            <Button
+                                               Grid.Column="0"
+                                               Height="25"
+                                               Margin="5,0,0,0"
+                                               Padding="5,1"
+                                               HorizontalAlignment="Stretch"
+                                               VerticalAlignment="Center"
+                                               Command="{Binding FlowLoadCommand}"
+                                               Content="{DynamicResource BtnFlowLoad}"
+                                               IsEnabled="{Binding IsNotProcessing}"
+                                               ToolTip="{DynamicResource BtnFlowLoad}" />
                                             <!--  自动测试按钮 - 第0列
                                             <Button
                                                 Grid.Column="0"
@@ -516,9 +515,10 @@
             
                                             <!--  刷新状态按钮 - 第2列  -->
                                             <Button
-                                                Grid.Column="2"
+                                                Grid.Column="1"
+                                                Grid.ColumnSpan="2"
                                                 Height="25"
-                                                Margin="5,0,0,0"
+                                                Margin="15,0,0,0"
                                                 Padding="5,1"
                                                 HorizontalAlignment="Stretch"
                                                 VerticalAlignment="Center"
