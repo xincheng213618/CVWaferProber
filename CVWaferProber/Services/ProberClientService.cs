@@ -82,14 +82,23 @@ namespace CVWaferProber.Services
                 MainViewModel.Instance?.LoadMappingFile(_proberState.GetStatus().CurrentMappingFile);
             }
             if (logger.IsInfoEnabled) logger.InfoFormat("StateTransition {0} => {1}", @event.FromState.ToString(), @event.ToState.ToString());
-            if (logger.IsInfoEnabled) logger.InfoFormat("CurrentState = {0}", _proberState.CurrentState.ToString());
+            //if (logger.IsInfoEnabled) logger.InfoFormat("CurrentState = {0}", _proberState.CurrentState.ToString());
             _connectionInfo.DevCurrentState = _proberState.CurrentState;
         }
 
         private void OnClientProberStateChanged(ConnectionStateChangedEvent @event)
         {
-            logger.InfoFormat("ConnectionStateChanged => {0}:{1}, IsConnected={2}", @event.ServerIp, @event.Port, @event.IsConnected);
             _connectionInfo?.SetConnected(@event.IsConnected);
+            if (@event.IsConnected)
+            {
+                logger.InfoFormat("ConnectionStateChanged => {0}:{1}, IsConnected={2}", @event.ServerIp, @event.Port, @event.IsConnected);
+                _clientProber.QueryStatusAsync();
+                _clientProber.GetCurrentTemperatureAsync();
+            }
+            //else
+            //{
+            //    logger.InfoFormat("ConnectionStateChanged => IsConnected={2}", @event.ServerIp, @event.Port, @event.IsConnected);
+            //}
         }
 
         public void SendResultAsync(int result)
@@ -103,7 +112,6 @@ namespace CVWaferProber.Services
             {
                 if (_clientProber.IsConnected)
                 {
-                    //if (logger.IsInfoEnabled) logger.InfoFormat("Process Current Die={0}[isFirst:{1}/isEnd:{2}] => {3}", die.ToMapAxis().ToString(), isFirst, isEnd, die.SerialNumber);
                     var isOK = await MoveAbsoluteAxisAsync(die);
                     //第一die时需要发送扎针
                     if (isFirst) isOK = isOK && await ZUpAsync(die);
@@ -304,6 +312,13 @@ namespace CVWaferProber.Services
         public void StartAutoTest()
         {
             _proberState?.TransitionToAsync( ProberState.Testing);
+        }
+
+        public async Task ReconnectAsync()
+        {
+            await _clientProber.DisconnectAsync();
+            Task.Delay(1000).ConfigureAwait(true);
+            await _clientProber.ConnectAsync(_connectionInfo.ServerIP, _connectionInfo.Port);
         }
     }
 }

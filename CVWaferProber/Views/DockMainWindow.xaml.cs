@@ -347,6 +347,21 @@ namespace CVWaferProber.Views
                 LogTextBox.Document.Blocks.Clear();
             }
         }
-        
+
+        private void Button_DoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel)
+            {
+                viewModel.ReconnectDevCommand?.Execute(null);
+            }
+        }
+
+        private void Button_Rc_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel)
+            {
+                viewModel.ReconnectRcCommand?.Execute(null);
+            }
+        }
     }
 }

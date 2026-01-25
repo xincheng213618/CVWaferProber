@@ -33,7 +33,7 @@ namespace CVWaferProber.Services
         }
 
         // 核心测试启动方法：移除所有Camera相关逻辑，保留IVL核心流程
-        public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
+        public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext)
         {
             // 标记EQE测试中（替换IVL的状态枚举）
             dieViewModel.ChangeStatus(ChipStatus.EQE_TESTING);
@@ -47,7 +47,7 @@ namespace CVWaferProber.Services
             _currentDieVM = dieViewModel;
            
             // 启动测试异步任务
-            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, isEnd);
+            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, hasNext);
 
             return task;
         }

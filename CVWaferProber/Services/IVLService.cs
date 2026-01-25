@@ -50,7 +50,7 @@ namespace CVWaferProber.Services
 
         }
 
-        public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
+        public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext)
         {
             // 新增：强制切换到Overview标签页（修复FindName错误）
             Application.Current.Dispatcher.Invoke(() =>
@@ -87,7 +87,7 @@ namespace CVWaferProber.Services
             // 缓存当前DieViewModel（定时器回调中需要用到）
             _currentDieVM = dieViewModel;
             //System.Timers.Timer timer = new System.Timers.Timer(1000);
-            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, isEnd);
+            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, hasNext);
             // 初始化并启动定时器（1秒调用一次IVLResultDisplay）
             System.Timers.Timer refreshTimer = new System.Timers.Timer(350)
             {

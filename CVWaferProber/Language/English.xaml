@@ -9,6 +9,7 @@
     <sys:String x:Key="BtnStartAutoTest">StartAutoTest</sys:String>
     <sys:String x:Key="BtnContinuAutoTest">ContinuAutoTest</sys:String>
     <sys:String x:Key="BtnStopAutoTest">StopAutoTest</sys:String>
+    <sys:String x:Key="BtnPauseAutoTest">PauseAutoTest</sys:String>
     <sys:String x:Key="BtnStartManTest">ManualTest</sys:String>
     <sys:String x:Key="BtnRefreshStatus">StatusRefresh</sys:String>
     <sys:String x:Key="BtnFlowLoad">LoadFlow</sys:String>

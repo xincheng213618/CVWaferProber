@@ -65,13 +65,13 @@ namespace CVWaferProber.Services
             }
         }
 
-        public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
+        public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext)
         {
             //
             EventAggregator?.Publish(new VAMFlowStartingEvent());
 
             dieViewModel.ChangeStatus(ChipStatus.VAM_TESTING);
-            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, isEnd);
+            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, hasNext);
             return task;
         }
       

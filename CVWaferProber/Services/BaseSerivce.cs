@@ -28,14 +28,14 @@ namespace CVWaferProber.Services
             this.EventAggregator = eventAggregator;
         }
 
-        public Task StartTesting(string timestamp, DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
+        public Task StartTesting(string timestamp, DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext)
         {
             string sn = BuildFlowSN(dieViewModel, timestamp);
             dieViewModel.SerialNumber = sn;
-            return StartTesting(dieViewModel, _selectedWPFlow, isEnd);
+            return StartTesting(dieViewModel, _selectedWPFlow, hasNext);
         }
-        public abstract Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true);
-        protected async Task RunFlowAsync(WPFlowViewModel _selectedWPFlow, DieViewModel dieViewModel, bool isEnd)
+        public abstract Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext);
+        protected async Task RunFlowAsync(WPFlowViewModel _selectedWPFlow, DieViewModel dieViewModel, bool hasNext)
         {
             try
             {
@@ -82,8 +82,8 @@ namespace CVWaferProber.Services
             }
             finally
             {
-                if (isEnd) DoEndTesting();
-                else DoAutoTestingNextCompleted(dieViewModel);
+                if (hasNext) DoAutoTestingNextCompleted(dieViewModel);
+                else DoEndTesting();
             }
         }
 

@@ -78,14 +78,14 @@ namespace CVWaferProber.Services
             public string GradeLevel { get; set; }
           
         }
-        public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
+        public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext)
         {
             dieViewModel.ChangeStatus(ChipStatus.TESTING);
             System.Windows.Application.Current?.Dispatcher?.Invoke(() =>
             {
                 CustomImageVM?.ClearImageResult();
             });
-            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, isEnd);
+            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, hasNext);
             return task;
         }
         private ChipStatus GetDieResultStatus(string serialNumber)

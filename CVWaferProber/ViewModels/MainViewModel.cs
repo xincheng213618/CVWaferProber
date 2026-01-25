@@ -19,6 +19,7 @@ using CVWPFSpectrometerCtrl.ViewModels;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Reactive.Linq;
 using System.Windows;
@@ -133,6 +134,8 @@ namespace CVWaferProber.ViewModels
         //
         public ICommand ShowConnectionSettingsCommand { get; }
         public ICommand ShowRCConnectionSettingsCommand { get; }
+        public ICommand ReconnectDevCommand { get; }
+        public ICommand ReconnectRcCommand { get; }
         /// <summary>
         /// 
         /// </summary>
@@ -552,6 +555,8 @@ namespace CVWaferProber.ViewModels
             ClearMappingCommand = new RelayCommand(_ => ClearMapping());
             FlowLoadCommand = new RelayCommand(_ => LoadBuzWPFlows());
             RCRegCommand = new RelayCommand(_ => RCReg());
+            ReconnectDevCommand = new RelayCommand(_ => ReconnectDev());
+            ReconnectRcCommand = new RelayCommand(_ => ReconnectRc());
             OpenHelpCommand = new RelayCommand(ExecuteOpenHelp);
             OpenAboutCommand = new RelayCommand(ExecuteOpenAbout);
             OpenProberDeviceDebugCommand = new RelayCommand(OpenProberDeviceDebug);
@@ -618,7 +623,7 @@ namespace CVWaferProber.ViewModels
 
             InitializeEvents();
 
-            LoadMappingFileFromCsv();
+            //LoadMappingFileFromCsv();
             LoadBuzWPFlows();
             InitMQTT();
 
@@ -672,7 +677,16 @@ namespace CVWaferProber.ViewModels
             ToolsVM = new ToolsBarViewModel(ProberClientService.Instance.ProberClient, ProberClientService.Instance.StateMachine, EventAggregator);
         }
 
-      
+        private void ReconnectRc()
+        {
+            rcService.RcUnRegist();
+            rcService.RcRegist();
+        }
+
+        private void ReconnectDev()
+        {
+            mainService.ReconnectDev();
+        }
 
         private async Task LoadMappingFileAsync(object obj)
         {
@@ -884,6 +898,8 @@ namespace CVWaferProber.ViewModels
         {
             SysFlowCfgWindow cfgWindow = new SysFlowCfgWindow();
             cfgWindow.Show();
+
+            this.LoadBuzWPFlows();
         }
 
         #region 核心方法实现（修复+新增）
@@ -1928,39 +1944,6 @@ namespace CVWaferProber.ViewModels
             _dataGrid?.Items.Refresh();
         }
 
-        //private void InitializeSimAutoTestTimer()
-        //{
-        //    _simAutoTestTimer = new DispatcherTimer();
-        //    _simAutoTestTimer.Interval = TimeSpan.FromMilliseconds(1000);
-        //    _simAutoTestTimer.Tick += RestGetFlowResultTimer_Tick;
-        //}
-
-        //private void RestGetFlowResultTimer_Tick(object? sender, EventArgs e)
-        //{
-        //    if (IsProcessing && CurTestDieIdx >= 0)
-        //    {
-        //        DieViewModel dieViewModel = TestResults[CurTestDieIdx];
-        //        var resp = rcModel.RcGetFlowResult_POI(dieViewModel.SerialNumber);
-        //        if (resp != null)
-        //        {
-        //            if (resp.IsSuccess)
-        //            {
-        //                DieResultDisplay(dieViewModel);
-        //                dieViewModel.ChangeStatus(ChipStatus.OK, true);
-        //            }
-        //            else if (resp.ResultStatus == "Pending")
-        //            {
-        //                return;
-        //            }
-        //            else
-        //            {
-        //                dieViewModel.ChangeStatus(ChipStatus.AOI_NG, true);
-        //            }
-        //            NextTestingDie();
-        //        }
-        //    }
-        //}
-
         private void DieResultDisplay(DieViewModel dieViewModel)
         {
             //if (string.IsNullOrEmpty(dieViewModel.SerialNumber))
@@ -1983,42 +1966,7 @@ namespace CVWaferProber.ViewModels
             CalculateYieldBySerialNumber();
         }
 
-        //private void NextTestingDie()
-        //{
-        //    if (_currentTestIndex < _testQueue.Count)
-        //    {
-        //        var currentDie = _testQueue[_currentTestIndex].Die;
-        //        currentDie.UnSelected();
-        //    }
-
-        //    _currentTestIndex++;
-        //    StartNextTestItem();
-        //}
-
-        private void StartTestingDie(int row, int col)
-        {
-            if (CurTestDieIdx >= 0)
-            {
-                TestResults[CurTestDieIdx].UnSelected();
-            }
-            var itemToSelect = TestResults.FirstOrDefault(d => d.MapX == col && d.MapY == row);
-            if (itemToSelect != null)
-            {
-                CurTestDieIdx = TestResults.IndexOf(itemToSelect);
-
-                ManScrollToItem(itemToSelect);
-                mainService.DoDieFlowExec(_selectedWPFlow, itemToSelect, false);
-                //aoiService.StartTesting(Timestamp, itemToSelect, _selectedWPFlow, false);
-                CalculateYieldBySerialNumber();
-            }
-            else
-            {
-                logger.ErrorFormat("Die not found By Row={0},Col={1}", row, col);
-            }
-        }
-
         private List<TestItem> _testQueue;
-        private int _currentTestIndex;
 
         public void StartAutoFlow()
         {
@@ -2036,10 +1984,7 @@ namespace CVWaferProber.ViewModels
             }
 
             TestingReady(_testQueue);
-            _currentTestIndex = 0;
             EnableBtnGUI(false);
-
-            //StartNextTestItem();
             mainService.StartAutoTesting(_selectedWPFlow, GetSelectedDieTestItems());
         }
         private List<DieViewModel> GetSelectedDieTestItems()
@@ -2052,7 +1997,9 @@ namespace CVWaferProber.ViewModels
                 {
                     testQueue.Add(die);
                 }
-                if (die.IsIVLEnabled && ( fType == CVWaferProberFlowType.IVL_SP || fType == CVWaferProberFlowType.IVL_Camera))
+                if (die.IsIVLEnabled && (fType == CVWaferProberFlowType.IVL ||
+                    fType == CVWaferProberFlowType.IVL_SP || 
+                    fType == CVWaferProberFlowType.IVL_Camera))
                 {
                     testQueue.Add(die);
                 }
@@ -2066,9 +2013,66 @@ namespace CVWaferProber.ViewModels
                 }
             }
 
-            return testQueue;
+            Stopwatch sw = Stopwatch.StartNew();
+            var resultList= SortEfficiently(testQueue);
+            sw.Stop();
+            Stopwatch sw2 = Stopwatch.StartNew();
+            var resultList1 = GetSortedResultsLinq(testQueue);
+            sw2.Stop();
+            logger.InfoFormat("SortEfficiently={0},GetSortedResultsLinq={1}", sw.Elapsed.ToString(), sw2.Elapsed.ToString());
+            return resultList;
         }
+        public List<DieViewModel> GetSortedResultsLinq(List<DieViewModel> testQueue)
+        {
+            return new List<DieViewModel>(
+                testQueue
+                    .GroupBy(d => d.MapY)
+                    .OrderBy(g => g.Key)
+                    .SelectMany((g, index) =>
+                        index % 2 == 0
+                            ? g.OrderBy(d => d.MapX)
+                            : g.OrderByDescending(d => d.MapX))
+                    .ToList()
+            );
+        }
+        public List<DieViewModel> SortEfficiently(List<DieViewModel> testQueue)
+        {
+            // 先按 Y 和 X 排序
+            var list = testQueue.OrderBy(d => d.MapY).ThenBy(d => d.MapX).ToList();
+            var result = new List<DieViewModel>();
 
+            int? currentY = int.MinValue;
+            List<DieViewModel> currentGroup = new List<DieViewModel>();
+            int groupIndex = 0;
+
+            foreach (var item in list)
+            {
+                if (item.MapY != currentY)
+                {
+                    // 处理上一个组
+                    if (groupIndex % 2 == 1)
+                    {
+                        currentGroup.Reverse(); // 奇数组反向
+                    }
+
+                    result.AddRange(currentGroup);
+                    currentGroup = new List<DieViewModel>();
+                    currentY = item.MapY;
+                    groupIndex++;
+                }
+
+                currentGroup.Add(item);
+            }
+
+            // 处理最后一个组
+            if (groupIndex % 2 == 1)
+            {
+                currentGroup.Reverse();
+            }
+            result.AddRange(currentGroup);
+
+            return result;
+        }
         public CVSpectrumAnalyzer? SpPanelView { get; set; }
         private TabControl? _innerTabControl;
         private void StartManFlow()
@@ -2077,10 +2081,9 @@ namespace CVWaferProber.ViewModels
             {
                 EnableBtnGUI(false);
                 ManTestingReady(die);
-                mainService.DoDieFlowExec(_selectedWPFlow, die);
+                mainService.DoDieFlowExec(_selectedWPFlow, die, false);
                 ActivateCorrespondingPanel();
             }
-            
         }
 
         private void DoEndTesting()

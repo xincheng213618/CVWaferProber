@@ -41,13 +41,13 @@ namespace CVWaferProber.ViewModels
                     break;
                 case "Flow.IVL":
                     FlowType = CVWaferProberFlowType.IVL;
-                    break; 
-                //case "Flow.IVL.SP":
-                //    FlowType = CVWaferProberFlowType.IVL_SP;
-                //    break;
-                //case "Flow.IVL.Camera":
-                //    FlowType = CVWaferProberFlowType.IVL_Camera;
-                //    break;
+                    break;
+                case "Flow.IVL.SP":
+                    FlowType = CVWaferProberFlowType.IVL;
+                    break;
+                case "Flow.IVL.Camera":
+                    FlowType = CVWaferProberFlowType.IVL;
+                    break;
                 case "Flow.EQE":
                     FlowType = CVWaferProberFlowType.EQE;
                     break;

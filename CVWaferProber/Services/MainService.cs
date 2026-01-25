@@ -5,6 +5,7 @@ using CVWaferProber.ViewModels;
 using CVWaferProber.WinMsg;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
+using System.Text;
 using WaferComm.Core;
 using WaferComm.StateMachine;
 
@@ -127,13 +128,16 @@ namespace CVWaferProber.Services
         /// <param name="e"></param>
         private void OnAutoTestingNextCompleted(object? sender, DieViewModel e)
         {
-            //TODO
-            proberClientService.SendResultAsync(2);
+            //发送结果给机台
+            proberClientService.SendResultAsync(e.Status == Core.Models.Enums.ChipStatus.OK ? 1 : 2);
             if (autoTestingItem != null)
             {
-               if(!autoTestingItem.IsPaused) DoDieFlowExec(autoTestingItem);
+                if (!autoTestingItem.IsPaused) DoDieFlowExec(autoTestingItem);
             }
-            else TestingCompleted?.Invoke(this, new EventArgs());
+            else
+            {
+                DoAutoTestEnd();
+            }
         }
 
         /// <summary>
@@ -144,8 +148,7 @@ namespace CVWaferProber.Services
         private void OnTestingCompleted(object? sender, EventArgs e)
         {
             autoTestingItem = null;
-            TestingCompleted?.Invoke(this, e);
-            proberClientService?.TestingCompleted();
+            DoAutoTestEnd();
         }
 
         #region Window Message
@@ -187,7 +190,7 @@ namespace CVWaferProber.Services
             }
         }
 
-        public Task? DoDieFlowExec(WPFlowViewModel? _selectedWPFlow, DieViewModel die, bool isEnd = true)
+        public Task? DoDieFlowExec(WPFlowViewModel? _selectedWPFlow, DieViewModel die, bool hasNext)
         {
             if (_selectedWPFlow == null) 
             {
@@ -215,7 +218,7 @@ namespace CVWaferProber.Services
                 default:
                     break;
             }
-            Task? task = baseSerivce?.StartTesting(die, _selectedWPFlow, isEnd);
+            Task? task = baseSerivce?.StartTesting(die, _selectedWPFlow, hasNext);
 
             return task;
         }
@@ -227,7 +230,7 @@ namespace CVWaferProber.Services
                 AutoTestingNext?.Invoke(this, (dieNext.diePre, dieNext.die));
                 Task.Factory.StartNew(async () =>
                 {
-                    await DoAutoDieFlowExecAsync(item.CurSelectedWPFlow, dieNext.die, dieNext.diePre == null, item.IsEnd);
+                    await DoAutoDieFlowExecAsync(item.CurSelectedWPFlow, dieNext.die, dieNext.diePre == null, item.HasNext);
                 });
             }
             else
@@ -235,40 +238,56 @@ namespace CVWaferProber.Services
                 if (logger.IsWarnEnabled) logger.WarnFormat("AutoTesting is ended, pre = X:{0},Y:{1}", dieNext.diePre?.MapX, dieNext.diePre?.MapY);
             }
         }
-        private async Task DoAutoDieFlowExecAsync(WPFlowViewModel? _selectedWPFlow, DieViewModel die, bool isFirst, bool isEnd)
+        private async Task DoAutoDieFlowExecAsync(WPFlowViewModel? _selectedWPFlow, DieViewModel die, bool isFirst, bool hasNext)
         {
-            //if (_clientProber != null)
-            //{
-            //    if (_clientProber.IsConnected)
-            //    {
-                    if (logger.IsInfoEnabled) logger.InfoFormat("Process Current Die={0}[isFirst:{1}/isEnd:{2}] => {3}", die.ToMapAxis().ToString(), isFirst, isEnd,die.SerialNumber);
-                    var isOK = await proberClientService.MoveTo(die, isFirst);
-                    if (isOK) await DoDieFlowExec(_selectedWPFlow, die, isEnd);
-                    else
-                    {
-                        die.ChangeStatus(Core.Models.Enums.ChipStatus.FAILED);
-                        if (logger.IsErrorEnabled) logger.Error("Prober client Move Absolute failed");
-                        TestingCompleted?.Invoke(this, new EventArgs());
-                    }
-                    if (isEnd) 
-                    {
-                        await proberClientService.StopTestAsync();
-                    }
-            //    }
-            //    else
-            //    {
-            //        TestingCompleted?.Invoke(this, new EventArgs());
-            //    }
-            //}
-            //else
-            //{
-            //    TestingCompleted?.Invoke(this, new EventArgs());
-            //}
+            if (logger.IsInfoEnabled) logger.InfoFormat("Process Current Die={0}[isFirst:{1}/HasNext:{2}] => {3}", die.ToMapAxis().ToString(), isFirst, hasNext, die.SerialNumber);
+            var isOK = await proberClientService.MoveTo(die, isFirst);
+            if (isOK) await DoDieFlowExec(_selectedWPFlow, die, hasNext);
+            else
+            {
+                die.ChangeStatus(Core.Models.Enums.ChipStatus.FAILED);
+                if (logger.IsErrorEnabled) logger.Error("Prober client Move Absolute failed");
+                DoAutoTestEnd();
+            }
+            if (!hasNext)
+            {
+                await proberClientService.StopTestAsync();
+            }
         }
 
+        private void DoAutoTestEnd()
+        {
+            TestingCompleted?.Invoke(this, new EventArgs());
+            proberClientService.TestingCompleted();
+        }
+
+        private void OutputLog(List<DieViewModel> dieVMList)
+        {
+            StringBuilder sb = new StringBuilder();
+            int? Y = int.MinValue;
+            for (int i = 0; i < dieVMList.Count; i++)
+            {
+                if (Y != dieVMList[i].MapY)
+                {
+                    if (sb.Length > 0) logger.InfoFormat("{0}", sb.ToString());
+                    Y = dieVMList[i].MapY;
+                    sb.Clear();
+                    sb.Append("[");
+                    sb.Append(dieVMList[i].MapY).Append("]");
+                    sb.Append(dieVMList[i].MapX);
+                }
+                else
+                {
+                    sb.Append(",");
+                    sb.Append(dieVMList[i].MapX);
+                }
+            }
+        }
 
         public void StartAutoTesting(WPFlowViewModel? _selectedWPFlow, List<DieViewModel> dieVMList)
         {
+            OutputLog(dieVMList);
+
             proberClientService?.StartAutoTest();
             autoTestingItem = new AutoTestingItem(dieVMList, _selectedWPFlow);
             DoDieFlowExec(autoTestingItem);
@@ -298,6 +317,11 @@ namespace CVWaferProber.Services
                 proberClientService?.ContinuAutoTest();
                 DoDieFlowExec(autoTestingItem);
             }
+        }
+
+        public void ReconnectDev()
+        {
+            proberClientService?.ReconnectAsync();
         }
     }
 }

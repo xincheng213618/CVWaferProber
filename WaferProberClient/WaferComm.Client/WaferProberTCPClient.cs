@@ -79,7 +79,7 @@ namespace WaferComm.Client
 
         public async Task SendCommandAsync(string command)
         {
-            if (!IsConnected)
+            if (!IsConnected || _stream == null)
             {
                 logger.Error("Unable to connect to the server.");
                 return;
@@ -99,7 +99,7 @@ namespace WaferComm.Client
 
                 lock (_sendLock)
                 {
-                    _stream.Write(data, 0, data.Length);
+                    if(_stream!=null) _stream.Write(data, 0, data.Length);
                 }
 
                 EventAggregator.Publish(new CommandSentEvent(fullCommand));

@@ -300,9 +300,10 @@
             <StatusBarItem HorizontalAlignment="Right">
                 <StackPanel Margin="0,0,10,0" Orientation="Horizontal">
                     <!--  连接状态指示器  -->
+                     <!--Command="{Binding ShowRCConnectionSettingsCommand}"-->
                     <Button
                         Padding="5,0"
-                        Command="{Binding ShowRCConnectionSettingsCommand}"
+                        MouseDoubleClick="Button_Rc_MouseDoubleClick"
                         Style="{StaticResource StatusButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse
@@ -326,9 +327,10 @@
                         Background="#CCCCCC" />
 
                     <!--  连接状态指示器  -->
+                        <!-- Command="{Binding ReconnectDevCommand}" -->
                     <Button
                         Padding="0,0"
-                        Command="{Binding ShowConnectionSettingsCommand}"
+                        MouseDoubleClick="Button_DoubleClick"
                         Style="{StaticResource StatusButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse
