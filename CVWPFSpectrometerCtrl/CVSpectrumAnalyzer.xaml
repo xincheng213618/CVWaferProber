@@ -22,7 +22,7 @@
         Padding="0"
         BorderThickness="0"
         SelectedIndex="{Binding OuterTabSelectedIndex, Mode=TwoWay}"
-        TabStripPlacement="Top">
+        TabStripPlacement="Right">
 
         <!--  SP选项卡（原内容）  -->
         <TabItem Header="{DynamicResource Dock.Layout.Title.SP1}">

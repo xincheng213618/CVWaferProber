@@ -27,8 +27,8 @@ namespace CVWaferProber.Services
         }
         private ProberClientService()
         {
-            //this._connectionInfo = new ConnectionInfo() { ServerIP = "192.168.1.100", Port = 8898 };
-            this._connectionInfo = new ConnectionInfo() { ServerIP = "127.0.0.1", Port = 8898 };
+            this._connectionInfo = new ConnectionInfo() { ServerIP = "192.168.1.100", Port = 8898 };
+            //this._connectionInfo = new ConnectionInfo() { ServerIP = "127.0.0.1", Port = 8898 };
             this._clientProber = new WaferProberTCPClient();
             var eventAggregator = _clientProber.EventAggregator;
             eventAggregator.Subscribe<ConnectionStateChangedEvent>(OnClientProberStateChanged);
