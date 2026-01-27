@@ -516,6 +516,10 @@ namespace WaferComm.StateMachine
             {
                 TransitionToAsync(ProberState.Ready).Wait();
                 return;
+            }else if(command == "92")
+            {
+                TransitionToAsync(ProberState.Paused).Wait();
+                return;
             }
             if (command.StartsWith("rr") && command.Length > 5) // 晶圆加载完成
             {
@@ -547,6 +551,12 @@ namespace WaferComm.StateMachine
 
                 case ProberState.Stopping:
                     if (command == "85") // 停止完成
+                    {
+                        TransitionToAsync(ProberState.Stoped).Wait();
+                    }
+                    break;
+                case ProberState.Stoped:
+                    if (command == "91") // 停止完成
                     {
                         TransitionToAsync(ProberState.Ready).Wait();
                     }
@@ -584,11 +594,11 @@ namespace WaferComm.StateMachine
             lock (_stateLock)
             {
                 // 检查状态转换是否允许
-                //if (!IsTransitionAllowed(_currentState, newState))
-                //{
-                //    EventAggregator.Publish(new StateTransitionEvent(_currentState, newState, false, data));
-                //    return false;
-                //}
+                if (!IsTransitionAllowed(_currentState, newState))
+                {
+                    EventAggregator.Publish(new StateTransitionEvent(_currentState, newState, false, data));
+                    return false;
+                }
 
                 ProberState oldState = _currentState;
                 _currentState = newState;
@@ -612,8 +622,11 @@ namespace WaferComm.StateMachine
 
         private bool IsTransitionAllowed(ProberState fromState, ProberState toState)
         {
-            return _allowedTransitions.ContainsKey(fromState) &&
-                   _allowedTransitions[fromState].Contains(toState);
+            if(toState == ProberState.Connected) return true;
+            if (fromState == ProberState.Maintenance) return false;
+            return true;
+            //return _allowedTransitions.ContainsKey(fromState) &&
+            //       _allowedTransitions[fromState].Contains(toState);
         }
 
         public ProberStatus GetStatus()

@@ -396,8 +396,8 @@ namespace WaferComm.Client
             }
             int temp = (int)(temperature * 10);
             string tempStr;
-            if (temp >= 0) tempStr = temp.ToString("+D4"); // 4位，如 0250
-            else tempStr = temp.ToString("D4"); // 4位，如 0250
+            if (temp >= 0) tempStr = string.Format("+{0:D4}", temp); // 4位，如 0250
+            else tempStr = string.Format("{0:D4}", temp); // 4位，如 0250
             return SendCommandAsync($"f{tempStr}");
         }
         public Task SendResultAsync(int result)

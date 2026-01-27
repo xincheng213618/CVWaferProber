@@ -19,6 +19,19 @@
 
         <!--  TabControl：分模块展示配置项  -->
         <TabControl Grid.Row="0">
+            <!--  Comm Tab页  -->
+            <TabItem Header="Comm">
+                <StackPanel>
+                    <Label Content="ServerIP:"/>
+                    <TextBox
+                        Margin="10,0,10,0"
+                        Text="{Binding ConnectionSettings.ServerIP}"/>
+                    <Label Content="ServerPort:"/>
+                    <TextBox
+                        Margin="10,0,10,0"
+                        Text="{Binding ConnectionSettings.Port}"/>
+                </StackPanel>
+            </TabItem>
             <!--  1. VAM Tab页  -->
             <TabItem Header="VAM">
                 <Grid Margin="10">

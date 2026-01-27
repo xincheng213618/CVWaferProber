@@ -1,4 +1,6 @@
-﻿using CVWaferProber.ViewModels;
+﻿using CVWaferProber.Config;
+using CVWaferProber.ViewModels;
+using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -41,31 +43,8 @@ namespace CVWaferProber.Components
 
             // 初始化日志文本
             InitializeLogText();
-
-            // 监听语言变化
-            //this.Loaded += (s, e) => {
-            //    if (Application.Current != null)
-            //    {
-            //        Application.Current.ResourcesChanged += OnResourcesChanged;
-            //    }
-            //};
-
-            //this.Unloaded += (s, e) => {
-            //    if (Application.Current != null)
-            //    {
-            //        Application.Current.ResourcesChanged -= OnResourcesChanged;
-            //    }
-            //};
         }
 
-        //private void OnResourcesChanged(object sender, ResourcesChangedEventArgs e)
-        //{
-        //    // 语言切换时更新UI文本
-        //    UpdateUITexts();
-
-        //    // 更新日志初始文本
-        //    UpdateLogReadyText();
-        //}
 
         private void UpdateUITexts()
         {

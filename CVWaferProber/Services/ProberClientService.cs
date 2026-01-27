@@ -1,9 +1,10 @@
 ﻿using CVCommCore;
-using CVWaferProber.Models;
+using CVWaferProber.Config;
 using CVWaferProber.ViewModels;
 using WaferComm.Client;
 using WaferComm.Core;
 using WaferComm.StateMachine;
+using ConnectionInfo = CVWaferProber.Models.ConnectionInfo;
 
 namespace CVWaferProber.Services
 {
@@ -19,7 +20,15 @@ namespace CVWaferProber.Services
         public ConnectionInfo ConnectionInfo { get => _connectionInfo; }
         public void Startup(string ip, int port)
         {
-            _clientProber?.ConnectAsync(ip, port).Wait();
+            _connectionInfo.ServerIP = ip;
+            _connectionInfo.Port = port;
+            _clientProber?.DisconnectAsync().Wait();
+            Startup();
+        } 
+        public void SetConnectionSettings(string ip, int port)
+        {
+            _connectionInfo.ServerIP = ip;
+            _connectionInfo.Port = port;
         }
         public void Startup()
         {
@@ -27,8 +36,12 @@ namespace CVWaferProber.Services
         }
         private ProberClientService()
         {
-            this._connectionInfo = new ConnectionInfo() { ServerIP = "192.168.1.100", Port = 8898 };
-            //this._connectionInfo = new ConnectionInfo() { ServerIP = "127.0.0.1", Port = 8898 };
+            var connsettings = ConfigManager.Config.ConnectionSettings;
+            this._connectionInfo = new ConnectionInfo()
+            {
+                ServerIP = connsettings.ServerIP,
+                Port = connsettings.Port
+            };
             this._clientProber = new WaferProberTCPClient();
             var eventAggregator = _clientProber.EventAggregator;
             eventAggregator.Subscribe<ConnectionStateChangedEvent>(OnClientProberStateChanged);
@@ -311,7 +324,7 @@ namespace CVWaferProber.Services
 
         public void StartAutoTest()
         {
-            _proberState?.TransitionToAsync( ProberState.Testing);
+            _proberState?.TransitionToAsync(ProberState.Testing);
         }
 
         public async Task ReconnectAsync()
@@ -319,6 +332,11 @@ namespace CVWaferProber.Services
             await _clientProber.DisconnectAsync();
             Task.Delay(1000).ConfigureAwait(true);
             await _clientProber.ConnectAsync(_connectionInfo.ServerIP, _connectionInfo.Port);
+        }
+
+        public void Maintenance()
+        {
+            _proberState?.TransitionToAsync(ProberState.Maintenance);
         }
     }
 }

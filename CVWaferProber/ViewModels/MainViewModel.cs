@@ -703,6 +703,7 @@ namespace CVWaferProber.ViewModels
                 {
                     ResultService.LoadFromCSV(openFileDialog.FileName, TestResults);
                     _dataGrid?.Items.Refresh();
+                    mainService.Maintenance();
                     if (logger.IsInfoEnabled) logger.InfoFormat("Load result ok => {0}", openFileDialog.FileName);
                 }
                 catch (Exception ex)
@@ -2144,6 +2145,7 @@ namespace CVWaferProber.ViewModels
             {
                 MappingCsvFilePath = openFileDialog.FileName;
                 LoadMappingFileFromCsv();
+                mainService.Maintenance();
             }
         }
         public void PauseAutoFlow()

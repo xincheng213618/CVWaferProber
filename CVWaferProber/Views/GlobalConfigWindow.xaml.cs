@@ -1,4 +1,6 @@
-﻿using CVWaferProber.Core.ViewModels;
+﻿using CVWaferProber.Config;
+using CVWaferProber.Core.ViewModels;
+using CVWaferProber.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -156,6 +158,10 @@ namespace CVWaferProber.Views
                         ConfigModel.AoiExportPath = savedConfig.AoiExportPath;
                         ConfigModel.EqeExportPath = savedConfig.EqeExportPath;
                         ConfigModel.IvlExportPath = savedConfig.IvlExportPath;
+
+                      
+                        ConfigModel.ConnectionSettings.ServerIP = ConfigManager.Config.ConnectionSettings.ServerIP;
+                        ConfigModel.ConnectionSettings.Port = ConfigManager.Config.ConnectionSettings.Port;
                     }
                 }
             }
@@ -179,6 +185,13 @@ namespace CVWaferProber.Views
                 EnsureDirectoryExists(Path.GetDirectoryName(configPath));
                 // 写入文件
                 File.WriteAllText(configPath, configContent);
+
+                ConfigManager.Config.ConnectionSettings.ServerIP = ConfigModel.ConnectionSettings.ServerIP;
+                ConfigManager.Config.ConnectionSettings.Port = ConfigModel.ConnectionSettings.Port;
+                ConfigManager.SaveConfig();
+
+                ProberClientService.Instance.SetConnectionSettings(ConfigModel.ConnectionSettings.ServerIP, ConfigModel.ConnectionSettings.Port);
+                ProberClientService.Instance.ReconnectAsync();
             }
             catch (Exception ex)
             {

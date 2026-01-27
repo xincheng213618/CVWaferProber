@@ -287,7 +287,6 @@ namespace CVWaferProber.Services
         public void StartAutoTesting(WPFlowViewModel? _selectedWPFlow, List<DieViewModel> dieVMList)
         {
             //OutputLog(dieVMList);
-
             proberClientService?.StartAutoTest();
             autoTestingItem = new AutoTestingItem(dieVMList, _selectedWPFlow);
             DoDieFlowExec(autoTestingItem);
@@ -322,6 +321,11 @@ namespace CVWaferProber.Services
         public void ReconnectDev()
         {
             proberClientService?.ReconnectAsync();
+        }
+
+        public void Maintenance()
+        {
+            proberClientService?.Maintenance();
         }
     }
 }

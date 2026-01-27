@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CVWaferProber.Core.Models;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,6 +11,7 @@ namespace CVWaferProber.Core.ViewModels
 {
     public class GlobalConfigModel
     {
+        public ConnectionSettings ConnectionSettings { get; set; } = new();
         /// <summary>
         /// VAM自动导出默认路径
         /// </summary>
@@ -28,6 +30,11 @@ namespace CVWaferProber.Core.ViewModels
         /// IVL导出路径
         /// </summary>
         public string IvlExportPath { get; set; } = @"D:\Project\IVL";
+
+        public GlobalConfigModel()
+        {
+            //ConnectionSettings = new ConnectionSettings();
+        }
         /// <summary>
         /// 验证所有配置路径是否有效
         /// </summary>

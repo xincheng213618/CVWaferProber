@@ -1,16 +1,17 @@
-﻿using log4net;
+﻿using CVWaferProber.Config;
+using CVWaferProber.ViewModels; // 新增：用于访问 MainViewModel
+using log4net;
 using log4net.Config;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
 using Color = System.Windows.Media.Color;
 using MessageBox = System.Windows.MessageBox;
-using CVWaferProber.ViewModels; // 新增：用于访问 MainViewModel
-using System.Windows.Threading;
 
 namespace CVWaferProber
 {
@@ -19,7 +20,6 @@ namespace CVWaferProber
     /// </summary>
     public partial class App : Application
     {
-        
         private const string LIBRARY_CV_Ali = "CV_algorithm.dll";
 
         [DllImport(LIBRARY_CV_Ali, EntryPoint = "CV_Ali_initial",
@@ -60,6 +60,9 @@ namespace CVWaferProber
             //byte[] bytes = BitConverter.GetBytes(indexFrame);
             //byte iAddr = bytes[1];
             //byte nValue = bytes[0];
+
+            // 加载配置
+            ConfigManager.LoadConfig();
 
             log.Info("Application starting...");
 
