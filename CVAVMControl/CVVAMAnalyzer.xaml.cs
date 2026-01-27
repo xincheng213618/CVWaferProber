@@ -38,7 +38,7 @@ namespace CVAVMControl
     /// </summary>
     public partial class CVVAMAnalyzer : UserControl
     {
-        
+
         private static readonly ILog logger = LogManager.GetLogger(typeof(CVVAMAnalyzer));
 
         private Mat? XMat;
@@ -52,11 +52,11 @@ namespace CVAVMControl
         private System.Windows.Point center;
         private int imageRadius;
         private double MaxAngle = 60; // Default max angle
-        private double ConoscopeCoefficient = 0.01935; // Pixels per degree   0.01935 0.02645
+        private double ConoscopeCoefficient = 0.02645; // Pixels per degree   0.01935 0.02645
 
         private int displayAngle = 120; // Default display angle
         private ExportChannel displayChannel = ExportChannel.Y; // Default display channel
-        private ExportDataType displayChannel1= ExportDataType.Y;
+        private ExportDataType displayChannel1 = ExportDataType.Y;
         private int displayRadius = 40; // Default display radius angle
                                         // CVVAMAnalyzer.cs 中新增定时器
         private DispatcherTimer? _resourceCleanTimer;
@@ -197,7 +197,7 @@ namespace CVAVMControl
             }
 
             // 关键：打印返回结果，定位问题
-            logger.Info($"DLL{(string)Application.Current.FindResource("Returncode")}：{res}，{(string)Application.Current.FindResource("Return")}JSON：{resultJson}");
+            logger.Info($"DLL{(string)Application.Current.FindResource("Returncode")}：{res}");//，{(string)Application.Current.FindResource("Return")}JSON：{resultJson}"
             return res;
         }
 
@@ -232,7 +232,7 @@ namespace CVAVMControl
             public double cie_y { get; set; }   // CIE坐标y（可选）
             public double position { get; set; } // 角度位置（对应图表X轴）
         }
-       
+
         // 新增：全局缓存DLL返回的所有方位角数据（0°~180°）
         public Dictionary<int, List<VamSamplePoint>> _dllAllAzimuthData = new Dictionary<int, List<VamSamplePoint>>();
         public Dictionary<(int polar, double azimuth), RgbSample> DllAllCircleData { get; private set; }
@@ -1767,7 +1767,7 @@ namespace CVAVMControl
             };
         }
 
-       
+
         private void BtnExportDiameter_Click1(object sender, RoutedEventArgs e)
         {
             try
@@ -2056,7 +2056,7 @@ namespace CVAVMControl
                 logger.Error($"{FindResource("Exportfailed")}：{ex.Message}", ex);
                 MessageBox.Show($"{FindResource("Exportfailed")}: {ex.Message}", $"{FindResource("Log.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            
+
         }
         /// <summary>
         /// 补全当前半径数据为1°步长（0°~360°完整覆盖）
@@ -2600,7 +2600,7 @@ namespace CVAVMControl
                             azimuthalAngle = currentAzimuth, // 方位角（0~360°）
                             polar_RHO = polarAngle,          // 极角（当前遍历的半径角度）
                             polar_Angle = 60.0,              // 固定60°（VAM业务默认值）
-                            pixelToAngle = ConoscopeCoefficient, 
+                            pixelToAngle = ConoscopeCoefficient,
                             pointNumLine = _pointNumLine,    // 全局采样点配置
                             pointNumCircle = azimuthSampleCount, // 方位角采样点数
                             center = new { x = center.X, y = center.Y },
@@ -2628,9 +2628,9 @@ namespace CVAVMControl
                         // 步骤7.5：处理DLL返回结果
                         if (callResult != CV_AliResType.SUCCESS && callResult != CV_AliResType.PART_SUCCESS)
                         {
-                            logger.Warn($"{$"{FindResource("VAM.RCircle")}"}{polarAngle}° {$"{FindResource("Azimuth")}"}{currentAzimuth:F1}° DLL{$"{FindResource("Callfailed")}"}，{$"{FindResource("Errorcode")}"}：{callResult}");
+                            logger.Warn($"{$"{FindResource("VAM.RCircle")}"}{polarAngle}° {$"{FindResource("Azimuth")}"}{currentAzimuth:F1}° DLL{$"{FindResource("Callfailed")}"}");
                             continue;
-                        }
+                        } //，{ $"{FindResource("Errorcode")}"}：{ callResult}
 
                         // 步骤7.6：解析JSON结果
                         string cleanResultJson = resultJson.Trim('\0').Trim();
@@ -2796,7 +2796,7 @@ namespace CVAVMControl
                 // 步骤7：处理结果（同直径线）
                 if (callResult != CV_AliResType.SUCCESS && callResult != CV_AliResType.PART_SUCCESS)
                 {
-                    logger.Error($"DLL{FindResource("Callfailed")}，{FindResource("Errorcode")}：{callResult}");
+                    logger.Error($"DLL{FindResource("Callfailed")}"); //，{FindResource("Errorcode")}：{callResult}
                     return false;
                 }
                 if (showImage.data != null)
@@ -3130,66 +3130,66 @@ namespace CVAVMControl
         /// <summary>
         /// 鼠标滚轮缩放图片（以鼠标位置为中心）
         /// </summary>
-        private void ImgDisplay_MouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            if (imgDisplay.Source == null || imgGrid == null) return;
+        //private void ImgDisplay_MouseWheel(object sender, MouseWheelEventArgs e)
+        //{
+        //    if (imgDisplay.Source == null || imgGrid == null) return;
 
-            // 1. 获取基础尺寸信息
-            _imgRenderWidth = imgDisplay.ActualWidth;
-            _imgRenderHeight = imgDisplay.ActualHeight;
-            if (_imgRenderWidth == 0 || _imgRenderHeight == 0) return;
+        //    // 1. 获取基础尺寸信息
+        //    _imgRenderWidth = imgDisplay.ActualWidth;
+        //    _imgRenderHeight = imgDisplay.ActualHeight;
+        //    if (_imgRenderWidth == 0 || _imgRenderHeight == 0) return;
 
-            // 2. 获取鼠标在imgGrid中的绝对位置（关键：基于Grid而非Image）
-            System.Windows.Point mousePosInGrid = e.GetPosition(imgGrid);
-            _lastMousePos = mousePosInGrid;
+        //    // 2. 获取鼠标在imgGrid中的绝对位置（关键：基于Grid而非Image）
+        //    System.Windows.Point mousePosInGrid = e.GetPosition(imgGrid);
+        //    _lastMousePos = mousePosInGrid;
 
-            // 3. 计算缩放前鼠标在图片上的绝对像素坐标
-            // 3.1 计算Image控件在imgGrid中的偏移（处理居中对齐）
-            double imgOffsetX = (imgGrid.ActualWidth - _imgRenderWidth) / 2;
-            double imgOffsetY = (imgGrid.ActualHeight - _imgRenderHeight) / 2;
+        //    // 3. 计算缩放前鼠标在图片上的绝对像素坐标
+        //    // 3.1 计算Image控件在imgGrid中的偏移（处理居中对齐）
+        //    double imgOffsetX = (imgGrid.ActualWidth - _imgRenderWidth) / 2;
+        //    double imgOffsetY = (imgGrid.ActualHeight - _imgRenderHeight) / 2;
 
-            // 3.2 计算鼠标在Image控件内的相对位置（去除偏移）
-            double mouseXInImage = Math.Max(0, mousePosInGrid.X - imgOffsetX);
-            double mouseYInImage = Math.Max(0, mousePosInGrid.Y - imgOffsetY);
+        //    // 3.2 计算鼠标在Image控件内的相对位置（去除偏移）
+        //    double mouseXInImage = Math.Max(0, mousePosInGrid.X - imgOffsetX);
+        //    double mouseYInImage = Math.Max(0, mousePosInGrid.Y - imgOffsetY);
 
-            // 3.3 计算鼠标指向的图片原始像素坐标
-            double pixelX = (mouseXInImage / _imgRenderWidth) * _imgNaturalWidth;
-            double pixelY = (mouseYInImage / _imgRenderHeight) * _imgNaturalHeight;
+        //    // 3.3 计算鼠标指向的图片原始像素坐标
+        //    double pixelX = (mouseXInImage / _imgRenderWidth) * _imgNaturalWidth;
+        //    double pixelY = (mouseYInImage / _imgRenderHeight) * _imgNaturalHeight;
 
-            // 4. 计算新的缩放比例
-            double delta = e.Delta > 0 ? _scaleStep : -_scaleStep;
-            double newScale = _currentScale + delta;
-            newScale = Math.Clamp(newScale, _minScale, _maxScale);
-            if (newScale == _currentScale) return;
+        //    // 4. 计算新的缩放比例
+        //    double delta = e.Delta > 0 ? _scaleStep : -_scaleStep;
+        //    double newScale = _currentScale + delta;
+        //    newScale = Math.Clamp(newScale, _minScale, _maxScale);
+        //    if (newScale == _currentScale) return;
 
-            // 5. 核心：计算平移补偿量（保证鼠标位置固定）
-            // 5.1 缩放前鼠标位置的屏幕坐标（相对于Image左上角）
-            double screenXBefore = (pixelX / _imgNaturalWidth) * _imgRenderWidth * _currentScale;
-            double screenYBefore = (pixelY / _imgNaturalHeight) * _imgRenderHeight * _currentScale;
+        //    // 5. 核心：计算平移补偿量（保证鼠标位置固定）
+        //    // 5.1 缩放前鼠标位置的屏幕坐标（相对于Image左上角）
+        //    double screenXBefore = (pixelX / _imgNaturalWidth) * _imgRenderWidth * _currentScale;
+        //    double screenYBefore = (pixelY / _imgNaturalHeight) * _imgRenderHeight * _currentScale;
 
-            // 5.2 缩放后鼠标位置的屏幕坐标
-            double screenXAfter = (pixelX / _imgNaturalWidth) * _imgRenderWidth * newScale;
-            double screenYAfter = (pixelY / _imgNaturalHeight) * _imgRenderHeight * newScale;
+        //    // 5.2 缩放后鼠标位置的屏幕坐标
+        //    double screenXAfter = (pixelX / _imgNaturalWidth) * _imgRenderWidth * newScale;
+        //    double screenYAfter = (pixelY / _imgNaturalHeight) * _imgRenderHeight * newScale;
 
-            // 5.3 计算需要补偿的平移量（抵消缩放带来的位置变化）
-            double deltaX = screenXBefore - screenXAfter;
-            double deltaY = screenYBefore - screenYAfter;
+        //    // 5.3 计算需要补偿的平移量（抵消缩放带来的位置变化）
+        //    double deltaX = screenXBefore - screenXAfter;
+        //    double deltaY = screenYBefore - screenYAfter;
 
-            // 6. 更新变换
-            // 6.1 先更新缩放
-            imgScaleTransform.ScaleX = newScale;
-            imgScaleTransform.ScaleY = newScale;
+        //    // 6. 更新变换
+        //    // 6.1 先更新缩放
+        //    imgScaleTransform.ScaleX = newScale;
+        //    imgScaleTransform.ScaleY = newScale;
 
-            // 6.2 再更新平移（累加补偿量）
-            imgTranslateTransform.X += deltaX;
-            imgTranslateTransform.Y += deltaY;
+        //    // 6.2 再更新平移（累加补偿量）
+        //    imgTranslateTransform.X += deltaX;
+        //    imgTranslateTransform.Y += deltaY;
 
-            // 7. 限制平移范围（避免图片完全移出可视区域）
-            LimitTranslation();
+        //    // 7. 限制平移范围（避免图片完全移出可视区域）
+        //    LimitTranslation();
 
-            // 8. 更新当前缩放比例
-            _currentScale = newScale;
-        }
+        //    // 8. 更新当前缩放比例
+        //    _currentScale = newScale;
+        //}
         // 3.限制平移范围
         private void LimitTranslation()
         {
@@ -3256,14 +3256,14 @@ namespace CVAVMControl
         private int _pointNumLine = 360;
         private double _linePolarInterval = 1; // 极角间隔角度（默认1°）
         private double _azimuthInterval = 3; // 方位角间隔角度（默认3°）
-        //private void Button_Click(object sender, RoutedEventArgs e)
-        //{
-        //    // 1. 先校验输入是否为空
-        //    if (string.IsNullOrWhiteSpace(pointNumLineBox.Text))
-        //    {
-        //        MessageBox.Show($"{FindResource("Pleaseenteranumber")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
-        //        return;
-        //    }
+                                             //private void Button_Click(object sender, RoutedEventArgs e)
+                                             //{
+                                             //    // 1. 先校验输入是否为空
+                                             //    if (string.IsNullOrWhiteSpace(pointNumLineBox.Text))
+                                             //    {
+                                             //        MessageBox.Show($"{FindResource("Pleaseenteranumber")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
+                                             //        return;
+                                             //    }
 
         //    // 2. 尝试转换为整数
         //    if (!int.TryParse(pointNumLineBox.Text, out int pointNumLine))
@@ -3325,7 +3325,7 @@ namespace CVAVMControl
         //        logger.Error("Export initialization failed", ex);//: "导出初始化失败"
         //        MessageBox.Show($"Export initialization failed：{ex.Message}", $"{FindResource("Log.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
         //    }
-           
+
         //}
         public void BtnExportClick()
         {
@@ -3418,7 +3418,7 @@ namespace CVAVMControl
                     }
 
                     logger.Info($"VAM data has been exported to: {exportFilePath}");
-                   // MessageBox.Show($"{FindResource("Exportcompleted")}\n{exportFilePath}", $"{FindResource("Log.Success")}", MessageBoxButton.OK, MessageBoxImage.Information);
+                    // MessageBox.Show($"{FindResource("Exportcompleted")}\n{exportFilePath}", $"{FindResource("Log.Success")}", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {
@@ -3489,7 +3489,7 @@ namespace CVAVMControl
             string polarRhoInput = txtLinePolarRHO.Text.Trim();
             if (!int.TryParse(polarRhoInput, out int polarRHO) || polarRHO <= 0)
             {
-                LinePolarIntervalBook.Text = (string)Application.Current.FindResource("VAM.60Point") ;
+                LinePolarIntervalBook.Text = (string)Application.Current.FindResource("VAM.60Point");
                 return;
             }
 
@@ -3556,6 +3556,60 @@ namespace CVAVMControl
         {
             try
             {
+                // ========== 1. 极角范围（polarRHO）核心判断 ==========
+                // 从界面获取极角范围输入值
+                string polarRhoInput = txtLinePolarRHO.Text.Trim();
+                if (!int.TryParse(polarRhoInput, out int polarRHO))
+                {
+                    // 输入非数字：提示并使用默认值60°
+                    MessageBox.Show(
+                        $"{FindResource("VAM.InvalidPolarRHO")}（{polarRhoInput}°）",
+                        $"{FindResource("Prompt")}",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    /*polarRHO = 60;*/ // 兜底默认值
+                    return;
+                }
+                else
+                {
+                    // 输入是数字：校验范围（-60°~60°）
+                    if (polarRHO < -60 || polarRHO > 60)
+                    {
+                        MessageBox.Show(
+                            $"{FindResource("VAM.PolarRHORange")} -60°~60°",
+                            $"{FindResource("Prompt")}",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                        return;
+                        //polarRHO = 60; // 超出范围时使用默认值
+                    }
+                    else if (polarRHO == 0)
+                    {
+                        // 极角范围为0：无有效数据，直接提示并返回
+                        MessageBox.Show(
+                            $"{FindResource("VAM.PolarRHOZero")}",
+                            $"{FindResource("Prompt")}",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+                        return;
+                    }
+                }
+
+                // ========== 2. 极角间隔（polarInterval）判断 ==========
+                double polarInterval = _linePolarInterval;
+                if (polarInterval <= 0 || polarInterval > 2 * polarRHO)
+                {
+                    // 间隔无效：提示并使用默认值1°
+                    MessageBox.Show(
+                        $"{FindResource("VAM.InvalidPolarInterval")}（{polarInterval}°）",
+                        $"{FindResource("Prompt")}",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    //polarInterval = 1; // 兜底默认值
+                    _linePolarInterval = polarInterval; // 同步更新全局变量
+                    return;
+                }
+
                 if (YMat == null || YMat.Empty())
                 {
                     MessageBox.Show($"{FindResource("Nodata")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -3580,7 +3634,7 @@ namespace CVAVMControl
                 string basePath = Path.ChangeExtension(saveFileDialog.FileName, null);
 
                 // 3. 执行原VamExportDialog的线条模式导出逻辑
-                ExportLineMode(selectedChannels, basePath); 
+                ExportLineMode(selectedChannels, basePath);
 
                 MessageBox.Show($"{FindResource("Exportsuccessful")}", $"{FindResource("Log.Success")}", MessageBoxButton.OK, MessageBoxImage.Information);
             }
@@ -3595,13 +3649,12 @@ namespace CVAVMControl
             int polarRHO = LinePolarRHO; // 极角范围（从txtLinePolarRHO获取）
             double polarInterval = _linePolarInterval; // 极角间隔（从txtLinePolarInterval获取，已通过UpdateLinePolarIntervalText同步）
 
-            // 容错处理：确保间隔参数有效
-            if (polarInterval <= 0 || polarInterval > 2 * polarRHO)
-            {
-                polarInterval = 1; // 默认1°间隔
-                logger.Warn($"{FindResource("VAM.Switchedtodefaultvalue")}：{polarInterval}°");
-                //MessageBox.Show($"极角间隔参数无效，已自动切换为默认值 {polarInterval}°", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            //// 容错处理：确保间隔参数有效
+            //if (polarInterval <= 0 || polarInterval > 2 * polarRHO)
+            //{
+            //    logger.Warn($"{FindResource("VAM.Switchedtodefaultvalue")}：{polarInterval}°");
+            //    MessageBox.Show($"极角间隔参数无效，已自动切换为默认值 {polarInterval}°", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+            //}
 
             // 2. 动态计算采样点：按间隔角度生成 [-polarRHO, polarRHO] 范围内的所有采样点
             List<double> polarAngles = new List<double>();
@@ -3696,11 +3749,36 @@ namespace CVAVMControl
 
                 logger.Info($"Channel {channel} has been exported successfully. Export path: {fullCsvPath}");
             }
-       
+
         }
         // 圆环导出按钮（原BtnExportCircle_Click）
         private void BtnExportCircle_Click(object sender, RoutedEventArgs e)
         {
+            // 1. 从界面获取核心参数（极角范围/步长、方位角间隔）
+            int polarStart = CirclePolarStart;
+            int polarEnd = CirclePolarEnd;
+            int polarStep = CirclePolarStep;
+            double azimuthInterval = _azimuthInterval; // 方位角间隔（从txtAzimuthInterval获取）
+                                                       // 容错处理：确保方位角间隔有效
+            if (azimuthInterval <= 0 || azimuthInterval > 360)
+            {
+                azimuthInterval = 3; // 默认3°间隔
+                logger.Warn($"{FindResource("VAM.Switchedtoazimuthvalue")}：{azimuthInterval}°");
+                MessageBox.Show($"{FindResource("VAM.Switchedtoazimuthvalue")} {azimuthInterval}°", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            if (!int.TryParse(txtCirclePolarEnd.Text.Trim(), out int end) || end < -60 || end > 60)
+            {
+                MessageBox.Show($"{FindResource("VAM.Effectiveendvalue")}", $"{FindResource("State.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
+                logger.Error($"{FindResource("VAM.Effectiveendvalue")}");
+                return;
+            }
+            if (polarStart > polarEnd)
+            {
+                MessageBox.Show("The end value of the polar angle cannot be less than the starting value ", $"{FindResource("State.Error")}", MessageBoxButton.OK, MessageBoxImage.Information);
+                logger.Error("The end value of the polar angle cannot be less than the starting value");
+                return;
+            }
             try
             {
                 if (YMat == null || YMat.Empty())
@@ -3736,6 +3814,7 @@ namespace CVAVMControl
                 MessageBox.Show($"{FindResource("Exportfailed")}：{ex.Message}", $"{FindResource("State.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
         private void ExportCircleMode(List<ExportDataType> selectedChannels, string basePath)
         {
             // 1. 从界面获取核心参数（极角范围/步长、方位角间隔）
@@ -3744,13 +3823,26 @@ namespace CVAVMControl
             int polarStep = CirclePolarStep;
             double azimuthInterval = _azimuthInterval; // 方位角间隔（从txtAzimuthInterval获取）
 
-            // 容错处理：确保方位角间隔有效
-            if (azimuthInterval <= 0 || azimuthInterval > 360)
-            {
-                azimuthInterval = 3; // 默认3°间隔
-                logger.Warn($"{FindResource("VAM.Switchedtoazimuthvalue")}：{azimuthInterval}°");
-                //MessageBox.Show($"{FindResource("VAM.Switchedtoazimuthvalue")} {azimuthInterval}°", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            //// 容错处理：确保方位角间隔有效
+            //if (azimuthInterval <= 0 || azimuthInterval > 360)
+            //{
+            //    azimuthInterval = 3; // 默认3°间隔
+            //    logger.Warn($"{FindResource("VAM.Switchedtoazimuthvalue")}：{azimuthInterval}°");
+            //    MessageBox.Show($"{FindResource("VAM.Switchedtoazimuthvalue")} {azimuthInterval}°", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+            //    return;
+            //}
+            //if (!int.TryParse(txtCirclePolarEnd.Text.Trim(), out int end) || end < -60 || end > 60)
+            //{
+            //    MessageBox.Show($"{FindResource("VAM.Effectiveendvalue")}", $"{FindResource("State.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
+            //    logger.Error($"{FindResource("VAM.Effectiveendvalue")}");
+            //    return;
+            //}
+            //if (polarStart < polarEnd)
+            //{
+            //    MessageBox.Show($"{polarStart < polarEnd} ", $"{FindResource("State.Error")}", MessageBoxButton.OK, MessageBoxImage.Information);
+            //    logger.Error($"{polarStart < polarEnd}");
+            //    return;
+            //}
 
             // 2. 动态生成极角采样点（圆环半径角度）
             List<int> polarAngles = new List<int>();
@@ -3789,9 +3881,9 @@ namespace CVAVMControl
                 azimuthSampleCount: azimuthSampleCount
             );
 
-             if (!dllSuccess || DllAllCircleData == null || DllAllCircleData.Count == 0)
+            if (!dllSuccess || DllAllCircleData == null || DllAllCircleData.Count == 0)
             {
-               
+
                 throw new Exception($"{FindResource("VAM.DLLcallfailed")}");
             }
 
@@ -3805,7 +3897,7 @@ namespace CVAVMControl
                 using (var writer = new StreamWriter(fullCsvPath, false, Encoding.UTF8))
                 {
                     // 5.1 写入标准化表头（包含间隔角度信息）
-                    writer.WriteLine($"Measurement Date,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,"); 
+                    writer.WriteLine($"Measurement Date,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,");
                     writer.WriteLine($"Instrument,VAM R-Circle（[{polarStart}°~{polarEnd}°],,,,,,,,,,,,");
                     writer.WriteLine($"AngleStep,{polarStep}°,,,,,,,,,,,,");///*{FindResource("VAM.AngleStep")}*/ 
                     writer.WriteLine($"AzimuthInterval, {azimuthInterval:F2}°,,,,,,,,,,,,");//{FindResource("VAM.Azimuthinterval")}
@@ -3823,7 +3915,7 @@ namespace CVAVMControl
                     foreach (int polar in polarAngles)
                     {
                         StringBuilder dataBuilder = new StringBuilder();
-                        dataBuilder.Append($"{polar}"); // 极角（整数，简洁展示）
+                        dataBuilder.Append($"{polar}°"); // 极角（整数，简洁展示）
 
                         // 遍历每个方位角，填充对应数据
                         foreach (double azimuth in azimuthAngles)
@@ -3859,7 +3951,7 @@ namespace CVAVMControl
             }
         }
         // 从圆环采样点中获取指定通道的值（需确保RgbSample类已定义）
-        private double GetChannelValueFromCircleSample(RgbSample sample,ExportDataType channel)
+        private double GetChannelValueFromCircleSample(RgbSample sample, ExportDataType channel)
         {
             if (sample == null)
                 return 0;
@@ -3900,11 +3992,11 @@ namespace CVAVMControl
         {
             get
             {
-                if (!int.TryParse(txtLinePolarRHO.Text.Trim(), out int rho) || rho < 0 || rho > 60)
+                if (int.TryParse(txtLinePolarRHO.Text.Trim(), out int rho))
                 {
-                    return 60; // VAM业务默认最大极角60°
+                    return rho;
                 }
-                return rho;
+                return 60; // VAM业务默认值
             }
         }
 
@@ -3930,12 +4022,12 @@ namespace CVAVMControl
         {
             get
             {
-                if (!int.TryParse(txtCirclePolarEnd.Text.Trim(), out int end) || end < -60 || end > 60)
+                if (!int.TryParse(txtCirclePolarEnd.Text.Trim(), out int End) || End < CirclePolarStart || End > 60)
                 {
-                    return 40;
+                    return 0;
                 }
                 // 保证结束值不小于起始值
-                return Math.Max(end, CirclePolarStart);
+                return End;
             }
         }
 
@@ -3946,13 +4038,14 @@ namespace CVAVMControl
         {
             get
             {
-                if (!int.TryParse(txtCirclePolarStep.Text.Trim(), out int step) || step <= 0)
-                {
-                    return 10;
-                }
+
+                //if (!int.TryParse(txtCirclePolarStep.Text.Trim(), out int step) || step <= 0)
+                //{
+                //    return 10;
+                //}
                 // 保证步长不超过极角范围
                 int polarRange = CirclePolarEnd - CirclePolarStart;
-                return step > polarRange ? polarRange : step;
+                return polarRange;
             }
         }
         #endregion
@@ -3998,7 +4091,7 @@ namespace CVAVMControl
         }
     }
 
-    internal class CropCenter 
+    internal class CropCenter
     {
         public double x { get; set; }
         public double y { get; set; }
