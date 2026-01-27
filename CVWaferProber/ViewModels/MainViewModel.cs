@@ -1,6 +1,7 @@
 ﻿using AvalonDock;
 using AvalonDock.Layout;
 using ChipMapping.Models;
+using ChipMapping.Models.HZCC;
 using ChipMapping.ViewModels;
 using ColorVision.Core.Entities;
 using CVDB.Services.Buz;
@@ -22,6 +23,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Reactive.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -195,6 +197,17 @@ namespace CVWaferProber.ViewModels
                 SetProperty(ref _isAutoSN, value);
             }
         }
+
+        private string _AppVersion;
+        public string AppVersion
+        {
+            get => _AppVersion;
+            set
+            {
+                SetProperty(ref _AppVersion, value);
+            }
+        }
+
         #region 面板显示状态属性
         // 1. 面板显示状态属性（右上角相机面板默认隐藏）
         private bool _isMappingPanelVisible = true;
@@ -534,6 +547,10 @@ namespace CVWaferProber.ViewModels
             _dataGrid = null;
             _isIVLCameraEnabled = false;
             _isAutoSN = true;
+            // 获取主程序集版本
+            Version version = Assembly.GetEntryAssembly()?.GetName().Version;
+
+            _AppVersion = string.Format("V{0}",version.ToString());
             rcService = new RCRestService();
             _rcConnectionInfo = rcService.ConnectionInfo;
             //

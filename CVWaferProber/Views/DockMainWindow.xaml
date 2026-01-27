@@ -292,10 +292,10 @@
         </avalon:DockingManager>
 
         <StatusBar Grid.Row="3">
-            <!--<StatusBarItem Width="150">
-                <TextBlock Text="{Binding ConnectionInfo.StatusMessage}" />
+            <StatusBarItem Width="150">
+                <TextBlock Text="{Binding AppVersion}" />
             </StatusBarItem>
-            <Separator/>-->
+            <!--<Separator/>-->
             <!--  右边区域：连接状态图标和信息  -->
             <StatusBarItem HorizontalAlignment="Right">
                 <StackPanel Margin="0,0,10,0" Orientation="Horizontal">
