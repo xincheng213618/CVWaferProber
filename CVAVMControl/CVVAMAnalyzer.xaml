@@ -42,6 +42,7 @@
 
 
         <!--  第2行第1列：伪彩图  -->
+        <!--  MouseWheel="ImgDisplay_MouseWheel"  -->
         <Border
             Grid.Row="1"
             Grid.Column="0"
@@ -60,11 +61,11 @@
                     HorizontalAlignment="Center"
                     FontSize="14"
                     Text="{DynamicResource VAM.PseudocolorImage}" />
+
                 <Grid
                     x:Name="imgGrid"
                     Grid.Row="1"
                     SizeChanged="ImgGrid_SizeChanged">
-
                     <Grid.Clip>
                         <RectangleGeometry x:Name="imgGridClip" />
                     </Grid.Clip>
@@ -75,7 +76,6 @@
                         VerticalAlignment="Center"
                         MouseLeave="ImgDisplay_MouseLeave"
                         MouseMove="ImgDisplay_MouseMove"
-                        MouseWheel="ImgDisplay_MouseWheel"
                         Stretch="Uniform">
                         <Image.RenderTransform>
                             <TransformGroup>
@@ -90,7 +90,7 @@
 
             </Grid>
         </Border>
-        
+
         <!--  添加GridSplitter  -->
         <GridSplitter
             Grid.Row="2"
@@ -345,19 +345,26 @@
                                             <CheckBox
                                                 x:Name="cbExportX"
                                                 Margin="0,0,10,0"
-                                                Content="{DynamicResource VAM.XChannel}" />
+                                                Content="X" />
                                             <CheckBox
                                                 x:Name="cbExportY"
                                                 Margin="0,0,10,0"
-                                                Content="{DynamicResource VAM.YChannel}"
+                                                Content="Y"
                                                 IsChecked="True" />
                                             <CheckBox
                                                 x:Name="cbExportZ"
                                                 Margin="0,0,10,0"
-                                                Content="{DynamicResource VAM.ZChannel}" />
-
+                                                Content="Z" />
+                                            <CheckBox
+                                                x:Name="cbExportCieX"
+                                                Margin="0,0,10,0"
+                                                Content="cx" />
+                                            <CheckBox
+                                                x:Name="cbExportCieY"
+                                                Margin="0,0,10,0"
+                                                Content="cy" />
                                         </StackPanel>
-                                        <StackPanel
+                                        <!--<StackPanel
                                             Margin="0,0,0,8"
                                             HorizontalAlignment="Left"
                                             Orientation="Horizontal">
@@ -365,20 +372,16 @@
                                                 Width="120"
                                                 Margin="0,0,5,0"
                                                 VerticalAlignment="Center" />
-                                            <CheckBox
-                                                x:Name="cbExportCieX"
-                                                Margin="0,0,55,0"
-                                                Content="{DynamicResource VAM.cieXChannel}" />
-                                            <CheckBox x:Name="cbExportCieY" Content="{DynamicResource VAM.cieYChannel}" />
-                                        </StackPanel>
+
+                                        </StackPanel>-->
                                         <!--  线条模式参数（原VamExportDialog的线条参数）  -->
                                         <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
                                             <TextBlock
                                                 Width="120"
                                                 Margin="0,0,5,0"
-                                                Text="{DynamicResource VAM.Polar_RHO}" 
-                                                ToolTip="Polar_RHO"/>
-                                                 
+                                                Text="{DynamicResource VAM.Polar_RHO}"
+                                                ToolTip="Polar_RHO" />
+
                                             <TextBox
                                                 x:Name="txtLinePolarRHO"
                                                 Width="100"
@@ -550,19 +553,27 @@
                                             <CheckBox
                                                 x:Name="cbCircleExportX"
                                                 Margin="0,0,10,0"
-                                                Content="{DynamicResource VAM.XChannel}" />
+                                                Content="X" />
                                             <CheckBox
                                                 x:Name="cbCircleExportY"
                                                 Margin="0,0,10,0"
-                                                Content="{DynamicResource VAM.YChannel}"
+                                                Content="Y"
                                                 IsChecked="True" />
                                             <CheckBox
                                                 x:Name="cbCircleExportZ"
                                                 Margin="0,0,10,0"
-                                                Content="{DynamicResource VAM.ZChannel}" />
+                                                Content="Z" />
+                                            <CheckBox
+                                                x:Name="cbCircleExportCieX"
+                                                Margin="0,0,5,0"
+                                                Content="cx" />
+                                            <CheckBox
+                                                x:Name="cbCircleExportCieY"
+                                                Margin="0,0,10,0"
+                                                Content="cy" />
                                         </StackPanel>
 
-                                        <StackPanel
+                                        <!--<StackPanel
                                             Margin="0,0,0,8"
                                             HorizontalAlignment="Left"
                                             Orientation="Horizontal">
@@ -578,7 +589,7 @@
                                                 x:Name="cbCircleExportCieY"
                                                 Margin="0,0,55,0"
                                                 Content="{DynamicResource VAM.cieYChannel}" />
-                                        </StackPanel>
+                                        </StackPanel>-->
 
                                         <!--  圆环模式参数（原VamExportDialog的圆环参数）  -->
                                         <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
@@ -601,7 +612,7 @@
                                             <TextBox
                                                 x:Name="txtCirclePolarEnd"
                                                 Width="100"
-                                                Text="80" />
+                                                Text="60" />
                                             <TextBlock Margin="5,0,0,0" Text="°" />
                                         </StackPanel>
 
