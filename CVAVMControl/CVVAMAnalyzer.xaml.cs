@@ -4273,29 +4273,7 @@ namespace CVAVMControl
             // 4. 同步更新全局变量
             _azimuthInterval = azimuthInterval;
         }
-        //private void UpdateLineSampleCountText()
-        //{
-        //    string input = txtLineSampleCount.Text.Trim();
-        //    if (!int.TryParse(input, out int sampleCount) || sampleCount <= 0)
-        //    {
-        //        LineSampleCountBook.Text = "（[-60,60]共无效点数）";
-        //        return;
-        //    }
-        //    int polarRHO = int.TryParse(txtLinePolarRHO.Text.Trim(), out int rho) ? rho : 60;
-        //    LineSampleCountBook.Text = $"（[-{polarRHO},{polarRHO}]共{sampleCount}点）";
-        //}
-
-        //private void UpdateCircleSampleCountText()
-        //{
-        //    string input = txtCircleSampleCount.Text.Trim();
-        //    if (!int.TryParse(input, out int sampleCount) || sampleCount <= 0)
-        //    {
-        //        CircleSampleCountBook.Text = "（[0,360)间隔无效）";
-        //        return;
-        //    }
-        //    double interval = 360.0 / sampleCount;
-        //    CircleSampleCountBook.Text = $"（[0,360)间隔{interval:F1}°）";
-        //}
+      
         private async void BtnExportDiameter_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -4708,7 +4686,7 @@ namespace CVAVMControl
                     azimuthAngles[i] = i;
                 }
 
-                logger.Info($"极角采样点: {totalPolarSamples}, 方位角采样点: {totalAzimuthSamples}");
+                logger.Info($"polar angle sampling points: {totalPolarSamples}, azimuth angle sampling points: {totalAzimuthSamples}");
 
                 // ========== 第2阶段：预准备数据矩阵 ==========
                 _progressManager.UpdateProgress(50);
@@ -4821,7 +4799,7 @@ namespace CVAVMControl
                             }
                         }
 
-                        logger.Info($"通道 {channel} 导出完成: {fullCsvPath}");
+                        logger.Info($"Channel {channel} {FindResource("Exportcompleted")}: {fullCsvPath}");
                     });
                 }
 
@@ -4829,7 +4807,7 @@ namespace CVAVMControl
             }
             catch (Exception ex)
             {
-                logger.Error("ExportLineModeAsync 执行失败", ex);
+                logger.Error("ExportLineModeAsync execution failed", ex);
                 throw;
             }
         }
@@ -5201,7 +5179,7 @@ namespace CVAVMControl
                             }
                         }
 
-                        logger.Info($"圆环通道 {channel} 导出完成: {fullCsvPath}");
+                        logger.Info($"Channel {channel} {FindResource("Exportcompleted")}: {fullCsvPath}");
                     });
                 }
 
@@ -5557,7 +5535,7 @@ namespace CVAVMControl
             }
             catch (Exception ex)
             {
-                logger.Error("读取VAM全局导出路径失败", ex);
+                logger.Error("Failed to read the VAM global export path", ex);
             }
 
             // 兜底使用默认路径
@@ -5656,7 +5634,7 @@ namespace CVAVMControl
             }
 
             _progressBar.Value = 100;
-            _progressText.Text = "导出完成";
+            _progressText.Text = (string)Application.Current.FindResource("Exportcompleted");
             _progressText.Foreground = Brushes.LightGreen;
 
             // 延迟隐藏进度条

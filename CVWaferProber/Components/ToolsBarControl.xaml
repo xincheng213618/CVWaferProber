@@ -132,7 +132,7 @@
 
             <Button
                 x:Name="btnToAuxCamera"
-                Width="120"
+                Width="130"
                 Height="30"
                 Command="{Binding ToAuxCameraCommand}"
                 Content="{DynamicResource Toolbar.ToAuxCamera}"
@@ -140,7 +140,7 @@
 
             <Button
                 x:Name="btnToIntegratingSphere"
-                Width="150"
+                Width="180"
                 Height="30"
                 Command="{Binding ToIntegratingSphereCommand}"
                 Content="{DynamicResource Toolbar.ToIntegratingSphere}"
