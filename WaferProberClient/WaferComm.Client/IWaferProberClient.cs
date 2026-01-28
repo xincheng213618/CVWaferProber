@@ -61,5 +61,6 @@ namespace WaferComm.Client
         Task ZToAuxCameraAsync();
         Task ZToIntegratingSphereAsync();
         Task SendResultAsync(int result);
+        Task GetCurrentDieAxisAsync();
     }
 }

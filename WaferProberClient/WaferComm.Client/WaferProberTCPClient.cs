@@ -430,6 +430,7 @@ namespace WaferComm.Client
         public Task ZToMainCameraAsync() => SendCommandAsync("gm");
         public Task ZToAuxCameraAsync() => SendCommandAsync("ga");
         public Task ZToIntegratingSphereAsync() => SendCommandAsync("gi");
+        public Task GetCurrentDieAxisAsync() => SendCommandAsync("raxis");
 
         #endregion
 

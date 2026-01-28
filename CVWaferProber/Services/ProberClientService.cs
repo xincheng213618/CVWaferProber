@@ -118,6 +118,7 @@ namespace CVWaferProber.Services
 
         public void SendResultAsync(int result)
         {
+            _clientProber?.GetCurrentDieAxisAsync();
             _clientProber?.SendResultAsync(result);
         }
 
