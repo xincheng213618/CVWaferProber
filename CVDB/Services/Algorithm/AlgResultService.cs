@@ -36,5 +36,7 @@ namespace CVDB.Services.Algorithm
         {
             return MysqlControler.GetInstance().Sql.Select<TScgdAlgorithmResultDetailImage>().Where(a => a.Pid == pid).ToList();
         }
+
+
     }
 }

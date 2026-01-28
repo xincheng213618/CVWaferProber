@@ -376,129 +376,176 @@ namespace CVWaferProber.Services
 
         private void LoadImageResult(ChipData? chipData, string serialNumber)
         {
+
             // 后台线程处理图像加载逻辑
             Task.Run(() =>
             {
-                string? resultImageFile = null;
-                DateTime? TestTime = null;
-                string? ImageDisplayBrightnessUniformity = null;
-                var results = AlgResultService.LoadAlgResultByBatchCode(serialNumber);
-                if (results == null || results.Count == 0) return;
-
-                List<POIMarker> POIMarkers = new List<POIMarker>();
-                int id = 1;
-
-                // 1. 首先从 VScgdAlgorithmResultMaster 获取原图（Camera Measurement）
-                foreach (var result in results)
+                try
                 {
-                    AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
+                    string? resultImageFile = null;
+                    DateTime? TestTime = null;
+                    string? ImageDisplayBrightnessUniformity = null;
 
-                    // 原图类型：OLED_FindDotsArrayOutFile 和 OLED_CombineQuaterImages
-                    if (resultType == AlgorithmResultType.OLED_FindDotsArrayOutFile ||
-                        resultType == AlgorithmResultType.OLED_CombineQuaterImages)
+                    // 1. 首先从 VScgdAlgorithmResultMaster 获取主记录
+                    var masterResults = AlgResultService.LoadAlgResultByBatchCode(serialNumber);
+                    if (masterResults == null || masterResults.Count == 0)
                     {
-                        if (!string.IsNullOrEmpty(result.ImgFile) && File.Exists(result.ImgFile))
-                        {
-                            string fileName = Path.GetFileNameWithoutExtension(result.ImgFile).ToLower();
-                            // 过滤 po.dat 文件
-                            if (!fileName.Equals("po") && !fileName.Equals("po.dat"))
-                            {
-                                AddImageToCameraMeasurement(id++, result.ImgFile);
-                            }
-                        }
+                        logger.Warn($"No master results found for serial number: {serialNumber}");
+                        return;
                     }
 
-                    // 记录基础图像信息
-                    if (result.ImgFileType >= 42 && result.ImgFileType <= 45)
-                    {
-                        resultImageFile = result.ImgFile;
-                        TestTime = result.CreateDate;
-                    }
-                }
+                    logger.Info($"Found {masterResults.Count} master results for {serialNumber}");
 
-                // 2. 从 TScgdAlgorithmResultDetailPoiCieFile 获取算法图（Analysis Image）
-                foreach (var result in results)
-                {
-                    AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
+                    List<POIMarker> POIMarkers = new List<POIMarker>();
+                    int id = 1;
 
-                    if (resultType == AlgorithmResultType.OLED_RebuildPixelsMem)
+                    // 2. 处理每个主记录
+                    foreach (var masterResult in masterResults)
                     {
-                        var details = AlgResultService.GetPOIDetailResultFileByPid(result.Id);
-                        if (details != null && details.Count == 1)
+                        AlgorithmResultType resultType = (AlgorithmResultType)masterResult.ImgFileType;
+                        logger.Info($"Processing result type: {resultType} (ID: {masterResult.Id})");
+
+                        // 2.1 从 VScgdAlgorithmResultMaster 获取原图（Camera Measurement）
+                        if (resultType == AlgorithmResultType.OLED_FindDotsArrayOutFile ||
+                            resultType == AlgorithmResultType.OLED_CombineQuaterImages)
                         {
-                            string filePath = details[0].FileUrl;
-                            if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+                            if (!string.IsNullOrEmpty(masterResult.ImgFile) && File.Exists(masterResult.ImgFile))
                             {
-                                string fileName = Path.GetFileNameWithoutExtension(filePath).ToLower();
+                                string fileName = Path.GetFileNameWithoutExtension(masterResult.ImgFile).ToLower();
                                 // 过滤 po.dat 文件
                                 if (!fileName.Equals("po") && !fileName.Equals("po.dat"))
                                 {
-                                    AddImageToAnalysisImage(id++, filePath);
+                                    logger.Info($"Adding camera measurement image: {masterResult.ImgFile}");
+                                    AddImageToCameraMeasurement(id++, masterResult.ImgFile);
+                                }
+                            }
+                        }
+
+                        // 2.2 记录基础图像信息（用于后续显示）
+                        if (masterResult.ImgFileType >= 42 && masterResult.ImgFileType <= 45)
+                        {
+                            resultImageFile = masterResult.ImgFile;
+                            TestTime = masterResult.CreateDate;
+                            logger.Info($"Base image found: {resultImageFile}");
+                        }
+
+                        // 2.3 从 TScgdAlgorithmResultDetailPoiCieFile 获取算法图（Analysis Image）
+                        // 关键：通过 Pid = masterResult.Id 来查找对应的明细记录
+                        var poiDetails = AlgResultService.GetPOIDetailResultFileByPid(masterResult.Id);
+                        logger.Info($"Found {poiDetails?.Count ?? 0} POI detail records for master ID: {masterResult.Id}");
+
+                        if (poiDetails != null && poiDetails.Count > 0)
+                        {
+                            foreach (var detail in poiDetails)
+                            {
+                                if (!string.IsNullOrEmpty(detail.FileUrl) && File.Exists(detail.FileUrl))
+                                {
+                                    string fileName = Path.GetFileNameWithoutExtension(detail.FileUrl).ToLower();
+                                    // 过滤 po.dat 文件
+                                    if (!fileName.Equals("po") && !fileName.Equals("po.dat"))
+                                    {
+                                        logger.Info($"Adding analysis image: {detail.FileUrl}");
+                                        AddImageToAnalysisImage(id++, detail.FileUrl);
+                                    }
+                                }
+                            }
+                        }
+
+                        // 2.4 处理其他类型的结果
+                        if (resultType == AlgorithmResultType.POI_Y)
+                        {
+                            var poiMarkers = AlgResultService.GetPOIDetailResult(masterResult.Id);
+                            foreach (var poi in poiMarkers)
+                            {
+                                if (poi.PoiType == 0)
+                                    POIMarkers.Add(new CircleMarker()
+                                    {
+                                        Label = poi.PoiName,
+                                        X = (double)poi.PoiX,
+                                        Y = (double)poi.PoiY,
+                                        Width = (double)poi.PoiWidth,
+                                        Height = (double)poi.PoiHeight,
+                                        Fill = null
+                                    });
+                                else if (poi.PoiType == 1)
+                                    POIMarkers.Add(new RectangleMarker()
+                                    {
+                                        Label = poi.PoiName,
+                                        X = (double)poi.PoiX,
+                                        Y = (double)poi.PoiY,
+                                        Width = (double)poi.PoiWidth,
+                                        Height = (double)poi.PoiHeight,
+                                        Fill = null
+                                    });
+                            }
+                        }
+
+                        // 2.5 处理 PoiAnalysis
+                        if (resultType == AlgorithmResultType.PoiAnalysis)
+                        {
+                            var details = AlgResultService.GetCommDetailResult(masterResult.Id);
+                            if (details != null && details.Count > 0)
+                            {
+                                foreach (var detail in details)
+                                {
+                                    if (!string.IsNullOrEmpty(detail.Result))
+                                    {
+                                        try
+                                        {
+                                            DetailResult_CommFile_V2 detailResult_Comm = JsonConvert.DeserializeObject<DetailResult_CommFile_V2>(detail.Result);
+                                            if (!string.IsNullOrEmpty(detailResult_Comm?.ResultFileName) &&
+                                                File.Exists(detailResult_Comm.ResultFileName))
+                                            {
+                                                PoiAnalysis poiAnalysis = JsonConvert.DeserializeObject<PoiAnalysis>(
+                                                    File.ReadAllText(detailResult_Comm.ResultFileName));
+
+                                                if (chipData != null && poiAnalysis?.result != null)
+                                                {
+                                                    chipData.DataValue = poiAnalysis.result.Value;
+                                                    ImageDisplayBrightnessUniformity = string.Format(
+                                                        "[{0},{1}]={2:F4}",
+                                                        chipData.Row, chipData.Column, chipData.DataValue);
+                                                    logger.Info($"PoiAnalysis data: {ImageDisplayBrightnessUniformity}");
+                                                }
+                                            }
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            logger.Error($"Error parsing PoiAnalysis: {ex.Message}");
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
 
-                    // 处理POI标记
-                    else if (resultType == AlgorithmResultType.POI_Y)
+                    // 3. 更新图像显示（UI线程）
+                    Application.Current.Dispatcher.Invoke(() =>
                     {
-                        var details = AlgResultService.GetPOIDetailResult(result.Id);
-                        foreach (var poi in details)
+                        if (!string.IsNullOrEmpty(resultImageFile) && !string.IsNullOrEmpty(ImageDisplayBrightnessUniformity))
                         {
-                            if (poi.PoiType == 0)
-                                POIMarkers.Add(new CircleMarker()
-                                {
-                                    Label = poi.PoiName,
-                                    X = (double)poi.PoiX,
-                                    Y = (double)poi.PoiY,
-                                    Width = (double)poi.PoiWidth,
-                                    Height = (double)poi.PoiHeight,
-                                    Fill = null
-                                });
-                            else if (poi.PoiType == 1)
-                                POIMarkers.Add(new RectangleMarker()
-                                {
-                                    Label = poi.PoiName,
-                                    X = (double)poi.PoiX,
-                                    Y = (double)poi.PoiY,
-                                    Width = (double)poi.PoiWidth,
-                                    Height = (double)poi.PoiHeight,
-                                    Fill = null
-                                });
-                        }
-                    }
-
-                    // 处理PoiAnalysis
-                    else if (resultType == AlgorithmResultType.PoiAnalysis)
-                    {
-                        var details = AlgResultService.GetCommDetailResult(result.Id);
-                        if (details != null && details.Count == 1)
-                        {
-                            DetailResult_CommFile_V2 detailResult_Comm = JsonConvert.DeserializeObject<DetailResult_CommFile_V2>(details[0].Result);
-                            if (File.Exists(detailResult_Comm.ResultFileName))
+                            OpenCvSharp.Mat? image = null;
+                            if (CVImageFileUtil.LoadImgFile(resultImageFile, ref image))
                             {
-                                PoiAnalysis poiAnalysis = JsonConvert.DeserializeObject<PoiAnalysis>(File.ReadAllText(detailResult_Comm.ResultFileName));
-                                chipData.DataValue = poiAnalysis.result.Value;
-                                ImageDisplayBrightnessUniformity = string.Format("[{0},{1}]={2:F4}",
-                                    chipData.Row, chipData.Column, chipData.DataValue);
+                                image = OpenCvMatTools.ConvertImageTo8UC3(image);
+                                CustomImageVM?.UpdatePOIImage(image, POIMarkers, ImageDisplayBrightnessUniformity);
+                                logger.Info($"Image displayed with POI markers and brightness info");
+                            }
+                            else
+                            {
+                                logger.Warn($"Failed to load image: {resultImageFile}");
                             }
                         }
-                    }
-                }
-
-                // 更新图像显示
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    if (!string.IsNullOrEmpty(resultImageFile) && !string.IsNullOrEmpty(ImageDisplayBrightnessUniformity))
-                    {
-                        OpenCvSharp.Mat? image = null;
-                        if (CVImageFileUtil.LoadImgFile(resultImageFile, ref image))
+                        else
                         {
-                            image = OpenCvMatTools.ConvertImageTo8UC3(image);
-                            CustomImageVM?.UpdatePOIImage(image, POIMarkers, ImageDisplayBrightnessUniformity);
+                            logger.Warn($"No image or brightness info to display. Image: {resultImageFile}, Brightness: {ImageDisplayBrightnessUniformity}");
                         }
-                    }
-                });
+                    });
+                }
+                catch (Exception ex)
+                {
+                    logger.Error($"Error in LoadImageResult: {ex.Message}\n{ex.StackTrace}");
+                }
             });
             // 后台线程处理图像加载逻辑
             //Task.Run(() =>
@@ -702,6 +749,7 @@ namespace CVWaferProber.Services
 
             Application.Current.Dispatcher.Invoke(() =>
             {
+
                 // 添加到 ProcessedImageResults（Analysis Image 视图）
                 CustomImageVM?.AddImage(loc);
             });
