@@ -226,7 +226,9 @@ namespace CVWaferProber.Services
                 }
                 else
                 {
-                    logger.WarnFormat("AutoTesting is failed,continue NG");
+                    logger.Warn("Automated die test failed, please proceed with manual testing.");
+                    //DoAutoTestEnd(true);
+                    proberClientService?.PausedAutoTest();
                 }
             }
             else

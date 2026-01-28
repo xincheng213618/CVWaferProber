@@ -30,17 +30,19 @@ namespace CVWaferProber.ViewModels
             _proberState.CurrentState == ProberState.Stoped;
         public bool CanStartAutoTest => _proberState.CurrentState == ProberState.WaferLoaded ||
             _proberState.CurrentState == ProberState.Stoped;
-        public bool CanContinuAutoTest => _proberState.CurrentState == ProberState.Paused;
-        public bool CanStopAutoTest => _proberState.CurrentState == ProberState.Testing ||
-            _proberState.CurrentState == ProberState.Paused || _proberState.CurrentState == ProberState.Stoped;
+        public bool CanContinuAutoTest => _proberState.CurrentState == ProberState.Paused &&
+            MainViewModel.Instance.IsNotProcessing;
+        public bool CanStopAutoTest => MainViewModel.Instance.IsNotProcessing && 
+            (_proberState.CurrentState == ProberState.Testing ||
+            _proberState.CurrentState == ProberState.Paused || _proberState.CurrentState == ProberState.Stoped);
         public bool CanPauseAutoTest => _proberState.CurrentState == ProberState.Testing;
 
         private IEventAggregator? _EventAggregator;
 
-        public event EventHandler ToIntegratingSpherePos;
-        public event EventHandler ToAuxCameraPos;
-        public event EventHandler ToMainCameraPos;
-        public event EventHandler LiftAllPos;
+        //public event EventHandler ToIntegratingSpherePos;
+        //public event EventHandler ToAuxCameraPos;
+        //public event EventHandler ToMainCameraPos;
+        //public event EventHandler LiftAllPos;
 
         public ToolsBarViewModel(IWaferProberClient client, IStateMachine? proberState, IEventAggregator? eventAggregator = null)
         {

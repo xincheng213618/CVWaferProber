@@ -299,7 +299,7 @@ namespace CVWaferProber.ViewModels
         public ICommand SearchCommand { get; }
         #endregion
 
-        private readonly Random _random = new Random();
+        //private readonly Random _random = new Random();
 
         private DataGrid? _dataGrid; // 引用DataGrid（静态列+动态列）
         private RCRestService rcService;
@@ -2096,7 +2096,7 @@ namespace CVWaferProber.ViewModels
             return result;
         }
         public CVSpectrumAnalyzer? SpPanelView { get; set; }
-        private TabControl? _innerTabControl;
+        //private TabControl? _innerTabControl;
         private void StartManFlow()
         {
             if (SelectedWPFlow != null && SelectedItem is DieViewModel die)
