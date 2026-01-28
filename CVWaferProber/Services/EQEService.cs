@@ -91,9 +91,9 @@ namespace CVWaferProber.Services
         }
 
         // 重写结束测试方法：与IVL完全一致
-        protected override void DoEndTesting(bool isAuto)
+        protected override void DoEndTesting(DieViewModel dieViewModel, bool isAuto)
         {
-            base.DoEndTesting(isAuto); // 调用基类触发TestingCompleted事件
+            base.DoEndTesting(dieViewModel, isAuto); // 调用基类触发TestingCompleted事件
             
         }
         public override void AutoExportData()

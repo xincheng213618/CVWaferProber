@@ -10,7 +10,6 @@ using CVWPFCamImageCtrl;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using System.IO;
-using System.Windows;
 using Application = System.Windows.Application;
 
 namespace CVWaferProber.Services
@@ -229,12 +228,17 @@ namespace CVWaferProber.Services
         public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool tranStatus = true)
         {
             dieViewModel.ChangeStatus(ChipStatus.TESTING);
+            ClearResult();
+            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, hasNext, tranStatus);
+            return task;
+        }
+
+        private void ClearResult()
+        {
             System.Windows.Application.Current?.Dispatcher?.Invoke(() =>
             {
                 CustomImageVM?.ClearImageResult();
             });
-            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, hasNext, tranStatus);
-            return task;
         }
         private ChipStatus GetDieResultStatus(string serialNumber)
         {

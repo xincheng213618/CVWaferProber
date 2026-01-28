@@ -243,10 +243,10 @@ namespace CVWaferProber.Services
         /// <summary>
         /// 重写基类EndTesting（确保流程结束时停止定时器）
         /// </summary>
-        protected override void DoEndTesting(bool isAuto)
+        protected override void DoEndTesting(DieViewModel dieViewModel, bool isAuto)
         {
 
-            base.DoEndTesting(isAuto); // 调用基类触发TestingCompleted事件
+            base.DoEndTesting(dieViewModel,isAuto); // 调用基类触发TestingCompleted事件
 
         }
 

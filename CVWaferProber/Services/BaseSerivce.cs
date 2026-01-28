@@ -86,7 +86,7 @@ namespace CVWaferProber.Services
             {
                 logger.InfoFormat("DoNextAutoTesting => {0}/{1}", dieViewModel.MapAxisToString(), dieViewModel.Status.ToString());
                 if (hasNext) DoAutoTestingNextCompleted(dieViewModel);
-                else DoEndTesting(isAuto);
+                else DoEndTesting(dieViewModel,isAuto);
             }
         }
 
@@ -157,9 +157,9 @@ namespace CVWaferProber.Services
             return SNBuilder.Build(ProberId, timestamp, dieViewModel);
         }
         public bool IsAutoExportData = true;
-        protected virtual void DoEndTesting(bool isAuto)
+        protected virtual void DoEndTesting(DieViewModel dieViewModel, bool isAuto)
         {
-            TestingCompleted?.Invoke(this, new TestCompletedEventArgs(isAuto));
+            TestingCompleted?.Invoke(this, new TestCompletedEventArgs(dieViewModel, isAuto));
             if (IsAutoExportData)
             {
                 AutoExportData();

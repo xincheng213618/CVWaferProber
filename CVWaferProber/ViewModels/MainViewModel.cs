@@ -35,7 +35,6 @@ using CheckBox = System.Windows.Controls.CheckBox;
 using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
-using TabControl = System.Windows.Controls.TabControl;
 
 
 namespace CVWaferProber.ViewModels
@@ -322,7 +321,6 @@ namespace CVWaferProber.ViewModels
         }
 
         private CVMQTTWPClient mqtt;
-        private int CurTestDieIdx = -1;
 
         public MainService mainService { get; private set; }
 
@@ -2126,7 +2124,6 @@ namespace CVWaferProber.ViewModels
         {
             CustomMappingVM.DisabledInput = IsProcessing = true;
 
-            CurTestDieIdx = 0;
             string timestamp = DateTime.Now.ToString("yyyyMMdd'T'HHmmss.fff");
             if (_isAutoSN) Timestamp = timestamp;
             foreach (var itemT in testItems)

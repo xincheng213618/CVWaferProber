@@ -99,15 +99,15 @@ namespace CVWaferProber.Services
         /// 
         /// </summary>
         /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OnAutoTestingNextCompleted(object? sender, DieViewModel e)
+        /// <param name="dieVM"></param>
+        private void OnAutoTestingNextCompleted(object? sender, DieViewModel dieVM)
         {
             //发送结果给机台
-            proberClientService.SendResultAsync(e.Status == Core.Models.Enums.ChipStatus.OK ? 1 : 2);
+            proberClientService?.SendResultAsync(dieVM);
             if (autoTestingItem != null)
             {
-                logger.InfoFormat("IsPaused={0},e.Status={1}", autoTestingItem.IsPaused, e.Status.ToString());
-                if (e.Status != Core.Models.Enums.ChipStatus.OK)
+                logger.InfoFormat("IsPaused={0},e.Status={1}", autoTestingItem.IsPaused, dieVM.Status.ToString());
+                if (dieVM.Status != Core.Models.Enums.ChipStatus.OK)
                 {
                     PauseAutoTesting();
                 }
@@ -118,7 +118,7 @@ namespace CVWaferProber.Services
             }
             else
             {
-                DoAutoTestEnd(true);
+                DoAutoTestEnd(dieVM, true);
             }
         }
 
@@ -129,8 +129,8 @@ namespace CVWaferProber.Services
         /// <param name="e"></param>
         private void OnTestingCompleted(object? sender, TestCompletedEventArgs e)
         {
-            if(e.IsAuto) autoTestingItem = null;
-            DoAutoTestEnd(e.IsAuto);
+            if (e.IsAuto) autoTestingItem = null;
+            DoAutoTestEnd(e.DieVM, e.IsAuto);
         }
 
         #region Window Message
@@ -258,16 +258,19 @@ namespace CVWaferProber.Services
                 }
                 else
                 {
-                    DoAutoTestEnd(isAuto);
-
+                    DoAutoTestEnd(die, isAuto);
                 }
             }
         }
-        
-        private void DoAutoTestEnd(bool isAuto)
+
+        private void DoAutoTestEnd(DieViewModel dieVM, bool isAuto)
         {
-            TestingCompleted?.Invoke(this, new TestCompletedEventArgs(isAuto));
-            if(isAuto) proberClientService.TestingCompleted();
+            TestingCompleted?.Invoke(this, new TestCompletedEventArgs(dieVM, isAuto));
+            if (isAuto)
+            {
+                proberClientService.SendResultAsync(dieVM);
+                proberClientService.TestingCompleted();
+            }
         }
 
         private void OutputLog(List<DieViewModel> dieVMList)

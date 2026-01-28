@@ -116,10 +116,15 @@ namespace CVWaferProber.Services
             //}
         }
 
-        public void SendResultAsync(int result)
+        public async Task SendResultAsync(int result)
         {
-            _clientProber?.GetCurrentDieAxisAsync();
-            _clientProber?.SendResultAsync(result);
+            await _clientProber?.GetCurrentDieAxisAsync();
+            await _clientProber?.SendResultAsync(result);
+        }
+
+        public async Task SendResultAsync(DieViewModel dieVM)
+        {
+            await SendResultAsync(dieVM.Status == Core.Models.Enums.ChipStatus.OK ? 1 : 2);
         }
 
         public async Task<bool> MoveToAsync(DieViewModel die, bool isFirst)
