@@ -346,6 +346,7 @@
     <!--  运动按钮  -->
     <sys:String x:Key="Button.FirstTestPosition">第一颗测试位置[q]</sys:String>
     <sys:String x:Key="Button.CurrentTestCoord">当前测试坐标[Q]</sys:String>
+    <sys:String x:Key="Button.CurrentTestDieAxis">当前Die坐标[raxis]</sys:String>
     <sys:String x:Key="Button.ProbePressure">探针压力[QP]</sys:String>
     <sys:String x:Key="Button.ResetMotion">重置运动监控</sys:String>
 

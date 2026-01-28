@@ -330,6 +330,7 @@
     <!--  运动按钮  -->
     <sys:String x:Key="Button.FirstTestPosition">First Test Position[q]</sys:String>
     <sys:String x:Key="Button.CurrentTestCoord">Current Test Coord[Q]</sys:String>
+    <sys:String x:Key="Button.CurrentTestDieAxis">Current Die Axis[raxis]</sys:String>
     <sys:String x:Key="Button.ProbePressure">Probe Pressure[QP]</sys:String>
     <sys:String x:Key="Button.ResetMotion">Reset Motion Monitor</sys:String>
 

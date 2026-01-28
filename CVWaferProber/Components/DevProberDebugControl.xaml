@@ -145,6 +145,10 @@
                                             <Button Content="{DynamicResource Button.CurrentTestCoord}" 
                                                     Width="120" Margin="0,0,5,0" Tag="Q" 
                                                     Command="{Binding SendBasicCommand}"
+                                                    CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>  
+                                            <Button Content="{DynamicResource Button.CurrentTestDieAxis}" 
+                                                    Width="120" Margin="0,0,5,0" Tag="raxis" 
+                                                    Command="{Binding SendBasicCommand}"
                                                     CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
                                             <Button Content="{DynamicResource Button.ProbePressure}" 
                                                     Width="120" Margin="0,0,5,0" Tag="QP" 
