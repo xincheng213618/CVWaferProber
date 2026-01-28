@@ -749,9 +749,12 @@ namespace CVWaferProber.Services
 
             Application.Current.Dispatcher.Invoke(() =>
             {
-
-                // 添加到 ProcessedImageResults（Analysis Image 视图）
-                CustomImageVM?.AddImage(loc);
+                // 直接添加到 ProcessedImageResults，绕过 AddImage 的分类逻辑
+                if (!CustomImageVM?.ProcessedImageResults.Any(item =>
+                    item.ImagePath.Equals(imgFile, StringComparison.OrdinalIgnoreCase)) ?? false)
+                {
+                    CustomImageVM?.ProcessedImageResults.Add(loc);
+                }
             });
         }
 
