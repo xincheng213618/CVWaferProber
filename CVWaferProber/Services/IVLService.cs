@@ -1,16 +1,10 @@
 ﻿using ChipMapping.ViewModels;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
-using CVWaferProber.Utils;
 using CVWaferProber.ViewModels;
 using CVWPFSpectrometerCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
-using Microsoft.VisualBasic.Logging;
-using System.Diagnostics;
-using System.Diagnostics.Metrics;
 using System.IO;
-using System.Text;
-using System.Windows;
 using Application = System.Windows.Application;
 
 namespace CVWaferProber.Services
@@ -50,7 +44,7 @@ namespace CVWaferProber.Services
 
         }
 
-        public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext)
+        public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool tranStatus = true)
         {
             // 新增：强制切换到Overview标签页（修复FindName错误）
             Application.Current.Dispatcher.Invoke(() =>
@@ -87,7 +81,7 @@ namespace CVWaferProber.Services
             // 缓存当前DieViewModel（定时器回调中需要用到）
             _currentDieVM = dieViewModel;
             //System.Timers.Timer timer = new System.Timers.Timer(1000);
-            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, hasNext);
+            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, hasNext, tranStatus);
             // 初始化并启动定时器（1秒调用一次IVLResultDisplay）
             System.Timers.Timer refreshTimer = new System.Timers.Timer(350)
             {
@@ -249,10 +243,10 @@ namespace CVWaferProber.Services
         /// <summary>
         /// 重写基类EndTesting（确保流程结束时停止定时器）
         /// </summary>
-        protected override void DoEndTesting()
+        protected override void DoEndTesting(bool isAuto)
         {
 
-            base.DoEndTesting(); // 调用基类触发TestingCompleted事件
+            base.DoEndTesting(isAuto); // 调用基类触发TestingCompleted事件
 
         }
 

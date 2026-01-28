@@ -1,6 +1,7 @@
 ﻿using ChipMapping.ViewModels;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.Restful.DTO;
+using CVWaferProber.Models;
 using CVWaferProber.Utils;
 using CVWaferProber.ViewModels;
 using System.Reactive.Linq;
@@ -18,8 +19,9 @@ namespace CVWaferProber.Services
 
         public string ProberId { get; set; }
 
-        public event EventHandler TestingCompleted;
+        public event EventHandler<TestCompletedEventArgs> TestingCompleted;
         public event EventHandler<DieViewModel> AutoTestingNextCompleted;
+        //public event EventHandler<DieViewModel> AutoTestingPaused;
 
         public BaseSerivce(RCRestService rcService, IEventAggregator? eventAggregator = null)
         {
@@ -28,14 +30,14 @@ namespace CVWaferProber.Services
             this.EventAggregator = eventAggregator;
         }
 
-        public Task StartTesting(string timestamp, DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext)
+        public Task StartTesting(string timestamp, DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool isAuto)
         {
             string sn = BuildFlowSN(dieViewModel, timestamp);
             dieViewModel.SerialNumber = sn;
-            return StartTesting(dieViewModel, _selectedWPFlow, hasNext);
+            return StartTesting(dieViewModel, _selectedWPFlow, hasNext, isAuto);
         }
-        public abstract Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext);
-        protected async Task RunFlowAsync(WPFlowViewModel _selectedWPFlow, DieViewModel dieViewModel, bool hasNext)
+        public abstract Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool isAuto);
+        protected async Task RunFlowAsync(WPFlowViewModel _selectedWPFlow, DieViewModel dieViewModel, bool hasNext, bool isAuto)
         {
             try
             {
@@ -82,10 +84,16 @@ namespace CVWaferProber.Services
             }
             finally
             {
+                logger.InfoFormat("DoNextAutoTesting => {0}/{1}", dieViewModel.MapAxisToString(), dieViewModel.Status.ToString());
                 if (hasNext) DoAutoTestingNextCompleted(dieViewModel);
-                else DoEndTesting();
+                else DoEndTesting(isAuto);
             }
         }
+
+        //private void DoAutoTestingPaused(DieViewModel dieViewModel)
+        //{
+        //    AutoTestingPaused?.Invoke(this, dieViewModel);
+        //}
 
         private void DoAutoTestingNextCompleted(DieViewModel dieViewModel)
         {
@@ -149,9 +157,9 @@ namespace CVWaferProber.Services
             return SNBuilder.Build(ProberId, timestamp, dieViewModel);
         }
         public bool IsAutoExportData = true;
-        protected virtual void DoEndTesting()
+        protected virtual void DoEndTesting(bool isAuto)
         {
-            TestingCompleted?.Invoke(this, EventArgs.Empty);
+            TestingCompleted?.Invoke(this, new TestCompletedEventArgs(isAuto));
             if (IsAutoExportData)
             {
                 AutoExportData();

@@ -308,8 +308,8 @@
 
             </ScrollViewer>
 
-            <!--  详细信息面板  -->
-            <Border Style="{StaticResource DetailsPanelStyle}" Visibility="{Binding SelectedChip, Converter={StaticResource NullToVisibilityConverter}}">
+            <!--  详细信息面板 Visibility="{Binding SelectedChip, Converter={StaticResource NullToVisibilityConverter}}" -->
+            <Border Style="{StaticResource DetailsPanelStyle}" Visibility="Hidden">
                 <StackPanel>
                     <TextBlock
                         Margin="0,0,0,10"

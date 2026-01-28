@@ -2869,7 +2869,12 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             //    _spectralCtrl.InvalidateVisual();
             //}
         }
+        //
         private void Clear()
+        {
+            Application.Current.Dispatcher.Invoke(() => { _Clear(); });
+        }
+        private void _Clear()
         {
             PlotModel.Series.Clear();
             Measurements.Clear();
@@ -2892,8 +2897,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             LoadCameraData(serialNumber);
             LoadSpectrumData(serialNumber);
         }
-
         private void ClearAllDisplays()
+        {
+            Application.Current.Dispatcher.Invoke(() => { _ClearAllDisplays(); });
+        }
+        private void _ClearAllDisplays()
         {
             // 清空图表
             PlotModel.Series.Clear();

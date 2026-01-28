@@ -860,7 +860,7 @@ namespace CVWaferProber.ViewModels
             mainService.InitializeService(ProberId, rcService);
             //
             mainService.TestingCompleted += OnTestingCompleted;
-            mainService.AutoTestingNext += OnOneDieTestingNext;
+            mainService.AutoTestingNextDie += OnAutoTestingNextDie;
             mainService.ChipSelected += OnChipDieSelected;
             //
             CustomMappingVM = mainService.GetMappingVM();
@@ -1545,11 +1545,16 @@ namespace CVWaferProber.ViewModels
             return System.Reflection.Assembly.GetExecutingAssembly().Location;
         }
 
-        private void OnTestingCompleted(object? sender, EventArgs e)
+        private void OnTestingCompleted(object? sender, TestCompletedEventArgs e)
         {
-            DoEndTesting();
+            DoEndTesting(e.IsAuto);
         }
-        private void OnOneDieTestingNext(object? sender, (DieViewModel? preDie, DieViewModel nextDie) e)
+        private void OnAutoTestingNextDie(object? sender, (DieViewModel? preDie, DieViewModel nextDie) e)
+        {
+            Application.Current.Dispatcher.Invoke(() => { MoveNextSel(e); });
+        }
+
+        private void MoveNextSel((DieViewModel? preDie, DieViewModel nextDie) e)
         {
             if (e.preDie != null) e.preDie.UnSelected();
             SelectedItem = e.nextDie;
@@ -2098,12 +2103,12 @@ namespace CVWaferProber.ViewModels
             {
                 EnableBtnGUI(false);
                 ManTestingReady(die);
-                mainService.DoDieFlowExec(_selectedWPFlow, die, false);
+                mainService.DoDieFlowExec(_selectedWPFlow, die, false, false);
                 ActivateCorrespondingPanel();
             }
         }
 
-        private void DoEndTesting()
+        private void DoEndTesting(bool isAuto)
         {
             EnableBtnGUI(true);
             CalculateYieldBySerialNumber();

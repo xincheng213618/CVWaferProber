@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using log4net.Repository.Hierarchy;
 using System.Timers;
-using WaferComm.Client;
 using WaferComm.Core;
 using WaferComm.Processors;
 
@@ -15,6 +10,8 @@ namespace WaferComm.StateMachine
     /// </summary>
     public class MotionMonitor : CommandProcessorBase
     {
+        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(MotionMonitor));
+
         private readonly IEventAggregator _eventAggregator;
         private readonly System.Timers.Timer _motionTimeoutTimer;
         private readonly object _motionLock = new object();
@@ -302,6 +299,7 @@ namespace WaferComm.StateMachine
             {
                 if (_currentMotion == null) // 确保没有新的运动开始
                 {
+                    logger.InfoFormat("Return to idle status in 5 seconds,CurrentMotionStatus={0}", CurrentMotionStatus.ToString());
                     SetMotionStatus(MotionStatus.Idle);
                 }
             });
@@ -368,10 +366,13 @@ namespace WaferComm.StateMachine
 
         private void SetMotionStatus(MotionStatus status)
         {
-            CurrentMotionStatus = status;
+            if (CurrentMotionStatus != status)
+            {
+                CurrentMotionStatus = status;
 
-            // 发布状态更新事件
-            _eventAggregator.Publish(new MotionStatusUpdatedEvent(status, _currentMotion));
+                // 发布状态更新事件
+                _eventAggregator.Publish(new MotionStatusUpdatedEvent(status, _currentMotion));
+            }
         }
 
         private void CancelCurrentMotion(string reason)
