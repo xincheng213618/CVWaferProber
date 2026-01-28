@@ -17,9 +17,9 @@
     WindowState="Maximized"
     mc:Ignorable="d">
 
-    <!--<Window.DataContext>
+    <Window.DataContext>
         <vm:MainViewModel />
-    </Window.DataContext>-->
+    </Window.DataContext>
     <Window.Resources>
         <cv:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <cv:BooleanToGridLengthConverter
