@@ -643,30 +643,35 @@ namespace ChipMapping.ViewModels
 
         private void GenerateChipData_FromMap(List<CVMappingData> mappingData)
         {
-            if (mappingData != null)
+            if (mappingData != null && mappingData.Count > 0)
             {
                 MappingPosDataRange dataRange = CsvMappingDataTool.GetPosDataRange(mappingData);
                 var Wid = dataRange.MaxPosX - dataRange.MinPosX;
                 var Hei = dataRange.MaxPosY - dataRange.MinPosY;
 
-                // 创建屏幕
-                System.Drawing.Size screenSize = new System.Drawing.Size(_screenWidth-10, _screenHeight-10);
+                // 创建屏幕尺寸（预留边距）
+                System.Drawing.Size screenSize = new System.Drawing.Size(_screenWidth - 10, _screenHeight - 10);
 
-                // 定义数学坐标系范围（x从-10到10，y从-5到5）
+                // 定义数学坐标系范围
                 RectangleF mathBounds = new RectangleF((int)dataRange.MinPosX, (int)dataRange.MinPosY, (int)Wid, (int)Hei);
-                // 创建坐标转换器
-                CoordinateConverter converter = new CoordinateConverter(screenSize, mathBounds);
-                int i = 0;
+
+                // 核心修改：创建转换器时传入翻转开关 → flipY = true 就是上下翻转（你的核心需求）
+                // 如需左右翻转：new CoordinateConverter(screenSize, mathBounds, flipY: true, flipX: true)
+                CoordinateConverter converter = new CoordinateConverter(screenSize, mathBounds, flipY: true);
+
                 foreach (var posMath in mappingData)
                 {
-                    var posSc = converter.MathToScreen(new System.Drawing.Point((int)posMath.PosX, (int)posMath.PosY));
+                    // 坐标转换（自动完成翻转）
+                    var posSc = converter.MathToScreen(new System.Drawing.PointF((float)posMath.PosX, (float)posMath.PosY));
 
+                    // 屏幕坐标增加起始偏移
                     double x = StartX + posSc.X;
                     double y = StartY + posSc.Y;
 
-                    //var status = (ChipStatus)_random.Next(0, 8);
+                    // 状态默认WAITING（保持原有逻辑）
                     var status = ChipStatus.WAITING;
                     var lv = _random.Next(30, 100);
+
                     var chipData = new ChipData
                     {
                         Id = posMath.Id,
@@ -687,9 +692,57 @@ namespace ChipMapping.ViewModels
                     };
 
                     Chips.Add(chipViewModel);
-                    i++;
                 }
+                // 计算完所有芯片后更新画布大小
+                UpdateCanvasSize();
             }
+            //if (mappingData != null)
+            //{
+            //    MappingPosDataRange dataRange = CsvMappingDataTool.GetPosDataRange(mappingData);
+            //    var Wid = dataRange.MaxPosX - dataRange.MinPosX;
+            //    var Hei = dataRange.MaxPosY - dataRange.MinPosY;
+
+            //    // 创建屏幕
+            //    System.Drawing.Size screenSize = new System.Drawing.Size(_screenWidth-10, _screenHeight-10);
+
+            //    // 定义数学坐标系范围（x从-10到10，y从-5到5）
+            //    RectangleF mathBounds = new RectangleF((int)dataRange.MinPosX, (int)dataRange.MinPosY, (int)Wid, (int)Hei);
+            //    // 创建坐标转换器
+            //    CoordinateConverter converter = new CoordinateConverter(screenSize, mathBounds);
+            //    int i = 0;
+            //    foreach (var posMath in mappingData)
+            //    {
+            //        var posSc = converter.MathToScreen(new System.Drawing.Point((int)posMath.PosX, (int)posMath.PosY));
+
+            //        double x = StartX + posSc.X;
+            //        double y = StartY + posSc.Y;
+
+            //        //var status = (ChipStatus)_random.Next(0, 8);
+            //        var status = ChipStatus.WAITING;
+            //        var lv = _random.Next(30, 100);
+            //        var chipData = new ChipData
+            //        {
+            //            Id = posMath.Id,
+            //            X = x,
+            //            Y = y,
+            //            RawX = posMath.AxisPosX,
+            //            RawY = posMath.AxisPosY,
+            //            Status = status,
+            //            DataValue = lv,
+            //            Row = posMath.DataMapY,
+            //            Column = posMath.DataMapX,
+            //        };
+
+            //        var chipViewModel = new ChipViewModel(chipData)
+            //        {
+            //            Width = 12,
+            //            Height = 9
+            //        };
+
+            //        Chips.Add(chipViewModel);
+            //        i++;
+            //    }
+            //}
         }
         private void GenerateChipData_FromCsv(string csvFile)
         {
