@@ -4,6 +4,7 @@ using OpenCvSharp;
 using OpenCvSharp.WpfExtensions;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Media;
 
@@ -212,33 +213,33 @@ namespace CVWPFCamImageCtrl
                     return;
                 }
 
-                // 提取文件扩展名（小写，方便对比）
-                string fileExt = System.IO.Path.GetExtension(imageItem.ImagePath)?.ToLower() ?? string.Empty;
-                string fileName = System.IO.Path.GetFileNameWithoutExtension(imageItem.ImagePath)?.ToLower() ?? "";
+                // 提取文件信息
+                string fileName = Path.GetFileNameWithoutExtension(imageItem.ImagePath)?.ToLower() ?? "";
+                string fileExt = Path.GetExtension(imageItem.ImagePath)?.ToLower() ?? string.Empty;
 
-                // 检查是否是 po.dat 文件
+                // ========== 关键修改：统一过滤 po.dat 文件 ==========
                 bool isPoDatFile = fileName.Equals("po") || fileName.Equals("po.dat");
+                if (isPoDatFile)
+                {
+                    Debug.WriteLine($"Skipping po.dat file in both views: {imageItem.FileName}");
+                    return; // 在两个视图中都跳过 po.dat 文件
+                }
+                // =================================================
 
-                // 1. 相机原始图（.cvraw）→ 添加到原图集合
+                // 1. 相机原始图（.cvraw）→ 添加到原图集合（Camera Measurement）
                 if (fileExt == ".cvraw")
                 {
-                    if (!_originalImageResults.Any(item => item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
+                    if (!_originalImageResults.Any(item =>
+                        item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
                     {
                         _originalImageResults.Add(imageItem);
                     }
                 }
-                // 2. 标定后图（.cvcie）→ 添加到处理后集合
+                // 2. 标定后图（.cvcie）→ 添加到处理后集合（Analysis Image）
                 else if (fileExt == ".cvcie")
                 {
-                    // 如果是 po.dat 文件，则不添加到 DataGrid 显示
-                    if (isPoDatFile)
-                    {
-                        // 可以在这里添加日志或调试信息
-                        Debug.WriteLine($"Skipping po.dat file: {imageItem.FileName}");
-                        return; // 不添加到任何集合
-                    }
-
-                    if (!_processedImageResults.Any(item => item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
+                    if (!_processedImageResults.Any(item =>
+                        item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
                     {
                         _processedImageResults.Add(imageItem);
                     }
@@ -246,20 +247,69 @@ namespace CVWPFCamImageCtrl
                 // 3. 其他格式（.tif, .tiff, .jpg 等）→ 根据上下文决定
                 else
                 {
-                    // 如果是 po.dat 文件（如 .tif 格式的 po.dat），也不添加到 DataGrid
-                    if (isPoDatFile)
-                    {
-                        Debug.WriteLine($"Skipping po.dat file: {imageItem.FileName}");
-                        return; // 不添加到任何集合
-                    }
-
-                    // 默认添加到总集合（或者根据需求决定）
-                    if (!_imageResults.Any(item => item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
+                    // 默认添加到总集合
+                    if (!_imageResults.Any(item =>
+                        item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
                     {
                         _imageResults.Add(imageItem);
                     }
                 }
             });
+            //Application.Current.Dispatcher.Invoke(() =>
+            //{
+            //    if (imageItem == null || string.IsNullOrEmpty(imageItem.ImagePath))
+            //    {
+            //        return;
+            //    }
+
+            //    // 提取文件扩展名（小写，方便对比）
+            //    string fileExt = System.IO.Path.GetExtension(imageItem.ImagePath)?.ToLower() ?? string.Empty;
+            //    string fileName = System.IO.Path.GetFileNameWithoutExtension(imageItem.ImagePath)?.ToLower() ?? "";
+
+            //    // 检查是否是 po.dat 文件
+            //    bool isPoDatFile = fileName.Equals("po") || fileName.Equals("po.dat");
+
+            //    // 1. 相机原始图（.cvraw）→ 添加到原图集合
+            //    if (fileExt == ".cvraw")
+            //    {
+            //        if (!_originalImageResults.Any(item => item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
+            //        {
+            //            _originalImageResults.Add(imageItem);
+            //        }
+            //    }
+            //    // 2. 标定后图（.cvcie）→ 添加到处理后集合
+            //    else if (fileExt == ".cvcie")
+            //    {
+            //        // 如果是 po.dat 文件，则不添加到 DataGrid 显示
+            //        if (isPoDatFile)
+            //        {
+            //            // 可以在这里添加日志或调试信息
+            //            Debug.WriteLine($"Skipping po.dat file: {imageItem.FileName}");
+            //            return; // 不添加到任何集合
+            //        }
+
+            //        if (!_processedImageResults.Any(item => item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
+            //        {
+            //            _processedImageResults.Add(imageItem);
+            //        }
+            //    }
+            //    // 3. 其他格式（.tif, .tiff, .jpg 等）→ 根据上下文决定
+            //    else
+            //    {
+            //        // 如果是 po.dat 文件（如 .tif 格式的 po.dat），也不添加到 DataGrid
+            //        if (isPoDatFile)
+            //        {
+            //            Debug.WriteLine($"Skipping po.dat file: {imageItem.FileName}");
+            //            return; // 不添加到任何集合
+            //        }
+
+            //        // 默认添加到总集合（或者根据需求决定）
+            //        if (!_imageResults.Any(item => item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
+            //        {
+            //            _imageResults.Add(imageItem);
+            //        }
+            //    }
+            //});
             //Application.Current.Dispatcher.Invoke(() =>
             //{
             //    string fileName = imageItem.FileName?.ToLower() ?? string.Empty;

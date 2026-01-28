@@ -332,17 +332,17 @@ namespace CVWPFCamImageCtrl
                             {
                                 // 获取文件扩展名
                                 string fileExt = Path.GetExtension(filePath).ToLower();
-                                string fileName = Path.GetFileNameWithoutExtension(filePath).ToLower();
+                                string fileName = Path.GetFileNameWithoutExtension(filePath);
 
-                                // 检查是否是 po.dat 文件
-                                bool isPoDatFile = fileName.Equals("po") || fileName.Equals("po.dat");
-
-                                // 如果是 po.dat 文件，跳过不加载到 DataGrid
+                                // ========== 关键修改：统一过滤 po.dat 文件 ==========
+                                bool isPoDatFile = fileName.Equals("po", StringComparison.OrdinalIgnoreCase) ||
+                                                   fileName.Equals("po.dat", StringComparison.OrdinalIgnoreCase);
                                 if (isPoDatFile)
                                 {
-                                    logger.Info($"Skipping po.dat file: {Path.GetFileName(filePath)}");
-                                    continue;
+                                    logger.Info($"Skipping po.dat file in image loader: {Path.GetFileName(filePath)}");
+                                    continue; // 跳过不加载到任何集合
                                 }
+                                // =================================================
 
                                 var imageItem = new ImageItem(_nextImageId++)
                                 {
@@ -367,26 +367,7 @@ namespace CVWPFCamImageCtrl
                     }
                 });
 
-                // 加载完成后，根据当前视图类型选择第一项
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    var currentActiveCollection = GetCurrentActiveCollection();
-                    if (currentActiveCollection.Count > 0)
-                    {
-                        // 确保 DataGrid 绑定的是当前活动集合
-                        if (_currentViewType == "Analysis")
-                        {
-                            MainImageDataGrid.ItemsSource = _model.ProcessedImageResults;
-                        }
-                        else if (_currentViewType == "Camera")
-                        {
-                            MainImageDataGrid.ItemsSource = _model.OriginalImageResults;
-                        }
-
-                        MainImageDataGrid.SelectedIndex = 0;
-                        MainImageDataGrid.Items.Refresh();
-                    }
-                });
+                // ... 其他代码不变 ...
             }
             catch (Exception ex)
             {
@@ -395,6 +376,86 @@ namespace CVWPFCamImageCtrl
             }
 
             return results;
+            //List<ImageItem> results = new List<ImageItem>();
+            //try
+            //{
+            //    int loadedCount = 0;
+            //    int totalCount = filePaths.Length;
+
+            //    await System.Threading.Tasks.Task.Run(() =>
+            //    {
+            //        foreach (string filePath in filePaths)
+            //        {
+            //            try
+            //            {
+            //                var fileInfo = new FileInfo(filePath);
+            //                if (fileInfo.Exists)
+            //                {
+            //                    // 获取文件扩展名
+            //                    string fileExt = Path.GetExtension(filePath).ToLower();
+            //                    string fileName = Path.GetFileNameWithoutExtension(filePath).ToLower();
+
+            //                    // 检查是否是 po.dat 文件
+            //                    bool isPoDatFile = fileName.Equals("po") || fileName.Equals("po.dat");
+
+            //                    // 如果是 po.dat 文件，跳过不加载到 DataGrid
+            //                    if (isPoDatFile)
+            //                    {
+            //                        logger.Info($"Skipping po.dat file: {Path.GetFileName(filePath)}");
+            //                        continue;
+            //                    }
+
+            //                    var imageItem = new ImageItem(_nextImageId++)
+            //                    {
+            //                        ImagePath = filePath,
+            //                        FileName = Path.GetFileName(filePath),
+            //                        FileSizeMB = fileInfo.Length / (1024.0 * 1024.0),
+            //                        Status = IsChineseMode ? "待加载" : "Loading"
+            //                    };
+
+            //                    // 调用 ViewModel 的 AddImage 方法，自动分配到对应集合
+            //                    _model.AddImage(imageItem);
+
+            //                    loadedCount++;
+            //                    UpdateProgressText(loadedCount, totalCount);
+            //                }
+            //            }
+            //            catch (Exception ex)
+            //            {
+            //                logger.Info(IsChineseMode ? $"加载文件失败 {filePath}: {ex.Message}" :
+            //                    $"Failed to load file {filePath}: {ex.Message}");
+            //            }
+            //        }
+            //    });
+
+            //    // 加载完成后，根据当前视图类型选择第一项
+            //    Application.Current.Dispatcher.Invoke(() =>
+            //    {
+            //        var currentActiveCollection = GetCurrentActiveCollection();
+            //        if (currentActiveCollection.Count > 0)
+            //        {
+            //            // 确保 DataGrid 绑定的是当前活动集合
+            //            if (_currentViewType == "Analysis")
+            //            {
+            //                MainImageDataGrid.ItemsSource = _model.ProcessedImageResults;
+            //            }
+            //            else if (_currentViewType == "Camera")
+            //            {
+            //                MainImageDataGrid.ItemsSource = _model.OriginalImageResults;
+            //            }
+
+            //            MainImageDataGrid.SelectedIndex = 0;
+            //            MainImageDataGrid.Items.Refresh();
+            //        }
+            //    });
+            //}
+            //catch (Exception ex)
+            //{
+            //    ShowErrorMessage(IsChineseMode ? "加载图像文件时发生错误" :
+            //        "An error occurred while loading the image", ex);
+            //}
+
+            //return results;
             //List<ImageItem> results = new List<ImageItem>();
             //try
             //{
