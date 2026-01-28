@@ -140,5 +140,13 @@ namespace CVWaferProber.ViewModels
         {
            await _client?.ZAllUpAsync();
         }
+
+        public void FireUI()
+        {
+            this.OnPropertyChanged(nameof(ContinuAutoTestCommand));
+            this.OnPropertyChanged(nameof(PauseAutoTestCommand));
+            this.OnPropertyChanged(nameof(CanPauseAutoTest));
+            this.OnPropertyChanged(nameof(CanContinuAutoTest));
+        }
     }
 }

@@ -32,6 +32,19 @@
                         Text="{Binding ConnectionSettings.Port}"/>
                 </StackPanel>
             </TabItem>
+            <!--  MotionSettings Tab页  -->
+            <TabItem Header="MotionSettings">
+                <StackPanel>
+                    <Label Content="DefaultXYMotionTimeout(s):"/>
+                    <TextBox
+                        Margin="10,0,10,0"
+                        Text="{Binding MotionSettings.DefaultXYMotionTimeout}"/>
+                    <Label Content="DefaultZMotionTimeout(s):"/>
+                    <TextBox
+                        Margin="10,0,10,0"
+                        Text="{Binding MotionSettings.DefaultZMotionTimeout}"/>
+                </StackPanel>
+            </TabItem>
             <!--  1. VAM Tab页  -->
             <TabItem Header="VAM">
                 <Grid Margin="10">

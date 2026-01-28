@@ -162,6 +162,9 @@ namespace CVWaferProber.Views
                       
                         ConfigModel.ConnectionSettings.ServerIP = ConfigManager.Config.ConnectionSettings.ServerIP;
                         ConfigModel.ConnectionSettings.Port = ConfigManager.Config.ConnectionSettings.Port;
+                        //
+                        ConfigModel.MotionSettings.DefaultXYMotionTimeout = ConfigManager.Config.MotionSettings.DefaultXYMotionTimeout;
+                        ConfigModel.MotionSettings.DefaultZMotionTimeout = ConfigManager.Config.MotionSettings.DefaultZMotionTimeout;
                     }
                 }
             }
@@ -185,11 +188,16 @@ namespace CVWaferProber.Views
                 EnsureDirectoryExists(Path.GetDirectoryName(configPath));
                 // 写入文件
                 File.WriteAllText(configPath, configContent);
-
+                //
                 ConfigManager.Config.ConnectionSettings.ServerIP = ConfigModel.ConnectionSettings.ServerIP;
                 ConfigManager.Config.ConnectionSettings.Port = ConfigModel.ConnectionSettings.Port;
+                //
+                ConfigManager.Config.MotionSettings.DefaultXYMotionTimeout = ConfigModel.MotionSettings.DefaultXYMotionTimeout;
+                ConfigManager.Config.MotionSettings.DefaultZMotionTimeout = ConfigModel.MotionSettings.DefaultZMotionTimeout;
                 ConfigManager.SaveConfig();
-
+                //
+                ProberClientService.Instance.ReloadSettings();
+                //
                 ProberClientService.Instance.SetConnectionSettings(ConfigModel.ConnectionSettings.ServerIP, ConfigModel.ConnectionSettings.Port);
                 ProberClientService.Instance.ReconnectAsync();
             }

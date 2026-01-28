@@ -1,4 +1,5 @@
-﻿using CVWaferProber.Core.Models;
+﻿using CVWaferProber.Core.Config;
+using CVWaferProber.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,6 +12,7 @@ namespace CVWaferProber.Core.ViewModels
 {
     public class GlobalConfigModel
     {
+        public MotionSettings MotionSettings { get; set; } = new();
         public ConnectionSettings ConnectionSettings { get; set; } = new();
         /// <summary>
         /// VAM自动导出默认路径
@@ -33,7 +35,6 @@ namespace CVWaferProber.Core.ViewModels
 
         public GlobalConfigModel()
         {
-            //ConnectionSettings = new ConnectionSettings();
         }
         /// <summary>
         /// 验证所有配置路径是否有效

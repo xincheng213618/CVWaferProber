@@ -16,8 +16,20 @@ namespace CVWaferProber.Core.Config
         public WindowSettings WindowSettings { get; set; } = new();
         public UserPreferences UserPreferences { get; set; } = new();
         public ConnectionSettings ConnectionSettings { get; set; } = new();
+        public MotionSettings MotionSettings { get; set; } = new();
     }
 
+    public class MotionSettings
+    {
+        /// <summary>
+        /// XY轴超时5秒
+        /// </summary>
+        public int DefaultXYMotionTimeout { get; set; } = 10;
+        /// <summary>
+        /// Z轴超时5秒
+        /// </summary>
+        public int DefaultZMotionTimeout { get; set; } = 5;
+    }
     // WindowSettings.cs
     public class WindowSettings
     {

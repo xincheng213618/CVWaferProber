@@ -1,7 +1,6 @@
 ﻿using AvalonDock;
 using AvalonDock.Layout;
 using ChipMapping.Models;
-using ChipMapping.Models.HZCC;
 using ChipMapping.ViewModels;
 using ColorVision.Core.Entities;
 using CVDB.Services.Buz;
@@ -2141,7 +2140,7 @@ namespace CVWaferProber.ViewModels
             StartManFlow();
         }
 
-        private void EnableBtnGUI(bool enabled)
+        public void EnableBtnGUI(bool enabled)
         {
             CustomMappingVM.DisabledInput = IsProcessing = !enabled;
 

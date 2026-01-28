@@ -47,7 +47,9 @@ namespace CVWaferProber.Services
             eventAggregator.Subscribe<ConnectionStateChangedEvent>(OnClientProberStateChanged);
             eventAggregator.Subscribe<StateTransitionEvent>(OnStateTransition);
 
-            ProberStateMachine proberState = new ProberStateMachine(eventAggregator, _clientProber);
+            var motionSettings = ConfigManager.Config.MotionSettings;
+            ProberStateMachine proberState = new ProberStateMachine(eventAggregator, _clientProber,
+                motionSettings.DefaultXYMotionTimeout, motionSettings.DefaultZMotionTimeout);
             _proberState = proberState;
             eventAggregator.Subscribe<StateUpdatedEvent>(OnProberStateUpdated);
             _proberState.StartAsync().Wait();
@@ -119,7 +121,7 @@ namespace CVWaferProber.Services
             _clientProber?.SendResultAsync(result);
         }
 
-        public async Task<bool> MoveTo(DieViewModel die, bool isFirst)
+        public async Task<bool> MoveToAsync(DieViewModel die, bool isFirst)
         {
             if (_clientProber != null)
             {
@@ -149,8 +151,6 @@ namespace CVWaferProber.Services
             if (logger.IsInfoEnabled) logger.InfoFormat("Prober client Moving Absolute Axis => {0}", die.MapAxisToString());
             _clientProber?.MoveAbsoluteAsync(absAxis.y, absAxis.x);
             return await WaitingMotionMoveAsync(die);
-            //Task.Delay(2000).Wait();
-            //return true;
         }
         private async Task<bool> ZUpAsync(DieViewModel die)
         {
@@ -337,6 +337,12 @@ namespace CVWaferProber.Services
         public void Maintenance()
         {
             _proberState?.TransitionToAsync(ProberState.Maintenance);
+        }
+
+        public void ReloadSettings()
+        {
+            var motionSettings = ConfigManager.Config.MotionSettings;
+            _proberState?.ReloadSettings(motionSettings.DefaultXYMotionTimeout, motionSettings.DefaultZMotionTimeout);
         }
     }
 }

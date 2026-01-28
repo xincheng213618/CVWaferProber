@@ -31,7 +31,15 @@ namespace CVWaferProber.Models
 
             return (pre, next);
         }
-
+        /// <summary>
+        /// 回滚到上一个测试的Die
+        /// </summary>
+        /// <returns>回滚后的当前DieViewModel，如果无法回滚则返回null</returns>
+        public DieViewModel? RollbackToPrevious()
+        {
+            CurTestingIndex--;
+            return TestingDieVMList[CurTestingIndex];
+        }
         public DieViewModel? GetCurrentDieVM()
         {
             //if (IsEnd) return null;

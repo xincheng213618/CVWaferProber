@@ -21,8 +21,8 @@ namespace WaferComm.StateMachine
 
         private MotionCommand _currentMotion;
         private DateTime _motionStartTime;
-        private readonly TimeSpan _defaultMotionTimeout = TimeSpan.FromSeconds(5);
-        private readonly TimeSpan _zMotionTimeout = TimeSpan.FromSeconds(10);
+        private TimeSpan _defaultXYMotionTimeout = TimeSpan.FromSeconds(10);
+        private TimeSpan _defaultZMotionTimeout = TimeSpan.FromSeconds(5);
         private readonly List<MotionCommand> _motionHistory = new List<MotionCommand>();
         private const int MAX_HISTORY_COUNT = 100;
 
@@ -30,10 +30,12 @@ namespace WaferComm.StateMachine
         public MotionCommand CurrentMotion => _currentMotion;
         public IEnumerable<MotionCommand> MotionHistory => _motionHistory.AsReadOnly();
 
-        public MotionMonitor(IEventAggregator eventAggregator) : base(eventAggregator)
+        public MotionMonitor(IEventAggregator eventAggregator, int defaultMotionTimeout, int zMotionTimeout) : base(eventAggregator)
         {
             _eventAggregator = eventAggregator;
 
+            _defaultXYMotionTimeout = TimeSpan.FromSeconds(defaultMotionTimeout);
+            _defaultZMotionTimeout = TimeSpan.FromSeconds(zMotionTimeout);
             _motionTimeoutTimer = new System.Timers.Timer();
             _motionTimeoutTimer.Elapsed += OnMotionTimeout;
             _motionTimeoutTimer.AutoReset = false;
@@ -189,9 +191,9 @@ namespace WaferComm.StateMachine
             string cmd = command.Trim('$', '#');
 
             if (cmd == "Z" || cmd == "D")
-                return _zMotionTimeout;
+                return _defaultZMotionTimeout;
             else
-                return _defaultMotionTimeout;
+                return _defaultXYMotionTimeout;
         }
 
         private void ProcessMotionResponse(string response)
@@ -428,6 +430,12 @@ namespace WaferComm.StateMachine
         {
             base.Dispose();
             _motionTimeoutTimer?.Dispose();
+        }
+
+        public void ReloadSettings(int defaultXYMotionTimeout, int defaultZMotionTimeout)
+        {
+            _defaultXYMotionTimeout = TimeSpan.FromSeconds(defaultXYMotionTimeout);
+            _defaultZMotionTimeout = TimeSpan.FromSeconds(defaultZMotionTimeout);
         }
     }
 

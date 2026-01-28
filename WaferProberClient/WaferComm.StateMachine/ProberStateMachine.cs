@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Timers;
+﻿using System.Timers;
 using WaferComm.Client;
 using WaferComm.Core;
 using WaferComm.Processors;
@@ -38,12 +34,12 @@ namespace WaferComm.StateMachine
             }
         }
 
-        public ProberStateMachine(IEventAggregator eventAggregator, IWaferProberClient client) : base(eventAggregator)
+        public ProberStateMachine(IEventAggregator eventAggregator, IWaferProberClient client, int defaultMotionTimeout, int zMotionTimeout) : base(eventAggregator)
         {
             _eventAggregator = eventAggregator;
             _client = client;
 
-            _motionMonitor = new MotionMonitor(eventAggregator);
+            _motionMonitor = new MotionMonitor(eventAggregator, defaultMotionTimeout, zMotionTimeout);
             _heaterMonitor = new HeaterMonitor(eventAggregator, client);
             // 初始化状态转移规则
             _allowedTransitions = InitializeTransitionRules();
@@ -685,6 +681,11 @@ namespace WaferComm.StateMachine
         public async Task StopHeaterMonitorAsync()
         {
             await _heaterMonitor.StopAsync();
+        }
+
+        public void ReloadSettings(int defaultXYMotionTimeout, int defaultZMotionTimeout)
+        {
+            _motionMonitor.ReloadSettings(defaultXYMotionTimeout, defaultZMotionTimeout);
         }
     }
 }
