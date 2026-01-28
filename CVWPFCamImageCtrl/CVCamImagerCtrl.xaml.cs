@@ -330,16 +330,13 @@ namespace CVWPFCamImageCtrl
                             var fileInfo = new FileInfo(filePath);
                             if (fileInfo.Exists)
                             {
-                                // 获取文件扩展名
-                                string fileExt = Path.GetExtension(filePath).ToLower();
-                                string fileName = Path.GetFileNameWithoutExtension(filePath);
+                                string fileName = Path.GetFileNameWithoutExtension(filePath).ToLower();
 
                                 // ========== 关键修改：统一过滤 po.dat 文件 ==========
-                                bool isPoDatFile = fileName.Equals("po", StringComparison.OrdinalIgnoreCase) ||
-                                                   fileName.Equals("po.dat", StringComparison.OrdinalIgnoreCase);
+                                bool isPoDatFile = fileName.Equals("po") || fileName.Equals("po.dat");
                                 if (isPoDatFile)
                                 {
-                                    logger.Info($"Skipping po.dat file in image loader: {Path.GetFileName(filePath)}");
+                                    logger.Info($"Skipping po.dat file: {Path.GetFileName(filePath)}");
                                     continue; // 跳过不加载到任何集合
                                 }
                                 // =================================================
@@ -352,7 +349,7 @@ namespace CVWPFCamImageCtrl
                                     Status = IsChineseMode ? "待加载" : "Loading"
                                 };
 
-                                // 调用 ViewModel 的 AddImage 方法，自动分配到对应集合
+                                // 调用 ViewModel 的 AddImage 方法，自动根据扩展名分类
                                 _model.AddImage(imageItem);
 
                                 loadedCount++;
@@ -367,7 +364,25 @@ namespace CVWPFCamImageCtrl
                     }
                 });
 
-                // ... 其他代码不变 ...
+                // 加载完成后，根据当前视图类型选择第一项
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var currentActiveCollection = GetCurrentActiveCollection();
+                    if (currentActiveCollection.Count > 0)
+                    {
+                        if (_currentViewType == "Analysis")
+                        {
+                            MainImageDataGrid.ItemsSource = _model.ProcessedImageResults;
+                        }
+                        else if (_currentViewType == "Camera")
+                        {
+                            MainImageDataGrid.ItemsSource = _model.OriginalImageResults;
+                        }
+
+                        MainImageDataGrid.SelectedIndex = 0;
+                        MainImageDataGrid.Items.Refresh();
+                    }
+                });
             }
             catch (Exception ex)
             {

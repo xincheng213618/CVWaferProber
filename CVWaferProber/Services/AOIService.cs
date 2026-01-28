@@ -388,14 +388,82 @@ namespace CVWaferProber.Services
                 List<POIMarker> POIMarkers = new List<POIMarker>();
                 int id = 1;
 
-                // 原有图像解析逻辑（无UI操作）
                 foreach (var result in results)
                 {
-                    // 1. 先加载Analysis image（从TScgdAlgorithmResultDetailPoiCieFile获取）
-                    LoadAnalysisImages(results, ref id, ref resultImageFile, ref TestTime);
+                    AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
 
-                    // 2. 再加载Camera Measurement（从VScgdAlgorithmResultMaster获取关联的原图）
-                    LoadCameraMeasurementImages(results, ref id);
+                    // 1. 从 VScgdAlgorithmResultMaster 获取 → Camera Measurement
+                    if (result.ImgFileType >= 42 && result.ImgFileType <= 45)
+                    {
+                        resultImageFile = result.ImgFile;
+                        TestTime = result.CreateDate;
+
+                        // 如果不是 po.dat 文件，添加到 Camera Measurement
+                        if (!string.IsNullOrEmpty(resultImageFile))
+                        {
+                            AddImageToViewModel(id++, resultImageFile, false); // false 表示来自 VScgd
+                        }
+                    }
+                    else if (resultType == AlgorithmResultType.OLED_CombineQuaterImages)
+                    {
+                        // 从 VScgdAlgorithmResultMaster 获取 → Camera Measurement
+                        if (!string.IsNullOrEmpty(result.ImgResult))
+                        {
+                            AddImageToViewModel(id++, result.ImgResult, false);
+                        }
+                    }
+                    else if (resultType == AlgorithmResultType.OLED_FindDotsArrayOutFile)
+                    {
+                        // 从 VScgdAlgorithmResultMaster 获取 → Camera Measurement
+                        if (!string.IsNullOrEmpty(result.ImgFile))
+                        {
+                            AddImageToViewModel(id++, result.ImgFile, false);
+                        }
+                    }
+
+                    // 2. 从 TScgdAlgorithmResultDetailPoiCieFile 获取 → Analysis image
+                    else if (resultType == AlgorithmResultType.OLED_RebuildPixelsMem)
+                    {
+                        var details = AlgResultService.GetPOIDetailResultFileByPid(result.Id);
+                        if (details != null && details.Count == 1)
+                        {
+                            string filePath = details[0].FileUrl;
+                            if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+                            {
+                                AddImageToViewModel(id++, filePath, true); // true 表示来自 TScgd
+                            }
+                        }
+                    }
+
+                    // 其他处理逻辑（POI标记等）保持不变
+                    else if (resultType == AlgorithmResultType.POI_Y)
+                    {
+                        var details = AlgResultService.GetPOIDetailResult(result.Id);
+                        foreach (var poi in details)
+                        {
+                            if (poi.PoiType == 0) POIMarkers.Add(new CircleMarker() { Label = poi.PoiName, X = (double)poi.PoiX, Y = (double)poi.PoiY, Width = (double)poi.PoiWidth, Height = (double)poi.PoiHeight, Fill = null });
+                            else if (poi.PoiType == 1) POIMarkers.Add(new RectangleMarker() { Label = poi.PoiName, X = (double)poi.PoiX, Y = (double)poi.PoiY, Width = (double)poi.PoiWidth, Height = (double)poi.PoiHeight, Fill = null });
+                        }
+                    }
+                    else if (resultType == AlgorithmResultType.PoiAnalysis)
+                    {
+                        var details = AlgResultService.GetCommDetailResult(result.Id);
+                        if (details != null && details.Count == 1)
+                        {
+                            DetailResult_CommFile_V2 detailResult_Comm = JsonConvert.DeserializeObject<DetailResult_CommFile_V2>(details[0].Result);
+                            if (System.IO.File.Exists(detailResult_Comm.ResultFileName))
+                            {
+                                PoiAnalysis poiAnalysis = JsonConvert.DeserializeObject<PoiAnalysis>(System.IO.File.ReadAllText(detailResult_Comm.ResultFileName));
+                                chipData.DataValue = poiAnalysis.result.Value;
+                                ImageDisplayBrightnessUniformity = string.Format("[{0},{1}]={2:F4}", chipData.Row, chipData.Column, chipData.DataValue);
+
+                                if (!string.IsNullOrEmpty(resultImageFile))
+                                {
+                                    AddImageToViewModel(id++, resultImageFile, false); // 来自 VScgd
+                                }
+                            }
+                        }
+                    }
                 }
 
                 // 仅UI更新操作切回UI线程
@@ -410,12 +478,47 @@ namespace CVWaferProber.Services
                             CustomImageVM?.UpdatePOIImage(image, POIMarkers, ImageDisplayBrightnessUniformity);
                         }
                     }
-
-                    // 图像添加到ViewModel的操作也在UI线程
-                    if (!string.IsNullOrEmpty(resultImageFile))
-                        AddResultImage(id++, resultImageFile);
                 });
             });
+            // 后台线程处理图像加载逻辑
+            //Task.Run(() =>
+            //{
+            //    string? resultImageFile = null;
+            //    DateTime? TestTime = null;
+            //    string? ImageDisplayBrightnessUniformity = null;
+            //    var results = AlgResultService.LoadAlgResultByBatchCode(serialNumber);
+            //    if (results == null || results.Count == 0) return;
+            //    List<POIMarker> POIMarkers = new List<POIMarker>();
+            //    int id = 1;
+
+            //    // 原有图像解析逻辑（无UI操作）
+            //    foreach (var result in results)
+            //    {
+            //        // 1. 先加载Analysis image（从TScgdAlgorithmResultDetailPoiCieFile获取）
+            //        LoadAnalysisImages(results, ref id, ref resultImageFile, ref TestTime);
+
+            //        // 2. 再加载Camera Measurement（从VScgdAlgorithmResultMaster获取关联的原图）
+            //        LoadCameraMeasurementImages(results, ref id);
+            //    }
+
+            //    // 仅UI更新操作切回UI线程
+            //    Application.Current.Dispatcher.Invoke(() =>
+            //    {
+            //        if (!string.IsNullOrEmpty(resultImageFile) && !string.IsNullOrEmpty(ImageDisplayBrightnessUniformity))
+            //        {
+            //            OpenCvSharp.Mat? image = null;
+            //            if (CVImageFileUtil.LoadImgFile(resultImageFile, ref image))
+            //            {
+            //                image = OpenCvMatTools.ConvertImageTo8UC3(image);
+            //                CustomImageVM?.UpdatePOIImage(image, POIMarkers, ImageDisplayBrightnessUniformity);
+            //            }
+            //        }
+
+            //        // 图像添加到ViewModel的操作也在UI线程
+            //        if (!string.IsNullOrEmpty(resultImageFile))
+            //            AddResultImage(id++, resultImageFile);
+            //    });
+            //});
             //string? resultImageFile = null;
             //DateTime? TestTime = null;
             //string? ImageDisplayBrightnessUniformity = null;
@@ -525,146 +628,186 @@ namespace CVWaferProber.Services
         /// <summary>
         /// 加载Analysis image（分析后图像）- 从TScgdAlgorithmResultDetailPoiCieFile获取，过滤po.dat
         /// </summary>
-        private void LoadAnalysisImages(List<VScgdAlgorithmResultMaster> results, ref int id, ref string? resultImageFile, ref DateTime? TestTime)
+        //private void LoadAnalysisImages(List<VScgdAlgorithmResultMaster> results, ref int id, ref string? resultImageFile, ref DateTime? TestTime)
+        //{
+        //    foreach (var result in results)
+        //    {
+        //        AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
+
+        //        // 处理OLED_RebuildPixelsMem类型（关联TScgdAlgorithmResultDetailPoiCieFile）
+        //        if (resultType == AlgorithmResultType.OLED_RebuildPixelsMem)
+        //        {
+        //            var details = AlgResultService.GetPOIDetailResultFileByPid(result.Id);
+        //            if (details != null && details.Count == 1)
+        //            {
+        //                string filePath = details[0].FileUrl;
+
+        //                // ========== 增强过滤逻辑 ==========
+        //                if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+        //                {
+        //                    string fileName = Path.GetFileNameWithoutExtension(filePath).ToLower();
+        //                    if (!fileName.Equals("po") && !fileName.Equals("po.dat"))
+        //                    {
+        //                        AddAnalysisImage(id++, filePath);
+        //                    }
+        //                }
+        //                // =================================
+        //            }
+        //        }
+
+        //        // 记录基础信息（原有逻辑）
+        //        if (result.ImgFileType >= 42 && result.ImgFileType <= 45)
+        //        {
+        //            resultImageFile = result.ImgFile;
+        //            TestTime = result.CreateDate;
+        //        }
+        //    }
+        //    //foreach (var result in results)
+        //    //{
+        //    //    // 处理OLED_RebuildPixelsMem类型（关联TScgdAlgorithmResultDetailPoiCieFile）
+        //    //    AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
+        //    //    if (resultType == AlgorithmResultType.OLED_RebuildPixelsMem)
+        //    //    {
+        //    //        var details = AlgResultService.GetPOIDetailResultFileByPid(result.Id);
+        //    //        if (details != null && details.Count == 1)
+        //    //        {
+        //    //            string filePath = details[0].FileUrl;
+        //    //            // 过滤po.dat后缀的文件
+        //    //            if (!string.IsNullOrEmpty(filePath)
+        //    //                && File.Exists(filePath)
+        //    //                && !Path.GetFileName(filePath).ToLower().Equals("po.dat"))
+        //    //            {
+        //    //                AddAnalysisImage(id++, filePath);
+        //    //            }
+        //    //        }
+        //    //    }
+
+        //    //    // 记录基础信息（原有逻辑）
+        //    //    if (result.ImgFileType >= 42 && result.ImgFileType <= 45)
+        //    //    {
+        //    //        resultImageFile = result.ImgFile;
+        //    //        TestTime = result.CreateDate;
+        //    //    }
+        //    //}
+        //}
+        /// <summary>
+        /// 添加图像到对应的视图集合
+        /// </summary>
+        private void AddImageToViewModel(int id, string imgFile, bool isFromTScgd = false)
         {
-            foreach (var result in results)
+            if (!File.Exists(imgFile)) return;
+
+            string fileName = Path.GetFileNameWithoutExtension(imgFile).ToLower();
+
+            // ========== 关键修改：统一过滤 po.dat 文件 ==========
+            if (fileName.Equals("po") || fileName.Equals("po.dat"))
             {
-                AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
-
-                // 处理OLED_RebuildPixelsMem类型（关联TScgdAlgorithmResultDetailPoiCieFile）
-                if (resultType == AlgorithmResultType.OLED_RebuildPixelsMem)
-                {
-                    var details = AlgResultService.GetPOIDetailResultFileByPid(result.Id);
-                    if (details != null && details.Count == 1)
-                    {
-                        string filePath = details[0].FileUrl;
-
-                        // ========== 增强过滤逻辑 ==========
-                        if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
-                        {
-                            string fileName = Path.GetFileNameWithoutExtension(filePath).ToLower();
-                            if (!fileName.Equals("po") && !fileName.Equals("po.dat"))
-                            {
-                                AddAnalysisImage(id++, filePath);
-                            }
-                        }
-                        // =================================
-                    }
-                }
-
-                // 记录基础信息（原有逻辑）
-                if (result.ImgFileType >= 42 && result.ImgFileType <= 45)
-                {
-                    resultImageFile = result.ImgFile;
-                    TestTime = result.CreateDate;
-                }
+                Debug.WriteLine($"Skipping po.dat file: {Path.GetFileName(imgFile)}");
+                return; // 跳过 po.dat 文件
             }
-            //foreach (var result in results)
-            //{
-            //    // 处理OLED_RebuildPixelsMem类型（关联TScgdAlgorithmResultDetailPoiCieFile）
-            //    AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
-            //    if (resultType == AlgorithmResultType.OLED_RebuildPixelsMem)
-            //    {
-            //        var details = AlgResultService.GetPOIDetailResultFileByPid(result.Id);
-            //        if (details != null && details.Count == 1)
-            //        {
-            //            string filePath = details[0].FileUrl;
-            //            // 过滤po.dat后缀的文件
-            //            if (!string.IsNullOrEmpty(filePath)
-            //                && File.Exists(filePath)
-            //                && !Path.GetFileName(filePath).ToLower().Equals("po.dat"))
-            //            {
-            //                AddAnalysisImage(id++, filePath);
-            //            }
-            //        }
-            //    }
+            // =================================================
 
-            //    // 记录基础信息（原有逻辑）
-            //    if (result.ImgFileType >= 42 && result.ImgFileType <= 45)
-            //    {
-            //        resultImageFile = result.ImgFile;
-            //        TestTime = result.CreateDate;
-            //    }
-            //}
+            // 构造ImageItem
+            ImageItem loc = new ImageItem(id)
+            {
+                FileName = Path.GetFileName(imgFile),
+                ImagePath = imgFile,
+                FileSizeMB = new FileInfo(imgFile).Length / (1024.0 * 1024.0),
+                Status = "Ready"
+            };
+
+            // 根据来源添加到对应集合
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                if (isFromTScgd)
+                {
+                    // 从 TScgdAlgorithmResultDetailPoiCieFile 获取的 → Analysis image 视图
+                    CustomImageVM?.AddImage(loc); // 这会进入 ProcessedImageResults
+                }
+                else
+                {
+                    // 从 VScgdAlgorithmResultMaster 获取的 → Camera Measurement 视图
+                    CustomImageVM?.AddOriginalImageOnly(loc); // 这会进入 OriginalImageResults
+                }
+            });
         }
-
         /// <summary>
         /// 加载Camera Measurement（原始图像）- 从VScgdAlgorithmResultMaster获取关联原图
         /// </summary>
-        private void LoadCameraMeasurementImages(List<VScgdAlgorithmResultMaster> results, ref int id)
-        {
-            foreach (var result in results)
-            {
-                AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
+        //private void LoadCameraMeasurementImages(List<VScgdAlgorithmResultMaster> results, ref int id)
+        //{
+        //    foreach (var result in results)
+        //    {
+        //        AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
 
-                // 匹配Camera Measurement的原图类型
-                List<AlgorithmResultType> cameraTypes = new List<AlgorithmResultType>
-                {
-                    AlgorithmResultType.OLED_FindDotsArrayOutFile, // 定位原图
-                    AlgorithmResultType.OLED_CombineQuaterImages   // 拼接原图
-                };
+        //        // 匹配Camera Measurement的原图类型
+        //        List<AlgorithmResultType> cameraTypes = new List<AlgorithmResultType>
+        //        {
+        //            AlgorithmResultType.OLED_FindDotsArrayOutFile, // 定位原图
+        //            AlgorithmResultType.OLED_CombineQuaterImages   // 拼接原图
+        //        };
 
-                if (cameraTypes.Contains(resultType) &&
-                    !string.IsNullOrEmpty(result.ImgFile) &&
-                    File.Exists(result.ImgFile))
-                {
-                    // ========== 增强过滤逻辑 ==========
-                    string fileName = Path.GetFileNameWithoutExtension(result.ImgFile).ToLower();
-                    if (!fileName.Equals("po") && !fileName.Equals("po.dat"))
-                    {
-                        AddCameraMeasurementImage(id++, result.ImgFile);
-                    }
-                    // =================================
-                }
-            }
-            //foreach (var result in results)
-            //{
-            //    AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
+        //        if (cameraTypes.Contains(resultType) &&
+        //            !string.IsNullOrEmpty(result.ImgFile) &&
+        //            File.Exists(result.ImgFile))
+        //        {
+        //            // ========== 增强过滤逻辑 ==========
+        //            string fileName = Path.GetFileNameWithoutExtension(result.ImgFile).ToLower();
+        //            if (!fileName.Equals("po") && !fileName.Equals("po.dat"))
+        //            {
+        //                AddCameraMeasurementImage(id++, result.ImgFile);
+        //            }
+        //            // =================================
+        //        }
+        //    }
+        //    //foreach (var result in results)
+        //    //{
+        //    //    AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
 
-            //    // 匹配Camera Measurement的原图类型（可根据实际业务调整类型范围）
-            //    List<AlgorithmResultType> cameraTypes = new List<AlgorithmResultType>
-            //    {
-            //        AlgorithmResultType.OLED_FindDotsArrayOutFile, // 定位原图
-            //        AlgorithmResultType.OLED_CombineQuaterImages   // 拼接原图
-            //        // 可添加其他原始图像类型
-            //    };
+        //    //    // 匹配Camera Measurement的原图类型（可根据实际业务调整类型范围）
+        //    //    List<AlgorithmResultType> cameraTypes = new List<AlgorithmResultType>
+        //    //    {
+        //    //        AlgorithmResultType.OLED_FindDotsArrayOutFile, // 定位原图
+        //    //        AlgorithmResultType.OLED_CombineQuaterImages   // 拼接原图
+        //    //        // 可添加其他原始图像类型
+        //    //    };
 
-            //    if (cameraTypes.Contains(resultType) && !string.IsNullOrEmpty(result.ImgFile) && File.Exists(result.ImgFile))
-            //    {
-            //        AddCameraMeasurementImage(id++, result.ImgFile);
-            //    }
-            //}
-        }
+        //    //    if (cameraTypes.Contains(resultType) && !string.IsNullOrEmpty(result.ImgFile) && File.Exists(result.ImgFile))
+        //    //    {
+        //    //        AddCameraMeasurementImage(id++, result.ImgFile);
+        //    //    }
+        //    //}
+        //}
 
         /// <summary>
         /// 添加Analysis image到ViewModel的ProcessedImageResults集合
         /// </summary>
-        private void AddAnalysisImage(int id, string imgFile)
-        {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                ImageItem loc = new ImageItem(id);
-                loc.FileName = Path.GetFileName(imgFile);
-                loc.ImagePath = imgFile;
-                // 使用AddImage方法（自动过滤po.dat并加入ProcessedImageResults）
-                CustomImageVM?.AddImage(loc);
-            });
-        }
+        //private void AddAnalysisImage(int id, string imgFile)
+        //{
+        //    Application.Current.Dispatcher.Invoke(() =>
+        //    {
+        //        ImageItem loc = new ImageItem(id);
+        //        loc.FileName = Path.GetFileName(imgFile);
+        //        loc.ImagePath = imgFile;
+        //        // 使用AddImage方法（自动过滤po.dat并加入ProcessedImageResults）
+        //        CustomImageVM?.AddImage(loc);
+        //    });
+        //}
 
         /// <summary>
         /// 添加Camera Measurement到ViewModel的OriginalImageResults集合
         /// </summary>
-        private void AddCameraMeasurementImage(int id, string imgFile)
-        {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                ImageItem loc = new ImageItem(id);
-                loc.FileName = Path.GetFileName(imgFile);
-                loc.ImagePath = imgFile;
-                // 直接添加到原始图像集合（包含所有类型）
-                CustomImageVM?.AddOriginalImageOnly(loc);
-            });
-        }
+        //private void AddCameraMeasurementImage(int id, string imgFile)
+        //{
+        //    Application.Current.Dispatcher.Invoke(() =>
+        //    {
+        //        ImageItem loc = new ImageItem(id);
+        //        loc.FileName = Path.GetFileName(imgFile);
+        //        loc.ImagePath = imgFile;
+        //        // 直接添加到原始图像集合（包含所有类型）
+        //        CustomImageVM?.AddOriginalImageOnly(loc);
+        //    });
+        //}
         public override void AutoExportData()
         {
 

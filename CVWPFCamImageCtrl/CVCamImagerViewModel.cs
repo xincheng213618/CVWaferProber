@@ -221,12 +221,13 @@ namespace CVWPFCamImageCtrl
                 bool isPoDatFile = fileName.Equals("po") || fileName.Equals("po.dat");
                 if (isPoDatFile)
                 {
-                    Debug.WriteLine($"Skipping po.dat file in both views: {imageItem.FileName}");
-                    return; // 在两个视图中都跳过 po.dat 文件
+                    Debug.WriteLine($"Skipping po.dat file in ViewModel: {imageItem.FileName}");
+                    return; // 跳过 po.dat 文件
                 }
                 // =================================================
 
-                // 1. 相机原始图（.cvraw）→ 添加到原图集合（Camera Measurement）
+                // 仅根据扩展名分类，不过滤其他条件
+                // 1. 相机原始图（.cvraw）→ 原图集合（Camera Measurement）
                 if (fileExt == ".cvraw")
                 {
                     if (!_originalImageResults.Any(item =>
@@ -235,7 +236,7 @@ namespace CVWPFCamImageCtrl
                         _originalImageResults.Add(imageItem);
                     }
                 }
-                // 2. 标定后图（.cvcie）→ 添加到处理后集合（Analysis Image）
+                // 2. 标定后图（.cvcie）→ 处理后集合（Analysis Image）
                 else if (fileExt == ".cvcie")
                 {
                     if (!_processedImageResults.Any(item =>
@@ -244,10 +245,9 @@ namespace CVWPFCamImageCtrl
                         _processedImageResults.Add(imageItem);
                     }
                 }
-                // 3. 其他格式（.tif, .tiff, .jpg 等）→ 根据上下文决定
+                // 3. 其他格式（.tif, .tiff, .jpg 等）→ 总集合
                 else
                 {
-                    // 默认添加到总集合
                     if (!_imageResults.Any(item =>
                         item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
                     {
