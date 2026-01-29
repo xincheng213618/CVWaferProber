@@ -97,10 +97,6 @@ namespace CVWPFCamImageCtrl
                 return;
             }
 
-            // 切换视图前清空当前显示
-            ImageDisplay.CurrentImage = null;
-            ClearImageInfoDisplay();
-
             var selectedItem = ViewSwitchComboBox.SelectedItem as ComboBoxItem;
             if (selectedItem == null)
             {
@@ -1255,8 +1251,7 @@ namespace CVWPFCamImageCtrl
 
         private void PreviousImage_Click(object sender, RoutedEventArgs e)
         {
-            var currentCollection = GetCurrentActiveCollection(); // 获取当前视图的集合
-            if (currentCollection.Any() && _currentImageIndex > 0)
+            if (_model.ImageResults.Any() && _currentImageIndex > 0)
             {
                 MainImageDataGrid.SelectedIndex = _currentImageIndex - 1;
             }
@@ -1264,8 +1259,7 @@ namespace CVWPFCamImageCtrl
 
         private void NextImage_Click(object sender, RoutedEventArgs e)
         {
-            var currentCollection = GetCurrentActiveCollection(); // 获取当前视图的集合
-            if (currentCollection.Any() && _currentImageIndex < currentCollection.Count - 1)
+            if (_model.ImageResults.Any() && _currentImageIndex < _model.ImageResults.Count - 1)
             {
                 MainImageDataGrid.SelectedIndex = _currentImageIndex + 1;
             }

@@ -63,16 +63,10 @@ namespace CVWPFCamImageCtrl
         {
             id = 1;
             ImageSrc = null;
-            // 清空所有图像集合
             _imageResults.Clear();
-            _processedImageResults.Clear();
-            _originalImageResults.Clear();
-            // 清空图像显示控件
-            if (_imageDisplay != null)
-                _imageDisplay.CurrentImage = null;
-            // 清空DataGrid显示的当前集合
-            if (CurrentDisplayCollection != null)
-                CurrentDisplayCollection.Clear();
+            _processedImageResults.Clear(); // 清空处理后图像
+            _originalImageResults.Clear(); // 清空原图
+            if (_imageDisplay != null) _imageDisplay.CurrentImage = null;
         }
         private void DrawCircleToImage(ref Mat image, CircleMarker poi)
         {
@@ -215,18 +209,13 @@ namespace CVWPFCamImageCtrl
             Application.Current.Dispatcher.Invoke(() =>
             {
                 string fileName = imageItem.FileName?.ToLower() ?? string.Empty;
+                // 过滤po.dat文件
                 if (!fileName.Equals("po.dat"))
                 {
-                    // 仅加入Analysis视图集合和总集合
-                    if (!_processedImageResults.Any(item => item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        _processedImageResults.Add(imageItem);
-                    }
-                    if (!_imageResults.Contains(imageItem))
-                    {
-                        _imageResults.Add(imageItem);
-                    }
+                    _imageResults.Add(imageItem);
+                    _processedImageResults.Add(imageItem); // Analysis image集合
                 }
+                // 即使是po.dat，也不加入原始图像集合（仅Analysis image过滤）
             });
             //Application.Current.Dispatcher.Invoke(() =>
             //{
@@ -246,9 +235,11 @@ namespace CVWPFCamImageCtrl
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                if (!_originalImageResults.Any(item => item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
+                _originalImageResults.Add(imageItem); // Camera Measurement集合
+                                                      // 原始图像也加入总集合（可选，根据UI需求）
+                if (!_imageResults.Contains(imageItem))
                 {
-                    _originalImageResults.Add(imageItem); // 仅加入Camera视图集合
+                    _imageResults.Add(imageItem);
                 }
             });
         }

@@ -41,78 +41,40 @@ namespace CVWaferProber.Services
 
         protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
         {
-            // 所有耗时操作（数据库查询、文件读取、JSON解析）放到后台线程
-            Task.Run(() =>
+            var results = AlgResultService.LoadAlgResultByBatchCode(dieViewModel.SerialNumber!);
+            if (results != null && results.Count > 0)
             {
-                var results = AlgResultService.LoadAlgResultByBatchCode(dieViewModel.SerialNumber!);
-                if (results != null && results.Count > 0)
+                foreach (var result in results)
                 {
-                    foreach (var result in results)
+                    var aoiDetails = AlgResultService.GetCommDetailResult(result.Id);
+                    if (aoiDetails != null && aoiDetails.Count == 1)
                     {
-                        var aoiDetails = AlgResultService.GetCommDetailResult(result.Id);
-                        if (aoiDetails != null && aoiDetails.Count == 1)
+                        var resultJson = aoiDetails[0].Result;
+                        if (!string.IsNullOrEmpty(resultJson))
                         {
-                            var resultJson = aoiDetails[0].Result;
-                            if (!string.IsNullOrEmpty(resultJson))
+                            // 解析 Common 表中的 Result 字段，获取 JSON 文件路径
+                            var detailResult = JsonConvert.DeserializeObject<DetailResult_CommFile_V2>(resultJson);
+                            if (detailResult != null && !string.IsNullOrEmpty(detailResult.ResultFileName) && File.Exists(detailResult.ResultFileName))
                             {
-                                var detailResult = JsonConvert.DeserializeObject<DetailResult_CommFile_V2>(resultJson);
-                                if (detailResult != null && !string.IsNullOrEmpty(detailResult.ResultFileName) && File.Exists(detailResult.ResultFileName))
-                                {
-                                    string darkResultJson = File.ReadAllText(detailResult.ResultFileName);
-                                    var darkResult = JsonConvert.DeserializeObject<DarkResultDto>(darkResultJson);
+                                // 读取并解析 Darkresult.json 文件
+                                string darkResultJson = File.ReadAllText(detailResult.ResultFileName);
+                                var darkResult = JsonConvert.DeserializeObject<DarkResultDto>(darkResultJson);
 
-                                    // 仅更新ViewModel属性时切回UI线程
-                                    Application.Current.Dispatcher.Invoke(() =>
-                                    {
-                                        dieViewModel.AOIGradeLevel = darkResult?.GradeLevel ?? "na";
-                                        dieViewModel.BlackPattern = darkResult?.GradeLevel ?? "na";
-                                    });
-                                }
+                                // 提取 GradeLevel
+                                dieViewModel.AOIGradeLevel = darkResult?.GradeLevel ?? "na";
+                                dieViewModel.BlackPattern = darkResult?.GradeLevel ?? "na";
                             }
-                            break;
                         }
+                        break;
                     }
                 }
-
-
-            });
-            // 图像加载也放到后台线程，仅UI更新切回
-            LoadImageResult(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
-            return ChipStatus.OK;
-            //var results = AlgResultService.LoadAlgResultByBatchCode(dieViewModel.SerialNumber!);
-            //if (results != null && results.Count > 0)
-            //{
-            //    foreach (var result in results)
-            //    {
-            //        var aoiDetails = AlgResultService.GetCommDetailResult(result.Id);
-            //        if (aoiDetails != null && aoiDetails.Count == 1)
-            //        {
-            //            var resultJson = aoiDetails[0].Result;
-            //            if (!string.IsNullOrEmpty(resultJson))
-            //            {
-            //                // 解析 Common 表中的 Result 字段，获取 JSON 文件路径
-            //                var detailResult = JsonConvert.DeserializeObject<DetailResult_CommFile_V2>(resultJson);
-            //                if (detailResult != null && !string.IsNullOrEmpty(detailResult.ResultFileName) && File.Exists(detailResult.ResultFileName))
-            //                {
-            //                    // 读取并解析 Darkresult.json 文件
-            //                    string darkResultJson = File.ReadAllText(detailResult.ResultFileName);
-            //                    var darkResult = JsonConvert.DeserializeObject<DarkResultDto>(darkResultJson);
-
-            //                    // 提取 GradeLevel
-            //                    dieViewModel.AOIGradeLevel = darkResult?.GradeLevel ?? "na";
-            //                    dieViewModel.BlackPattern = darkResult?.GradeLevel ?? "na";
-            //                }
-            //            }
-            //            break;
-            //        }
-            //    }
-            //}
+            }
 
             // 自动导出CSV结果
             // AutoExportCSVResult(dieViewModel, results);
 
-            //LoadImageResult(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
-            //return ChipStatus.OK;
+            LoadImageResult(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
+            return ChipStatus.OK;
             //var results = AlgResultService.LoadAlgResultByBatchCode(dieViewModel.SerialNumber!);
             //if (results != null && results.Count > 0)
             //{
@@ -226,14 +188,11 @@ namespace CVWaferProber.Services
             public string GradeLevel { get; set; }
 
         }
-        public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext)
+        public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool isEnd = true)
         {
             dieViewModel.ChangeStatus(ChipStatus.TESTING);
-            System.Windows.Application.Current?.Dispatcher?.Invoke(() =>
-            {
-                CustomImageVM?.ClearImageResult();
-            });
-            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, hasNext);
+            CustomImageVM?.ClearImageResult();
+            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, isEnd);
             return task;
         }
         private ChipStatus GetDieResultStatus(string serialNumber)
@@ -269,8 +228,6 @@ namespace CVWaferProber.Services
             }
             else
             {
-                // 关键：在加载新数据前，先清空之前的数据
-                CustomImageVM?.ClearImageResult();
                 FlowResultDisplay(dieViewModel);
             }
             //CustomImageVM?.ClearImageResult();
@@ -281,6 +238,7 @@ namespace CVWaferProber.Services
         {
             if (!System.IO.File.Exists(imgFile)) return;
 
+            // 检查是否是 po.dat 文件
             string fileName = Path.GetFileNameWithoutExtension(imgFile).ToLower();
             if (fileName.Equals("po") || fileName.Equals("po.dat"))
             {
@@ -288,7 +246,6 @@ namespace CVWaferProber.Services
                 return;
             }
 
-            // 构造ImageItem（无UI操作）
             ImageItem loc = new ImageItem(id)
             {
                 FileName = Path.GetFileName(imgFile),
@@ -297,47 +254,17 @@ namespace CVWaferProber.Services
                 Status = "Ready"
             };
 
-            // 仅添加到UI集合时切回UI线程
-            Application.Current.Dispatcher.Invoke(() =>
+            // 根据图像类型添加到对应的集合
+            if (isRawImage)
             {
-                if (isRawImage)
-                {
-                    CustomImageVM?.AddOriginalImageOnly(loc);
-                }
-                else
-                {
-                    CustomImageVM?.AddImage(loc);
-                }
-            });
-            //if (!System.IO.File.Exists(imgFile)) return;
-
-            //// 检查是否是 po.dat 文件
-            //string fileName = Path.GetFileNameWithoutExtension(imgFile).ToLower();
-            //if (fileName.Equals("po") || fileName.Equals("po.dat"))
-            //{
-            //    Debug.WriteLine($"Skipping po.dat file: {Path.GetFileName(imgFile)}");
-            //    return;
-            //}
-
-            //ImageItem loc = new ImageItem(id)
-            //{
-            //    FileName = Path.GetFileName(imgFile),
-            //    ImagePath = imgFile,
-            //    FileSizeMB = new FileInfo(imgFile).Length / (1024.0 * 1024.0),
-            //    Status = "Ready"
-            //};
-
-            //// 根据图像类型添加到对应的集合
-            //if (isRawImage)
-            //{
-            //    // 原始相机图 → 添加到 OriginalImageResults
-            //    CustomImageVM?.AddOriginalImageOnly(loc);
-            //}
-            //else
-            //{
-            //    // 标定后图 → 添加到 ProcessedImageResults
-            //    CustomImageVM?.AddImage(loc);
-            //}
+                // 原始相机图 → 添加到 OriginalImageResults
+                CustomImageVM?.AddOriginalImageOnly(loc);
+            }
+            else
+            {
+                // 标定后图 → 添加到 ProcessedImageResults
+                CustomImageVM?.AddImage(loc);
+            }
         }
 
         private void LoadImageResult(ChipData? chipData, string serialNumber)
@@ -402,90 +329,90 @@ namespace CVWaferProber.Services
             //    image = OpenCvMatTools.ConvertImageTo8UC3(image);
             //    CustomImageVM?.UpdatePOIImage(image, POIMarkers, ImageDisplayBrightnessUniformity);
             //}
-
-            ////foreach (var result in results)
-            ////{
-            ////    AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
-            ////    if (result.ImgFileType >= 42 && result.ImgFileType <= 45)
-            ////    {
-            ////        resultImageFile = result.ImgFile;
-            ////        TestTime = result.CreateDate;
-            ////    }
-            ////    else if (resultType == AlgorithmResultType.OLED_CombineQuaterImages)
-            ////    {
-            ////        AddResultImage(id++, result.ImgResult);
-            ////    }
-            ////    else if (resultType == AlgorithmResultType.OLED_RebuildPixelsMem)
-            ////    {
-            ////        var details = AlgResultService.GetPOIDetailResultFileByPid(result.Id);
-            ////        if (details != null && details.Count == 1)
-            ////        {
-            ////            if (System.IO.File.Exists(details[0].FileUrl))
-            ////            {
-            ////                AddResultImage(id++, details[0].FileUrl);
-            ////            }
-            ////        }
-            ////    }
-            ////    else if (resultType == AlgorithmResultType.POI_Y)
-            ////    {
-            ////        var details = AlgResultService.GetPOIDetailResult(result.Id);
-            ////        foreach (var poi in details)
-            ////        {
-            ////            if (poi.PoiType == 0) POIMarkers.Add(new CircleMarker() { Label = poi.PoiName, X = (double)poi.PoiX, Y = (double)poi.PoiY, Width = (double)poi.PoiWidth, Height = (double)poi.PoiHeight, Fill = null });
-            ////            else if (poi.PoiType == 1) POIMarkers.Add(new RectangleMarker() { Label = poi.PoiName, X = (double)poi.PoiX, Y = (double)poi.PoiY, Width = (double)poi.PoiWidth, Height = (double)poi.PoiHeight, Fill = null });
-            ////        }
-            ////    }
-            ////    else if (resultType == AlgorithmResultType.PoiAnalysis)
-            ////    {
-            ////        var details = AlgResultService.GetCommDetailResult(result.Id);
-            ////        if (details != null && details.Count == 1)
-            ////        {
-            ////            DetailResult_CommFile_V2 detailResult_Comm = JsonConvert.DeserializeObject<DetailResult_CommFile_V2>(details[0].Result);
-            ////            if (System.IO.File.Exists(detailResult_Comm.ResultFileName))
-            ////            {
-            ////                //ImageItem imageResultViewModel = new ImageItem(id++);
-
-            ////                PoiAnalysis poiAnalysis = JsonConvert.DeserializeObject<PoiAnalysis>(System.IO.File.ReadAllText(detailResult_Comm.ResultFileName));
-            ////                chipData.DataValue = poiAnalysis.result.Value;
-            ////                ImageDisplayBrightnessUniformity = string.Format("[{0},{1}]={2:F4}", chipData.Row, chipData.Column, chipData.DataValue);
-            ////                //
-            ////                //imageResultViewModel.FileName = System.IO.Path.GetFileName(resultImageFile);
-            ////                //imageResultViewModel.ImagePath = resultImageFile;
-            ////                //imageResultViewModel.SerialNumber = serialNumber;
-            ////                //imageResultViewModel.TestTime = TestTime;
-            ////                //imageResultViewModel.ResultType = "数据提取";
-            ////                // 在UI线程更新集合
-            ////                //CustomImageVM?.AddImage(imageResultViewModel);
-
-            ////                if (!string.IsNullOrEmpty(resultImageFile)) AddResultImage(id++, resultImageFile);
-            ////            }
-            ////        }
-            ////    }
-            ////    //定位
-            ////    else if (resultType == AlgorithmResultType.OLED_FindDotsArrayOutFile)
-            ////    {
-            ////        //ImageItem loc = new ImageItem(id++);
-            ////        //loc.FileName = System.IO.Path.GetFileName(result.ImgFile);
-            ////        //loc.ImagePath = result.ImgFile;
-            ////        ////loc.ResultType = "定位";
-            ////        ////loc.SerialNumber = serialNumber;
-            ////        ////loc.TestTime = result.CreateDate;
-            ////        //// 在UI线程更新集合
-            ////        //CustomImageVM?.AddImage(loc);
-            ////       // AddResultImage(id++, result.ImgFile);
-            ////        bool isRawImage = Path.GetExtension(result.ImgFile).ToLower() == ".cvraw";
-            ////        AddResultImage(id++, result.ImgFile, isRawImage);
-
-            ////    }
-            ////}
-
             //if (!string.IsNullOrEmpty(resultImageFile) && !string.IsNullOrEmpty(ImageDisplayBrightnessUniformity))
             //{
             //    OpenCvSharp.Mat? image = null;
             //    if (!CVImageFileUtil.LoadImgFile(resultImageFile, ref image)) return;
             //    image = OpenCvMatTools.ConvertImageTo8UC3(image);
-            //    CustomImageVM?.UpdatePOIImage(image, POIMarkers, ImageDisplayBrightnessUniformity);             
+            //    CustomImageVM?.UpdatePOIImage(image, POIMarkers, ImageDisplayBrightnessUniformity);
             //}
+            //foreach (var result in results)
+            //{
+            //    AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
+            //    if (result.ImgFileType >= 42 && result.ImgFileType <= 45)
+            //    {
+            //        resultImageFile = result.ImgFile;
+            //        TestTime = result.CreateDate;
+            //    }
+            //    else if (resultType == AlgorithmResultType.OLED_CombineQuaterImages)
+            //    {
+            //        AddResultImage(id++, result.ImgResult);
+            //    }
+            //    else if (resultType == AlgorithmResultType.OLED_RebuildPixelsMem)
+            //    {
+            //        var details = AlgResultService.GetPOIDetailResultFileByPid(result.Id);
+            //        if (details != null && details.Count == 1)
+            //        {
+            //            if (System.IO.File.Exists(details[0].FileUrl))
+            //            {
+            //                AddResultImage(id++, details[0].FileUrl);
+            //            }
+            //        }
+            //    }
+            //    else if (resultType == AlgorithmResultType.POI_Y)
+            //    {
+            //        var details = AlgResultService.GetPOIDetailResult(result.Id);
+            //        foreach (var poi in details)
+            //        {
+            //            if (poi.PoiType == 0) POIMarkers.Add(new CircleMarker() { Label = poi.PoiName, X = (double)poi.PoiX, Y = (double)poi.PoiY, Width = (double)poi.PoiWidth, Height = (double)poi.PoiHeight, Fill = null });
+            //            else if (poi.PoiType == 1) POIMarkers.Add(new RectangleMarker() { Label = poi.PoiName, X = (double)poi.PoiX, Y = (double)poi.PoiY, Width = (double)poi.PoiWidth, Height = (double)poi.PoiHeight, Fill = null });
+            //        }
+            //    }
+            //    else if (resultType == AlgorithmResultType.PoiAnalysis)
+            //    {
+            //        var details = AlgResultService.GetCommDetailResult(result.Id);
+            //        if (details != null && details.Count == 1)
+            //        {
+            //            DetailResult_CommFile_V2 detailResult_Comm = JsonConvert.DeserializeObject<DetailResult_CommFile_V2>(details[0].Result);
+            //            if (System.IO.File.Exists(detailResult_Comm.ResultFileName))
+            //            {
+            //                //ImageItem imageResultViewModel = new ImageItem(id++);
+
+            //                PoiAnalysis poiAnalysis = JsonConvert.DeserializeObject<PoiAnalysis>(System.IO.File.ReadAllText(detailResult_Comm.ResultFileName));
+            //                chipData.DataValue = poiAnalysis.result.Value;
+            //                ImageDisplayBrightnessUniformity = string.Format("[{0},{1}]={2:F4}", chipData.Row, chipData.Column, chipData.DataValue);
+            //                //
+            //                //imageResultViewModel.FileName = System.IO.Path.GetFileName(resultImageFile);
+            //                //imageResultViewModel.ImagePath = resultImageFile;
+            //                //imageResultViewModel.SerialNumber = serialNumber;
+            //                //imageResultViewModel.TestTime = TestTime;
+            //                //imageResultViewModel.ResultType = "数据提取";
+            //                // 在UI线程更新集合
+            //                //CustomImageVM?.AddImage(imageResultViewModel);
+
+            //                if (!string.IsNullOrEmpty(resultImageFile)) AddResultImage(id++, resultImageFile);
+            //            }
+            //        }
+            //    }
+            //    //定位
+            //    else if (resultType == AlgorithmResultType.OLED_FindDotsArrayOutFile)
+            //    {
+            //        //ImageItem loc = new ImageItem(id++);
+            //        //loc.FileName = System.IO.Path.GetFileName(result.ImgFile);
+            //        //loc.ImagePath = result.ImgFile;
+            //        ////loc.ResultType = "定位";
+            //        ////loc.SerialNumber = serialNumber;
+            //        ////loc.TestTime = result.CreateDate;
+            //        //// 在UI线程更新集合
+            //        //CustomImageVM?.AddImage(loc);
+            //       // AddResultImage(id++, result.ImgFile);
+            //        bool isRawImage = Path.GetExtension(result.ImgFile).ToLower() == ".cvraw";
+            //        AddResultImage(id++, result.ImgFile, isRawImage);
+
+            //    }
+            //}
+
+
         }
         /// <summary>
         /// 加载Analysis image（分析后图像）- 从TScgdAlgorithmResultDetailPoiCieFile获取，过滤po.dat
@@ -576,7 +503,7 @@ namespace CVWaferProber.Services
         }
         public override void AutoExportData()
         {
-
+            throw new NotImplementedException();
         }
     }
 }
