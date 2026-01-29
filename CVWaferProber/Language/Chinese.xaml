@@ -501,6 +501,7 @@
     <sys:String x:Key="StatusPanel.FAILED">运行失败</sys:String>
     <sys:String x:Key="StatusPanel.OVERTIME">超时</sys:String>
     <sys:String x:Key="StatusPanel.PAUSED">未知</sys:String>
+    <sys:String x:Key="StatusPanel.SKIP">跳过</sys:String>
     <!--  提示信息  -->
     <sys:String x:Key="Cannotbeempty">不能为空</sys:String>
     <sys:String x:Key="Click">请点击芯片查看详细信息</sys:String>

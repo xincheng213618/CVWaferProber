@@ -41,7 +41,17 @@ namespace CVWaferProber.ViewModels
         public bool IsAOIEnabled
         {
             get => _isAOIEnabled;
-            set { _isAOIEnabled = value; OnPropertyChanged(); }
+            set { 
+                if(Status != ChipStatus.SKIP)
+                {
+                    _isAOIEnabled = value;
+                }
+                else
+                {
+                    _isAOIEnabled = false;
+                }
+                OnPropertyChanged();
+            }
         }
 
         // IVL复选框绑定属性

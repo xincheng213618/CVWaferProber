@@ -57,6 +57,7 @@ namespace CVWaferProber.Core.Models
                 ChipStatus.CAL_NG => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x80, 0, 0x80)),
                 ChipStatus.I2C_NG => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0xFF, 0xFF)),
                 ChipStatus.AOI_LINE_NG => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0xC0, 0xCB)),
+                ChipStatus.SKIP => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 127, 0)),
                 _ => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(33, 150, 243))
             };
         }
@@ -93,6 +94,7 @@ namespace CVWaferProber.Core.Models
                     ChipStatus.IVL_COMPLETED => (string)Application.Current.FindResource("StatusPanel.IVL_COMPLETED"),
                     ChipStatus.FAILED => (string)Application.Current.FindResource("StatusPanel.FAILED"),
                     ChipStatus.OVERTIME => (string)Application.Current.FindResource("StatusPanel.OVERTIME"),
+                    ChipStatus.SKIP => (string)Application.Current.FindResource("StatusPanel.SKIP"),
                     _ => "Unknown"
                 };
             }

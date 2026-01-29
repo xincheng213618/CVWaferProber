@@ -36,6 +36,8 @@ namespace CVWaferProber.Core.Models.Enums
         FAILED,
         //超时
         OVERTIME,
+        //跳过
+        SKIP,
     }
 
     enum JY_ERROR

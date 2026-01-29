@@ -1,4 +1,5 @@
 ﻿using ChipMapping.Models;
+using ChipMapping.Tools;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
@@ -657,6 +658,11 @@ namespace ChipMapping.ViewModels
                 // 创建坐标转换器
                 CoordinateConverter converter = new CoordinateConverter(screenSize, mathBounds);
                 int i = 0;
+                //var dd = CsvMappingDataTool.FindOuterPointsComprehensive(mappingData);
+                //PointMarker
+                //new MultiLayerBoundaryMarker().MarkOuterPointsWithinDistance(mappingData,3);
+                CsvMappingDataTool.MarkOutsiderRingPoints(mappingData);
+
                 foreach (var posMath in mappingData)
                 {
                     var posSc = converter.MathToScreen(new System.Drawing.Point((int)posMath.PosX, (int)posMath.PosY));
@@ -664,8 +670,16 @@ namespace ChipMapping.ViewModels
                     double x = StartX + posSc.X;
                     double y = StartY + posSc.Y;
 
-                    //var status = (ChipStatus)_random.Next(0, 8);
                     var status = ChipStatus.WAITING;
+                    //var status = (ChipStatus)_random.Next(0, 8);
+                    if (posMath.IsOuter)
+                    {
+                        status = ChipStatus.SKIP;
+                    }
+                    else
+                    {
+                        status = ChipStatus.WAITING;
+                    }
                     var lv = _random.Next(30, 100);
                     var chipData = new ChipData
                     {
