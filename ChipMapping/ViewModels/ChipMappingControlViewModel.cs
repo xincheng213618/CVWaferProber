@@ -30,7 +30,10 @@ namespace ChipMapping.ViewModels
         //private ChipStatus _filterStatus = ChipStatus.Normal | ChipStatus.Warning | ChipStatus.Error | ChipStatus.Offline;
         private ChipStatus _filterStatus = ChipStatus.OK | ChipStatus.WAITING;
 
-       
+        /// <summary>
+        /// 外圈显示
+        /// </summary>
+        public int OutsiderRing { get; set; } = 3;
         // 行列布局参数
         private int _rows = 30;
         private int _columns = 40;
@@ -544,18 +547,18 @@ namespace ChipMapping.ViewModels
             //GenerateChipData_Circle();
             StartProgressiveRendering();
         }
-        public void RefreshFromCsv(string csvFile)
-        {
-            this.SelectedChip = null;
-            Chips.Clear();
-            GenerateChipData_FromCsv(csvFile);
-            StartProgressiveRendering();
-        } 
+        //public void RefreshFromCsv(string csvFile)
+        //{
+        //    this.SelectedChip = null;
+        //    Chips.Clear();
+        //    GenerateChipData_FromCsv(csvFile);
+        //    StartProgressiveRendering();
+        //} 
         public void RefreshFromMap(List<CVMappingData> mappingData)
         {
             this.SelectedChip = null;
             Chips.Clear();
-            GenerateChipData_FromMap(mappingData);
+            GenerateChipData_FromMap(mappingData, OutsiderRing);
             StartProgressiveRendering();
         }
 
@@ -642,7 +645,7 @@ namespace ChipMapping.ViewModels
             }
         }
 
-        private void GenerateChipData_FromMap(List<CVMappingData> mappingData)
+        private void GenerateChipData_FromMap(List<CVMappingData> mappingData,int outsiderRing)
         {
             if (mappingData != null)
             {
@@ -661,7 +664,7 @@ namespace ChipMapping.ViewModels
                 //var dd = CsvMappingDataTool.FindOuterPointsComprehensive(mappingData);
                 //PointMarker
                 //new MultiLayerBoundaryMarker().MarkOuterPointsWithinDistance(mappingData,3);
-                CsvMappingDataTool.MarkOutsiderRingPoints(mappingData);
+                //CsvMappingDataTool.MarkOutsiderRingPoints(mappingData);
 
                 foreach (var posMath in mappingData)
                 {
@@ -671,8 +674,7 @@ namespace ChipMapping.ViewModels
                     double y = StartY + posSc.Y;
 
                     var status = ChipStatus.WAITING;
-                    //var status = (ChipStatus)_random.Next(0, 8);
-                    if (posMath.IsOuter)
+                    if (posMath.OutsiderRing < outsiderRing)
                     {
                         status = ChipStatus.SKIP;
                     }
@@ -705,14 +707,14 @@ namespace ChipMapping.ViewModels
                 }
             }
         }
-        private void GenerateChipData_FromCsv(string csvFile)
-        {
-            List<CVMappingData> mappingData = null;
-            if(CsvMappingDataTool.LoadMappingCsv(csvFile, ref mappingData))
-            {
-                GenerateChipData_FromMap(mappingData);
-            }
-        }
+        //private void GenerateChipData_FromCsv(string csvFile)
+        //{
+        //    List<CVMappingData> mappingData = null;
+        //    if(CsvMappingDataTool.LoadMappingCsv(csvFile, ref mappingData))
+        //    {
+        //        GenerateChipData_FromMap(mappingData);
+        //    }
+        //}
 
         private void StartProgressiveRendering()
         {

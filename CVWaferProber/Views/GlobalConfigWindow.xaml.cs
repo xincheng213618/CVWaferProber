@@ -165,6 +165,8 @@ namespace CVWaferProber.Views
                         //
                         ConfigModel.MotionSettings.DefaultXYMotionTimeout = ConfigManager.Config.MotionSettings.DefaultXYMotionTimeout;
                         ConfigModel.MotionSettings.DefaultZMotionTimeout = ConfigManager.Config.MotionSettings.DefaultZMotionTimeout;
+                        //
+                        ConfigModel.MapSettings.OutsiderRing = ConfigManager.Config.MapSettings.OutsiderRing;
                     }
                 }
             }
@@ -194,6 +196,9 @@ namespace CVWaferProber.Views
                 //
                 ConfigManager.Config.MotionSettings.DefaultXYMotionTimeout = ConfigModel.MotionSettings.DefaultXYMotionTimeout;
                 ConfigManager.Config.MotionSettings.DefaultZMotionTimeout = ConfigModel.MotionSettings.DefaultZMotionTimeout;
+                //
+                ConfigManager.Config.MapSettings.OutsiderRing = ConfigModel.MapSettings.OutsiderRing;
+                //
                 ConfigManager.SaveConfig();
                 //
                 ProberClientService.Instance.ReloadSettings();

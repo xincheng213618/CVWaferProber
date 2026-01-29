@@ -12,6 +12,7 @@ namespace CVWaferProber.Core.ViewModels
 {
     public class GlobalConfigModel
     {
+        public MappingSettings MapSettings { get; set; } = new();
         public MotionSettings MotionSettings { get; set; } = new();
         public ConnectionSettings ConnectionSettings { get; set; } = new();
         /// <summary>

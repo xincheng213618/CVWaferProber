@@ -45,6 +45,15 @@
                         Text="{Binding MotionSettings.DefaultZMotionTimeout}"/>
                 </StackPanel>
             </TabItem>
+            <!--  MotionSettings Tab页  -->
+            <TabItem Header="MappingSettings">
+                <StackPanel>
+                    <Label Content="OutsiderRing:"/>
+                    <TextBox
+                        Margin="10,0,10,0"
+                        Text="{Binding MapSettings.OutsiderRing}"/>
+                </StackPanel>
+            </TabItem>
             <!--  1. VAM Tab页  -->
             <TabItem Header="VAM">
                 <Grid Margin="10">

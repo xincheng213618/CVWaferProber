@@ -17,6 +17,12 @@ namespace CVWaferProber.Core.Config
         public UserPreferences UserPreferences { get; set; } = new();
         public ConnectionSettings ConnectionSettings { get; set; } = new();
         public MotionSettings MotionSettings { get; set; } = new();
+        public MappingSettings MapSettings { get; set; } = new();
+    }
+
+    public class MappingSettings
+    {
+        public int OutsiderRing { get; set; } = 3;
     }
 
     public class MotionSettings

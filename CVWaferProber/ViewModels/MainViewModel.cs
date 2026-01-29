@@ -4,6 +4,7 @@ using ChipMapping.Models;
 using ChipMapping.ViewModels;
 using ColorVision.Core.Entities;
 using CVDB.Services.Buz;
+using CVWaferProber.Config;
 using CVWaferProber.Core;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;

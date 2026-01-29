@@ -1,4 +1,5 @@
 ﻿using ChipMapping.ViewModels;
+using CVWaferProber.Config;
 
 namespace CVWaferProber.Services
 {
@@ -13,6 +14,8 @@ namespace CVWaferProber.Services
         {
             CustomVM = customVM;
             CustomVM.ChipSelected += OnChipSelected;
+
+            CustomVM.OutsiderRing = ConfigManager.Config.MapSettings.OutsiderRing;
         }
 
         private void OnChipSelected(object? sender, ChipViewModel _selectedChip)
