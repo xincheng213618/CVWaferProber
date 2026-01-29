@@ -1322,7 +1322,8 @@ namespace CVWaferProber.ViewModels
                 int successCount = testedDices.Count(d =>
                     d.Status == ChipStatus.OK ||
                     d.Status == ChipStatus.IVL_COMPLETED ||
-                    d.Status == ChipStatus.EQE_COMPLETED);
+                    d.Status == ChipStatus.VAM_COMPLETED
+                    || d.Status == ChipStatus.EQE_COMPLETED) ;
 
                 double yieldRate = (double)successCount / testedDices.Count * 100;
                 YieldInfo = $"{successCount}/{testedDices.Count} ({yieldRate:F2}%)";

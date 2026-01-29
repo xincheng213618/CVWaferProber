@@ -228,7 +228,7 @@ namespace CVWaferProber.Services
         public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext)
         {
             dieViewModel.ChangeStatus(ChipStatus.TESTING);
-            System.Windows.Application.Current?.Dispatcher?.Invoke(() =>
+            Application.Current?.Dispatcher?.Invoke(() =>
             {
                 CustomImageVM?.ClearImageResult();
             });
@@ -397,16 +397,16 @@ namespace CVWaferProber.Services
 
                     // 2. 定义【相机原图/算法图】的类型枚举（核心区分依据，从现有代码提取）
                     var cameraImageTypes = new List<AlgorithmResultType>
-            {
-                AlgorithmResultType.OLED_FindDotsArrayOutFile, // 定位原图
-                AlgorithmResultType.OLED_CombineQuaterImages    // 拼接原图
-            };
+                    {
+                        AlgorithmResultType.OLED_FindDotsArrayOutFile, // 定位原图
+                        AlgorithmResultType.OLED_CombineQuaterImages    // 拼接原图
+                    };
                     var algorithmImageTypes = new List<AlgorithmResultType>
-            {
-                AlgorithmResultType.OLED_RebuildPixelsMem, // 重建像素图（算法图核心）
-                AlgorithmResultType.PoiAnalysis,            // POI分析图（算法图）
-                AlgorithmResultType.POI_Y                   // POI标记图（算法图）
-            };
+                    {
+                        AlgorithmResultType.OLED_RebuildPixelsMem, // 重建像素图（算法图核心）
+                        AlgorithmResultType.PoiAnalysis,            // POI分析图（算法图）
+                        AlgorithmResultType.POI_Y                   // POI标记图（算法图）
+                    };
 
                     // 3. 遍历所有主记录，按类型分类处理图像
                     foreach (var masterResult in masterResults)
