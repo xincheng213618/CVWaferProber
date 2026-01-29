@@ -762,7 +762,21 @@ namespace CVWPFCamImageCtrl
         private async void LoadSelectedImage(ImageItem imageItem, bool isReload = false)
         {
             if (imageItem == null) return;
-
+            // 额外检查：如果是 po.dat，直接返回加载失败
+            string fileName = imageItem.FileName?.ToLower() ?? string.Empty;
+            if (fileName.Equals("po.dat") || fileName.Equals("po"))
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    imageItem.Status = IsChineseMode ? "不支持的文件" : "Unsupported file";
+                    MessageBox.Show(
+                        IsChineseMode ? "po.dat 不是可显示的图像文件" : "po.dat is not a displayable image file",
+                        IsChineseMode ? "提示" : "Info",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                });
+                return;
+            }
             // 1. 记录当前选中索引（UI线程操作）
             _currentImageIndex = MainImageDataGrid.SelectedIndex;
 

@@ -12,6 +12,7 @@ namespace CVWPFCamImageCtrl
 {
     public class CVCamImagerViewModel : ViewModelBase
     {
+        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(CVCamImagerViewModel));
         private ImageSource? _imageSource;
         private ObservableCollection<ImageItem> _imageResults;
         // 新增：Analysis image - 处理后图像集合（排除 po.dat）
@@ -235,8 +236,14 @@ namespace CVWPFCamImageCtrl
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                _originalImageResults.Add(imageItem); // Camera Measurement集合
-                                                      // 原始图像也加入总集合（可选，根据UI需求）
+                string fileName = imageItem.FileName?.ToLower() ?? string.Empty;
+                if (fileName.Equals("po.dat") || fileName.Equals("po"))
+                {
+                    logger.Info($"Skipping po.dat in AddOriginalImageOnly: {fileName}");
+                    return;
+                }
+
+                _originalImageResults.Add(imageItem);
                 if (!_imageResults.Contains(imageItem))
                 {
                     _imageResults.Add(imageItem);

@@ -494,12 +494,27 @@ namespace CVWaferProber.Services
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
+                // 过滤掉 po.dat 文件
+                string fileName = Path.GetFileName(imgFile).ToLower();
+                if (fileName.Equals("po.dat") || fileName.Equals("po"))
+                {
+                    logger.Info($"Skipping po.dat file in Camera Measurement: {fileName}");
+                    return;
+                }
+
                 ImageItem loc = new ImageItem(id);
                 loc.FileName = Path.GetFileName(imgFile);
                 loc.ImagePath = imgFile;
-                // 直接添加到原始图像集合（包含所有类型）
                 CustomImageVM?.AddOriginalImageOnly(loc);
             });
+            //Application.Current.Dispatcher.Invoke(() =>
+            //{
+            //    ImageItem loc = new ImageItem(id);
+            //    loc.FileName = Path.GetFileName(imgFile);
+            //    loc.ImagePath = imgFile;
+            //    // 直接添加到原始图像集合（包含所有类型）
+            //    CustomImageVM?.AddOriginalImageOnly(loc);
+            //});
         }
         public override void AutoExportData()
         {
