@@ -416,10 +416,20 @@ namespace WaferComm.StateMachine
         public DateTime LastHeartbeat { get; set; }
         public bool IsHeartbeatOk => DateTime.Now - LastHeartbeat <= TimeSpan.FromSeconds(10);
         public string ErrorMessage { get; set; }
+        public decimal MotionAxisX { get;  set; }
+        public decimal MotionAxisY { get;  set; }
+        public decimal MotionAxisZ { get;  set; }
 
         //public override string ToString()
         //{
         //    return $"{CurrentState} | Wafer: {CurrentWaferId} | Progress: {TestedDies}/{TotalDies} ({ProgressPercentage:F1}%) | Temp: {CurrentTemperature:F1}℃";
         //}
+    }
+
+    public class ProberMotionAxisStatus
+    {
+        public decimal CurrentAxisX { get; set; }
+        public decimal CurrentAxisY { get; set; }
+        public decimal CurrentAxisZ { get; set; }
     }
 }

@@ -12,6 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\CVWaferProber.Core\CVWaferProber.Core.csproj" />
     <ProjectReference Include="..\WaferComm.Client\WaferComm.Client.csproj" />
     <ProjectReference Include="..\WaferComm.Core\WaferComm.Core.csproj" />
     <ProjectReference Include="..\WaferComm.Processors\WaferComm.Processors.csproj" />

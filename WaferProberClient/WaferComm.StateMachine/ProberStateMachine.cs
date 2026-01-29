@@ -1,4 +1,6 @@
-﻿using System.Timers;
+﻿using CVWaferProber.Core.Events;
+using log4net.Repository.Hierarchy;
+using System.Timers;
 using WaferComm.Client;
 using WaferComm.Core;
 using WaferComm.Processors;
@@ -11,6 +13,9 @@ namespace WaferComm.StateMachine
     /// </summary>
     public class ProberStateMachine : CommandProcessorBase, IStateMachine
     {
+        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(ProberStateMachine));
+
+
         private readonly IEventAggregator _eventAggregator;
         private readonly IWaferProberClient _client;
         private readonly System.Timers.Timer _statusTimer;
@@ -437,7 +442,7 @@ namespace WaferComm.StateMachine
             if (!@event.IsValid) return;
 
             string command = @event.Command;
-
+            logger.InfoFormat("RECV => {0}", command);
             // 更新状态信息
             UpdateStatusFromCommand(command);
 
@@ -463,6 +468,27 @@ namespace WaferComm.StateMachine
                 if (decimal.TryParse(command.Substring(2), out decimal temp))
                 {
                     _currentStatus.CurrentTemperature = temp;
+                }
+            }
+            else if (command.StartsWith("raxis") && command.Length > 6)
+            {
+                string axis = command.Substring(5);
+                string[] xyzAxises = axis.Split(',');
+                if (xyzAxises != null && xyzAxises.Length == 3)
+                {
+                    if (decimal.TryParse(xyzAxises[0], out decimal x))
+                    {
+                        _currentStatus.MotionAxisX = x / 1000;
+                    }
+                    if (decimal.TryParse(xyzAxises[1], out decimal y))
+                    {
+                        _currentStatus.MotionAxisY = y / 1000;
+                    }
+                    if (decimal.TryParse(xyzAxises[2], out decimal z))
+                    {
+                        _currentStatus.MotionAxisZ = z / 1000;
+                    }
+                    EventAggregator.Publish(new MotionAxisUpdatedEvent(GetXYZAxis()));
                 }
             }
             else if (command == "67") // Z Up完成
@@ -503,6 +529,20 @@ namespace WaferComm.StateMachine
             }else if (command.StartsWith("rr") && command.Length > 1)
             {
                 _currentStatus.CurrentMappingFile = command.Substring(2);
+            }
+        }
+
+        private ProberMotionAxisStatus GetXYZAxis()
+        {
+            lock (_stateLock)
+            {
+                ProberMotionAxisStatus axisStatus = new ProberMotionAxisStatus()
+                {
+                    CurrentAxisX = _currentStatus.MotionAxisX,
+                    CurrentAxisY = _currentStatus.MotionAxisY,
+                    CurrentAxisZ = _currentStatus.MotionAxisZ,
+                };
+                return axisStatus;
             }
         }
 
@@ -691,13 +731,21 @@ namespace WaferComm.StateMachine
 }
 
 // 新增状态更新事件
-public class StateUpdatedEvent
+public class StateUpdatedEvent : BaseEvent
 {
     public ProberStatus Status { get; }
-    public DateTime Timestamp { get; } = DateTime.Now;
-
     public StateUpdatedEvent(ProberStatus status)
     {
         Status = status;
+    }
+}
+
+public class MotionAxisUpdatedEvent : BaseEvent
+{
+    public ProberMotionAxisStatus Axis { get; }
+
+    public MotionAxisUpdatedEvent(ProberMotionAxisStatus axis)
+    {
+        Axis = axis;
     }
 }

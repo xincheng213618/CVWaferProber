@@ -28,6 +28,8 @@ namespace CVWaferProber.ViewModels
             _proberState.CurrentState == ProberState.Stoped;
         public bool CanToIntegratingSphere => _proberState.CurrentState == ProberState.WaferLoaded ||
             _proberState.CurrentState == ProberState.Stoped;
+
+        private bool _CanContinuAutoTest;
         public bool CanStartAutoTest => _proberState.CurrentState == ProberState.WaferLoaded ||
             _proberState.CurrentState == ProberState.Stoped;
         public bool CanContinuAutoTest => _proberState.CurrentState == ProberState.Paused &&
@@ -37,7 +39,7 @@ namespace CVWaferProber.ViewModels
             _proberState.CurrentState == ProberState.Paused || _proberState.CurrentState == ProberState.Stoped);
         public bool CanPauseAutoTest => _proberState.CurrentState == ProberState.Testing;
 
-        private IEventAggregator? _EventAggregator;
+        //private IEventAggregator? _EventAggregator;
 
         //public event EventHandler ToIntegratingSpherePos;
         //public event EventHandler ToAuxCameraPos;
@@ -50,7 +52,7 @@ namespace CVWaferProber.ViewModels
             _proberState = proberState;
             _client.EventAggregator.Subscribe<ZAxisPosChangedEvent>(OnZAxisPosChanged);
 
-            _EventAggregator = eventAggregator;
+            //_EventAggregator = eventAggregator;
             LiftAllCommand = new RelayCommand(
                  _ => LiftAll(),
                 _ => CanLiftAll);

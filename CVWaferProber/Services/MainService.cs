@@ -93,6 +93,13 @@ namespace CVWaferProber.Services
         {
             proberClientService = ProberClientService.Instance;
             proberClientService.Initialize();
+
+            proberClientService.Subscribe<MotionAxisUpdatedEvent>(OnMotionAxisUpdated);
+        }
+
+        private void OnMotionAxisUpdated(MotionAxisUpdatedEvent @event)
+        {
+            if (autoTestingItem != null) autoTestingItem.UpdateCurDieMotionAxis(@event.Axis);
         }
 
         /// <summary>

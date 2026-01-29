@@ -98,10 +98,10 @@ namespace ChipMapping.Models
 
             return new MappingMapDataRange
             {
-                MinMapY = mappingData.Min(d => d.MapY),
-                MaxMapY = mappingData.Max(d => d.MapY),
-                MinMapX = mappingData.Min(d => d.MapX),
-                MaxMapX = mappingData.Max(d => d.MapX)
+                MinMapY = mappingData.Min(d => d.DataMapY),
+                MaxMapY = mappingData.Max(d => d.DataMapY),
+                MinMapX = mappingData.Min(d => d.DataMapX),
+                MaxMapX = mappingData.Max(d => d.DataMapX)
             };
         }
         public static bool LoadMappingCsv(string csvPath, ref List<CVMappingData>? cvMappingData)

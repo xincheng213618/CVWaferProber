@@ -81,8 +81,11 @@ namespace CVWaferProber.ViewModels
         public DateTime? StartTestTime { get; set; }
         public MotionStatus MStatus { get; set; }
         public string? TotalTime { get; set; }
+        public decimal MotionAxisX { get; set; }
+        public decimal MotionAxisY { get; set; }
+        public decimal MotionAxisZ { get; set; }
         public ChipViewModel? chipViewModel { get; set; }
-        public string? DataValue => string.Format("{0:F4}",chipViewModel?.DataValue);
+        public string? DataValue => string.Format("{0:F4}", chipViewModel?.DataValue);
         public void RefreshDataValue()
         {
             OnPropertyChanged(nameof(DataValue));
@@ -192,6 +195,16 @@ namespace CVWaferProber.ViewModels
         public string MapAxisToString()
         {
             return string.Format("Y{0}{1:D3}X{2}{3:D3}", this.MapY >= 0 ? "+" : "", this.MapY, this.MapX >= 0 ? "+" : "", this.MapX);
+        }
+
+        public void UpdateMotionAxis(ProberMotionAxisStatus axis)
+        {
+           this.MotionAxisX = axis.CurrentAxisX;
+           this.MotionAxisY = axis.CurrentAxisY;
+           this.MotionAxisZ = axis.CurrentAxisZ;
+            OnPropertyChanged(nameof(MotionAxisX));
+            OnPropertyChanged(nameof(MotionAxisY));
+            OnPropertyChanged(nameof(MotionAxisZ));
         }
 
         #region 动态属性

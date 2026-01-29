@@ -1,6 +1,8 @@
 ﻿using CVCommCore;
 using CVWaferProber.Config;
+using CVWaferProber.Core.Events;
 using CVWaferProber.ViewModels;
+using OpenTK.Compute.OpenCL;
 using WaferComm.Client;
 using WaferComm.Core;
 using WaferComm.StateMachine;
@@ -349,6 +351,11 @@ namespace CVWaferProber.Services
         {
             var motionSettings = ConfigManager.Config.MotionSettings;
             _proberState?.ReloadSettings(motionSettings.DefaultXYMotionTimeout, motionSettings.DefaultZMotionTimeout);
+        }
+
+        public void Subscribe<T>(Action<T> handler) where T : class
+        {
+            _clientProber.EventAggregator.Subscribe<T>(handler);
         }
     }
 }

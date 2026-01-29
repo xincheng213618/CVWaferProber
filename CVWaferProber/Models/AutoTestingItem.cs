@@ -1,4 +1,5 @@
 ﻿using CVWaferProber.ViewModels;
+using WaferComm.StateMachine;
 
 namespace CVWaferProber.Models
 {
@@ -45,6 +46,13 @@ namespace CVWaferProber.Models
             //if (IsEnd) return null;
             if (CurTestingIndex > 0) return TestingDieVMList[CurTestingIndex - 1];
             else return null;
+        }
+
+        public void UpdateCurDieMotionAxis(ProberMotionAxisStatus axis)
+        {
+            var cur = GetCurrentDieVM();
+            if(cur == null) return;
+            cur.UpdateMotionAxis(axis);
         }
     }
 }

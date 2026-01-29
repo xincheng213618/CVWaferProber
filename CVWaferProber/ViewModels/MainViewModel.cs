@@ -1049,6 +1049,15 @@ namespace CVWaferProber.ViewModels
                     IsOptional = true,
                     ColumnType = ColumnType.Text,
                     ColumnKey = ColumnKey.Other
+                }, 
+                new ColumnConfig
+                {
+                    ColumnHeader = "AxisX",
+                    ColumnBindingPath = "MotionAxisX",
+                    IsSelected = true,
+                    IsOptional = true,
+                    ColumnType = ColumnType.Text,
+                    ColumnKey = ColumnKey.Other
                 },
             };
 
@@ -2147,6 +2156,8 @@ namespace CVWaferProber.ViewModels
             CustomMappingVM.DisabledInput = IsProcessing = !enabled;
 
             OnPropertyChanged(nameof(IsNotProcessing));
+
+            ToolsVM?.FireUI();
         }
 
         private void StopAutoTest(object? obj)
