@@ -20,7 +20,6 @@ namespace CVDB.Services.Algorithm
         {
             return MysqlControler.GetInstance().Sql.Select<VScgdAlgorithmResultMaster>().Where(a => a.BatchCode.Equals(batchCode) && a.ImgFileType == algType).ToList();
         }
-
         public static List<TScgdAlgorithmResultDetailPoiCieFile> GetPOIDetailResultFileByPid(int pid)
         {
             return MysqlControler.GetInstance().Sql.Select<TScgdAlgorithmResultDetailPoiCieFile>().Where(a => a.Pid == pid).ToList();
