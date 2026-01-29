@@ -239,7 +239,7 @@ namespace CVWaferProber.Services
             if (!System.IO.File.Exists(imgFile)) return;
 
             // 检查是否是 po.dat 文件
-            string fileName = Path.GetFileNameWithoutExtension(imgFile).ToLower();
+            string fileName = Path.GetFileName(imgFile).ToLower();
             if (fileName.Equals("po") || fileName.Equals("po.dat"))
             {
                 Debug.WriteLine($"Skipping po.dat file: {Path.GetFileName(imgFile)}");
@@ -494,6 +494,7 @@ namespace CVWaferProber.Services
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
+                if (!File.Exists(imgFile)) return;
                 // 过滤掉 po.dat 文件
                 string fileName = Path.GetFileName(imgFile).ToLower();
                 if (fileName.Equals("po.dat") || fileName.Equals("po"))
@@ -505,6 +506,8 @@ namespace CVWaferProber.Services
                 ImageItem loc = new ImageItem(id);
                 loc.FileName = Path.GetFileName(imgFile);
                 loc.ImagePath = imgFile;
+                loc.FileSizeMB = new FileInfo(imgFile).Length / (1024.0 * 1024.0);
+                loc.Status = "Ready";
                 CustomImageVM?.AddOriginalImageOnly(loc);
             });
             //Application.Current.Dispatcher.Invoke(() =>

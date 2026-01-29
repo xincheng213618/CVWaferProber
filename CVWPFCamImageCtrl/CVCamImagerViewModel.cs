@@ -211,11 +211,12 @@ namespace CVWPFCamImageCtrl
             {
                 string fileName = imageItem.FileName?.ToLower() ?? string.Empty;
                 // 过滤po.dat文件
-                if (!fileName.Equals("po.dat"))
+                if (!fileName.Equals("po.dat") || fileName == "po")
                 {
                     _imageResults.Add(imageItem);
                     _processedImageResults.Add(imageItem); // Analysis image集合
                 }
+               // _originalImageResults.Add(imageItem);
                 // 即使是po.dat，也不加入原始图像集合（仅Analysis image过滤）
             });
             //Application.Current.Dispatcher.Invoke(() =>
@@ -236,15 +237,21 @@ namespace CVWPFCamImageCtrl
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
+                if (imageItem == null || string.IsNullOrEmpty(imageItem.ImagePath) || !File.Exists(imageItem.ImagePath))
+                    return;
+                // 最后一层过滤，确保万无一失
                 string fileName = imageItem.FileName?.ToLower() ?? string.Empty;
-                if (fileName.Equals("po.dat") || fileName.Equals("po"))
+                if (fileName.Contains("po.dat") || fileName == "po")
                 {
-                    logger.Info($"Skipping po.dat in AddOriginalImageOnly: {fileName}");
+                    logger.Info($"Skipping po.dat in ViewModel: {fileName}");
                     return;
                 }
-
-                _originalImageResults.Add(imageItem);
-                if (!_imageResults.Contains(imageItem))
+                // 避免重复添加
+                if (!_originalImageResults.Any(item => item.ImagePath == imageItem.ImagePath))
+                {
+                    _originalImageResults.Add(imageItem);
+                }
+                if (!_imageResults.Any(item => item.ImagePath == imageItem.ImagePath))
                 {
                     _imageResults.Add(imageItem);
                 }
