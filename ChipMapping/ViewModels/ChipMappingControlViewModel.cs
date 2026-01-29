@@ -761,7 +761,7 @@ namespace ChipMapping.ViewModels
             List<CVMappingData> mappingData = null;
             if(CsvMappingDataTool.LoadMappingCsv(csvFile, ref mappingData))
             {
-                GenerateChipData_FromMap(mappingData);
+                GenerateChipData_FromMap(mappingData, OutsiderRing);
             }
         }
         //private void GenerateChipData_FromCsv(string csvFile)
