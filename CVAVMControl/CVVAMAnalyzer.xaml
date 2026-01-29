@@ -19,6 +19,9 @@
             <!--  第2行：伪彩图  -->
             <RowDefinition Height="*" />
             <!--  第3行：图表区  -->
+
+            <!--  新增：进度条行  -->
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -26,6 +29,8 @@
             <ColumnDefinition Width="Auto" />
             <!--  第2列：切换按钮 + 参数区  -->
         </Grid.ColumnDefinitions>
+
+        <!--  ========== 新增：导出进度条区域（合并行列，放在最底部） ==========  -->
 
 
         <!--  第1行：合并列 - 打开CVCIE文件按钮  -->
@@ -39,7 +44,54 @@
             Click="BtnOpenFile_Click"
             Content="{DynamicResource VAM.OpenCVCIEFile}"
             FontSize="16" />
+        <!-- 第4行：进度条区域（修复背景色和高度） -->
+        <Border
+            x:Name="progressBarContainer"
+            Grid.Row="4"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Margin="5,10,5,0"
+            Padding="5"
+            Background="#FF2D2D30" 
+            BorderBrush="#FF3F3F46"
+            BorderThickness="1"
+            Visibility="Collapsed">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
+                <!-- 进度条 -->
+                <ProgressBar
+                    x:Name="exportProgressBar"
+                    Grid.Column="0"
+                    Height="20"
+                    Background="#FF1E1E1E"
+                    Foreground="#FF007ACC"
+                    Maximum="100"
+                    Minimum="0"
+                    Value="0">
+                    <!-- 添加进度条样式 -->
+                    <ProgressBar.Style>
+                        <Style TargetType="ProgressBar">
+                            <Setter Property="BorderThickness" Value="1"/>
+                            <Setter Property="BorderBrush" Value="#FF3F3F46"/>
+                        </Style>
+                    </ProgressBar.Style>
+                </ProgressBar>
+
+                <!-- 进度文本 -->
+                <TextBlock
+                    x:Name="exportProgressText"
+                    Grid.Column="1"
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    Foreground="White"
+                    Text="0%" />
+            </Grid>
+        </Border>
 
         <!--  第2行第1列：伪彩图  -->
         <!--  MouseWheel="ImgDisplay_MouseWheel"  -->
@@ -673,5 +725,6 @@
 
             </Grid>
         </Border>
+
     </Grid>
 </UserControl>

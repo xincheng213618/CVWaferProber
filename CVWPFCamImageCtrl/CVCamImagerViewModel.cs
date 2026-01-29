@@ -4,6 +4,7 @@ using OpenCvSharp;
 using OpenCvSharp.WpfExtensions;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Media;
 
@@ -62,10 +63,16 @@ namespace CVWPFCamImageCtrl
         {
             id = 1;
             ImageSrc = null;
+            // 清空所有图像集合
             _imageResults.Clear();
-            _processedImageResults.Clear(); // 清空处理后图像
-            _originalImageResults.Clear(); // 清空原图
-            if (_imageDisplay != null) _imageDisplay.CurrentImage = null;
+            _processedImageResults.Clear();
+            _originalImageResults.Clear();
+            // 清空图像显示控件
+            if (_imageDisplay != null)
+                _imageDisplay.CurrentImage = null;
+            // 清空DataGrid显示的当前集合
+            if (CurrentDisplayCollection != null)
+                CurrentDisplayCollection.Clear();
         }
         private void DrawCircleToImage(ref Mat image, CircleMarker poi)
         {
@@ -73,7 +80,7 @@ namespace CVWPFCamImageCtrl
             OpenCvSharp.Point cvPoint = new OpenCvSharp.Point(poi.X, poi.Y);
 
             // 绘制圆形标记点
-            Cv2.Circle(image, cvPoint,(int)poi.Radius,
+            Cv2.Circle(image, cvPoint, (int)poi.Radius,
                       poi.Color,
                       1);  // -1表示实心圆
 
@@ -169,7 +176,7 @@ namespace CVWPFCamImageCtrl
             {
                 if (poi == null) continue;
                 if (poi is CircleMarker poiC) DrawCircleToImage(ref image, poiC);
-                else if(poi is RectangleMarker poiR) DrawRectToImage(ref image, poiR);
+                else if (poi is RectangleMarker poiR) DrawRectToImage(ref image, poiR);
             }
         }
 
@@ -207,54 +214,15 @@ namespace CVWPFCamImageCtrl
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                if (imageItem == null || string.IsNullOrEmpty(imageItem.ImagePath))
+                string fileName = imageItem.FileName?.ToLower() ?? string.Empty;
+                if (!fileName.Equals("po.dat"))
                 {
-                    return;
-                }
-
-                // 提取文件扩展名（小写，方便对比）
-                string fileExt = System.IO.Path.GetExtension(imageItem.ImagePath)?.ToLower() ?? string.Empty;
-                string fileName = System.IO.Path.GetFileNameWithoutExtension(imageItem.ImagePath)?.ToLower() ?? "";
-
-                // 检查是否是 po.dat 文件
-                bool isPoDatFile = fileName.Equals("po") || fileName.Equals("po.dat");
-
-                // 1. 相机原始图（.cvraw）→ 添加到原图集合
-                if (fileExt == ".cvraw")
-                {
-                    if (!_originalImageResults.Any(item => item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        _originalImageResults.Add(imageItem);
-                    }
-                }
-                // 2. 标定后图（.cvcie）→ 添加到处理后集合
-                else if (fileExt == ".cvcie")
-                {
-                    // 如果是 po.dat 文件，则不添加到 DataGrid 显示
-                    if (isPoDatFile)
-                    {
-                        // 可以在这里添加日志或调试信息
-                        Debug.WriteLine($"Skipping po.dat file: {imageItem.FileName}");
-                        return; // 不添加到任何集合
-                    }
-
+                    // 仅加入Analysis视图集合和总集合
                     if (!_processedImageResults.Any(item => item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
                     {
                         _processedImageResults.Add(imageItem);
                     }
-                }
-                // 3. 其他格式（.tif, .tiff, .jpg 等）→ 根据上下文决定
-                else
-                {
-                    // 如果是 po.dat 文件（如 .tif 格式的 po.dat），也不添加到 DataGrid
-                    if (isPoDatFile)
-                    {
-                        Debug.WriteLine($"Skipping po.dat file: {imageItem.FileName}");
-                        return; // 不添加到任何集合
-                    }
-
-                    // 默认添加到总集合（或者根据需求决定）
-                    if (!_imageResults.Any(item => item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
+                    if (!_imageResults.Contains(imageItem))
                     {
                         _imageResults.Add(imageItem);
                     }
@@ -278,7 +246,10 @@ namespace CVWPFCamImageCtrl
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                _originalImageResults.Add(imageItem);
+                if (!_originalImageResults.Any(item => item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
+                {
+                    _originalImageResults.Add(imageItem); // 仅加入Camera视图集合
+                }
             });
         }
         private ObservableCollection<ImageItem> _currentDisplayCollection;

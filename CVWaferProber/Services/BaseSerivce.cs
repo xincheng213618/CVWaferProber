@@ -165,9 +165,9 @@ namespace CVWaferProber.Services
                 AutoExportData();
             }
 
-           
+
         }
         public abstract void AutoExportData();
         public abstract void ResultDisplay(DieViewModel dieViewModel);
     }
-} 
+}

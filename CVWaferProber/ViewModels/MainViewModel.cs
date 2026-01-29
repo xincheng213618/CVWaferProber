@@ -2353,6 +2353,7 @@ namespace CVWaferProber.ViewModels
                         logger.Warn( "AOI panel not initialized, cannot activate"  );// "AOI面板未初始化，无法激活"
                     }
                     break;
+                case CVWaferProberFlowType.IVL:
                 case CVWaferProberFlowType.IVL_SP:
                 case CVWaferProberFlowType.IVL_Camera:
                     ActivateSpectralInnerTabAction?.Invoke();
