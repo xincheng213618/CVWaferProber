@@ -595,317 +595,122 @@ namespace CVAVMControl
                 ProcessCVCIEFile(openFileDialog.FileName);
             }
         }
-        private async Task ProcessCVCIEFile(string filename)
-        {
-            // 定义需要在UI线程初始化/释放的核心Mat对象
-            Mat? newXMat = null;
-            Mat? newYMat = null;
-            Mat? newZMat = null;
-            // 定义后台处理后需要更新的UI相关变量
-            double newCenterX = 0;
-            double newCenterY = 0;
-            int newImageRadius = 0;
-            int newSelectedAngle = -1;
-            bool isProcessSuccess = false;
 
+        private void ProcessCVCIEFile(string filename)
+        {
             try
             {
-                // 1. UI线程轻量操作：先释放旧的Mat资源（避免内存泄漏），获取UI相关常量
                 XMat?.Dispose();
                 YMat?.Dispose();
                 ZMat?.Dispose();
-                XMat = YMat = ZMat = null; // 置空避免后续空引用
 
-                // 2. 耗时逻辑（文件读取、DLL裁切、Mat创建）全部放到后台线程Task.Run
-                await Task.Run(() =>
+                CVCIEFile fileInfo = new CVCIEFile();
+                CVFileUtil.Read(filename, out fileInfo);
+
+                // 保存原始数据
+                byte[] originalData = fileInfo.Data; // 重要：保存原始数据引用
+
+                string cropJson = JsonConvert.SerializeObject(new
                 {
-                    CVCIEFile fileInfo = null;
-                    try
+                    RHO = 60.0,
+                    pixelToAngle = ConoscopeCoefficient,
+                    center = new CropCenter
                     {
-                        fileInfo = new CVCIEFile();
-                        // 读取CVCIE文件（IO+解析，耗时）
-                        CVFileUtil.Read(filename, out fileInfo);
-
-                        // 保存原始数据引用
-                        byte[] originalData = fileInfo.Data;
-                        if (originalData == null || originalData.Length == 0)
-                        {
-                            throw new InvalidOperationException("The original file data is empty.");
-                        }
-
-                        // 序列化裁切配置（轻量，可放后台）
-                        string cropJson = JsonConvert.SerializeObject(new
-                        {
-                            RHO = 60.0,
-                            pixelToAngle = ConoscopeCoefficient,
-                            center = new CropCenter
-                            {
-                                x = fileInfo.Cols / 2.0,
-                                y = fileInfo.Rows / 2.0
-                            }
-                        });
-
-                        // 调用DLL裁切（原生DLL调用，CPU密集，核心耗时点）
-                        int dstW = fileInfo.Cols;
-                        int dstH = fileInfo.Rows;
-                        CV_AliResType cropResult = CV_Ali_cutVamImage(
-                            IntPtr.Zero,
-                            ref dstW,
-                            ref dstH,
-                            fileInfo.Bpp,
-                            fileInfo.Channels,
-                            originalData,
-                            cropJson
-                        );
-
-                        if (cropResult == CV_AliResType.SUCCESS)
-                        {
-                            fileInfo.Cols = dstW;
-                            fileInfo.Rows = dstH;
-                            logger.Info($"DLL cutting successful, size after cutting：{fileInfo.Cols}x{fileInfo.Rows}");
-
-                            // 计算裁切后数据尺寸
-                            int cropChannelSize = dstW * dstH * (fileInfo.Bpp / 8);
-                            int cropAllPixLen = cropChannelSize * fileInfo.Channels;
-
-                            // 校验数据长度有效性
-                            if (originalData.Length >= cropAllPixLen)
-                            {
-                                // 拷贝裁切后数据
-                                dataXyz = new byte[cropAllPixLen];
-                                Buffer.BlockCopy(originalData, 0, dataXyz, 0, cropAllPixLen);
-
-                                // 分离XYZ三个通道
-                                byte[] croppedX = new byte[cropChannelSize];
-                                byte[] croppedY = new byte[cropChannelSize];
-                                byte[] croppedZ = new byte[cropChannelSize];
-                                Buffer.BlockCopy(dataXyz, 0, croppedX, 0, cropChannelSize);
-                                Buffer.BlockCopy(dataXyz, cropChannelSize, croppedY, 0, cropChannelSize);
-                                Buffer.BlockCopy(dataXyz, cropChannelSize * 2, croppedZ, 0, cropChannelSize);
-
-                                // 根据Bpp确定Mat类型
-                                OpenCvSharp.MatType singleChannelTypeFinal = fileInfo.Bpp switch
-                                {
-                                    8 => MatType.CV_8UC1,
-                                    16 => MatType.CV_16UC1,
-                                    32 => MatType.CV_32FC1,
-                                    64 => MatType.CV_64FC1,
-                                    _ => throw new NotSupportedException($"Bpp {fileInfo.Bpp} not supported")
-                                };
-
-                                // 后台创建Mat（OpenCV Mat创建非UI操作，可后台执行）
-                                newXMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedX);
-                                newYMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedY);
-                                newZMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedZ);
-
-                                // 计算后续UI需要的参数
-                                newCenterX = newYMat.Width / 2.0;
-                                newCenterY = newYMat.Height / 2.0;
-                                newImageRadius = (int)(MaxAngle / ConoscopeCoefficient);
-                                isProcessSuccess = true;
-                            }
-                            else
-                            {
-                                throw new InvalidOperationException("Output: The length of the cropped data is insufficient, original data length: " + originalData.Length + ", required: " + cropAllPixLen);
-                            }
-                        }
-                        else
-                        {
-                            logger.Warn("DLL cropping failed");
-                            return;
-                            //// 【保留原有逻辑】此处补充你原来的“使用原始数据创建Mat”代码，示例如下（根据你的实际代码调整）
-                            //int originalChannelSize = fileInfo.Cols * fileInfo.Rows * (fileInfo.Bpp / 8);
-                            //int originalAllPixLen = originalChannelSize * fileInfo.Channels;
-                            //dataXyz = new byte[originalAllPixLen];
-                            //Buffer.BlockCopy(fileInfo.Data, 0, dataXyz, 0, originalAllPixLen);
-
-                            //OpenCvSharp.MatType singleChannelType = fileInfo.Bpp switch
-                            //{
-                            //    8 => MatType.CV_8UC1,
-                            //    16 => MatType.CV_16UC1,
-                            //    32 => MatType.CV_32FC1,
-                            //    64 => MatType.CV_64FC1,
-                            //    _ => throw new NotSupportedException($"Bpp {fileInfo.Bpp} not supported")
-                            //};
-
-                            //byte[] originalX = new byte[originalChannelSize];
-                            //byte[] originalY = new byte[originalChannelSize];
-                            //byte[] originalZ = new byte[originalChannelSize];
-                            //Buffer.BlockCopy(dataXyz, 0, originalX, 0, originalChannelSize);
-                            //Buffer.BlockCopy(dataXyz, originalChannelSize, originalY, 0, originalChannelSize);
-                            //Buffer.BlockCopy(dataXyz, originalChannelSize * 2, originalZ, 0, originalChannelSize);
-
-                            //newXMat = Mat.FromPixelData(fileInfo.Cols, fileInfo.Rows, singleChannelType, originalX);
-                            //newYMat = Mat.FromPixelData(fileInfo.Cols, fileInfo.Rows, singleChannelType, originalY);
-                            //newZMat = Mat.FromPixelData(fileInfo.Cols, fileInfo.Rows, singleChannelType, originalZ);
-
-                            //newCenterX = newYMat.Width / 2.0;
-                            //newCenterY = newYMat.Height / 2.0;
-                            //newImageRadius = (int)(MaxAngle / ConoscopeCoefficient);
-                            //isProcessSuccess = true;
-                        }
-                    }
-                    finally
-                    {
-                        // 后台释放文件信息资源，避免内存泄漏
-                        fileInfo?.Dispose();
+                        x = fileInfo.Cols / 2.0,
+                        y = fileInfo.Rows / 2.0
                     }
                 });
 
-                // 3. 回到UI线程：更新全局Mat、UI控件、执行UI相关方法（所有控件操作必须在UI线程）
-                if (isProcessSuccess && newXMat != null && newYMat != null && newZMat != null)
+                // 调用DLL裁切
+                int dstW = fileInfo.Cols;
+                int dstH = fileInfo.Rows;
+                CV_AliResType cropResult = CV_Ali_cutVamImage(
+                    IntPtr.Zero,
+                    ref dstW,
+                    ref dstH,
+                    fileInfo.Bpp,
+                    fileInfo.Channels,
+                    originalData,     // 传入原始数据
+                    cropJson
+                );
+
+                if (cropResult == CV_AliResType.SUCCESS)
                 {
-                    // 赋值全局Mat对象
-                    XMat = newXMat;
-                    YMat = newYMat;
-                    ZMat = newZMat;
+                    fileInfo.Cols = dstW;
+                    fileInfo.Rows = dstH;
+                    logger.Info($"DLL裁切成功，裁切后尺寸：{fileInfo.Cols}x{fileInfo.Rows}");
 
-                    // 更新全局坐标/半径参数
-                    center = new System.Windows.Point(newCenterX, newCenterY);
-                    imageRadius = newImageRadius;
+                    // 重要：更新dataXyz为裁切后的数据
+                    // 假设DLL裁切函数会在原数组上进行修改
+                    // 如果DLL返回新数组，需要相应调整
 
-                    // 操作下拉框控件，设置默认选中项（WPF控件必须UI线程访问）
-                    if (cbDisplayAngle.Items.Count > 0 && cbDisplayAngle.Items[0] is ComboBoxItem firstItem)
+                    int cropChannelSize = dstW * dstH * (fileInfo.Bpp / 8);
+                    int cropAllPixLen = cropChannelSize * fileInfo.Channels;
+
+                    // 检查裁切后数据是否有效
+                    if (originalData.Length >= cropAllPixLen)
                     {
-                        cbDisplayAngle.SelectedItem = firstItem;
-                        if (int.TryParse(firstItem.Tag?.ToString(), out int firstAngle))
-                        {
-                            _selectedAngle = firstAngle;
-                            newSelectedAngle = firstAngle;
-                        }
-                    }
+                        dataXyz = new byte[cropAllPixLen];
+                        Buffer.BlockCopy(originalData, 0, dataXyz, 0, cropAllPixLen);
 
-                    // 异步调用更新显示（之前已改造为异步，直接调用即可）
-                    UpdateDisplay();
-                    _isDataValid = true;
+                        // 分离XYZ通道
+                        byte[] croppedX = new byte[cropChannelSize];
+                        byte[] croppedY = new byte[cropChannelSize];
+                        byte[] croppedZ = new byte[cropChannelSize];
+
+                        Buffer.BlockCopy(dataXyz, 0, croppedX, 0, cropChannelSize);
+                        Buffer.BlockCopy(dataXyz, cropChannelSize, croppedY, 0, cropChannelSize);
+                        Buffer.BlockCopy(dataXyz, cropChannelSize * 2, croppedZ, 0, cropChannelSize);
+
+                        // 创建Mat对象
+                        OpenCvSharp.MatType singleChannelTypeFinal = fileInfo.Bpp switch
+                        {
+                            8 => MatType.CV_8UC1,
+                            16 => MatType.CV_16UC1,
+                            32 => MatType.CV_32FC1,
+                            64 => MatType.CV_64FC1,
+                            _ => throw new NotSupportedException($"Bpp {fileInfo.Bpp} not supported")
+                        };
+
+                        XMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedX);
+                        YMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedY);
+                        ZMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedZ);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("裁切后数据长度不足");
+                    }
                 }
+                else
+                {
+                    logger.Warn("DLL裁切失败，使用原始数据");
+                    // 使用原始数据创建Mat
+                    // ... 原有创建Mat的代码 ...
+                }
+
+                // 后续代码保持不变...
+                center = new System.Windows.Point(YMat.Width / 2.0, YMat.Height / 2.0);
+                imageRadius = (int)(MaxAngle / ConoscopeCoefficient);
+
+                if (cbDisplayAngle.Items.Count > 0 && cbDisplayAngle.Items[0] is ComboBoxItem firstItem)
+                {
+                    cbDisplayAngle.SelectedItem = firstItem;
+                    if (int.TryParse(firstItem.Tag?.ToString(), out int firstAngle))
+                    {
+                        _selectedAngle = firstAngle;
+                    }
+                }
+
+                UpdateDisplay();
+                fileInfo.Dispose();
+                _isDataValid = true;
             }
             catch (Exception ex)
             {
-                // 统一捕获异步异常，释放临时Mat，给用户错误提示
-                newXMat?.Dispose();
-                newYMat?.Dispose();
-                newZMat?.Dispose();
-                logger.Error("Failed to process CVCIE file", ex);
-                //MessageBox.Show($"Failed to process CVCIE file: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                _isDataValid = false;
+                logger.Error("处理CVCIE文件失败", ex);
+                MessageBox.Show($"处理文件失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        //private void ProcessCVCIEFile(string filename)
-        //{
-        //    try
-        //    {
-        //        XMat?.Dispose();
-        //        YMat?.Dispose();
-        //        ZMat?.Dispose();
-
-        //        CVCIEFile fileInfo = new CVCIEFile();
-        //        CVFileUtil.Read(filename, out fileInfo);
-
-        //        // 保存原始数据
-        //        byte[] originalData = fileInfo.Data; // 重要：保存原始数据引用
-
-        //        string cropJson = JsonConvert.SerializeObject(new
-        //        {
-        //            RHO = 60.0,
-        //            pixelToAngle = ConoscopeCoefficient,
-        //            center = new CropCenter
-        //            {
-        //                x = fileInfo.Cols / 2.0,
-        //                y = fileInfo.Rows / 2.0
-        //            }
-        //        });
-
-        //        // 调用DLL裁切
-        //        int dstW = fileInfo.Cols;
-        //        int dstH = fileInfo.Rows;
-        //        CV_AliResType cropResult = CV_Ali_cutVamImage(
-        //            IntPtr.Zero,
-        //            ref dstW,
-        //            ref dstH,
-        //            fileInfo.Bpp,
-        //            fileInfo.Channels,
-        //            originalData,     // 传入原始数据
-        //            cropJson
-        //        );
-
-        //        if (cropResult == CV_AliResType.SUCCESS)
-        //        {
-        //            fileInfo.Cols = dstW;
-        //            fileInfo.Rows = dstH;
-        //            logger.Info($"DLL裁切成功，裁切后尺寸：{fileInfo.Cols}x{fileInfo.Rows}");
-
-        //            // 重要：更新dataXyz为裁切后的数据
-        //            // 假设DLL裁切函数会在原数组上进行修改
-        //            // 如果DLL返回新数组，需要相应调整
-
-        //            int cropChannelSize = dstW * dstH * (fileInfo.Bpp / 8);
-        //            int cropAllPixLen = cropChannelSize * fileInfo.Channels;
-
-        //            // 检查裁切后数据是否有效
-        //            if (originalData.Length >= cropAllPixLen)
-        //            {
-        //                dataXyz = new byte[cropAllPixLen];
-        //                Buffer.BlockCopy(originalData, 0, dataXyz, 0, cropAllPixLen);
-
-        //                // 分离XYZ通道
-        //                byte[] croppedX = new byte[cropChannelSize];
-        //                byte[] croppedY = new byte[cropChannelSize];
-        //                byte[] croppedZ = new byte[cropChannelSize];
-
-        //                Buffer.BlockCopy(dataXyz, 0, croppedX, 0, cropChannelSize);
-        //                Buffer.BlockCopy(dataXyz, cropChannelSize, croppedY, 0, cropChannelSize);
-        //                Buffer.BlockCopy(dataXyz, cropChannelSize * 2, croppedZ, 0, cropChannelSize);
-
-        //                // 创建Mat对象
-        //                OpenCvSharp.MatType singleChannelTypeFinal = fileInfo.Bpp switch
-        //                {
-        //                    8 => MatType.CV_8UC1,
-        //                    16 => MatType.CV_16UC1,
-        //                    32 => MatType.CV_32FC1,
-        //                    64 => MatType.CV_64FC1,
-        //                    _ => throw new NotSupportedException($"Bpp {fileInfo.Bpp} not supported")
-        //                };
-
-        //                XMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedX);
-        //                YMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedY);
-        //                ZMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedZ);
-        //            }
-        //            else
-        //            {
-        //                throw new InvalidOperationException("裁切后数据长度不足");
-        //            }
-        //        }
-        //        else
-        //        {
-        //            logger.Warn("DLL裁切失败，使用原始数据");
-        //            // 使用原始数据创建Mat
-        //            // ... 原有创建Mat的代码 ...
-        //        }
-
-        //        // 后续代码保持不变...
-        //        center = new System.Windows.Point(YMat.Width / 2.0, YMat.Height / 2.0);
-        //        imageRadius = (int)(MaxAngle / ConoscopeCoefficient);
-
-        //        if (cbDisplayAngle.Items.Count > 0 && cbDisplayAngle.Items[0] is ComboBoxItem firstItem)
-        //        {
-        //            cbDisplayAngle.SelectedItem = firstItem;
-        //            if (int.TryParse(firstItem.Tag?.ToString(), out int firstAngle))
-        //            {
-        //                _selectedAngle = firstAngle;
-        //            }
-        //        }
-
-        //        UpdateDisplay();
-        //        fileInfo.Dispose();
-        //        _isDataValid = true;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        logger.Error("处理CVCIE文件失败", ex);
-        //        MessageBox.Show($"处理文件失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-        //    }
-        //}
         // 原有方法保持不变，修改ProcessCVCIEFile方法，添加裁切逻辑
         //private void ProcessCVCIEFile(string filename)
         //{
@@ -1410,448 +1215,229 @@ namespace CVAVMControl
             UpdateDisplay();
         }
         #endregion
-        //private void UpdateDisplay()
-        //{
-        //    Mat? selectedMat = GetSelectedChannelMat(displayChannel);
-        //    if (selectedMat == null || selectedMat.Empty())
-        //        return;
-
-        //    pseudoColorMat?.Dispose();
-        //    Mat normalizedMat = new Mat();
-        //    Mat colorMat = new Mat();
-        //    Cv2.Normalize(selectedMat, normalizedMat, 0, 255, NormTypes.MinMax);
-        //    Mat mat8U = new Mat();
-        //    normalizedMat.ConvertTo(mat8U, MatType.CV_8UC1);
-        //    Cv2.ApplyColorMap(mat8U, colorMat, ColormapTypes.Jet);
-        //    normalizedMat.Dispose();
-        //    mat8U.Dispose();
-
-        //    // ========== 基础参数（核心修改：动态计算图像实际有效半径） ==========
-        //    OpenCvSharp.Point centerPoint = new OpenCvSharp.Point(
-        //        colorMat.Width / 2,  // 图像中心X（动态取图像宽度的一半）
-        //        colorMat.Height / 2  // 图像中心Y（动态取图像高度的一半）
-        //    );
-        //    // 动态计算“图像实际有效半径”：取图像宽/高的较小值的一半（确保圆环在图像内）
-        //    float imageActualRadius = Math.Min(colorMat.Width, colorMat.Height) / 2f;
-        //    // 动态计算“角度系数”：让最大圆环的半径刚好等于图像实际有效半径
-        //    double dynamicConoscopeCoefficient = imageActualRadius / MaxAngle;
-
-
-        //    // ========== 1. 绘制背景同心圆（均匀包裹图像） ==========
-        //    Scalar bgCircleColor = new Scalar(0, 255, 255); // 黄色
-        //    int bgCircleLineWidth = 10;
-        //    int circleCount = 6; // 固定6条圆环
-        //                         // 均匀分布：最大半径 = 图像实际有效半径，按6条均分
-        //    float bgCircleInterval = imageActualRadius / circleCount;
-
-        //    for (int i = 1; i <= circleCount; i++)
-        //    {
-        //        // 直接用图像像素半径（不再依赖MaxAngle换算）
-        //        float circleRadius = i * bgCircleInterval;
-        //        Cv2.Circle(
-        //            colorMat,
-        //            centerPoint,
-        //            (int)circleRadius,
-        //            bgCircleColor,
-        //            bgCircleLineWidth,
-        //            LineTypes.AntiAlias // 抗锯齿
-        //        );
-        //    }
-
-
-        //    // ========== 2. 直径线/R圆模式的绘制逻辑（同步修改半径计算） ==========
-        //    Scalar yellowColor = new Scalar(0, 255, 255);
-        //    Scalar purpleColor = new Scalar(255, 0, 255);
-        //    int yellowLineWidth = 15;
-        //    int purpleLineWidth = 30;
-        //    int yellowCircleWidth = 15;
-        //    int purpleCircleWidth = 30;
-
-        //    string currentBtnText = btnSwitchChart.Content.ToString();
-        //    string rCircleTitle = FindResource("Plot.Title.RCircle").ToString();
-        //    string diameterTitle = FindResource("Plot.Title.DiameterLine").ToString();
-
-
-        //    // 直径线模式：直线端点匹配图像边缘
-        //    if (currentBtnText == rCircleTitle)
-        //    {
-        //        List<double> angleValues = GetAllComboBoxValues(cbDisplayAngle);
-        //        foreach (double angle in angleValues)
-        //        {
-        //            double radian = -angle * Math.PI / 180.0;
-        //            // 直线端点取图像实际有效半径（确保直线贯穿图像）
-        //            OpenCvSharp.Point startPoint = new OpenCvSharp.Point(
-        //                (int)(centerPoint.X - imageActualRadius * Math.Cos(radian)),
-        //                (int)(centerPoint.Y - imageActualRadius * Math.Sin(radian))
-        //            );
-        //            OpenCvSharp.Point endPoint = new OpenCvSharp.Point(
-        //                (int)(centerPoint.X + imageActualRadius * Math.Cos(radian)),
-        //                (int)(centerPoint.Y + imageActualRadius * Math.Sin(radian))
-        //            );
-        //            Cv2.Line(colorMat, startPoint, endPoint, yellowColor, yellowLineWidth, LineTypes.AntiAlias);
-
-        //            // 备注位置
-        //            OpenCvSharp.Point labelPos = new OpenCvSharp.Point(
-        //                (int)(endPoint.X + 15 * Math.Cos(radian)),
-        //                (int)(endPoint.Y + 15 * Math.Sin(radian))
-        //            );
-        //            DrawAngleLabel(colorMat, labelPos, $"{angle}(A)", yellowColor, fontScale: 4);
-        //        }
-
-        //        // 选中项高亮
-        //        if (_selectedAngle != -1)
-        //        {
-        //            double radian = -_selectedAngle * Math.PI / 180.0;
-        //            OpenCvSharp.Point startPoint = new OpenCvSharp.Point(
-        //                (int)(centerPoint.X - imageActualRadius * Math.Cos(radian)),
-        //                (int)(centerPoint.Y - imageActualRadius * Math.Sin(radian))
-        //            );
-        //            OpenCvSharp.Point endPoint = new OpenCvSharp.Point(
-        //                (int)(centerPoint.X + imageActualRadius * Math.Cos(radian)),
-        //                (int)(centerPoint.Y + imageActualRadius * Math.Sin(radian))
-        //            );
-        //            Cv2.Line(colorMat, startPoint, endPoint, purpleColor, purpleLineWidth, LineTypes.AntiAlias);
-
-        //            OpenCvSharp.Point labelPos = new OpenCvSharp.Point(
-        //                (int)(endPoint.X + 15 * Math.Cos(radian)),
-        //                (int)(endPoint.Y + 15 * Math.Sin(radian))
-        //            );
-        //            DrawAngleLabel(colorMat, labelPos, $"{_selectedAngle}(A)", purpleColor, fontScale: 4);
-        //        }
-        //    }
-
-
-        //    // R圆模式：圆环半径匹配图像实际有效区域
-        //    if (currentBtnText == diameterTitle)
-        //    {
-        //        // 强制刷新下拉框并读取最新值列表
-        //        cbDisplayRadius.UpdateLayout();
-        //        List<double> radiusValues = GetAllComboBoxValues(cbDisplayRadius);
-
-        //        // 绘制所有当前有效的R圆角度（已删除的不会出现在列表中）
-        //        foreach (double radius in radiusValues)
-        //        {
-        //            float radiusPixel = (float)(Math.Abs(radius) / MaxAngle * imageActualRadius);
-        //            if (radiusPixel > imageActualRadius) continue;
-
-        //            Cv2.Circle(
-        //                colorMat,
-        //                centerPoint,
-        //                (int)radiusPixel,
-        //                yellowColor,
-        //                yellowCircleWidth,
-        //                LineTypes.AntiAlias
-        //            );
-
-        //            // ========== 正负角度区分标签位置 ==========
-        //            OpenCvSharp.Point labelPos;
-        //            if (radius >= 0)
-        //            {
-        //                // 正角度：显示在右边红框位置（中心右侧）
-        //                labelPos = new OpenCvSharp.Point((int)(centerPoint.X + radiusPixel + 20), (int)centerPoint.Y);
-        //                // 避免超出图像右边界
-        //                if (labelPos.X > colorMat.Width - 100)
-        //                {
-        //                    labelPos.X = (int)(centerPoint.X + radiusPixel - 100);
-        //                }
-        //            }
-        //            else
-        //            {
-        //                // 负角度：显示在左边红框位置（中心左侧）
-        //                labelPos = new OpenCvSharp.Point((int)(centerPoint.X - radiusPixel - 100), (int)centerPoint.Y);
-        //                // 避免超出图像左边界
-        //                if (labelPos.X < 0)
-        //                {
-        //                    labelPos.X = (int)(centerPoint.X - radiusPixel + 20);
-        //                }
-        //            }
-        //            DrawAngleLabel(colorMat, labelPos, $"{radius}(R)", yellowColor, fontScale: 4);
-        //        }
-
-        //        // 选中项高亮（仅绘制当前选中的有效半径）
-        //        if (_selectedRadius != -1 && radiusValues.Contains(_selectedRadius))
-        //        {
-        //            float radiusPixel = (float)(Math.Abs(_selectedRadius) / MaxAngle * imageActualRadius);
-        //            if (radiusPixel > imageActualRadius) return;
-
-        //            Cv2.Circle(
-        //                colorMat,
-        //                centerPoint,
-        //                (int)radiusPixel,
-        //                purpleColor,
-        //                purpleCircleWidth,
-        //                LineTypes.AntiAlias
-        //            );
-
-        //            // ========== 核心修改：选中项的正负角度标签位置 ==========
-        //            OpenCvSharp.Point labelPos;
-        //            if (_selectedRadius >= 0)
-        //            {
-        //                // 正角度：右边红框
-        //                labelPos = new OpenCvSharp.Point((int)(centerPoint.X + radiusPixel + 20), (int)centerPoint.Y);
-        //                if (labelPos.X > colorMat.Width - 100)
-        //                {
-        //                    labelPos.X = (int)(centerPoint.X + radiusPixel - 100);
-        //                }
-        //            }
-        //            else
-        //            {
-        //                // 负角度：左边红框
-        //                labelPos = new OpenCvSharp.Point((int)(centerPoint.X - radiusPixel - 100), (int)centerPoint.Y);
-        //                if (labelPos.X < 0)
-        //                {
-        //                    labelPos.X = (int)(centerPoint.X - radiusPixel + 20);
-        //                }
-        //            }
-        //            DrawAngleLabel(colorMat, labelPos, $"{_selectedRadius}(R)", purpleColor, fontScale: 4);
-        //        }
-        //    }
-
-
-
-        //    // ========== 绘制XY轴（贯穿图像） ==========
-        //    Scalar redColor = new Scalar(0, 0, 255);
-        //    int redLineWidth = 20;
-        //    OpenCvSharp.Point xAxisStart = new OpenCvSharp.Point(0, centerPoint.Y);
-        //    OpenCvSharp.Point xAxisEnd = new OpenCvSharp.Point(colorMat.Width, centerPoint.Y);
-        //    Cv2.Line(colorMat, xAxisStart, xAxisEnd, redColor, redLineWidth, LineTypes.AntiAlias);
-
-        //    OpenCvSharp.Point yAxisStart = new OpenCvSharp.Point(centerPoint.X, 0);
-        //    OpenCvSharp.Point yAxisEnd = new OpenCvSharp.Point(centerPoint.X, colorMat.Height);
-        //    Cv2.Line(colorMat, yAxisStart, yAxisEnd, redColor, redLineWidth, LineTypes.AntiAlias);
-
-
-        //    // ========== 更新显示 ==========
-        //    pseudoColorMat = colorMat;
-        //    WriteableBitmap writeableBitmap = pseudoColorMat.ToWriteableBitmap();
-        //    imgDisplay.Source = writeableBitmap;
-
-        //    _imgNaturalWidth = writeableBitmap.PixelWidth;
-        //    _imgNaturalHeight = writeableBitmap.PixelHeight;
-        //    ResetImageScale();
-        //    PlotDiameterLineChart();
-        //    PlotRCircleChart();
-        //    // 额外确保AutoScale
-        //    ResetChartScales();
-        //}
-
-        private async void UpdateDisplay()
+        private void UpdateDisplay()
         {
-            try
-            {
-                // 1. 先在UI线程获取必要的UI参数（避免跨线程访问控件）
-                Mat? selectedMat = GetSelectedChannelMat(displayChannel);
-                if (selectedMat == null || selectedMat.Empty())
-                    return;
+            Mat? selectedMat = GetSelectedChannelMat(displayChannel);
+            if (selectedMat == null || selectedMat.Empty())
+                return;
 
-                string currentBtnText = btnSwitchChart.Content.ToString();
-                string rCircleTitle = FindResource("Plot.Title.RCircle").ToString();
-                string diameterTitle = FindResource("Plot.Title.DiameterLine").ToString();
+            pseudoColorMat?.Dispose();
+            Mat normalizedMat = new Mat();
+            Mat colorMat = new Mat();
+            Cv2.Normalize(selectedMat, normalizedMat, 0, 255, NormTypes.MinMax);
+            Mat mat8U = new Mat();
+            normalizedMat.ConvertTo(mat8U, MatType.CV_8UC1);
+            Cv2.ApplyColorMap(mat8U, colorMat, ColormapTypes.Jet);
+            normalizedMat.Dispose();
+            mat8U.Dispose();
+
+            // ========== 基础参数（核心修改：动态计算图像实际有效半径） ==========
+            OpenCvSharp.Point centerPoint = new OpenCvSharp.Point(
+                colorMat.Width / 2,  // 图像中心X（动态取图像宽度的一半）
+                colorMat.Height / 2  // 图像中心Y（动态取图像高度的一半）
+            );
+            // 动态计算“图像实际有效半径”：取图像宽/高的较小值的一半（确保圆环在图像内）
+            float imageActualRadius = Math.Min(colorMat.Width, colorMat.Height) / 2f;
+            // 动态计算“角度系数”：让最大圆环的半径刚好等于图像实际有效半径
+            double dynamicConoscopeCoefficient = imageActualRadius / MaxAngle;
+
+
+            // ========== 1. 绘制背景同心圆（均匀包裹图像） ==========
+            Scalar bgCircleColor = new Scalar(0, 255, 255); // 黄色
+            int bgCircleLineWidth = 10;
+            int circleCount = 6; // 固定6条圆环
+                                 // 均匀分布：最大半径 = 图像实际有效半径，按6条均分
+            float bgCircleInterval = imageActualRadius / circleCount;
+
+            for (int i = 1; i <= circleCount; i++)
+            {
+                // 直接用图像像素半径（不再依赖MaxAngle换算）
+                float circleRadius = i * bgCircleInterval;
+                Cv2.Circle(
+                    colorMat,
+                    centerPoint,
+                    (int)circleRadius,
+                    bgCircleColor,
+                    bgCircleLineWidth,
+                    LineTypes.AntiAlias // 抗锯齿
+                );
+            }
+
+
+            // ========== 2. 直径线/R圆模式的绘制逻辑（同步修改半径计算） ==========
+            Scalar yellowColor = new Scalar(0, 255, 255);
+            Scalar purpleColor = new Scalar(255, 0, 255);
+            int yellowLineWidth = 15;
+            int purpleLineWidth = 30;
+            int yellowCircleWidth = 15;
+            int purpleCircleWidth = 30;
+
+            string currentBtnText = btnSwitchChart.Content.ToString();
+            string rCircleTitle = FindResource("Plot.Title.RCircle").ToString();
+            string diameterTitle = FindResource("Plot.Title.DiameterLine").ToString();
+
+
+            // 直径线模式：直线端点匹配图像边缘
+            if (currentBtnText == rCircleTitle)
+            {
                 List<double> angleValues = GetAllComboBoxValues(cbDisplayAngle);
+                foreach (double angle in angleValues)
+                {
+                    double radian = -angle * Math.PI / 180.0;
+                    // 直线端点取图像实际有效半径（确保直线贯穿图像）
+                    OpenCvSharp.Point startPoint = new OpenCvSharp.Point(
+                        (int)(centerPoint.X - imageActualRadius * Math.Cos(radian)),
+                        (int)(centerPoint.Y - imageActualRadius * Math.Sin(radian))
+                    );
+                    OpenCvSharp.Point endPoint = new OpenCvSharp.Point(
+                        (int)(centerPoint.X + imageActualRadius * Math.Cos(radian)),
+                        (int)(centerPoint.Y + imageActualRadius * Math.Sin(radian))
+                    );
+                    Cv2.Line(colorMat, startPoint, endPoint, yellowColor, yellowLineWidth, LineTypes.AntiAlias);
+
+                    // 备注位置
+                    OpenCvSharp.Point labelPos = new OpenCvSharp.Point(
+                        (int)(endPoint.X + 15 * Math.Cos(radian)),
+                        (int)(endPoint.Y + 15 * Math.Sin(radian))
+                    );
+                    DrawAngleLabel(colorMat, labelPos, $"{angle}(A)", yellowColor, fontScale: 4);
+                }
+
+                // 选中项高亮
+                if (_selectedAngle != -1)
+                {
+                    double radian = -_selectedAngle * Math.PI / 180.0;
+                    OpenCvSharp.Point startPoint = new OpenCvSharp.Point(
+                        (int)(centerPoint.X - imageActualRadius * Math.Cos(radian)),
+                        (int)(centerPoint.Y - imageActualRadius * Math.Sin(radian))
+                    );
+                    OpenCvSharp.Point endPoint = new OpenCvSharp.Point(
+                        (int)(centerPoint.X + imageActualRadius * Math.Cos(radian)),
+                        (int)(centerPoint.Y + imageActualRadius * Math.Sin(radian))
+                    );
+                    Cv2.Line(colorMat, startPoint, endPoint, purpleColor, purpleLineWidth, LineTypes.AntiAlias);
+
+                    OpenCvSharp.Point labelPos = new OpenCvSharp.Point(
+                        (int)(endPoint.X + 15 * Math.Cos(radian)),
+                        (int)(endPoint.Y + 15 * Math.Sin(radian))
+                    );
+                    DrawAngleLabel(colorMat, labelPos, $"{_selectedAngle}(A)", purpleColor, fontScale: 4);
+                }
+            }
+
+
+            // R圆模式：圆环半径匹配图像实际有效区域
+            if (currentBtnText == diameterTitle)
+            {
+                // 强制刷新下拉框并读取最新值列表
                 cbDisplayRadius.UpdateLayout();
                 List<double> radiusValues = GetAllComboBoxValues(cbDisplayRadius);
-                double selectedAngle = _selectedAngle;
-                double selectedRadius = _selectedRadius;
-                double maxAngle = MaxAngle;
 
-                // 2. CPU密集型的OpenCV绘制逻辑放到后台线程（Task.Run），避免卡UI
-                Mat? colorMat = await Task.Run(() =>
+                // 绘制所有当前有效的R圆角度（已删除的不会出现在列表中）
+                foreach (double radius in radiusValues)
                 {
-                    Mat tempPseudoColorMat = null;
-                    Mat tempColorMat = new Mat();
-                    try
+                    float radiusPixel = (float)(Math.Abs(radius) / MaxAngle * imageActualRadius);
+                    if (radiusPixel > imageActualRadius) continue;
+
+                    Cv2.Circle(
+                        colorMat,
+                        centerPoint,
+                        (int)radiusPixel,
+                        yellowColor,
+                        yellowCircleWidth,
+                        LineTypes.AntiAlias
+                    );
+
+                    // ========== 正负角度区分标签位置 ==========
+                    OpenCvSharp.Point labelPos;
+                    if (radius >= 0)
                     {
-                        // 归一化+伪彩色转换
-                        using Mat normalizedMat = new Mat();
-                        using Mat mat8U = new Mat();
-                        Cv2.Normalize(selectedMat, normalizedMat, 0, 255, NormTypes.MinMax);
-                        normalizedMat.ConvertTo(mat8U, MatType.CV_8UC1);
-                        Cv2.ApplyColorMap(mat8U, tempColorMat, ColormapTypes.Jet);
-
-                        // 基础参数（动态计算）
-                        OpenCvSharp.Point centerPoint = new OpenCvSharp.Point(
-                            tempColorMat.Width / 2,
-                            tempColorMat.Height / 2
-                        );
-                        float imageActualRadius = Math.Min(tempColorMat.Width, tempColorMat.Height) / 2f;
-
-                        // ========== 1. 绘制背景同心圆 ==========
-                        Scalar bgCircleColor = new Scalar(0, 255, 255);
-                        int bgCircleLineWidth = 10;
-                        int circleCount = 6;
-                        float bgCircleInterval = imageActualRadius / circleCount;
-                        for (int i = 1; i <= circleCount; i++)
+                        // 正角度：显示在右边红框位置（中心右侧）
+                        labelPos = new OpenCvSharp.Point((int)(centerPoint.X + radiusPixel + 20), (int)centerPoint.Y);
+                        // 避免超出图像右边界
+                        if (labelPos.X > colorMat.Width - 100)
                         {
-                            float circleRadius = i * bgCircleInterval;
-                            Cv2.Circle(tempColorMat, centerPoint, (int)circleRadius, bgCircleColor, bgCircleLineWidth, LineTypes.AntiAlias);
+                            labelPos.X = (int)(centerPoint.X + radiusPixel - 100);
                         }
-
-                        // ========== 2. 直径线/R圆模式绘制 ==========
-                        Scalar yellowColor = new Scalar(0, 255, 255);
-                        Scalar purpleColor = new Scalar(255, 0, 255);
-                        int yellowLineWidth = 15;
-                        int purpleLineWidth = 30;
-                        int yellowCircleWidth = 15;
-                        int purpleCircleWidth = 30;
-
-                        // 直径线模式（R圆标题对应直径线绘制，保持原有逻辑）
-                        if (currentBtnText == rCircleTitle)
-                        {
-                            foreach (double angle in angleValues)
-                            {
-                                double radian = -angle * Math.PI / 180.0;
-                                OpenCvSharp.Point startPoint = new OpenCvSharp.Point(
-                                    (int)(centerPoint.X - imageActualRadius * Math.Cos(radian)),
-                                    (int)(centerPoint.Y - imageActualRadius * Math.Sin(radian))
-                                );
-                                OpenCvSharp.Point endPoint = new OpenCvSharp.Point(
-                                    (int)(centerPoint.X + imageActualRadius * Math.Cos(radian)),
-                                    (int)(centerPoint.Y + imageActualRadius * Math.Sin(radian))
-                                );
-                                Cv2.Line(tempColorMat, startPoint, endPoint, yellowColor, yellowLineWidth, LineTypes.AntiAlias);
-
-                                // 备注位置
-                                OpenCvSharp.Point labelPos = new OpenCvSharp.Point(
-                                    (int)(endPoint.X + 15 * Math.Cos(radian)),
-                                    (int)(endPoint.Y + 15 * Math.Sin(radian))
-                                );
-                                DrawAngleLabel(tempColorMat, labelPos, $"{angle}(A)", yellowColor, fontScale: 4);
-                            }
-
-                            // 选中项高亮
-                            if (selectedAngle != -1)
-                            {
-                                double radian = -selectedAngle * Math.PI / 180.0;
-                                OpenCvSharp.Point startPoint = new OpenCvSharp.Point(
-                                    (int)(centerPoint.X - imageActualRadius * Math.Cos(radian)),
-                                    (int)(centerPoint.Y - imageActualRadius * Math.Sin(radian))
-                                );
-                                OpenCvSharp.Point endPoint = new OpenCvSharp.Point(
-                                    (int)(centerPoint.X + imageActualRadius * Math.Cos(radian)),
-                                    (int)(centerPoint.Y + imageActualRadius * Math.Sin(radian))
-                                );
-                                Cv2.Line(tempColorMat, startPoint, endPoint, purpleColor, purpleLineWidth, LineTypes.AntiAlias);
-
-                                OpenCvSharp.Point labelPos = new OpenCvSharp.Point(
-                                    (int)(endPoint.X + 15 * Math.Cos(radian)),
-                                    (int)(endPoint.Y + 15 * Math.Sin(radian))
-                                );
-                                DrawAngleLabel(tempColorMat, labelPos, $"{selectedAngle}(A)", purpleColor, fontScale: 4);
-                            }
-                        }
-
-                        // R圆模式（直径标题对应R圆绘制，保持原有逻辑）
-                        if (currentBtnText == diameterTitle)
-                        {
-                            foreach (double radius in radiusValues)
-                            {
-                                float radiusPixel = (float)(Math.Abs(radius) / maxAngle * imageActualRadius);
-                                if (radiusPixel > imageActualRadius) continue;
-
-                                Cv2.Circle(tempColorMat, centerPoint, (int)radiusPixel, yellowColor, yellowCircleWidth, LineTypes.AntiAlias);
-
-                                // 正负角度区分标签位置
-                                OpenCvSharp.Point labelPos;
-                                if (radius >= 0)
-                                {
-                                    labelPos = new OpenCvSharp.Point((int)(centerPoint.X + radiusPixel + 20), (int)centerPoint.Y);
-                                    if (labelPos.X > tempColorMat.Width - 100)
-                                    {
-                                        labelPos.X = (int)(centerPoint.X + radiusPixel - 100);
-                                    }
-                                }
-                                else
-                                {
-                                    labelPos = new OpenCvSharp.Point((int)(centerPoint.X - radiusPixel - 100), (int)centerPoint.Y);
-                                    if (labelPos.X < 0)
-                                    {
-                                        labelPos.X = (int)(centerPoint.X - radiusPixel + 20);
-                                    }
-                                }
-                                DrawAngleLabel(tempColorMat, labelPos, $"{radius}(R)", yellowColor, fontScale: 4);
-                            }
-
-                            // 选中项高亮
-                            if (selectedRadius != -1 && radiusValues.Contains(selectedRadius))
-                            {
-                                float radiusPixel = (float)(Math.Abs(selectedRadius) / maxAngle * imageActualRadius);
-                                if (radiusPixel > imageActualRadius) return null;
-
-                                Cv2.Circle(tempColorMat, centerPoint, (int)radiusPixel, purpleColor, purpleCircleWidth, LineTypes.AntiAlias);
-
-                                // 正负角度标签位置
-                                OpenCvSharp.Point labelPos;
-                                if (selectedRadius >= 0)
-                                {
-                                    labelPos = new OpenCvSharp.Point((int)(centerPoint.X + radiusPixel + 20), (int)centerPoint.Y);
-                                    if (labelPos.X > tempColorMat.Width - 100)
-                                    {
-                                        labelPos.X = (int)(centerPoint.X + radiusPixel - 100);
-                                    }
-                                }
-                                else
-                                {
-                                    labelPos = new OpenCvSharp.Point((int)(centerPoint.X - radiusPixel - 100), (int)centerPoint.Y);
-                                    if (labelPos.X < 0)
-                                    {
-                                        labelPos.X = (int)(centerPoint.X - radiusPixel + 20);
-                                    }
-                                }
-                                DrawAngleLabel(tempColorMat, labelPos, $"{selectedRadius}(R)", purpleColor, fontScale: 4);
-                            }
-                        }
-
-                        // ========== 绘制XY轴 ==========
-                        Scalar redColor = new Scalar(0, 0, 255);
-                        int redLineWidth = 20;
-                        OpenCvSharp.Point xAxisStart = new OpenCvSharp.Point(0, centerPoint.Y);
-                        OpenCvSharp.Point xAxisEnd = new OpenCvSharp.Point(tempColorMat.Width, centerPoint.Y);
-                        Cv2.Line(tempColorMat, xAxisStart, xAxisEnd, redColor, redLineWidth, LineTypes.AntiAlias);
-
-                        OpenCvSharp.Point yAxisStart = new OpenCvSharp.Point(centerPoint.X, 0);
-                        OpenCvSharp.Point yAxisEnd = new OpenCvSharp.Point(centerPoint.X, tempColorMat.Height);
-                        Cv2.Line(tempColorMat, yAxisStart, yAxisEnd, redColor, redLineWidth, LineTypes.AntiAlias);
-
-                        tempPseudoColorMat = tempColorMat.Clone();
                     }
-                    catch
+                    else
                     {
-                        tempColorMat?.Dispose();
-                        throw; // 抛出异常让上层捕获
+                        // 负角度：显示在左边红框位置（中心左侧）
+                        labelPos = new OpenCvSharp.Point((int)(centerPoint.X - radiusPixel - 100), (int)centerPoint.Y);
+                        // 避免超出图像左边界
+                        if (labelPos.X < 0)
+                        {
+                            labelPos.X = (int)(centerPoint.X - radiusPixel + 20);
+                        }
                     }
-                    finally
+                    DrawAngleLabel(colorMat, labelPos, $"{radius}(R)", yellowColor, fontScale: 4);
+                }
+
+                // 选中项高亮（仅绘制当前选中的有效半径）
+                if (_selectedRadius != -1 && radiusValues.Contains(_selectedRadius))
+                {
+                    float radiusPixel = (float)(Math.Abs(_selectedRadius) / MaxAngle * imageActualRadius);
+                    if (radiusPixel > imageActualRadius) return;
+
+                    Cv2.Circle(
+                        colorMat,
+                        centerPoint,
+                        (int)radiusPixel,
+                        purpleColor,
+                        purpleCircleWidth,
+                        LineTypes.AntiAlias
+                    );
+
+                    // ========== 核心修改：选中项的正负角度标签位置 ==========
+                    OpenCvSharp.Point labelPos;
+                    if (_selectedRadius >= 0)
                     {
-                        tempColorMat?.Dispose();
+                        // 正角度：右边红框
+                        labelPos = new OpenCvSharp.Point((int)(centerPoint.X + radiusPixel + 20), (int)centerPoint.Y);
+                        if (labelPos.X > colorMat.Width - 100)
+                        {
+                            labelPos.X = (int)(centerPoint.X + radiusPixel - 100);
+                        }
                     }
-                    return tempPseudoColorMat;
-                });
-
-                // 后台线程执行失败，直接返回
-                if (colorMat == null || colorMat.Empty())
-                    return;
-
-                // 3. 回到UI线程更新UI（所有控件操作必须在UI线程）
-                // 释放旧的Mat，避免内存泄漏
-                pseudoColorMat?.Dispose();
-                pseudoColorMat = colorMat;
-
-                // 更新图像显示
-                WriteableBitmap writeableBitmap = colorMat.ToWriteableBitmap();
-                imgDisplay.Source = writeableBitmap;
-                _imgNaturalWidth = writeableBitmap.PixelWidth;
-                _imgNaturalHeight = writeableBitmap.PixelHeight;
-
-                // 重置图像缩放+绘制图表（都是UI操作，必须在UI线程）
-                ResetImageScale();
-                PlotDiameterLineChart();
-                PlotRCircleChart();
-                ResetChartScales();
+                    else
+                    {
+                        // 负角度：左边红框
+                        labelPos = new OpenCvSharp.Point((int)(centerPoint.X - radiusPixel - 100), (int)centerPoint.Y);
+                        if (labelPos.X < 0)
+                        {
+                            labelPos.X = (int)(centerPoint.X - radiusPixel + 20);
+                        }
+                    }
+                    DrawAngleLabel(colorMat, labelPos, $"{_selectedRadius}(R)", purpleColor, fontScale: 4);
+                }
             }
-            catch (Exception ex)
-            {
-                // 补充异常处理，避免异步方法崩溃无提示
-                MessageBox.Show($"Image update failed：{ex.Message}", $"{FindResource("State.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+
+
+
+            // ========== 绘制XY轴（贯穿图像） ==========
+            Scalar redColor = new Scalar(0, 0, 255);
+            int redLineWidth = 20;
+            OpenCvSharp.Point xAxisStart = new OpenCvSharp.Point(0, centerPoint.Y);
+            OpenCvSharp.Point xAxisEnd = new OpenCvSharp.Point(colorMat.Width, centerPoint.Y);
+            Cv2.Line(colorMat, xAxisStart, xAxisEnd, redColor, redLineWidth, LineTypes.AntiAlias);
+
+            OpenCvSharp.Point yAxisStart = new OpenCvSharp.Point(centerPoint.X, 0);
+            OpenCvSharp.Point yAxisEnd = new OpenCvSharp.Point(centerPoint.X, colorMat.Height);
+            Cv2.Line(colorMat, yAxisStart, yAxisEnd, redColor, redLineWidth, LineTypes.AntiAlias);
+
+
+            // ========== 更新显示 ==========
+            pseudoColorMat = colorMat;
+            WriteableBitmap writeableBitmap = pseudoColorMat.ToWriteableBitmap();
+            imgDisplay.Source = writeableBitmap;
+
+            _imgNaturalWidth = writeableBitmap.PixelWidth;
+            _imgNaturalHeight = writeableBitmap.PixelHeight;
+            ResetImageScale();
+            PlotDiameterLineChart();
+            PlotRCircleChart();
+            // 额外确保AutoScale
+            ResetChartScales();
         }
         /// <summary>
         /// 辅助方法：读取ComboBox中所有ComboBoxItem的Tag值（转为double）
@@ -2954,28 +2540,32 @@ namespace CVAVMControl
         {
             try
             {
-                // 1. 基础校验（UI线程操作提前完成，仅做1次切回）
-                var (isDataValid, imgWidth, imgHeight, bpp, xyzData) = await Application.Current.Dispatcher.InvokeAsync(() =>
-                {
-                    bool valid = IsMatSafe(XMat) && IsMatSafe(YMat) && IsMatSafe(ZMat) && center.X != 0 && center.Y != 0 && dataXyz != null;
-                    return (valid, YMat?.Width ?? 0, YMat?.Height ?? 0,
-                        YMat.Depth() switch { MatType.CV_8U => 8, MatType.CV_16U => 16, MatType.CV_32F => 32, _ => 16 },
-                        dataXyz);
-                });
-                if (!isDataValid)
+                // 基础校验
+                if (!IsMatSafe(XMat) || !IsMatSafe(YMat) || !IsMatSafe(ZMat) || center.X == 0 || center.Y == 0)
                 {
                     logger.Error($"{FindResource("Datanotloadedorimagecenternotinitialized")}");
                     return false;
                 }
 
-                // 2. 构建ImageData（仅1次数据拷贝，避免循环内重复创建）
+                int imgWidth = YMat.Width;
+                int imgHeight = YMat.Height;
+                int bpp = YMat.Depth() switch
+                {
+                    MatType.CV_8U => 8,
+                    MatType.CV_16U => 16,
+                    MatType.CV_32F => 32,
+                    _ => 16
+                };
+
+                if (dataXyz == null) return false;
+
                 ImageData xyzImageData = new ImageData
                 {
                     _w = imgWidth,
                     _h = imgHeight,
                     _bpp = bpp,
                     _channels = 3,
-                    data = xyzData
+                    data = dataXyz
                 };
                 ImageData bgrImageData = new ImageData
                 {
@@ -2986,288 +2576,150 @@ namespace CVAVMControl
                     data = null
                 };
 
-                // 3. 清空缓存（UI线程仅做1次，避免循环内切回）
-                await Application.Current.Dispatcher.InvokeAsync(() => _dllAllAzimuthData.Clear());
-                int totalAzimuths = 181;
-                int completed = 0;
-
-                // 4. 并行遍历方位角（核心优化：利用多核，避免单线程循环）
-                // 注意：DLL若不支持多线程，需改为Task.WhenAll+有序执行，避免竞态
-                var tasks = Enumerable.Range(0, 181).Select(async azimuth =>
-                {
-                    try
-                    {
-                        // 循环内仅做非UI操作：JSON序列化+DLL调用+反序列化
-                        string staticJson = JsonConvert.SerializeObject(new
-                        {
-                            debugCfg = new { Debug = false, debugPath = "Result\\", debugImgResize = 2 },
-                            azimuthalAngle = azimuth,
-                            polar_RHO = polarRHO,
-                            polar_Angle = polarAngle,
-                            pixelToAngle = ConoscopeCoefficient,
-                            pointNumLine = pointNumLine,
-                            pointNumCircle = 60,
-                            center = new { x = center.X, y = center.Y },
-                            displayChannel = exportChannel.ToString()
-                        });
-
-                        // DLL调用封装为纯异步（无UI访问）
-                        var (callResult, resultJson, showImage) = await Task.Run(() =>
-                        {
-                            string json;
-                            ImageData img;
-                            var res = CallCV_Ali_calcVam(bgrImageData, xyzImageData, staticJson, out json, out img);
-                            return (res, json, img);
-                        });
-
-                        // 清理内存（非UI）
-                        if (showImage?.data != null)
-                        {
-                            Array.Clear(showImage.data, 0, showImage.data.Length);
-                            showImage.data = null;
-                        }
-
-                        if (callResult != CV_AliResType.SUCCESS && callResult != CV_AliResType.PART_SUCCESS)
-                        {
-                            logger.Warn($"{FindResource("Azimuth")}{azimuth}° DLL{FindResource("Callfailed")}");
-                            return;
-                        }
-
-                        string cleanJson = resultJson?.Trim('\0').Trim() ?? string.Empty;
-                        if (string.IsNullOrEmpty(cleanJson)) return;
-
-                        // 反序列化（非UI，利用Task.Run避免阻塞）
-                        var vamResult = await Task.Run(() => JsonConvert.DeserializeObject<VamResultRoot>(cleanJson));
-                        if (vamResult?.result?.line?.Data == null || vamResult.result.line.Data.Count == 0) return;
-
-                        // 仅在数据有效时切回UI线程更新缓存（减少切回次数）
-                        await Application.Current.Dispatcher.InvokeAsync(() =>
-                        {
-                            _dllAllAzimuthData[azimuth] = vamResult.result.line.Data;
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.Error($"{FindResource("Azimuth")}{azimuth}° {FindResource("Exceptionoccurred")}", ex);
-                    }
-                    finally
-                    {
-                        // 原子更新进度，避免并发冲突
-                        int current = Interlocked.Increment(ref completed);
-                        onProgressUpdate?.Invoke((int)((double)current / totalAzimuths * 100));
-                    }
-                });
-
-                // 5. 等待所有并行任务完成
-                await Task.WhenAll(tasks);
-
-                // 6. 处理180°数据（仅1次UI切回）
+                // 清空原有缓存
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    if (_dllAllAzimuthData.ContainsKey(0) && !_dllAllAzimuthData.ContainsKey(180))
-                    {
-                        var zeroData = _dllAllAzimuthData[0];
-                        _dllAllAzimuthData[180] = zeroData.Select(p => new VamSamplePoint
-                        {
-                            X = p.X,
-                            Y = p.Y,
-                            Z = p.Z,
-                            cie_x = p.cie_x,
-                            cie_y = p.cie_y,
-                            position = -p.position
-                        }).Reverse().ToList();
-                    }
+                    _dllAllAzimuthData.Clear();
                 });
 
-                return _dllAllAzimuthData.Count > 0;
+                int totalAzimuths = 181; // 0°~180°
+                int completedAzimuths = 0;
+
+                // 遍历0°~180°所有方位角，异步调用DLL并缓存数据
+                for (int azimuth = 0; azimuth <= 180; azimuth++)
+                {
+                    // 使用传入的动态参数构建JSON
+                    string staticJson = JsonConvert.SerializeObject(new
+                    {
+                        debugCfg = new { Debug = false, debugPath = "Result\\", debugImgResize = 2 },
+                        azimuthalAngle = azimuth,
+                        polar_RHO = polarRHO,
+                        polar_Angle = polarAngle,
+                        pixelToAngle = ConoscopeCoefficient,
+                        pointNumLine = pointNumLine,
+                        pointNumCircle = 60,
+                        center = new { x = center.X, y = center.Y },
+                        displayChannel = exportChannel.ToString()
+                    });
+
+                    string resultJson = string.Empty;
+                    ImageData showImage = null;
+                    CV_AliResType callResult = CV_AliResType.FAILED;
+
+                    // 异步调用DLL
+                    await Task.Run(() =>
+                    {
+                        callResult = CallCV_Ali_calcVam(
+                            bgrImageData,
+                            xyzImageData,
+                            staticJson,
+                            out resultJson,
+                            out showImage
+                        );
+                    });
+
+                    // 清理内存
+                    if (showImage?.data != null)
+                    {
+                        Array.Clear(showImage.data, 0, showImage.data.Length);
+                        showImage.data = null;
+                    }
+
+                    if (callResult != CV_AliResType.SUCCESS && callResult != CV_AliResType.PART_SUCCESS)
+                    {
+                        logger.Warn($"{FindResource("Azimuth")}{azimuth}° DLL{FindResource("Callfailed")}，{FindResource("Errorcode")}：{callResult}");
+
+                        // 即使失败也更新进度
+                        completedAzimuths++;
+                        if (onProgressUpdate != null)
+                        {
+                            int progress = (int)((double)completedAzimuths / totalAzimuths * 100);
+                            onProgressUpdate(progress);
+                        }
+
+                        await Task.Delay(10);
+                        continue;
+                    }
+
+                    string cleanJson = resultJson?.Trim('\0').Trim() ?? string.Empty;
+                    if (string.IsNullOrEmpty(cleanJson))
+                    {
+                        logger.Warn($"{FindResource("Azimuth")}{azimuth}° {FindResource("nullJSON")}");
+
+                        completedAzimuths++;
+                        if (onProgressUpdate != null)
+                        {
+                            int progress = (int)((double)completedAzimuths / totalAzimuths * 100);
+                            onProgressUpdate(progress);
+                        }
+
+                        await Task.Delay(10);
+                        continue;
+                    }
+
+                    try
+                    {
+                        VamResultRoot result = JsonConvert.DeserializeObject<VamResultRoot>(cleanJson);
+                        if (result?.result?.line?.Data != null && result.result.line.Data.Count > 0)
+                        {
+                            await Application.Current.Dispatcher.InvokeAsync(() =>
+                            {
+                                _dllAllAzimuthData[azimuth] = result.result.line.Data;
+                            });
+                        }
+                    }
+                    catch (JsonException ex)
+                    {
+                        logger.Error($"{FindResource("Azimuth")}{azimuth}° {FindResource("JSONEX")}", ex);
+                    }
+
+                    // 更新进度
+                    completedAzimuths++;
+                    if (onProgressUpdate != null)
+                    {
+                        int progress = (int)((double)completedAzimuths / totalAzimuths * 100);
+                        onProgressUpdate(progress);
+                    }
+
+                    // 短暂延迟，让UI有机会更新
+                    await Task.Delay(10);
+                }
+
+                // 处理180°数据（从0°数据反转）
+                if (_dllAllAzimuthData.ContainsKey(0) && !_dllAllAzimuthData.ContainsKey(180))
+                {
+                    var zeroData = await Application.Current.Dispatcher.InvokeAsync(() => _dllAllAzimuthData[0]);
+                    var reversed180Data = new List<VamSamplePoint>();
+
+                    // 反转径向角度的数据顺序
+                    for (int i = zeroData.Count - 1; i >= 0; i--)
+                    {
+                        var originalPoint = zeroData[i];
+                        reversed180Data.Add(new VamSamplePoint
+                        {
+                            X = originalPoint.X,
+                            Y = originalPoint.Y,
+                            Z = originalPoint.Z,
+                            cie_x = originalPoint.cie_x,
+                            cie_y = originalPoint.cie_y,
+                            position = -originalPoint.position
+                        });
+                    }
+
+                    await Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        _dllAllAzimuthData[180] = reversed180Data;
+                    });
+                }
+
+                int dataCount = await Application.Current.Dispatcher.InvokeAsync(() => _dllAllAzimuthData.Count);
+                return dataCount > 0;
             }
             catch (Exception ex)
             {
                 logger.Error($"{FindResource("Failedtoobtainfullazimuthdata")}", ex);
                 return false;
             }
-            //try
-            //{
-            //    // 基础校验
-            //    if (!IsMatSafe(XMat) || !IsMatSafe(YMat) || !IsMatSafe(ZMat) || center.X == 0 || center.Y == 0)
-            //    {
-            //        logger.Error($"{FindResource("Datanotloadedorimagecenternotinitialized")}");
-            //        return false;
-            //    }
-
-            //    int imgWidth = YMat.Width;
-            //    int imgHeight = YMat.Height;
-            //    int bpp = YMat.Depth() switch
-            //    {
-            //        MatType.CV_8U => 8,
-            //        MatType.CV_16U => 16,
-            //        MatType.CV_32F => 32,
-            //        _ => 16
-            //    };
-
-            //    if (dataXyz == null) return false;
-
-            //    ImageData xyzImageData = new ImageData
-            //    {
-            //        _w = imgWidth,
-            //        _h = imgHeight,
-            //        _bpp = bpp,
-            //        _channels = 3,
-            //        data = dataXyz
-            //    };
-            //    ImageData bgrImageData = new ImageData
-            //    {
-            //        _w = imgWidth,
-            //        _h = imgHeight,
-            //        _bpp = bpp,
-            //        _channels = 3,
-            //        data = null
-            //    };
-
-            //    // 清空原有缓存
-            //    await Application.Current.Dispatcher.InvokeAsync(() =>
-            //    {
-            //        _dllAllAzimuthData.Clear();
-            //    });
-
-            //    int totalAzimuths = 181; // 0°~180°
-            //    int completedAzimuths = 0;
-
-            //    // 遍历0°~180°所有方位角，异步调用DLL并缓存数据
-            //    for (int azimuth = 0; azimuth <= 180; azimuth++)
-            //    {
-            //        // 使用传入的动态参数构建JSON
-            //        string staticJson = JsonConvert.SerializeObject(new
-            //        {
-            //            debugCfg = new { Debug = false, debugPath = "Result\\", debugImgResize = 2 },
-            //            azimuthalAngle = azimuth,
-            //            polar_RHO = polarRHO,
-            //            polar_Angle = polarAngle,
-            //            pixelToAngle = ConoscopeCoefficient,
-            //            pointNumLine = pointNumLine,
-            //            pointNumCircle = 60,
-            //            center = new { x = center.X, y = center.Y },
-            //            displayChannel = exportChannel.ToString()
-            //        });
-
-            //        string resultJson = string.Empty;
-            //        ImageData showImage = null;
-            //        CV_AliResType callResult = CV_AliResType.FAILED;
-
-            //        // 异步调用DLL
-            //        await Task.Run(() =>
-            //        {
-            //            callResult = CallCV_Ali_calcVam(
-            //                bgrImageData,
-            //                xyzImageData,
-            //                staticJson,
-            //                out resultJson,
-            //                out showImage
-            //            );
-            //        });
-
-            //        // 清理内存
-            //        if (showImage?.data != null)
-            //        {
-            //            Array.Clear(showImage.data, 0, showImage.data.Length);
-            //            showImage.data = null;
-            //        }
-
-            //        if (callResult != CV_AliResType.SUCCESS && callResult != CV_AliResType.PART_SUCCESS)
-            //        {
-            //            logger.Warn($"{FindResource("Azimuth")}{azimuth}° DLL{FindResource("Callfailed")}，{FindResource("Errorcode")}：{callResult}");
-
-            //            // 即使失败也更新进度
-            //            completedAzimuths++;
-            //            if (onProgressUpdate != null)
-            //            {
-            //                int progress = (int)((double)completedAzimuths / totalAzimuths * 100);
-            //                onProgressUpdate(progress);
-            //            }
-
-            //            await Task.Delay(10);
-            //            continue;
-            //        }
-
-            //        string cleanJson = resultJson?.Trim('\0').Trim() ?? string.Empty;
-            //        if (string.IsNullOrEmpty(cleanJson))
-            //        {
-            //            logger.Warn($"{FindResource("Azimuth")}{azimuth}° {FindResource("nullJSON")}");
-
-            //            completedAzimuths++;
-            //            if (onProgressUpdate != null)
-            //            {
-            //                int progress = (int)((double)completedAzimuths / totalAzimuths * 100);
-            //                onProgressUpdate(progress);
-            //            }
-
-            //            await Task.Delay(10);
-            //            continue;
-            //        }
-
-            //        try
-            //        {
-            //            VamResultRoot result = JsonConvert.DeserializeObject<VamResultRoot>(cleanJson);
-            //            if (result?.result?.line?.Data != null && result.result.line.Data.Count > 0)
-            //            {
-            //                await Application.Current.Dispatcher.InvokeAsync(() =>
-            //                {
-            //                    _dllAllAzimuthData[azimuth] = result.result.line.Data;
-            //                });
-            //            }
-            //        }
-            //        catch (JsonException ex)
-            //        {
-            //            logger.Error($"{FindResource("Azimuth")}{azimuth}° {FindResource("JSONEX")}", ex);
-            //        }
-
-            //        // 更新进度
-            //        completedAzimuths++;
-            //        if (onProgressUpdate != null)
-            //        {
-            //            int progress = (int)((double)completedAzimuths / totalAzimuths * 100);
-            //            onProgressUpdate(progress);
-            //        }
-
-            //        // 短暂延迟，让UI有机会更新
-            //        await Task.Delay(10);
-            //    }
-
-            //    // 处理180°数据（从0°数据反转）
-            //    if (_dllAllAzimuthData.ContainsKey(0) && !_dllAllAzimuthData.ContainsKey(180))
-            //    {
-            //        var zeroData = await Application.Current.Dispatcher.InvokeAsync(() => _dllAllAzimuthData[0]);
-            //        var reversed180Data = new List<VamSamplePoint>();
-
-            //        // 反转径向角度的数据顺序
-            //        for (int i = zeroData.Count - 1; i >= 0; i--)
-            //        {
-            //            var originalPoint = zeroData[i];
-            //            reversed180Data.Add(new VamSamplePoint
-            //            {
-            //                X = originalPoint.X,
-            //                Y = originalPoint.Y,
-            //                Z = originalPoint.Z,
-            //                cie_x = originalPoint.cie_x,
-            //                cie_y = originalPoint.cie_y,
-            //                position = -originalPoint.position
-            //            });
-            //        }
-
-            //        await Application.Current.Dispatcher.InvokeAsync(() =>
-            //        {
-            //            _dllAllAzimuthData[180] = reversed180Data;
-            //        });
-            //    }
-
-            //    int dataCount = await Application.Current.Dispatcher.InvokeAsync(() => _dllAllAzimuthData.Count);
-            //    return dataCount > 0;
-            //}
-            //catch (Exception ex)
-            //{
-            //    logger.Error($"{FindResource("Failedtoobtainfullazimuthdata")}", ex);
-            //    return false;
-            //}
         }
 
         /// <summary>
@@ -4849,11 +4301,6 @@ namespace CVAVMControl
                             {
                                 basePath = Path.ChangeExtension(saveFileDialog.FileName, null);
                             }
-                            else
-                            {
-                               
-                                progressBarContainer.Visibility = Visibility.Collapsed;
-                            }
                         });
 
                         if (string.IsNullOrEmpty(basePath)) return;
@@ -5219,84 +4666,143 @@ namespace CVAVMControl
         {
             try
             {
+                // ========== 第1阶段：参数准备 ==========
                 _progressManager.UpdateProgress(45);
 
-                // 1. 预生成采样点（纯计算，非UI）
+                // 生成极角数组
                 int totalPolarSamples = (int)((2 * polarRHO) / polarInterval) + 1;
-                double[] polarAngles = Enumerable.Range(0, totalPolarSamples)
-                    .Select(i => Math.Round(-polarRHO + i * polarInterval, 2))
-                    .ToArray();
-                double[] azimuthAngles = Enumerable.Range(0, 181).Select(i => (double)i).ToArray();
+                double[] polarAngles = new double[totalPolarSamples];
 
-                // 2. 从UI缓存获取数据（仅1次切回，批量获取所有数据）
-                var allAzimuthData = await Application.Current.Dispatcher.InvokeAsync(() =>
+                for (int i = 0; i < totalPolarSamples; i++)
                 {
-                    return _dllAllAzimuthData.ToDictionary(kv => kv.Key, kv => kv.Value);
-                });
+                    polarAngles[i] = Math.Round(-polarRHO + i * polarInterval, 2);
+                }
 
-                // 3. 并行填充数据矩阵（多核优化，避免单线程循环）
-                var channelMatrixTasks = selectedChannels.Select(async channel =>
+                // 方位角数组（0-180度，1度间隔）
+                int totalAzimuthSamples = 181;
+                double[] azimuthAngles = new double[totalAzimuthSamples];
+                for (int i = 0; i < totalAzimuthSamples; i++)
                 {
-                    double[,] matrix = new double[totalPolarSamples, 181];
-                    for (int polarIndex = 0; polarIndex < totalPolarSamples; polarIndex++)
+                    azimuthAngles[i] = i;
+                }
+
+                logger.Info($"polar angle sampling points: {totalPolarSamples}, azimuth angle sampling points: {totalAzimuthSamples}");
+
+                // ========== 第2阶段：预准备数据矩阵 ==========
+                _progressManager.UpdateProgress(50);
+
+                // 为每个通道创建数据矩阵，提高写入效率
+                Dictionary<ExportDataType, double[,]> channelDataMatrices = new Dictionary<ExportDataType, double[,]>();
+
+                foreach (var channel in selectedChannels)
+                {
+                    channelDataMatrices[channel] = new double[totalPolarSamples, totalAzimuthSamples];
+                }
+
+                // 填充数据矩阵
+                for (int azimuthIndex = 0; azimuthIndex < totalAzimuthSamples; azimuthIndex++)
+                {
+                    int azimuth = (int)azimuthAngles[azimuthIndex];
+
+                    // 从缓存中获取数据
+                    var sampleList = await Application.Current.Dispatcher.InvokeAsync(() =>
                     {
-                        double polar = polarAngles[polarIndex];
-                        for (int azimuthIndex = 0; azimuthIndex < 181; azimuthIndex++)
-                        {
-                            int azimuth = (int)azimuthAngles[azimuthIndex];
-                            if (allAzimuthData.TryGetValue(azimuth, out var sampleList))
-                            {
-                                var targetSample = sampleList.OrderBy(s => Math.Abs(Math.Round(s.position, 2) - polar)).FirstOrDefault();
-                                matrix[polarIndex, azimuthIndex] = targetSample != null ? GetChannelValue(targetSample, channel) : 0;
-                            }
-                        }
-                    }
-                    return (Channel: channel, Matrix: matrix);
-                });
-                var channelMatrices = (await Task.WhenAll(channelMatrixTasks)).ToDictionary(t => t.Channel, t => t.Matrix);
+                        return _dllAllAzimuthData.TryGetValue(azimuth, out var list) ? list : null;
+                    });
 
-                // 4. 并行写入文件（IO密集，并行化提升效率，避免单文件阻塞）
-                var exportTasks = selectedChannels.Select(async channel =>
-                {
-                    string csvPath = $"{basePath}_{channel}.csv";
-                    double[,] matrix = channelMatrices[channel];
-
-                    // 用StreamWriter异步写入（核心：避免同步IO阻塞）
-                    using (var writer = new StreamWriter(csvPath, false, Encoding.UTF8, 4096)) // 4KB缓冲区，减少IO次数
+                    if (sampleList != null && sampleList.Count > 0)
                     {
-                        // 异步写入表头
-                        await writer.WriteLineAsync($"Measurement Date,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,");
-                        await writer.WriteLineAsync($"Instrument,VAM {polarRHO}°,,,,,,,,,,,,");
-                        await writer.WriteLineAsync($"Channel,{channel},,,,,,,,,,,,");
-                        await writer.WriteLineAsync($"PolarInterval,{polarInterval}°,,,,,,,,,,,,,");
-                        await writer.WriteLineAsync();
-
-                        // 异步写入列标题
-                        StringBuilder header = new StringBuilder("Polar Angle(°)");
-                        foreach (double az in azimuthAngles) header.Append($",{az:F0}°");
-                        await writer.WriteLineAsync(header.ToString());
-
-                        // 异步写入数据行（批量拼接，减少Write次数）
+                        // 对每个极角采样点
                         for (int polarIndex = 0; polarIndex < totalPolarSamples; polarIndex++)
                         {
-                            StringBuilder row = new StringBuilder($"{polarAngles[polarIndex]:F2}");
-                            for (int azIndex = 0; azIndex < 181; azIndex++)
-                            {
-                                row.Append($",{matrix[polarIndex, azIndex]:F5}");
-                            }
-                            await writer.WriteLineAsync(row.ToString());
+                            double polar = polarAngles[polarIndex];
 
-                            // 每20行更新1次进度，减少UI切回
-                            if (polarIndex % 20 == 0)
+                            // 找到最接近的采样点
+                            var targetSample = sampleList
+                                .OrderBy(s => Math.Abs(Math.Round(s.position, 2) - polar))
+                                .FirstOrDefault();
+
+                            if (targetSample != null)
                             {
-                                _progressManager.UpdateProgress(70 + (int)((polarIndex + 1) * 25.0 / totalPolarSamples / selectedChannels.Count));
+                                foreach (var channel in selectedChannels)
+                                {
+                                    channelDataMatrices[channel][polarIndex, azimuthIndex] = GetChannelValue(targetSample, channel);
+                                }
                             }
                         }
                     }
-                    logger.Info($"Channel {channel} {FindResource("Exportcompleted")}: {csvPath}");
-                });
 
-                await Task.WhenAll(exportTasks);
+                    // 更新进度
+                    if (azimuthIndex % 10 == 0)
+                    {
+                        int progress = 50 + (int)(azimuthIndex * 20.0 / totalAzimuthSamples);
+                        _progressManager.UpdateProgress(progress);
+                    }
+                }
+
+                // ========== 第3阶段：导出文件 ==========
+                int channelCount = selectedChannels.Count;
+                for (int channelIndex = 0; channelIndex < channelCount; channelIndex++)
+                {
+                    var channel = selectedChannels[channelIndex];
+                    double[,] dataMatrix = channelDataMatrices[channel];
+
+                    int channelStartProgress = 70 + (int)(channelIndex * 25.0 / channelCount);
+                    _progressManager.UpdateProgress(channelStartProgress);
+
+                    string csvFileName = $"{basePath}_{channel}.csv";
+                    string fullCsvPath = Path.Combine(Path.GetDirectoryName(csvFileName) ?? "", Path.GetFileName(csvFileName));
+
+                    await Task.Run(() =>
+                    {
+                        using (var writer = new StreamWriter(fullCsvPath, false, Encoding.UTF8))
+                        {
+                            // 写入表头
+                            writer.WriteLine($"Measurement Date,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,");
+                            writer.WriteLine($"Instrument,VAM {polarRHO}°,,,,,,,,,,,,");
+                            writer.WriteLine($"Channel,{channel},,,,,,,,,,,,");
+                            writer.WriteLine($"PolarInterval,{polarInterval}°,,,,,,,,,,,,,");
+                            writer.WriteLine();
+
+                            // 写入列标题
+                            writer.Write("Polar Angle(°)");
+                            for (int i = 0; i < totalAzimuthSamples; i++)
+                            {
+                                writer.Write($",{azimuthAngles[i]:F0}°");
+                            }
+                            writer.WriteLine();
+
+                            // 写入数据行
+                            for (int polarIndex = 0; polarIndex < totalPolarSamples; polarIndex++)
+                            {
+                                writer.Write($"{polarAngles[polarIndex]:F2}");
+
+                                for (int azimuthIndex = 0; azimuthIndex < totalAzimuthSamples; azimuthIndex++)
+                                {
+                                    writer.Write($",{dataMatrix[polarIndex, azimuthIndex]:F5}");
+                                }
+
+                                writer.WriteLine();
+
+                                // 每处理20行更新一次进度
+                                if (polarIndex % 20 == 0)
+                                {
+                                    int progress = channelStartProgress +
+                                        (int)((polarIndex + 1) * 25.0 / totalPolarSamples / channelCount);
+
+                                    // 在主线程更新进度
+                                    Application.Current.Dispatcher.Invoke(() =>
+                                    {
+                                        _progressManager.UpdateProgress(Math.Min(progress, 95));
+                                    });
+                                }
+                            }
+                        }
+
+                        logger.Info($"Channel {channel} {FindResource("Exportcompleted")}: {fullCsvPath}");
+                    });
+                }
+
                 _progressManager.UpdateProgress(100);
             }
             catch (Exception ex)
@@ -5304,152 +4810,6 @@ namespace CVAVMControl
                 logger.Error("ExportLineModeAsync execution failed", ex);
                 throw;
             }
-            //try
-            //{
-            //    // ========== 第1阶段：参数准备 ==========
-            //    _progressManager.UpdateProgress(45);
-
-            //    // 生成极角数组
-            //    int totalPolarSamples = (int)((2 * polarRHO) / polarInterval) + 1;
-            //    double[] polarAngles = new double[totalPolarSamples];
-
-            //    for (int i = 0; i < totalPolarSamples; i++)
-            //    {
-            //        polarAngles[i] = Math.Round(-polarRHO + i * polarInterval, 2);
-            //    }
-
-            //    // 方位角数组（0-180度，1度间隔）
-            //    int totalAzimuthSamples = 181;
-            //    double[] azimuthAngles = new double[totalAzimuthSamples];
-            //    for (int i = 0; i < totalAzimuthSamples; i++)
-            //    {
-            //        azimuthAngles[i] = i;
-            //    }
-
-            //    logger.Info($"polar angle sampling points: {totalPolarSamples}, azimuth angle sampling points: {totalAzimuthSamples}");
-
-            //    // ========== 第2阶段：预准备数据矩阵 ==========
-            //    _progressManager.UpdateProgress(50);
-
-            //    // 为每个通道创建数据矩阵，提高写入效率
-            //    Dictionary<ExportDataType, double[,]> channelDataMatrices = new Dictionary<ExportDataType, double[,]>();
-
-            //    foreach (var channel in selectedChannels)
-            //    {
-            //        channelDataMatrices[channel] = new double[totalPolarSamples, totalAzimuthSamples];
-            //    }
-
-            //    // 填充数据矩阵
-            //    for (int azimuthIndex = 0; azimuthIndex < totalAzimuthSamples; azimuthIndex++)
-            //    {
-            //        int azimuth = (int)azimuthAngles[azimuthIndex];
-
-            //        // 从缓存中获取数据
-            //        var sampleList = await Application.Current.Dispatcher.InvokeAsync(() =>
-            //        {
-            //            return _dllAllAzimuthData.TryGetValue(azimuth, out var list) ? list : null;
-            //        });
-
-            //        if (sampleList != null && sampleList.Count > 0)
-            //        {
-            //            // 对每个极角采样点
-            //            for (int polarIndex = 0; polarIndex < totalPolarSamples; polarIndex++)
-            //            {
-            //                double polar = polarAngles[polarIndex];
-
-            //                // 找到最接近的采样点
-            //                var targetSample = sampleList
-            //                    .OrderBy(s => Math.Abs(Math.Round(s.position, 2) - polar))
-            //                    .FirstOrDefault();
-
-            //                if (targetSample != null)
-            //                {
-            //                    foreach (var channel in selectedChannels)
-            //                    {
-            //                        channelDataMatrices[channel][polarIndex, azimuthIndex] = GetChannelValue(targetSample, channel);
-            //                    }
-            //                }
-            //            }
-            //        }
-
-            //        // 更新进度
-            //        if (azimuthIndex % 10 == 0)
-            //        {
-            //            int progress = 50 + (int)(azimuthIndex * 20.0 / totalAzimuthSamples);
-            //            _progressManager.UpdateProgress(progress);
-            //        }
-            //    }
-
-            //    // ========== 第3阶段：导出文件 ==========
-            //    int channelCount = selectedChannels.Count;
-            //    for (int channelIndex = 0; channelIndex < channelCount; channelIndex++)
-            //    {
-            //        var channel = selectedChannels[channelIndex];
-            //        double[,] dataMatrix = channelDataMatrices[channel];
-
-            //        int channelStartProgress = 70 + (int)(channelIndex * 25.0 / channelCount);
-            //        _progressManager.UpdateProgress(channelStartProgress);
-
-            //        string csvFileName = $"{basePath}_{channel}.csv";
-            //        string fullCsvPath = Path.Combine(Path.GetDirectoryName(csvFileName) ?? "", Path.GetFileName(csvFileName));
-
-            //        await Task.Run(() =>
-            //        {
-            //            using (var writer = new StreamWriter(fullCsvPath, false, Encoding.UTF8))
-            //            {
-            //                // 写入表头
-            //                writer.WriteLine($"Measurement Date,{DateTime.Now:yyyy/MM/dd HH:mm},,,,,,,,,,,,");
-            //                writer.WriteLine($"Instrument,VAM {polarRHO}°,,,,,,,,,,,,");
-            //                writer.WriteLine($"Channel,{channel},,,,,,,,,,,,");
-            //                writer.WriteLine($"PolarInterval,{polarInterval}°,,,,,,,,,,,,,");
-            //                writer.WriteLine();
-
-            //                // 写入列标题
-            //                writer.Write("Polar Angle(°)");
-            //                for (int i = 0; i < totalAzimuthSamples; i++)
-            //                {
-            //                    writer.Write($",{azimuthAngles[i]:F0}°");
-            //                }
-            //                writer.WriteLine();
-
-            //                // 写入数据行
-            //                for (int polarIndex = 0; polarIndex < totalPolarSamples; polarIndex++)
-            //                {
-            //                    writer.Write($"{polarAngles[polarIndex]:F2}");
-
-            //                    for (int azimuthIndex = 0; azimuthIndex < totalAzimuthSamples; azimuthIndex++)
-            //                    {
-            //                        writer.Write($",{dataMatrix[polarIndex, azimuthIndex]:F5}");
-            //                    }
-
-            //                    writer.WriteLine();
-
-            //                    // 每处理20行更新一次进度
-            //                    if (polarIndex % 20 == 0)
-            //                    {
-            //                        int progress = channelStartProgress +
-            //                            (int)((polarIndex + 1) * 25.0 / totalPolarSamples / channelCount);
-
-            //                        // 在主线程更新进度
-            //                        Application.Current.Dispatcher.Invoke(() =>
-            //                        {
-            //                            _progressManager.UpdateProgress(Math.Min(progress, 95));
-            //                        });
-            //                    }
-            //                }
-            //            }
-
-            //            logger.Info($"Channel {channel} {FindResource("Exportcompleted")}: {fullCsvPath}");
-            //        });
-            //    }
-
-            //    _progressManager.UpdateProgress(100);
-            //}
-            //catch (Exception ex)
-            //{
-            //    logger.Error("ExportLineModeAsync execution failed", ex);
-            //    throw;
-            //}
         }
         private async void BtnExportCircle_Click(object sender, RoutedEventArgs e)
         {
@@ -5484,11 +4844,6 @@ namespace CVAVMControl
                             if (saveFileDialog.ShowDialog() == true)
                             {
                                 basePath = Path.ChangeExtension(saveFileDialog.FileName, null);
-                            }
-                            else
-                            {
-
-                                progressBarContainer.Visibility = Visibility.Collapsed;
                             }
                         });
 

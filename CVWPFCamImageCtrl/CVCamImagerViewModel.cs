@@ -19,10 +19,6 @@ namespace CVWPFCamImageCtrl
         // 新增：Camera Measurement - 原图集合（未经处理，不排除任何文件）
         private ObservableCollection<ImageItem> _originalImageResults;
         private ObservableCollection<POIMarker> _poiMarkers;
-      
-      
-
-       
         private CVImager? _imageDisplay;
         private uint id = 1;
         public CVCamImagerViewModel()
@@ -34,8 +30,6 @@ namespace CVWPFCamImageCtrl
             // 初始化新增集合
             _processedImageResults = new ObservableCollection<ImageItem>();
             _originalImageResults = new ObservableCollection<ImageItem>();
-            // 初始化当前显示集合为算法图集合
-            _currentDisplayCollection = _processedImageResults;
         }
         public ObservableCollection<POIMarker> POIMarkers
         {
@@ -223,14 +217,16 @@ namespace CVWPFCamImageCtrl
                 string fileName = Path.GetFileNameWithoutExtension(imageItem.ImagePath)?.ToLower() ?? "";
                 string fileExt = Path.GetExtension(imageItem.ImagePath)?.ToLower() ?? string.Empty;
 
-                // 统一过滤 po.dat 文件
+                // ========== 关键修改：统一过滤 po.dat 文件 ==========
                 bool isPoDatFile = fileName.Equals("po") || fileName.Equals("po.dat");
                 if (isPoDatFile)
                 {
                     Debug.WriteLine($"Skipping po.dat file in ViewModel: {imageItem.FileName}");
-                    return;
+                    return; // 跳过 po.dat 文件
                 }
+                // =================================================
 
+                // 仅根据扩展名分类，不过滤其他条件
                 // 1. 相机原始图（.cvraw）→ 原图集合（Camera Measurement）
                 if (fileExt == ".cvraw")
                 {
@@ -249,7 +245,7 @@ namespace CVWPFCamImageCtrl
                         _processedImageResults.Add(imageItem);
                     }
                 }
-                // 3. 其他格式 → 总集合
+                // 3. 其他格式（.tif, .tiff, .jpg 等）→ 总集合
                 else
                 {
                     if (!_imageResults.Any(item =>
@@ -259,55 +255,6 @@ namespace CVWPFCamImageCtrl
                     }
                 }
             });
-            //Application.Current.Dispatcher.Invoke(() =>
-            //{
-            //    if (imageItem == null || string.IsNullOrEmpty(imageItem.ImagePath))
-            //    {
-            //        return;
-            //    }
-
-            //    // 提取文件信息
-            //    string fileName = Path.GetFileNameWithoutExtension(imageItem.ImagePath)?.ToLower() ?? "";
-            //    string fileExt = Path.GetExtension(imageItem.ImagePath)?.ToLower() ?? string.Empty;
-
-            //    // ========== 关键修改：统一过滤 po.dat 文件 ==========
-            //    bool isPoDatFile = fileName.Equals("po") || fileName.Equals("po.dat");
-            //    if (isPoDatFile)
-            //    {
-            //        Debug.WriteLine($"Skipping po.dat file in ViewModel: {imageItem.FileName}");
-            //        return; // 跳过 po.dat 文件
-            //    }
-            //    // =================================================
-
-            //    // 仅根据扩展名分类，不过滤其他条件
-            //    // 1. 相机原始图（.cvraw）→ 原图集合（Camera Measurement）
-            //    if (fileExt == ".cvraw")
-            //    {
-            //        if (!_originalImageResults.Any(item =>
-            //            item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
-            //        {
-            //            _originalImageResults.Add(imageItem);
-            //        }
-            //    }
-            //    // 2. 标定后图（.cvcie）→ 处理后集合（Analysis Image）
-            //    else if (fileExt == ".cvcie")
-            //    {
-            //        if (!_processedImageResults.Any(item =>
-            //            item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
-            //        {
-            //            _processedImageResults.Add(imageItem);
-            //        }
-            //    }
-            //    // 3. 其他格式（.tif, .tiff, .jpg 等）→ 总集合
-            //    else
-            //    {
-            //        if (!_imageResults.Any(item =>
-            //            item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
-            //        {
-            //            _imageResults.Add(imageItem);
-            //        }
-            //    }
-            //});
             //Application.Current.Dispatcher.Invoke(() =>
             //{
             //    if (imageItem == null || string.IsNullOrEmpty(imageItem.ImagePath))
@@ -390,44 +337,22 @@ namespace CVWPFCamImageCtrl
             get => _currentDisplayCollection;
             set => SetProperty(ref _currentDisplayCollection, value);
         }
-        // 新增：当前显示模式
-        private string _currentDisplayMode = "Analysis"; // 默认显示算法图
 
-        public string CurrentDisplayMode
-        {
-            get => _currentDisplayMode;
-            set
-            {
-                if (SetProperty(ref _currentDisplayMode, value))
-                {
-                    // 模式改变时更新当前显示集合
-                    UpdateCurrentDisplayCollection();
-                }
-            }
-        }
         // 添加切换方法
-        private void UpdateCurrentDisplayCollection()
+        public void SwitchDisplayMode(string mode)
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            switch (mode)
             {
-                switch (_currentDisplayMode)
-                {
-                    case "Camera":
-                        CurrentDisplayCollection = _originalImageResults;
-                        break;
-                    case "Analysis":
-                        CurrentDisplayCollection = _processedImageResults;
-                        break;
-                    default:
-                        CurrentDisplayCollection = _processedImageResults;
-                        break;
-                }
-            });
-        }
-        // 新增：从外部设置显示模式的方法（供AOIService调用）
-        public void SetDisplayMode(string mode)
-        {
-            CurrentDisplayMode = mode;
+                case "Camera":
+                    CurrentDisplayCollection = OriginalImageResults;
+                    break;
+                case "Analysis":
+                    CurrentDisplayCollection = ProcessedImageResults;
+                    break;
+                default:
+                    CurrentDisplayCollection = ImageResults;
+                    break;
+            }
         }
     }
 }

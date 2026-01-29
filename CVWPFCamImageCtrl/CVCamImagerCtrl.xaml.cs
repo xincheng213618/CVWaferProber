@@ -91,9 +91,9 @@ namespace CVWPFCamImageCtrl
         #region 新增：下拉框切换 DataGrid 数据源
         private void ViewSwitchComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (_model == null)
+            if (_model == null || MainImageDataGrid == null)
             {
-                logger.Info("Error: _model is null");
+                logger.Info("Error: _model or MainImageDataGrid is null");
                 return;
             }
 
@@ -104,23 +104,58 @@ namespace CVWPFCamImageCtrl
                 return;
             }
 
-            string selectedMode = selectedItem.Tag.ToString() ?? "Analysis";
-            logger.Info($"切换视图模式: {selectedMode}");
+            _currentViewType = selectedItem.Tag.ToString() ?? "Analysis";
+            logger.Info($"Current view type：{_currentViewType}");
 
-            // 保存当前选中的图像（用于重新选中）
+            // 获取当前活动的集合（用于加载图像）
+            var currentActiveCollection = GetCurrentActiveCollection();
+
+            // 保存当前选中的图像（如果有）
             ImageItem previouslySelectedImage = MainImageDataGrid.SelectedItem as ImageItem;
             string previousImagePath = previouslySelectedImage?.ImagePath;
 
-            // 1. 更新ViewModel的显示模式
-            _model.SetDisplayMode(selectedMode);
+            // 核心：视图与对应分类集合绑定，仅显示对应类型图像
+            switch (_currentViewType)
+            {
+                case "Analysis":
+                    logger.Info($"切换到 Analysis 视图，绑定 ProcessedImageResults");
+                    // 直接绑定集合，而不是通过 ItemsSource 属性
+                    MainImageDataGrid.ItemsSource = _model.ProcessedImageResults;
 
-            // 2. DataGrid会自动更新，因为绑定了CurrentDisplayCollection
+                    // 检查绑定是否成功
+                    if (MainImageDataGrid.ItemsSource != _model.ProcessedImageResults)
+                    {
+                        logger.Info("警告：绑定 ProcessedImageResults 失败");
+                        // 强制重新绑定
+                        MainImageDataGrid.ItemsSource = null;
+                        MainImageDataGrid.ItemsSource = _model.ProcessedImageResults;
+                    }
+                    break;
 
-            // 3. 延迟选中逻辑（确保集合已更新）
+                case "Camera":
+                    logger.Info($"切换到 Camera 视图，绑定 OriginalImageResults");
+                    MainImageDataGrid.ItemsSource = _model.OriginalImageResults;
+
+                    // 检查绑定是否成功
+                    if (MainImageDataGrid.ItemsSource != _model.OriginalImageResults)
+                    {
+                        logger.Info("警告：绑定 OriginalImageResults 失败");
+                        // 强制重新绑定
+                        MainImageDataGrid.ItemsSource = null;
+                        MainImageDataGrid.ItemsSource = _model.OriginalImageResults;
+                    }
+                    break;
+            }
+
+            // 强制刷新 DataGrid，确保数据更新
+            MainImageDataGrid.Items.Refresh();
+            MainImageDataGrid.UpdateLayout();
+
+            // 延迟选中逻辑
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                var currentCollection = _model.CurrentDisplayCollection;
-                if (currentCollection == null || currentCollection.Count == 0)
+                var currentItemsSource = MainImageDataGrid.ItemsSource as ObservableCollection<ImageItem>;
+                if (currentItemsSource == null || currentItemsSource.Count == 0)
                 {
                     // 如果当前集合为空，清除图像显示
                     ImageDisplay.CurrentImage = null;
@@ -133,14 +168,13 @@ namespace CVWPFCamImageCtrl
                 // 尝试重新选中之前选中的图像（如果存在于当前集合中）
                 if (!string.IsNullOrEmpty(previousImagePath))
                 {
-                    var sameImageInNewCollection = currentCollection
-                        .FirstOrDefault(item =>
-                            item.ImagePath.Equals(previousImagePath, StringComparison.OrdinalIgnoreCase));
+                    var sameImageInNewCollection = currentItemsSource
+                        .FirstOrDefault(item => item.ImagePath.Equals(previousImagePath, StringComparison.OrdinalIgnoreCase));
 
                     if (sameImageInNewCollection != null)
                     {
                         MainImageDataGrid.SelectedItem = sameImageInNewCollection;
-                        MainImageDataGrid.SelectedIndex = currentCollection.IndexOf(sameImageInNewCollection);
+                        MainImageDataGrid.SelectedIndex = currentItemsSource.IndexOf(sameImageInNewCollection);
                         logger.Info($"视图切换后重新选中同一图像: {sameImageInNewCollection.FileName}");
                         return;
                     }
@@ -151,154 +185,57 @@ namespace CVWPFCamImageCtrl
                 logger.Info("视图切换后自动选中第一项");
 
             }), DispatcherPriority.Loaded);
+            //if (_model == null || MainImageDataGrid == null)
+            //{
+            //    Debug.WriteLine("异常：_model 或 MainImageDataGrid 为 null");
+            //    return;
+            //}
+
+            //var selectedItem = ViewSwitchComboBox.SelectedItem as ComboBoxItem;
+            //if (selectedItem == null)
+            //{
+            //    Debug.WriteLine("异常：选中项转换为 ComboBoxItem 失败");
+            //    return;
+            //}
+
+            //_currentViewType = selectedItem.Tag.ToString() ?? "Analysis";
+            //Debug.WriteLine($"当前视图类型：{_currentViewType}");
+
+            //// 核心：视图与对应分类集合绑定，仅显示对应类型图像
+            //switch (_currentViewType)
+            //{
+            //    case "Analysis":
+            //        // 绑定处理后集合（仅 .cvcie 标定图）
+            //        MainImageDataGrid.ItemsSource = _model.ProcessedImageResults;
+            //        break;
+            //    case "Camera":
+            //        // 绑定原图集合（仅 .cvraw 相机原始图）
+            //        MainImageDataGrid.ItemsSource = _model.OriginalImageResults;
+            //        break;
+            //}
+
+            //// 调试输出：查看对应集合数据量
+            //Debug.WriteLine($"ProcessedImageResults（cvcie）数量：{_model.ProcessedImageResults.Count}");
+            //Debug.WriteLine($"OriginalImageResults（cvraw）数量：{_model.OriginalImageResults.Count}");
+
+            //// 强制刷新 DataGrid，确保数据更新
+            //MainImageDataGrid.Items.Refresh();
+            //MainImageDataGrid.UpdateLayout();
+
+            //// 延迟选中第一项（确保绑定完成）
+            //Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            //{
+            //    if (MainImageDataGrid.Items.Count > 0)
+            //    {
+            //        MainImageDataGrid.SelectedIndex = 0;
+            //        Debug.WriteLine("视图切换后自动选中第一项");
+            //    }
+            //    else
+            //    {
+            //        Debug.WriteLine("当前视图集合无数据，无法选中");
+            //    }
+            //}), DispatcherPriority.Loaded);
         }
-        //private void ViewSwitchComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        //{
-        //    if (_model == null || MainImageDataGrid == null)
-        //    {
-        //        logger.Info("Error: _model or MainImageDataGrid is null");
-        //        return;
-        //    }
-
-        //    var selectedItem = ViewSwitchComboBox.SelectedItem as ComboBoxItem;
-        //    if (selectedItem == null)
-        //    {
-        //        logger.Info("Error: Failed to convert selected item to ComboBoxItem");
-        //        return;
-        //    }
-
-        //    _currentViewType = selectedItem.Tag.ToString() ?? "Analysis";
-        //    logger.Info($"Current view type：{_currentViewType}");
-
-        //    // 获取当前活动的集合（用于加载图像）
-        //    var currentActiveCollection = GetCurrentActiveCollection();
-
-        //    // 保存当前选中的图像（如果有）
-        //    ImageItem previouslySelectedImage = MainImageDataGrid.SelectedItem as ImageItem;
-        //    string previousImagePath = previouslySelectedImage?.ImagePath;
-
-        //    // 核心：视图与对应分类集合绑定，仅显示对应类型图像
-        //    switch (_currentViewType)
-        //    {
-        //        case "Analysis":
-        //            logger.Info($"切换到 Analysis 视图，绑定 ProcessedImageResults");
-        //            // 直接绑定集合，而不是通过 ItemsSource 属性
-        //            MainImageDataGrid.ItemsSource = _model.ProcessedImageResults;
-
-        //            // 检查绑定是否成功
-        //            if (MainImageDataGrid.ItemsSource != _model.ProcessedImageResults)
-        //            {
-        //                logger.Info("警告：绑定 ProcessedImageResults 失败");
-        //                // 强制重新绑定
-        //                MainImageDataGrid.ItemsSource = null;
-        //                MainImageDataGrid.ItemsSource = _model.ProcessedImageResults;
-        //            }
-        //            break;
-
-        //        case "Camera":
-        //            logger.Info($"切换到 Camera 视图，绑定 OriginalImageResults");
-        //            MainImageDataGrid.ItemsSource = _model.OriginalImageResults;
-
-        //            // 检查绑定是否成功
-        //            if (MainImageDataGrid.ItemsSource != _model.OriginalImageResults)
-        //            {
-        //                logger.Info("警告：绑定 OriginalImageResults 失败");
-        //                // 强制重新绑定
-        //                MainImageDataGrid.ItemsSource = null;
-        //                MainImageDataGrid.ItemsSource = _model.OriginalImageResults;
-        //            }
-        //            break;
-        //    }
-
-        //    // 强制刷新 DataGrid，确保数据更新
-        //    MainImageDataGrid.Items.Refresh();
-        //    MainImageDataGrid.UpdateLayout();
-
-        //    // 延迟选中逻辑
-        //    Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-        //    {
-        //        var currentItemsSource = MainImageDataGrid.ItemsSource as ObservableCollection<ImageItem>;
-        //        if (currentItemsSource == null || currentItemsSource.Count == 0)
-        //        {
-        //            // 如果当前集合为空，清除图像显示
-        //            ImageDisplay.CurrentImage = null;
-        //            ClearImageInfoDisplay();
-        //            CurrentFileNameText.Text = IsChineseMode ? "无图像" : "No Image";
-        //            logger.Info("当前视图集合无数据，无法选中");
-        //            return;
-        //        }
-
-        //        // 尝试重新选中之前选中的图像（如果存在于当前集合中）
-        //        if (!string.IsNullOrEmpty(previousImagePath))
-        //        {
-        //            var sameImageInNewCollection = currentItemsSource
-        //                .FirstOrDefault(item => item.ImagePath.Equals(previousImagePath, StringComparison.OrdinalIgnoreCase));
-
-        //            if (sameImageInNewCollection != null)
-        //            {
-        //                MainImageDataGrid.SelectedItem = sameImageInNewCollection;
-        //                MainImageDataGrid.SelectedIndex = currentItemsSource.IndexOf(sameImageInNewCollection);
-        //                logger.Info($"视图切换后重新选中同一图像: {sameImageInNewCollection.FileName}");
-        //                return;
-        //            }
-        //        }
-
-        //        // 如果没有找到之前的图像，选中第一项
-        //        MainImageDataGrid.SelectedIndex = 0;
-        //        logger.Info("视图切换后自动选中第一项");
-
-        //    }), DispatcherPriority.Loaded);
-        //    //if (_model == null || MainImageDataGrid == null)
-        //    //{
-        //    //    Debug.WriteLine("异常：_model 或 MainImageDataGrid 为 null");
-        //    //    return;
-        //    //}
-
-        //    //var selectedItem = ViewSwitchComboBox.SelectedItem as ComboBoxItem;
-        //    //if (selectedItem == null)
-        //    //{
-        //    //    Debug.WriteLine("异常：选中项转换为 ComboBoxItem 失败");
-        //    //    return;
-        //    //}
-
-        //    //_currentViewType = selectedItem.Tag.ToString() ?? "Analysis";
-        //    //Debug.WriteLine($"当前视图类型：{_currentViewType}");
-
-        //    //// 核心：视图与对应分类集合绑定，仅显示对应类型图像
-        //    //switch (_currentViewType)
-        //    //{
-        //    //    case "Analysis":
-        //    //        // 绑定处理后集合（仅 .cvcie 标定图）
-        //    //        MainImageDataGrid.ItemsSource = _model.ProcessedImageResults;
-        //    //        break;
-        //    //    case "Camera":
-        //    //        // 绑定原图集合（仅 .cvraw 相机原始图）
-        //    //        MainImageDataGrid.ItemsSource = _model.OriginalImageResults;
-        //    //        break;
-        //    //}
-
-        //    //// 调试输出：查看对应集合数据量
-        //    //Debug.WriteLine($"ProcessedImageResults（cvcie）数量：{_model.ProcessedImageResults.Count}");
-        //    //Debug.WriteLine($"OriginalImageResults（cvraw）数量：{_model.OriginalImageResults.Count}");
-
-        //    //// 强制刷新 DataGrid，确保数据更新
-        //    //MainImageDataGrid.Items.Refresh();
-        //    //MainImageDataGrid.UpdateLayout();
-
-        //    //// 延迟选中第一项（确保绑定完成）
-        //    //Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-        //    //{
-        //    //    if (MainImageDataGrid.Items.Count > 0)
-        //    //    {
-        //    //        MainImageDataGrid.SelectedIndex = 0;
-        //    //        Debug.WriteLine("视图切换后自动选中第一项");
-        //    //    }
-        //    //    else
-        //    //    {
-        //    //        Debug.WriteLine("当前视图集合无数据，无法选中");
-        //    //    }
-        //    //}), DispatcherPriority.Loaded);
-        //}
 
         #endregion
         #region 文件操作    
