@@ -2,6 +2,7 @@
 using CVCommCore;
 using CVCommCore.CVImage;
 using CVDB.Services.Algorithm;
+using CVDB.Services.Image;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
@@ -459,27 +460,61 @@ namespace CVWaferProber.Services
         /// <summary>
         /// 加载Camera Measurement（原始图像）- 从VScgdAlgorithmResultMaster获取关联原图
         /// </summary>
-        private void LoadCameraMeasurementImages(List<VScgdAlgorithmResultMaster> results, ref int id)
+        private void LoadCameraMeasurementImages(string batchCode, ref int id)
         {
-            foreach (var result in results)
+            try
             {
-                AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
+                // 从ImageResultService获取相机原图结果
+                var cameraResults = ImageResultService.LoadResultByBatchCode(batchCode);
 
-                // 匹配Camera Measurement的原图类型（可根据实际业务调整类型范围）
-                List<AlgorithmResultType> cameraTypes = new List<AlgorithmResultType>
+                if (cameraResults == null || cameraResults.Count == 0)
                 {
-                    AlgorithmResultType.OLED_FindDotsArrayOutFile, // 定位原图
-                    AlgorithmResultType.OLED_CombineQuaterImages   // 拼接原图
-                    // 可添加其他原始图像类型
-                };
-
-                if (cameraTypes.Contains(resultType) && !string.IsNullOrEmpty(result.ImgFile) && File.Exists(result.ImgFile))
-                {
-                    AddCameraMeasurementImage(id++, result.ImgFile);
+                    logger.Info($"未找到批次{batchCode}的相机原图数据");
+                    return;
                 }
+
+                foreach (var result in cameraResults)
+                {
+                    if (result == null) continue;
+
+                    // 根据FileType筛选相机原图（这里假设FileType=1是相机原图，根据实际业务调整）
+                    if (result.FileType.HasValue && result.FileType.Value == 1)
+                    {
+                        string filePath = result.FileUrl;
+
+                        // 验证文件路径
+                        if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+                        {
+                            // 获取文件扩展名，判断是否为原始图像
+                            string fileExt = Path.GetExtension(filePath).ToLower();
+
+                            // 如果是.cvraw格式，添加到原始图集合
+                            if (fileExt == ".cvraw")
+                            {
+                                AddCameraMeasurementImage(id++, filePath);
+                                logger.Debug($"已添加相机原图: {Path.GetFileName(filePath)}");
+                            }
+                            else
+                            {
+                                // 也可以根据实际需求处理其他类型的图像
+                                AddCameraMeasurementImage(id++, filePath);
+                                logger.Debug($"已添加图像: {Path.GetFileName(filePath)} (类型: {result.FileType})");
+                            }
+                        }
+                        else
+                        {
+                            logger.Warn($"相机原图文件不存在或路径为空: {filePath}");
+                        }
+                    }
+                }
+
+                logger.Info($"批次{batchCode}的相机原图加载完成，共处理{cameraResults.Count}条记录");
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"加载批次{batchCode}的相机原图失败", ex);
             }
         }
-
         /// <summary>
         /// 添加Analysis image到ViewModel的ProcessedImageResults集合
         /// </summary>
@@ -522,71 +557,71 @@ namespace CVWaferProber.Services
         /// <param name="serialNumber">芯片序列号（关联算法结果）</param>
         private void LoadImageResult(ChipData? chipData, string serialNumber)
         {
-            // 空值快速判断，直接返回避免无效操作
+
+            // 空值快速判断
             if (string.IsNullOrEmpty(serialNumber) || CustomImageVM == null)
             {
                 logger.Warn("LoadImageResult：序列号为空或CustomImageVM未初始化，跳过图片加载");
                 return;
             }
 
-            // 所有耗时/非UI操作放到后台线程
+            // 后台线程处理
             Task.Run(() =>
             {
                 try
                 {
-                    // 1. 初始化核心变量（后台线程内声明，避免跨线程作用域问题）
-                    int imageId = 1; // 图片唯一标识ID
-                    string? mainResultImageFile = null; // 主分析图文件路径
-                    DateTime? testTime = null; // 测试时间
-                    string? brightnessUniformityText = null; // 亮度均匀性显示文本
-                    List<POIMarker> poiMarkers = new List<POIMarker>(); // POI标记集合
+                    int imageId = 1;
+                    string? mainResultImageFile = null;
+                    DateTime? testTime = null;
+                    string? brightnessUniformityText = null;
+                    List<POIMarker> poiMarkers = new List<POIMarker>();
 
-                    // 2. 从数据库加载算法主结果
+                    // 1. 从数据库加载算法主结果
                     var algResults = AlgResultService.LoadAlgResultByBatchCode(serialNumber);
                     if (algResults == null || algResults.Count == 0)
                     {
-                        logger.Info($"LoadImageResult：序列号{serialNumber}未查询到算法结果，无图片可加载");
-                        return;
+                        logger.Info($"LoadImageResult：序列号{serialNumber}未查询到算法结果");
                     }
-
-                    // 3. 遍历主结果，解析所有图像、POI标记、业务数据
-                    foreach (var masterResult in algResults)
+                    else
                     {
-                        if (masterResult == null) continue;
-                        AlgorithmResultType resultType = (AlgorithmResultType)masterResult.ImgFileType;
-                        int masterResultId = masterResult.Id;
+                        // 遍历主结果，解析分析图像和POI标记
+                        foreach (var masterResult in algResults)
+                        {
+                            if (masterResult == null) continue;
+                            AlgorithmResultType resultType = (AlgorithmResultType)masterResult.ImgFileType;
+                            int masterResultId = masterResult.Id;
 
-                        // 3.1 记录主分析图基础信息（ImgFileType 42-45）
-                        RecordMainAnalysisImageInfo(masterResult, ref mainResultImageFile, ref testTime);
+                            // 记录主分析图信息
+                            RecordMainAnalysisImageInfo(masterResult, ref mainResultImageFile, ref testTime);
 
-                        // 3.2 加载【拼接后处理图】OLED_CombineQuaterImages
-                        LoadCombineQuaterImage(masterResult, ref imageId);
+                            // 加载拼接后处理图
+                            LoadCombineQuaterImage(masterResult, ref imageId);
 
-                        // 3.3 加载【像素重建处理图】OLED_RebuildPixelsMem（关联明细表）
-                        LoadRebuildPixelsImage(masterResultId, ref imageId);
+                            // 加载像素重建处理图
+                            LoadRebuildPixelsImage(masterResultId, ref imageId);
 
-                        // 3.4 解析【POI标记】POI_Y（用于图像标注）
-                        ParsePOIMarkers(masterResultId, resultType, ref poiMarkers);
+                            // 解析POI标记
+                            ParsePOIMarkers(masterResultId, resultType, ref poiMarkers);
 
-                        // 3.5 解析【POI分析数据】PoiAnalysis（亮度均匀性）
-                        ParsePoiAnalysisData(masterResultId, resultType, chipData, ref brightnessUniformityText);
-
-                        // 3.6 加载【原始相机图】OLED_FindDotsArrayOutFile（区分.cvraw后缀）
-                        LoadOriginalCameraImage(masterResult, resultType, ref imageId);
+                            // 解析POI分析数据
+                            ParsePoiAnalysisData(masterResultId, resultType, chipData, ref brightnessUniformityText);
+                        }
                     }
 
-                    // 4. UI线程操作：渲染POI标记+亮度均匀性、更新主分析图
+                    // 2. 从ImageResultService加载相机原图
+                    LoadCameraMeasurementImages(serialNumber, ref imageId);
+
+                    // 3. UI线程操作：渲染POI标记+亮度均匀性
                     Application.Current.Dispatcher.Invoke(() =>
                     {
                         RenderPoiAndBrightnessImage(mainResultImageFile, brightnessUniformityText, poiMarkers);
                     });
 
-                    logger.Info($"LoadImageResult：序列号{serialNumber}图片加载完成，共处理{imageId - 1}张图片");
+                    logger.Info($"LoadImageResult：序列号{serialNumber}图片加载完成");
                 }
                 catch (Exception ex)
                 {
                     logger.Error($"LoadImageResult：加载序列号{serialNumber}图片失败", ex);
-                    // 异常不中断程序，仅打印日志
                 }
             });
         }
