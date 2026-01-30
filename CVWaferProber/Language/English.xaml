@@ -652,4 +652,15 @@
     <sys:String x:Key="Toolbar.ToMainCamera">To AOI Camera</sys:String>
     <sys:String x:Key="Toolbar.ToAuxCamera">To VAM Camera</sys:String>
     <sys:String x:Key="Toolbar.ToIntegratingSphere">To Integrating Sphere</sys:String>
+
+    <!--  测试状态文本  -->
+
+    <sys:String x:Key="Maping.AutoTesting">Auto Testing</sys:String>
+    <sys:String x:Key="Maping.ManualTesting">Manual Testing</sys:String>
+    <sys:String x:Key="Maping.Testing">Testing</sys:String>
+    <sys:String x:Key="Maping.TestCompleted">Test Completed</sys:String>
+    <sys:String x:Key="Maping.TestFailed">Test Failed</sys:String>
+    <sys:String x:Key="Maping.StartingTest">Starting test...</sys:String>
+    <sys:String x:Key="Maping.Die">die</sys:String>
+    <sys:String x:Key="Maping.Dies">dies</sys:String>
 </ResourceDictionary>

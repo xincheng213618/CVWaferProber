@@ -665,4 +665,12 @@
     <sys:String x:Key="Toolbar.ToAuxCamera">移至VAM相机位</sys:String>
     <sys:String x:Key="Toolbar.ToIntegratingSphere">移至积分球位</sys:String>
 
+    <sys:String x:Key="Maping.AutoTesting">Auto Testing</sys:String>
+    <sys:String x:Key="Maping.ManualTesting">Manual Testing</sys:String>
+    <sys:String x:Key="Maping.Testing">Testing</sys:String>
+    <sys:String x:Key="Maping.TestCompleted">Test Completed</sys:String>
+    <sys:String x:Key="Maping.TestFailed">Test Failed</sys:String>
+    <sys:String x:Key="Maping.StartingTest">Starting test...</sys:String>
+    <sys:String x:Key="Maping.Die">die</sys:String>
+    <sys:String x:Key="Maping.Dies">dies</sys:String>
 </ResourceDictionary>
