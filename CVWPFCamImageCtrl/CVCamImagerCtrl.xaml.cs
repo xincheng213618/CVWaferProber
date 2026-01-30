@@ -330,14 +330,13 @@ namespace CVWPFCamImageCtrl
                             var fileInfo = new FileInfo(filePath);
                             if (fileInfo.Exists)
                             {
-                                // 获取文件扩展名
                                 string fileExt = Path.GetExtension(filePath).ToLower();
                                 string fileName = Path.GetFileNameWithoutExtension(filePath).ToLower();
 
                                 // 检查是否是 po.dat 文件
                                 bool isPoDatFile = fileName.Equals("po") || fileName.Equals("po.dat");
 
-                                // 如果是 po.dat 文件，跳过不加载到 DataGrid
+                                // 如果是 po.dat 文件，跳过不加载
                                 if (isPoDatFile)
                                 {
                                     logger.Info($"Skipping po.dat file: {Path.GetFileName(filePath)}");
@@ -352,8 +351,19 @@ namespace CVWPFCamImageCtrl
                                     Status = IsChineseMode ? "待加载" : "Loading"
                                 };
 
-                                // 调用 ViewModel 的 AddImage 方法，自动分配到对应集合
-                                _model.AddImage(imageItem);
+                                // 根据文件类型判断应该添加到哪个集合
+                                // Camera Measurement: .cvraw 文件
+                                // Analysis Image: .cvcie 和其他图像文件
+                                if (fileExt == ".cvraw")
+                                {
+                                    // 添加到 Camera Measurement 集合
+                                    _model.AddCameraMeasurementImage(imageItem);
+                                }
+                                else
+                                {
+                                    // 添加到 Analysis Image 集合
+                                    _model.AddAnalysisImage(imageItem);
+                                }
 
                                 loadedCount++;
                                 UpdateProgressText(loadedCount, totalCount);
@@ -361,8 +371,7 @@ namespace CVWPFCamImageCtrl
                         }
                         catch (Exception ex)
                         {
-                            logger.Info(IsChineseMode ? $"加载文件失败 {filePath}: {ex.Message}" :
-                                $"Failed to load file {filePath}: {ex.Message}");
+                            logger.Info($"加载文件失败 {filePath}: {ex.Message}");
                         }
                     }
                 });
@@ -370,28 +379,28 @@ namespace CVWPFCamImageCtrl
                 // 加载完成后，根据当前视图类型选择第一项
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    var currentActiveCollection = GetCurrentActiveCollection();
-                    if (currentActiveCollection.Count > 0)
+                    // 根据当前视图类型设置 DataGrid 数据源
+                    if (_currentViewType == "Analysis")
                     {
-                        // 确保 DataGrid 绑定的是当前活动集合
-                        if (_currentViewType == "Analysis")
-                        {
-                            MainImageDataGrid.ItemsSource = _model.ProcessedImageResults;
-                        }
-                        else if (_currentViewType == "Camera")
-                        {
-                            MainImageDataGrid.ItemsSource = _model.OriginalImageResults;
-                        }
+                        MainImageDataGrid.ItemsSource = _model.ProcessedImageResults;
+                    }
+                    else if (_currentViewType == "Camera")
+                    {
+                        MainImageDataGrid.ItemsSource = _model.OriginalImageResults;
+                    }
 
+                    MainImageDataGrid.Items.Refresh();
+
+                    // 选中第一项
+                    if (MainImageDataGrid.Items.Count > 0)
+                    {
                         MainImageDataGrid.SelectedIndex = 0;
-                        MainImageDataGrid.Items.Refresh();
                     }
                 });
             }
             catch (Exception ex)
             {
-                ShowErrorMessage(IsChineseMode ? "加载图像文件时发生错误" :
-                    "An error occurred while loading the image", ex);
+                ShowErrorMessage(IsChineseMode ? "加载图像文件时发生错误" : "An error occurred while loading the image", ex);
             }
 
             return results;
@@ -847,7 +856,7 @@ namespace CVWPFCamImageCtrl
         {
             if (_currentViewType == "Camera")
             {
-                // Camera Measurement 模式：只显示相机原始图格式
+                // Camera Measurement 模式：只显示相机原始图格式（主要是 .cvraw）
                 return IsChineseMode ?
                     "相机原始图 (*.cvraw)|*.cvraw|所有文件 (*.*)|*.*" :
                     "Camera Raw Images (*.cvraw)|*.cvraw|All Files (*.*)|*.*";
@@ -856,9 +865,23 @@ namespace CVWPFCamImageCtrl
             {
                 // Analysis Image 模式：显示标定后图和其他图像格式
                 return IsChineseMode ?
-                    "标定后图像 (*.cvcie;*.tif;*.tiff;*.jpg;*.jpeg;*.png)|*.cvcie;*.tif;*.tiff;*.jpg;*.jpeg;*.png|所有文件 (*.*)|*.*" :
-                    "Calibrated Images (*.cvcie;*.tif;*.tiff;*.jpg;*.jpeg;*.png)|*.cvcie;*.tif;*.tiff;*.jpg;*.jpeg;*.png|All Files (*.*)|*.*";
+                    "标定后图像 (*.cvcie)|*.cvcie|图像文件 (*.tif;*.tiff;*.jpg;*.jpeg;*.png;*.bmp)|*.tif;*.tiff;*.jpg;*.jpeg;*.png;*.bmp|所有文件 (*.*)|*.*" :
+                    "Calibrated Images (*.cvcie)|*.cvcie|Image Files (*.tif;*.tiff;*.jpg;*.jpeg;*.png;*.bmp)|*.tif;*.tiff;*.jpg;*.jpeg;*.png;*.bmp|All Files (*.*)|*.*";
             }
+            //if (_currentViewType == "Camera")
+            //{
+            //    // Camera Measurement 模式：只显示相机原始图格式
+            //    return IsChineseMode ?
+            //        "相机原始图 (*.cvraw)|*.cvraw|所有文件 (*.*)|*.*" :
+            //        "Camera Raw Images (*.cvraw)|*.cvraw|All Files (*.*)|*.*";
+            //}
+            //else
+            //{
+            //    // Analysis Image 模式：显示标定后图和其他图像格式
+            //    return IsChineseMode ?
+            //        "标定后图像 (*.cvcie;*.tif;*.tiff;*.jpg;*.jpeg;*.png)|*.cvcie;*.tif;*.tiff;*.jpg;*.jpeg;*.png|所有文件 (*.*)|*.*" :
+            //        "Calibrated Images (*.cvcie;*.tif;*.tiff;*.jpg;*.jpeg;*.png)|*.cvcie;*.tif;*.tiff;*.jpg;*.jpeg;*.png|All Files (*.*)|*.*";
+            //}
         }
         private void ShowErrorMessage(string title, Exception ex)
         {

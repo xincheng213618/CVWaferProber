@@ -280,5 +280,61 @@ namespace CVWPFCamImageCtrl
                     break;
             }
         }
+        // 添加图像到对应集合
+        public void AddImage(ImageItem imageItem, bool isCameraMeasurement = false)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                string fileName = imageItem.FileName?.ToLower() ?? string.Empty;
+                string filePath = imageItem.ImagePath?.ToLower() ?? "";
+
+                // 过滤 po.dat 文件（所有集合都不包含）
+                if (fileName.Equals("po.dat") || fileName.Equals("po"))
+                {
+                    logger.Info($"Skipping po.dat file: {fileName}");
+                    return;
+                }
+
+                // 避免重复添加
+                if (_imageResults.Any(item => item.ImagePath == imageItem.ImagePath))
+                    return;
+
+                // 添加到总集合
+                _imageResults.Add(imageItem);
+
+                // 根据类型添加到对应集合
+                if (isCameraMeasurement)
+                {
+                    // Camera Measurement：原始相机图
+                    if (!_originalImageResults.Any(item => item.ImagePath == imageItem.ImagePath))
+                    {
+                        _originalImageResults.Add(imageItem);
+                    }
+                }
+                else
+                {
+                    // Analysis Image：处理后图像
+                    if (!_processedImageResults.Any(item => item.ImagePath == imageItem.ImagePath))
+                    {
+                        _processedImageResults.Add(imageItem);
+                    }
+                }
+            });
+        }
+
+        // 专门添加 Camera Measurement 图片
+        public void AddCameraMeasurementImage(ImageItem imageItem)
+        {
+            AddImage(imageItem, true);
+        }
+
+        // 专门添加 Analysis Image 图片
+        public void AddAnalysisImage(ImageItem imageItem)
+        {
+            AddImage(imageItem, false);
+        }
+
+        // 清空所有图像
+      
     }
 }

@@ -201,16 +201,16 @@
     <sys:String x:Key="VAM.Add">Add</sys:String>
     <sys:String x:Key="VAM.Delete">Delete</sys:String>
     <sys:String x:Key="VAM.Apply">Apply</sys:String>
-    <sys:String x:Key="VAM.XChannel">XChannel</sys:String>
-    <sys:String x:Key="VAM.YChannel">YChannel</sys:String>
-    <sys:String x:Key="VAM.ZChannel">ZChannel</sys:String>
+    <sys:String x:Key="VAM.XChannel">Tristimulus X</sys:String>
+    <sys:String x:Key="VAM.YChannel">Tristimulus Y</sys:String>
+    <sys:String x:Key="VAM.ZChannel">Tristimulus Z</sys:String>
 
     <sys:String x:Key="VAM.OperationArea">Operation Area</sys:String>
 
     <sys:String x:Key="VAM.Exportparameterconfiguration">Export Parameter Configuration</sys:String>
     <sys:String x:Key="VAM.ExporChannel">Export Channel:</sys:String>
-    <sys:String x:Key="VAM.cieXChannel">cieXChannel</sys:String>
-    <sys:String x:Key="VAM.cieYChannel">cieYChannel</sys:String>
+    <sys:String x:Key="VAM.cieXChannel">Tristimulus cx</sys:String>
+    <sys:String x:Key="VAM.cieYChannel">Tristimulus cy</sys:String>
     <sys:String x:Key="VAM.Polar_RHO">Polar Angle Range:</sys:String>
 
     <sys:String x:Key="VAM.Value">°（[-Value,Value]）</sys:String>
