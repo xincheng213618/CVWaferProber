@@ -326,7 +326,7 @@
                                                                   Background="#FF6C757D"
                                                                   Foreground="White"
                                                                   BorderThickness="0"/>-->
-                                        <!--LoadTestResultCommand  BtnLoadTestResult IsNotProcessing-->
+                                        <!--  LoadTestResultCommand  BtnLoadTestResult IsNotProcessing  -->
                                         <Button
                                             x:Name="BtnReload"
                                             Width="80"
@@ -476,16 +476,16 @@
                                             </Grid.ColumnDefinitions>
                                             <!--  FlowLoad按钮 - 第1列  -->
                                             <Button
-                                               Grid.Column="0"
-                                               Height="25"
-                                               Margin="5,0,0,0"
-                                               Padding="5,1"
-                                               HorizontalAlignment="Stretch"
-                                               VerticalAlignment="Center"
-                                               Command="{Binding FlowLoadCommand}"
-                                               Content="{DynamicResource BtnFlowLoad}"
-                                               IsEnabled="{Binding IsNotProcessing}"
-                                               ToolTip="{DynamicResource BtnFlowLoad}" />
+                                                Grid.Column="0"
+                                                Height="25"
+                                                Margin="5,0,0,0"
+                                                Padding="5,1"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Center"
+                                                Command="{Binding FlowLoadCommand}"
+                                                Content="{DynamicResource BtnFlowLoad}"
+                                                IsEnabled="{Binding IsNotProcessing}"
+                                                ToolTip="{DynamicResource BtnFlowLoad}" />
                                             <!--  自动测试按钮 - 第0列
                                             <Button
                                                 Grid.Column="0"
@@ -497,9 +497,9 @@
                                                 Command="{Binding StartAutoTestCommand}"
                                                 Content="{DynamicResource BtnStartAutoTest}"
                                                 ToolTip="{DynamicResource BtnStartAutoTest}" />
-                                              -->
+                                            -->
 
-                                            <!--  停止测试按钮 - 第1列  
+                                            <!--  停止测试按钮 - 第1列
                                             <Button
                                                 Grid.Column="1"
                                                 Height="25"
@@ -512,7 +512,7 @@
                                                 Content="{DynamicResource BtnStopAutoTest}"
                                                 ToolTip="{DynamicResource BtnStopAutoTest}" />
                                             -->
-            
+
                                             <!--  刷新状态按钮 - 第2列  -->
                                             <Button
                                                 Grid.Column="1"
@@ -574,8 +574,8 @@
                                                 BorderThickness="0"
                                                 Command="{Binding LoadMappingFileCommand}"
                                                 Content="{DynamicResource BtnLoadTestResult}"
-                                                ToolTip="{DynamicResource BtnLoadTestResult}"
-                                                IsEnabled="{Binding IsNotProcessing}" />
+                                                IsEnabled="{Binding IsNotProcessing}"
+                                                ToolTip="{DynamicResource BtnLoadTestResult}" />
                                         </Grid>
                                     </StackPanel>
                                 </Border>
