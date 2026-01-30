@@ -133,7 +133,7 @@ namespace CVWaferProber.Services
         {
             if (string.IsNullOrEmpty(serialNumber) || CustomImageVM == null)
             {
-                logger.Warn("LoadImageResult：序列号为空或CustomImageVM未初始化");
+                logger.Warn("LoadImageResult：Serial number is empty or CustomImageVM is not initialized");
                 return;
             }
 
@@ -150,11 +150,11 @@ namespace CVWaferProber.Services
                     // 3. 加载POI分析数据
                     LoadPoiAnalysisData(serialNumber, chipData);
 
-                    logger.Info($"序列号{serialNumber}图片加载完成");
+                    logger.Info($"Serial number {serialNumber} image loading completed");
                 }
                 catch (Exception ex)
                 {
-                    logger.Error($"加载序列号{serialNumber}图片失败", ex);
+                    logger.Error($"Failed to load the image with serial numberNumber}}", ex);
                 }
             });
         }
@@ -167,13 +167,13 @@ namespace CVWaferProber.Services
         {
             try
             {
-                logger.Info($"开始加载批次{batchCode}的Analysis Image");
+                logger.Info($"Start loading Analysis Image for batch {batchCode}");
 
                 // 首先获取算法主结果
                 var algResults = AlgResultService.LoadAlgResultByBatchCode(batchCode);
                 if (algResults == null || algResults.Count == 0)
                 {
-                    logger.Warn($"批次{batchCode}未找到算法主结果");
+                    logger.Warn($"Batch {batchCode} algorithm main result not found");
                     return;
                 }
 
@@ -197,14 +197,14 @@ namespace CVWaferProber.Services
                         string fileName = Path.GetFileNameWithoutExtension(filePath).ToLower();
                         if (fileName.Equals("po") || fileName.Equals("po.dat"))
                         {
-                            logger.Debug($"过滤po.dat文件: {Path.GetFileName(filePath)}");
+                            logger.Debug($"Filter the po.dat file: {Path.GetFileName(filePath)}");
                             continue;
                         }
 
                         // 检查文件是否存在
                         if (!File.Exists(filePath))
                         {
-                            logger.Warn($"Analysis Image文件不存在: {filePath}");
+                            logger.Warn($"Analysis Image File does not exist: {filePath}");
                             continue;
                         }
 
@@ -223,15 +223,15 @@ namespace CVWaferProber.Services
                             CustomImageVM?.AddImage(imageItem);
                         });
 
-                        logger.Debug($"已添加Analysis Image: {Path.GetFileName(filePath)}");
+                        logger.Debug($"added Analysis Image: {Path.GetFileName(filePath)}");
                     }
                 }
 
-                logger.Info($"批次{batchCode}的Analysis Image加载完成，共处理{algResults.Count}个主结果");
+                logger.Info($"Batch {batchCode} analysis image loading completed, totaling {algResults.Count} results processed.");
             }
             catch (Exception ex)
             {
-                logger.Error($"加载批次{batchCode}的Analysis Image失败", ex);
+                logger.Error($"Loading batch {batchCode} Analysis Image failed", ex);
             }
         }
 
@@ -249,7 +249,7 @@ namespace CVWaferProber.Services
 
                 if (cameraResults == null || cameraResults.Count == 0)
                 {
-                    logger.Warn($"批次{batchCode}未找到Camera Measurement数据");
+                    logger.Warn($"Start loading Camera Measurement for batch {batchCode}");
                     return;
                 }
 
@@ -264,13 +264,13 @@ namespace CVWaferProber.Services
 
                     if (string.IsNullOrEmpty(filePath))
                     {
-                        logger.Warn($"Camera Measurement文件路径为空，FileType={result.FileType}");
+                        logger.Warn($"Camera Measurement file path is empty，FileType={result.FileType}");
                         continue;
                     }
 
                     if (!File.Exists(filePath))
                     {
-                        logger.Warn($"Camera Measurement文件不存在: {filePath}");
+                        logger.Warn($"Camera Measurement File does not exist: {filePath}");
                         continue;
                     }
 
@@ -278,7 +278,7 @@ namespace CVWaferProber.Services
                     string fileExt = Path.GetExtension(filePath).ToLower();
                     if (!IsSupportedImageExtension(fileExt))
                     {
-                        logger.Debug($"跳过非图像文件: {filePath}");
+                        logger.Debug($"Skip non-image files: {filePath}");
                         continue;
                     }
 
@@ -301,11 +301,11 @@ namespace CVWaferProber.Services
                     logger.Debug($"已添加Camera Measurement: {Path.GetFileName(filePath)} (FileType: {result.FileType})");
                 }
 
-                logger.Info($"批次{batchCode}的Camera Measurement加载完成，共添加{addedCount}个文件");
+                logger.Info($"Batch {batchCode} Camera Measurement loaded successfully, {addedCount} files added in total");
             }
             catch (Exception ex)
             {
-                logger.Error($"加载批次{batchCode}的Camera Measurement失败", ex);
+                logger.Error($"Loading batch {batchCode} Camera Measurement failed", ex);
             }
         }
 
@@ -338,7 +338,7 @@ namespace CVWaferProber.Services
                     if (detailFile == null || string.IsNullOrEmpty(detailFile.ResultFileName) ||
                         !File.Exists(detailFile.ResultFileName))
                     {
-                        logger.Warn($"PoiAnalysis分析文件不存在：{detailFile?.ResultFileName}");
+                        logger.Warn($"PoiAnalysis analysis file does not exist：{detailFile?.ResultFileName}");
                         continue;
                     }
 
@@ -357,12 +357,12 @@ namespace CVWaferProber.Services
                 // 如果需要显示亮度均匀性文本，可以在这里处理
                 if (!string.IsNullOrEmpty(brightnessText))
                 {
-                    logger.Info($"POI分析数据: {brightnessText}");
+                    logger.Info($"POI data analysis: {brightnessText}");
                 }
             }
             catch (Exception ex)
             {
-                logger.Error($"加载批次{batchCode}的POI分析数据失败", ex);
+                logger.Error($"Failed to load POI analysis data for batch {batchCode}", ex);
             }
         }
 
@@ -412,12 +412,12 @@ namespace CVWaferProber.Services
                 // 如果有POI标记，可以在这里更新UI
                 if (poiMarkers.Count > 0)
                 {
-                    logger.Debug($"加载了{poiMarkers.Count}个POI标记");
+                    logger.Debug($"Loaded {poiMarkers.Count} POI markers");
                 }
             }
             catch (Exception ex)
             {
-                logger.Error($"加载POI标记失败", ex);
+                logger.Error($"Failed to load POI markers", ex);
             }
         }
 

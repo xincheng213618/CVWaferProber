@@ -158,7 +158,7 @@ namespace CVWPFCamImageCtrl
                 // 过滤po.dat文件
                 if (fileName.Equals("po.dat") || fileName.Equals("po"))
                 {
-                    logger.Debug($"过滤po.dat文件: {imageItem.FileName}");
+                    logger.Debug($"Filter the po.dat file: {imageItem.FileName}");
                     return;
                 }
 
