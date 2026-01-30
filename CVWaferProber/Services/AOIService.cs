@@ -458,7 +458,7 @@ namespace CVWaferProber.Services
         }
 
         /// <summary>
-        /// 加载Camera Measurement（原始图像）- 从VScgdAlgorithmResultMaster获取关联原图
+        /// 加载Camera Measurement（原始图像）- VScgdMeasureResultImg
         /// </summary>
         private void LoadCameraMeasurementImages(string batchCode, ref int id)
         {
