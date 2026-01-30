@@ -12,7 +12,6 @@ namespace CVWPFCamImageCtrl
 {
     public class CVCamImagerViewModel : ViewModelBase
     {
-        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(CVCamImagerViewModel));
         private ImageSource? _imageSource;
         private ObservableCollection<ImageItem> _imageResults;
         // 新增：Analysis image - 处理后图像集合（排除 po.dat）
@@ -64,10 +63,16 @@ namespace CVWPFCamImageCtrl
         {
             id = 1;
             ImageSrc = null;
+            // 清空所有图像集合
             _imageResults.Clear();
-            _processedImageResults.Clear(); // 清空处理后图像
-            _originalImageResults.Clear(); // 清空原图
-            if (_imageDisplay != null) _imageDisplay.CurrentImage = null;
+            _processedImageResults.Clear();
+            _originalImageResults.Clear();
+            // 清空图像显示控件
+            if (_imageDisplay != null)
+                _imageDisplay.CurrentImage = null;
+            // 清空DataGrid显示的当前集合
+            if (CurrentDisplayCollection != null)
+                CurrentDisplayCollection.Clear();
         }
         private void DrawCircleToImage(ref Mat image, CircleMarker poi)
         {
@@ -210,14 +215,18 @@ namespace CVWPFCamImageCtrl
             Application.Current.Dispatcher.Invoke(() =>
             {
                 string fileName = imageItem.FileName?.ToLower() ?? string.Empty;
-                // 过滤po.dat文件
-                if (!fileName.Equals("po.dat") || fileName == "po")
+                if (!fileName.Equals("po.dat"))
                 {
-                    _imageResults.Add(imageItem);
-                    _processedImageResults.Add(imageItem); // Analysis image集合
+                    // 仅加入Analysis视图集合和总集合
+                    if (!_processedImageResults.Any(item => item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        _processedImageResults.Add(imageItem);
+                    }
+                    if (!_imageResults.Contains(imageItem))
+                    {
+                        _imageResults.Add(imageItem);
+                    }
                 }
-                // _originalImageResults.Add(imageItem);
-                // 即使是po.dat，也不加入原始图像集合（仅Analysis image过滤）
             });
             //Application.Current.Dispatcher.Invoke(() =>
             //{
@@ -237,23 +246,9 @@ namespace CVWPFCamImageCtrl
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                if (imageItem == null || string.IsNullOrEmpty(imageItem.ImagePath) || !File.Exists(imageItem.ImagePath))
-                    return;
-                // 最后一层过滤，确保万无一失
-                string fileName = imageItem.FileName?.ToLower() ?? string.Empty;
-                if (fileName.Contains("po.dat") || fileName == "po")
+                if (!_originalImageResults.Any(item => item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
                 {
-                    logger.Info($"Skipping po.dat in ViewModel: {fileName}");
-                    return;
-                }
-                // 避免重复添加
-                if (!_originalImageResults.Any(item => item.ImagePath == imageItem.ImagePath))
-                {
-                    _originalImageResults.Add(imageItem);
-                }
-                if (!_imageResults.Any(item => item.ImagePath == imageItem.ImagePath))
-                {
-                    _imageResults.Add(imageItem);
+                    _originalImageResults.Add(imageItem); // 仅加入Camera视图集合
                 }
             });
         }
