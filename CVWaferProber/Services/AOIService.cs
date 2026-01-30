@@ -591,7 +591,7 @@ namespace CVWaferProber.Services
             });
         }
 
-        #region 私有辅助方法（职责单一，便于维护和调试）
+        #region 辅助方法
         /// <summary>
         /// 记录主分析图信息（ImgFileType 42-45）
         /// </summary>
