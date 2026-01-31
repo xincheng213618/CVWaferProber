@@ -32,9 +32,9 @@
                         Text="{Binding ConnectionSettings.Port}"/>
                 </StackPanel>
             </TabItem>
-            <TabItem Header="Log">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
-                    <Label Content="Logger:"/>
+            <TabItem Header="Logger" Height="19" VerticalAlignment="Top">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,5">
+                    <Label Content="Logger Level:"/>
                     <ComboBox
                         ItemsSource="{Binding LogLevels}"
                         DisplayMemberPath="Level"
