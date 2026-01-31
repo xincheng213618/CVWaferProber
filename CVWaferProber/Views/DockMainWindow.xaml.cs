@@ -44,6 +44,7 @@ namespace CVWaferProber.Views
             InitializeComponent();
             InitializeLogging();
             InitializeSPControls();
+            this.Closed += DockMainWindow_Closed;
             // 注册窗口按键监听（关键：捕获所有按键）
             this.KeyDown += DockMainWindow_KeyDown;
             if (DataContext is MainViewModel mainVm)
@@ -65,7 +66,12 @@ namespace CVWaferProber.Views
             }
         }
 
-        
+        private void DockMainWindow_Closed(object? sender, EventArgs e)
+        {
+            System.Windows.Application.Current.Shutdown();
+        }
+
+
         /// <summary>
         /// 初始化SP面板控件引用
         /// </summary>

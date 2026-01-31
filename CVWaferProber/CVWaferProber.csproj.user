@@ -36,6 +36,9 @@
     <Compile Update="Views\DevProberDebugWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Views\SplashScreen.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Views\SummaryConfigWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -80,10 +83,16 @@
     <Page Update="Views\DevProberDebugWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
+    <Page Update="Views\SplashScreen.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Views\SysFlowCfgWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Views\TestWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\WaferProberStartupWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

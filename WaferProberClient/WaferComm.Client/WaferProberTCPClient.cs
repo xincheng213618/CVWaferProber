@@ -34,7 +34,7 @@ namespace WaferComm.Client
             {
                 if (IsConnected)
                 {
-                    logger.Error("Connected to the server.");
+                    logger.Info("Connected to the server.");
                     return;
                     //throw new InvalidOperationException("已经连接到服务器");
                 }

@@ -12,7 +12,7 @@
     xmlns:local="clr-namespace:CVWaferProber.ViewModels"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:CVWaferProber.ViewModels"
-    Title="{DynamicResource CVWaferProber}"
+    Title="{DynamicResource AppTitle}"
     WindowStartupLocation="CenterScreen"
     WindowState="Maximized"
     mc:Ignorable="d">

@@ -12,6 +12,8 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyVersion>2026.01.30.0</AssemblyVersion>
     <FileVersion>2026.01.30.0</FileVersion>
+    <Company>ColorVision</Company>
+    <Copyright>Copyright © 2026 视彩光电</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Assets\logo_gear.png" />
     <None Remove="en-US\ST.Library.UI.resources.dll" />
     <None Remove="zh-CN\ST.Library.UI.resources.dll" />
   </ItemGroup>
@@ -93,6 +96,9 @@
     <Content Include="zh-CN\ST.Library.UI.resources.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\logo_gear.png" />
   </ItemGroup>
 
   <ItemGroup>

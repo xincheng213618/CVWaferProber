@@ -867,11 +867,11 @@ namespace CVWaferProber.ViewModels
             CustomIVLVM = mainService.GetIVLVM();
             if (CustomIVLVM != null) CustomIVLVM.CustomEQEVM = mainService.GetEQEVM();
 
-            Task.Factory.StartNew(async () =>
-            {
-                await Task.Delay(2000);
-                MainService.Instance.Startup();
-            });
+            //Task.Factory.StartNew(async () =>
+            //{
+            //    await Task.Delay(2000);
+            //    MainService.Instance.Startup();
+            //});
         }
         private void InitializeEvents()
         {

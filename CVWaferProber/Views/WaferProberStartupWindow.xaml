@@ -1,0 +1,344 @@
+﻿<Window x:Class="CVWaferProber.Views.WaferProberStartupWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CVWaferProber.Views"
+        xmlns:lang="clr-namespace:CVWaferProber.Language"
+        mc:Ignorable="d"
+        Height="600" 
+        Width="900"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        WindowStartupLocation="CenterScreen"
+        Background="Transparent">
+
+    <Window.Resources>
+        <!-- 渐变画刷定义 -->
+        <LinearGradientBrush x:Key="MainBackground" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#0A2463" Offset="0"/>
+            <GradientStop Color="#1E3A8A" Offset="0.5"/>
+            <GradientStop Color="#0A2463" Offset="1"/>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="AccentBrush" StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Color="#3B82F6" Offset="0"/>
+            <GradientStop Color="#60A5FA" Offset="0.5"/>
+            <GradientStop Color="#3B82F6" Offset="1"/>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="ProgressBarBackground" StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Color="#1E40AF" Offset="0"/>
+            <GradientStop Color="#1E3A8A" Offset="1"/>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="ProgressBarForeground" StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Color="#60A5FA" Offset="0"/>
+            <GradientStop Color="#93C5FD" Offset="0.5"/>
+            <GradientStop Color="#60A5FA" Offset="1"/>
+        </LinearGradientBrush>
+
+        <!-- 样式定义 -->
+        <Style x:Key="StatusTextStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#E5E7EB"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Margin" Value="0,4"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="TitleTextStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontSize" Value="32"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#3B82F6" BlurRadius="10" Direction="270" ShadowDepth="3"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 修正：状态指示器的样式 -->
+        <Style x:Key="StatusIndicatorStyle" TargetType="Ellipse">
+            <Setter Property="Width" Value="10"/>
+            <Setter Property="Height" Value="10"/>
+            <Setter Property="Margin" Value="0,0,10,0"/>
+            <Style.Triggers>
+                <!-- 使用Trigger而不是动画，避免属性路径问题 -->
+                <DataTrigger Binding="{Binding IsActive}" Value="True">
+                    <Setter Property="Fill">
+                        <Setter.Value>
+                            <SolidColorBrush Color="#60A5FA"/>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                    <Setter Property="Fill">
+                        <Setter.Value>
+                            <SolidColorBrush Color="#10B981"/>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsActive}" Value="False">
+                    <Setter Property="Fill">
+                        <Setter.Value>
+                            <SolidColorBrush Color="#6B7280"/>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <!-- 主窗口边框 -->
+    <Border BorderBrush="#3B82F6" 
+            BorderThickness="1" 
+            CornerRadius="10"
+            Background="{StaticResource MainBackground}">
+
+        <Grid>
+            <!-- 网格布局 -->
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- 标题栏 -->
+            <Border Grid.Row="0" 
+                    Background="Transparent" 
+                    Height="40"
+                    MouseLeftButtonDown="Border_MouseLeftButtonDown">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- 应用标题（使用DynamicResource） -->
+                    <TextBlock Grid.Column="0" 
+                               Text="{DynamicResource AppTitle}" 
+                               Style="{StaticResource TitleTextStyle}"
+                               FontSize="20"
+                               Margin="20,0,0,0"
+                               VerticalAlignment="Center"/>
+
+                    <!--<Button Grid.Column="1" 
+                            Content="✕" 
+                            Width="40" 
+                            Height="40"
+                            BorderThickness="0"
+                            Background="Transparent"
+                            Foreground="#FFFFFF"
+                            FontSize="16"
+                            Click="CloseButton_Click"/>-->
+                </Grid>
+            </Border>
+
+            <!-- 主要内容区域 -->
+            <Grid Grid.Row="1" Margin="40">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 左侧：品牌和系统信息 -->
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <!-- 品牌标识 -->
+                    <Viewbox Width="200" Height="80" Margin="0,0,0,30">
+                        <Canvas Width="200" Height="80">
+                            <!-- 晶圆图标 -->
+                            <Ellipse Canvas.Left="10" Canvas.Top="0" 
+                                     Width="60" Height="60"
+                                     Stroke="#60A5FA" 
+                                     StrokeThickness="3"
+                                     Fill="Transparent">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="#3B82F6" BlurRadius="10" ShadowDepth="2"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+
+                            <!-- 晶圆内部图案 -->
+                            <Path Data="M40,30 A10,10 0 1 1 40,30 Z" 
+                                  Stroke="#93C5FD" 
+                                  StrokeThickness="2"
+                                  Fill="Transparent"/>
+                            <Ellipse Canvas.Left="35" Canvas.Top="25" 
+                                     Width="10" Height="10"
+                                     Fill="#3B82F6"/>
+
+                            <!-- 探针图标 -->
+                            <Path Data="M80,20 L120,10 L130,30 L90,40 Z" 
+                                  Fill="#60A5FA" 
+                                  Opacity="0.8">
+                                <Path.Effect>
+                                    <DropShadowEffect Color="#3B82F6" BlurRadius="5" ShadowDepth="1"/>
+                                </Path.Effect>
+                            </Path>
+
+                            <!-- 连接线 -->
+                            <Line X1="70" Y1="30" X2="85" Y2="25" 
+                                  Stroke="#93C5FD" 
+                                  StrokeThickness="2"
+                                  StrokeDashArray="2,2"/>
+                        </Canvas>
+                    </Viewbox>
+
+                    <TextBlock Text="PRECISION PROBER" 
+                               Foreground="#93C5FD" 
+                               FontSize="24"
+                               FontWeight="Bold"
+                               Margin="0,0,0,10"/>
+
+                    <TextBlock Text="Wafer Probing System" 
+                               Foreground="#E5E7EB" 
+                               FontSize="16"
+                               Margin="0,0,0,30"/>
+
+                    <!-- 系统信息 -->
+                    <StackPanel>
+                        <Border Background="#1E3A8A" 
+                                CornerRadius="5" 
+                                Padding="15,10"
+                                Margin="0,0,0,15">
+                            <StackPanel>
+                                <TextBlock Text="{DynamicResource SystemInfo}" 
+                                           Foreground="#60A5FA" 
+                                           FontSize="14"
+                                           FontWeight="Bold"
+                                           Margin="0,0,0,5"/>
+
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="8" Height="8" Fill="#10B981" Margin="0,0,5,0"/>
+                                    <TextBlock x:Name="versionTextBlock" Text="Version: 1.2.1" Style="{StaticResource StatusTextStyle}"/>
+                                </StackPanel>
+
+                                <!--<StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="8" Height="8" Fill="#10B981" Margin="0,0,5,0"/>
+                                    <TextBlock Text="序列号: WP-2023-0876" Style="{StaticResource StatusTextStyle}"/>
+                                </StackPanel>-->
+
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="8" Height="8" Fill="#10B981" Margin="0,0,5,0"/>
+                                    <TextBlock x:Name="buildDateTextBlock" Text="Builder: 2026-10-15" Style="{StaticResource StatusTextStyle}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- 中间分隔线 -->
+                <Border Grid.Column="1" 
+                        Width="1" 
+                        Background="#374151" 
+                        Margin="40,0"/>
+
+                <!-- 右侧：启动进度和状态 -->
+                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                    <TextBlock Text="{DynamicResource StartupTitle}" 
+                           Style="{StaticResource TitleTextStyle}"
+                           FontSize="28"
+                           Margin="0,0,0,30"/>
+
+                    <!-- 进度指示器 -->
+                    <Border Background="#1E3A8A" 
+                            CornerRadius="10" 
+                            Padding="20,25"
+                            Margin="0,0,0,30">
+                        <StackPanel>
+                            <!-- 主进度条 -->
+                            <StackPanel Margin="0,0,0,20">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                    <TextBlock Text="{DynamicResource StartupProgress}" 
+                                       Foreground="#93C5FD" 
+                                       FontSize="16"
+                                       FontWeight="SemiBold"/>
+                                    <TextBlock x:Name="ProgressPercentage" 
+                                       Text="0%" 
+                                       Foreground="#60A5FA" 
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       Margin="10,0,0,0"/>
+                                </StackPanel>
+
+                                <Border Height="12" 
+                                        CornerRadius="6" 
+                                        Background="{StaticResource ProgressBarBackground}">
+                                    <Border x:Name="ProgressBarFill" 
+                                            Width="0" 
+                                            HorizontalAlignment="Left"
+                                            CornerRadius="6" 
+                                            Background="{StaticResource ProgressBarForeground}">
+                                        <Border.Effect>
+                                            <BlurEffect Radius="2"/>
+                                        </Border.Effect>
+                                    </Border>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- 状态列表 -->
+                            <ItemsControl x:Name="StatusList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,5">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- 修正：使用样式而不是内联属性 -->
+                                            <Ellipse Grid.Column="0" 
+                                                     Style="{StaticResource StatusIndicatorStyle}"/>
+
+                                            <!-- 状态文本 -->
+                                            <TextBlock Grid.Column="1" 
+                                                       Text="{Binding Description}" 
+                                                       Style="{StaticResource StatusTextStyle}"/>
+
+                                            <!-- 状态图标 -->
+                                            <TextBlock Grid.Column="2" 
+                                                       Text="{Binding StatusIcon}" 
+                                                       Foreground="{Binding StatusColor}"
+                                                       FontSize="12"
+                                                       FontWeight="Bold"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 提示信息 -->
+                    <!-- 状态消息 -->
+                    <TextBlock x:Name="StatusMessage" 
+                           Text="{DynamicResource Initializing}" 
+                           Foreground="#93C5FD" 
+                           FontSize="14"
+                           TextAlignment="Center"
+                           Margin="0,20,0,5"/>
+
+                    <!-- 版权信息 -->
+                    <TextBlock x:Name="CopyrightTextBlock"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Foreground="#6B7280" 
+                       FontSize="12"
+                       TextAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- 底部装饰 -->
+            <Border Grid.Row="2" 
+                    Height="2" 
+                    Margin="20,0,20,20"
+                    Background="{StaticResource AccentBrush}"
+                    CornerRadius="1">
+                <Border.Effect>
+                    <BlurEffect Radius="2"/>
+                </Border.Effect>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

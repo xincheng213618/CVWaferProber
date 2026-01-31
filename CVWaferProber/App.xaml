@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:handy="https://handyorg.github.io/handycontrol"
     xmlns:local="clr-namespace:CVWaferProber"
-    StartupUri="Views/DockMainWindow.xaml">
+    xmlns:lang="clr-namespace:CVWaferProber.Language">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -12,6 +12,9 @@
                 <ResourceDictionary Source="Language/Chinese.xaml" />
                 <!--<ResourceDictionary Source="Language/English.xaml"/>-->
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- 语言切换管理器 -->
+            <lang:LanguageManager x:Key="LanguageManager"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

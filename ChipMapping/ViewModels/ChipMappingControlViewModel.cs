@@ -1,5 +1,4 @@
 ﻿using ChipMapping.Models;
-using ChipMapping.Tools;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
@@ -650,14 +649,14 @@ namespace ChipMapping.ViewModels
             if (mappingData != null && mappingData.Count > 0)
             {
                 MappingPosDataRange dataRange = CsvMappingDataTool.GetAxisPosDataRange(mappingData);
-                var Wid = dataRange.MaxPosX - dataRange.MinPosX;
-                var Hei = dataRange.MaxPosY - dataRange.MinPosY;
+                var Wid = dataRange.MaxX - dataRange.MinX;
+                var Hei = dataRange.MaxY - dataRange.MinY;
 
                 // 创建屏幕尺寸（预留边距）
                 System.Drawing.Size screenSize = new System.Drawing.Size(_screenWidth - 10, _screenHeight - 10);
 
                 // 定义数学坐标系范围
-                RectangleF mathBounds = new RectangleF((int)dataRange.MinPosX, (int)dataRange.MinPosY, (int)Wid, (int)Hei);
+                RectangleF mathBounds = new RectangleF((int)dataRange.MinX, (int)dataRange.MinY, (int)Wid, (int)Hei);
 
                 // 核心修改：创建转换器时传入翻转开关 → flipY = true 就是上下翻转（你的核心需求）
                 // 如需左右翻转：new CoordinateConverter(screenSize, mathBounds, flipY: true, flipX: true)

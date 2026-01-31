@@ -2,7 +2,7 @@
 using CVWaferProber.Services;
 using CVWaferProber.ViewModels; // 新增：用于访问 MainViewModel
 using log4net;
-using log4net.Config;
+using CVWaferProber.Views;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -14,6 +14,8 @@ using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
 using Color = System.Windows.Media.Color;
 using MessageBox = System.Windows.MessageBox;
+using CVWaferProber.Models;
+using CVWaferProber.Language;
 
 namespace CVWaferProber
 {
@@ -41,6 +43,9 @@ namespace CVWaferProber
         private const int LOCALE_ZH_CN = 0x0804; // 中文（中国）
 
         private static readonly ILog log = LogManager.GetLogger(typeof(App));
+
+        //private CVWaferProber.Views.SplashScreen _splash;
+        private CVWaferProber.Views.WaferProberStartupWindow _splash;
         protected override void OnStartup(StartupEventArgs e)
         {
             // 设置兼容模式
@@ -74,7 +79,18 @@ namespace CVWaferProber
 
             // 初始化语言（读取Settings中的默认语言）
             AppSettingsManager.InitializeLanguage();
-            
+
+            // 1. 创建并显示启动窗口
+            _splash = new CVWaferProber.Views.WaferProberStartupWindow();
+            _splash.AddStartupTasks(new MainStartupTask());
+            _splash.AddStartupTasks(new CommStartupTask(LanguageManager.Instance.GetString("Task_Motion"), "#6B7280"));
+            _splash.AddStartupTasks(new CommStartupTask(LanguageManager.Instance.GetString("Task_Vision"), "#6B7280"));
+            _splash.InitializeStartupTasks();
+            _splash.StartupCompleted += OnStartupCompleted;
+            _splash.Show();
+
+            _mainWindow = new DockMainWindow();
+
             // 1. 定义DataGrid行的样式（覆盖选中状态）
             var rowStyle = new Style(typeof(DataGridRow))
             {
@@ -177,8 +193,39 @@ namespace CVWaferProber
                 log.Warn("Failed to schedule ResetStatusCommand invocation.", dex);
             }
         }
-        
+        private DockMainWindow _mainWindow;
 
+        private void OnStartupCompleted(object sender, EventArgs e)
+        {
+            MainService.Instance.Startup();
+            // 关闭启动窗口
+            _splash.Close();
+
+            // 创建并显示主窗口
+            _mainWindow = new DockMainWindow();
+            _mainWindow.Show();
+        }
+        private void InitializeApp()
+        {
+            // 模拟初始化步骤
+            //_splash.UpdateProgress(0.1, "正在加载配置...");
+            System.Threading.Thread.Sleep(300);
+
+            //_splash.UpdateProgress(0.4, "连接设备中...");
+            System.Threading.Thread.Sleep(500);
+
+            //_splash.UpdateProgress(0.8, "初始化用户界面...");
+            System.Threading.Thread.Sleep(300);
+
+            //_splash.UpdateProgress(1.0, "启动完成！");
+            MainService.Instance.Startup();
+            // 3. 关闭启动窗口，显示主窗口
+            Dispatcher.Invoke(() =>
+            {
+                _splash.Close();
+                _mainWindow.Show();
+            });
+        }
 
         // 应用关闭时调用释放
         protected override void OnExit(ExitEventArgs e)
@@ -187,7 +234,7 @@ namespace CVWaferProber
             {
                 // 调用DLL释放方法
                 CV_Ali_release();
-                Console.WriteLine("CV_algorithm.dll Resource released successfully");
+               log.Info("CV_algorithm.dll Resource released successfully");
             }
             catch (Exception ex)
             {

@@ -263,7 +263,7 @@
 
     <!--  主标题区域  -->
     <sys:String x:Key="MainTitle">System Flow Configuration Management</sys:String>
-    <sys:String x:Key="SubTitle">Configure system parameters and options</sys:String>
+    <sys:String x:Key="SubTitle">Configure sys parameters and options</sys:String>
 
     <!--  数据列标题  -->
     <sys:String x:Key="Column_No">No.</sys:String>
@@ -645,12 +645,38 @@
     <sys:String x:Key="HC_Yes">Yes</sys:String>
     <sys:String x:Key="HC_No">No</sys:String>
     <sys:String x:Key="HC_Close">Close</sys:String>
-
-
-
     <sys:String x:Key="Createdexportdirectory">Created export directory</sys:String>
+
+    <!-- Toolbar -->
     <sys:String x:Key="Toolbar.LiftAll">Lift All</sys:String>
     <sys:String x:Key="Toolbar.ToMainCamera">To AOI Camera</sys:String>
     <sys:String x:Key="Toolbar.ToAuxCamera">To VAM Camera</sys:String>
     <sys:String x:Key="Toolbar.ToIntegratingSphere">To Integrating Sphere</sys:String>
+
+    <!-- 在现有资源基础上添加 -->
+    <sys:String x:Key="CopyrightNotice">Copyright © {0} {1}. All rights reserved.</sys:String>
+    <sys:String x:Key="Copyright">Copyright</sys:String>
+    <sys:String x:Key="AllRightsReserved">All rights reserved</sys:String>
+    <sys:String x:Key="CompanyName">Color Vision Ltd.</sys:String>
+    <sys:String x:Key="CurrentYear">2026</sys:String>
+    
+    <!-- Startup Window -->
+    <sys:String x:Key="AppTitle">CV Wafer Prober Control System</sys:String>
+    <sys:String x:Key="StartupTitle">System Initialization</sys:String>
+    <sys:String x:Key="StartupProgress">Startup Progress</sys:String>
+    <sys:String x:Key="Initializing">Initializing...</sys:String>
+    <sys:String x:Key="SystemInfo">System Information</sys:String>
+    <sys:String x:Key="Version">Version</sys:String>
+    <sys:String x:Key="SerialNumber">Serial Number</sys:String>
+    <sys:String x:Key="BuildDate">Build Date</sys:String>
+
+    <!-- Startup Tasks -->
+    <sys:String x:Key="Task_Hardware">Initializing Hardware Interface</sys:String>
+    <sys:String x:Key="Task_Motion">Loading Motion Control System</sys:String>
+    <sys:String x:Key="Task_ProbeCard">Connecting Probe Card Controller</sys:String>
+    <sys:String x:Key="Task_Calibration">Calibrating Wafer Stage</sys:String>
+    <sys:String x:Key="Task_Vision">Initializing Vision System</sys:String>
+    <sys:String x:Key="Task_TestProgram">Loading Test Program</sys:String>
+    <sys:String x:Key="Task_Safety">Starting Safety Monitoring</sys:String>
+    <sys:String x:Key="Task_Ready">Ready</sys:String>
 </ResourceDictionary>

@@ -659,12 +659,39 @@
     <sys:String x:Key="HC_Yes">是</sys:String>
     <sys:String x:Key="HC_No">否</sys:String>
     <sys:String x:Key="HC_Close">关闭</sys:String>
-
-
     <sys:String x:Key="Createdexportdirectory">创建导出目录</sys:String>
+
+    <!-- Toolbar -->
     <sys:String x:Key="Toolbar.LiftAll">抬起所有</sys:String>
     <sys:String x:Key="Toolbar.ToMainCamera">移至AOI相机位</sys:String>
     <sys:String x:Key="Toolbar.ToAuxCamera">移至VAM相机位</sys:String>
     <sys:String x:Key="Toolbar.ToIntegratingSphere">移至积分球位</sys:String>
+
+    <!-- 在现有资源基础上添加 © 2026 Precision Instruments. 保留所有权利 -->
+    <sys:String x:Key="CopyrightNotice">版权所有 © {0} {1}。保留所有权利。</sys:String>
+    <sys:String x:Key="Copyright">版权所有</sys:String>
+    <sys:String x:Key="AllRightsReserved">保留所有权利</sys:String>
+    <sys:String x:Key="CompanyName">视彩光电</sys:String>
+    <sys:String x:Key="CurrentYear">2026</sys:String>
+    
+    <!-- 启动界面 -->
+    <sys:String x:Key="AppTitle">CV晶圆探针台控制系统</sys:String>
+    <sys:String x:Key="StartupTitle">系统初始化</sys:String>
+    <sys:String x:Key="StartupProgress">启动进度</sys:String>
+    <sys:String x:Key="Initializing">正在初始化...</sys:String>
+    <sys:String x:Key="SystemInfo">系统信息</sys:String>
+    <sys:String x:Key="Version">版本</sys:String>
+    <sys:String x:Key="SerialNumber">序列号</sys:String>
+    <sys:String x:Key="BuildDate">构建日期</sys:String>
+
+    <!-- 启动任务列表 -->
+    <sys:String x:Key="Task_Hardware">初始化硬件接口</sys:String>
+    <sys:String x:Key="Task_Motion">加载运动控制系统</sys:String>
+    <sys:String x:Key="Task_ProbeCard">连接探针卡控制器</sys:String>
+    <sys:String x:Key="Task_Calibration">校准晶圆平台</sys:String>
+    <sys:String x:Key="Task_Vision">初始化视觉系统</sys:String>
+    <sys:String x:Key="Task_TestProgram">加载测试程序</sys:String>
+    <sys:String x:Key="Task_Safety">启动安全监控</sys:String>
+    <sys:String x:Key="Task_Ready">准备就绪</sys:String>
 
 </ResourceDictionary>

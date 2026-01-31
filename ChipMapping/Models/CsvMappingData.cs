@@ -25,8 +25,8 @@ namespace ChipMapping.Models
     public class CVMappingData : CsvMappingData
     {
         public uint Id { get; set; }
-        public double Distance { get; set; }
-        public bool IsOuter { get; set; }
+        //public double Distance { get; set; }
+        //public bool IsOuter { get; set; }
 
         public CVMappingData(uint id,CsvMappingData data)
         {
@@ -49,33 +49,14 @@ namespace ChipMapping.Models
 
     public class MappingPosDataRange
     {
-        public double MinPosY { get; set; }
-        public double MaxPosY { get; set; }
-        public double MinPosX { get; set; }
-        public double MaxPosX { get; set; }
-    }
-     public class MappingMapDataRange
-    {
-        public int MinMapY { get; set; }
-        public int MaxMapY { get; set; }
-        public int MinMapX { get; set; }
-        public int MaxMapX { get; set; }
+        public double MinY { get; set; }
+        public double MaxY { get; set; }
+        public double MinX { get; set; }
+        public double MaxX { get; set; }
     }
 
     public static class CsvMappingDataTool
     {
-        //public static Dictionary<(int Row, int Column), CsvMappingData> CreateDataDictionary(List<CsvMappingData> mappingData)
-        //{
-        //    var dataDict = new Dictionary<(double, double), CsvMappingData>();
-
-        //    foreach (var data in mappingData)
-        //    {
-        //        var key = (data.PosY, data.PosX);
-        //        dataDict[key] = data;
-        //    }
-
-        //    return dataDict;
-        //}
         public static MappingPosDataRange GetPosDataRange(List<CVMappingData> mappingData)
         {
             if (mappingData == null || mappingData.Count == 0)
@@ -85,10 +66,10 @@ namespace ChipMapping.Models
 
             return new MappingPosDataRange
             {
-                MinPosY = mappingData.Min(d => d.PosY),
-                MaxPosY = mappingData.Max(d => d.PosY),
-                MinPosX = mappingData.Min(d => d.PosX),
-                MaxPosX = mappingData.Max(d => d.PosX)
+                MinY = mappingData.Min(d => d.PosY),
+                MaxY = mappingData.Max(d => d.PosY),
+                MinX = mappingData.Min(d => d.PosX),
+                MaxX = mappingData.Max(d => d.PosX)
             };
         } 
         public static MappingPosDataRange GetAxisPosDataRange(List<CVMappingData> mappingData)
@@ -100,25 +81,10 @@ namespace ChipMapping.Models
 
             return new MappingPosDataRange
             {
-                MinPosY = mappingData.Min(d => d.AxisPosY),
-                MaxPosY = mappingData.Max(d => d.AxisPosY),
-                MinPosX = mappingData.Min(d => d.AxisPosX),
-                MaxPosX = mappingData.Max(d => d.AxisPosX)
-            };
-        }
-        public static MappingMapDataRange GetMapDataRange(List<CVMappingData> mappingData)
-        {
-            if (mappingData == null || mappingData.Count == 0)
-            {
-                throw new ArgumentException($"mappingData {Application.Current.FindResource("Cannotbeempty")}");
-            }
-
-            return new MappingMapDataRange
-            {
-                MinMapY = mappingData.Min(d => d.DataMapY),
-                MaxMapY = mappingData.Max(d => d.DataMapY),
-                MinMapX = mappingData.Min(d => d.DataMapX),
-                MaxMapX = mappingData.Max(d => d.DataMapX)
+                MinY = mappingData.Min(d => d.AxisPosY),
+                MaxY = mappingData.Max(d => d.AxisPosY),
+                MinX = mappingData.Min(d => d.AxisPosX),
+                MaxX = mappingData.Max(d => d.AxisPosX)
             };
         }
         public static bool LoadMappingCsv(string csvPath, ref List<CVMappingData>? cvMappingData)
@@ -149,67 +115,6 @@ namespace ChipMapping.Models
             return result;
         }
 
-        #region Markout
-        public static void MarkOutsiderRingPoints(List<CVMappingData> records)
-        {
-            // 1. 统计坐标范围
-            int minX = records.Min(r => r.DataMapX);
-            int maxX = records.Max(r => r.DataMapX);
-            int minY = records.Min(r => r.DataMapY);
-            int maxY = records.Max(r => r.DataMapY);
-
-            // 2. 计算椭圆参数
-            double centerX = (minX + maxX) / 2.0;
-            double centerY = (minY + maxY) / 2.0;
-            double radiusX = (maxX - minX) / 2.0;
-            double radiusY = (maxY - minY) / 2.0;
-            // 3. 标记椭圆外圈点
-            var markedRecords = MarkEllipseOuterPoints(records, centerX, centerY, radiusX, radiusY);
-        }
-
-        static List<CVMappingData> MarkEllipseOuterPoints(List<CVMappingData> records, double centerX, double centerY, double radiusX, double radiusY)
-        {
-            // 方法1: 基于椭圆方程判断
-            foreach (var record in records)
-            {
-                // 计算点到中心的标准化距离
-                double ellipseValue = CalculateEllipseDistance(record.DataMapX, record.DataMapY, centerX, centerY, radiusX, radiusY);
-
-                // 方法1: 简单阈值法 - 靠近椭圆边界的点
-                double threshold = 0.9; // 调整这个值来控制外圈厚度
-                record.IsOuter = ellipseValue >= threshold;
-
-                // 方法2: 基于距离排名 - 取距离最远的N%作为外圈
-                record.Distance = ellipseValue; // 保存计算的距离
-            }
-            return records;
-        }
-
-        static List<CVMappingData> MarkByRanking(List<CVMappingData> records, double outerPercentage)
-        {
-            // 按椭圆距离排序
-            var sorted = records.OrderByDescending(r => r.Distance).ToList();
-
-            // 计算外圈点的数量
-            int outerCount = (int)(records.Count * outerPercentage);
-
-            // 标记外圈点
-            for (int i = 0; i < sorted.Count; i++)
-            {
-                sorted[i].IsOuter = i < outerCount;
-            }
-
-            return sorted;
-        }
-
-        static double CalculateEllipseDistance(double x, double y, double centerX, double centerY, double radiusX, double radiusY)
-        {
-            double normalizedX = (x - centerX) / radiusX;
-            double normalizedY = (y - centerY) / radiusY;
-            return Math.Pow(normalizedX, 2) + Math.Pow(normalizedY, 2);
-        }
-
-        #endregion
 
         /// <summary>
         /// 综合多种方法找出外圈点
