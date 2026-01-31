@@ -649,7 +649,7 @@ namespace ChipMapping.ViewModels
         {
             if (mappingData != null && mappingData.Count > 0)
             {
-                MappingPosDataRange dataRange = CsvMappingDataTool.GetPosDataRange(mappingData);
+                MappingPosDataRange dataRange = CsvMappingDataTool.GetAxisPosDataRange(mappingData);
                 var Wid = dataRange.MaxPosX - dataRange.MinPosX;
                 var Hei = dataRange.MaxPosY - dataRange.MinPosY;
 
@@ -661,12 +661,13 @@ namespace ChipMapping.ViewModels
 
                 // 核心修改：创建转换器时传入翻转开关 → flipY = true 就是上下翻转（你的核心需求）
                 // 如需左右翻转：new CoordinateConverter(screenSize, mathBounds, flipY: true, flipX: true)
-                CoordinateConverter converter = new CoordinateConverter(screenSize, mathBounds, flipY: true);
+                CoordinateConverter converter = new CoordinateConverter(screenSize, mathBounds, flipY: false);
 
                 foreach (var posMath in mappingData)
                 {
                     // 坐标转换（自动完成翻转）
-                    var posSc = converter.MathToScreen(new System.Drawing.PointF((float)posMath.PosX, (float)posMath.PosY));
+                    //var posSc = converter.MathToScreen(new System.Drawing.PointF((float)posMath.PosX, (float)posMath.PosY));
+                    var posSc = converter.MathToScreen(new System.Drawing.PointF((float)posMath.AxisPosX, (float)posMath.AxisPosY));
 
                     // 屏幕坐标增加起始偏移
                     double x = StartX + posSc.X;

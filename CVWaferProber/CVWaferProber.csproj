@@ -10,8 +10,8 @@
     <Platforms>AnyCPU;x64</Platforms>
     <UseWindowsForms>True</UseWindowsForms>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <AssemblyVersion>2026.01.29.0</AssemblyVersion>
-    <FileVersion>2026.01.29.0</FileVersion>
+    <AssemblyVersion>2026.01.30.0</AssemblyVersion>
+    <FileVersion>2026.01.30.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

@@ -24,11 +24,13 @@ namespace ChipMapping.Models
         /// 上下翻转（核心：晶圆Y轴映射到屏幕时翻转）
         /// </summary>
         public bool FlipY { get; set; } = false;
-        public CoordinateConverter(Size screenSize, RectangleF mathBounds,bool flipY = false)
+        public bool FlipX { get; set; } = true;
+        public CoordinateConverter(Size screenSize, RectangleF mathBounds, bool flipY = false, bool flipX = true)
         {
             ScreenSize = screenSize;
             MathBounds = mathBounds;
             FlipY = flipY;
+            FlipX = flipX;
             // 计算缩放比例
             ScaleX = screenSize.Width / mathBounds.Width;
             ScaleY = screenSize.Height / mathBounds.Height;
@@ -42,12 +44,19 @@ namespace ChipMapping.Models
             // 首先将数学坐标相对于数学坐标系原点进行归一化
             float normalizedX = mathPoint.X - MathBounds.Left;
             float normalizedY = mathPoint.Y - MathBounds.Top;
-            // 3. 上下翻转Y轴：如果开启，用数学范围高度减去归一化Y
+            // 1. 翻转X轴：如果开启，用数学范围宽度减去归一化X
+            if (FlipX)
+            {
+                normalizedX = MathBounds.Width - normalizedX;
+            }
+
+            // 2. 上下翻转Y轴：如果开启，用数学范围高度减去归一化Y
             if (FlipY)
             {
                 normalizedY = MathBounds.Height - normalizedY;
             }
-            // 缩放并翻转y轴
+
+            // 缩放并转换为屏幕坐标
             float screenX = normalizedX * ScaleX;
             float screenY = ScreenSize.Height - (normalizedY * ScaleY);
 

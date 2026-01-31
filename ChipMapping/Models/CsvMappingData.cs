@@ -90,6 +90,21 @@ namespace ChipMapping.Models
                 MinPosX = mappingData.Min(d => d.PosX),
                 MaxPosX = mappingData.Max(d => d.PosX)
             };
+        } 
+        public static MappingPosDataRange GetAxisPosDataRange(List<CVMappingData> mappingData)
+        {
+            if (mappingData == null || mappingData.Count == 0)
+            {
+                throw new ArgumentException( $"mappingData {Application.Current.FindResource("Cannotbeempty")}");
+            }
+
+            return new MappingPosDataRange
+            {
+                MinPosY = mappingData.Min(d => d.AxisPosY),
+                MaxPosY = mappingData.Max(d => d.AxisPosY),
+                MinPosX = mappingData.Min(d => d.AxisPosX),
+                MaxPosX = mappingData.Max(d => d.AxisPosX)
+            };
         }
         public static MappingMapDataRange GetMapDataRange(List<CVMappingData> mappingData)
         {

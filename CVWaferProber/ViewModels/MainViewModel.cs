@@ -1050,11 +1050,29 @@ namespace CVWaferProber.ViewModels
                     IsOptional = true,
                     ColumnType = ColumnType.Text,
                     ColumnKey = ColumnKey.Other
-                }, 
+                },
                 new ColumnConfig
                 {
                     ColumnHeader = "AxisX",
                     ColumnBindingPath = "MotionAxisX",
+                    IsSelected = true,
+                    IsOptional = true,
+                    ColumnType = ColumnType.Text,
+                    ColumnKey = ColumnKey.Other
+                }, 
+                new ColumnConfig
+                {
+                    ColumnHeader = "AxisY",
+                    ColumnBindingPath = "MotionAxisY",
+                    IsSelected = true,
+                    IsOptional = true,
+                    ColumnType = ColumnType.Text,
+                    ColumnKey = ColumnKey.Other
+                }, 
+                new ColumnConfig
+                {
+                    ColumnHeader = "AxisZ",
+                    ColumnBindingPath = "MotionAxisZ",
                     IsSelected = true,
                     IsOptional = true,
                     ColumnType = ColumnType.Text,
