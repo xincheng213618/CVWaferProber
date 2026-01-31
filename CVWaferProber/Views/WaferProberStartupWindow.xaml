@@ -123,7 +123,7 @@
                                Margin="20,0,0,0"
                                VerticalAlignment="Center"/>
 
-                    <!--<Button Grid.Column="1" 
+                    <Button Grid.Column="1" 
                             Content="✕" 
                             Width="40" 
                             Height="40"
@@ -131,7 +131,7 @@
                             Background="Transparent"
                             Foreground="#FFFFFF"
                             FontSize="16"
-                            Click="CloseButton_Click"/>-->
+                            Click="CloseButton_Click"/>
                 </Grid>
             </Border>
 
@@ -191,7 +191,7 @@
                                FontWeight="Bold"
                                Margin="0,0,0,10"/>
 
-                    <TextBlock Text="Wafer Probing System" 
+                    <TextBlock Text="{DynamicResource BrandTagline}" 
                                Foreground="#E5E7EB" 
                                FontSize="16"
                                Margin="0,0,0,30"/>

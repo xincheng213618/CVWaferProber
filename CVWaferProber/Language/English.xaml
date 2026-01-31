@@ -659,7 +659,9 @@
     <sys:String x:Key="AllRightsReserved">All rights reserved</sys:String>
     <sys:String x:Key="CompanyName">Color Vision Ltd.</sys:String>
     <sys:String x:Key="CurrentYear">2026</sys:String>
-    
+    <!-- Brand Information -->
+    <sys:String x:Key="BrandName">PRECISION PROBER</sys:String>
+    <sys:String x:Key="BrandTagline">Wafer Probing System</sys:String>
     <!-- Startup Window -->
     <sys:String x:Key="AppTitle">CV Wafer Prober Control System</sys:String>
     <sys:String x:Key="StartupTitle">System Initialization</sys:String>
@@ -679,4 +681,8 @@
     <sys:String x:Key="Task_TestProgram">Loading Test Program</sys:String>
     <sys:String x:Key="Task_Safety">Starting Safety Monitoring</sys:String>
     <sys:String x:Key="Task_Ready">Ready</sys:String>
+
+    <!-- Status Messages -->
+    <sys:String x:Key="StartupCompleted">System startup completed! Launching main interface...</sys:String>
+    <sys:String x:Key="LaunchingMain">Launching main application...</sys:String>
 </ResourceDictionary>

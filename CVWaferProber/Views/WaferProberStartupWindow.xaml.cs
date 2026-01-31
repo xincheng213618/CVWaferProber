@@ -140,7 +140,7 @@ namespace CVWaferProber.Views
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 // 启动完成
-                StatusMessage.Text = "系统启动完成，正在进入主界面...";
+                StatusMessage.Text = LanguageManager.Instance.GetString("StartupCompleted");
 
                 // 延迟后关闭启动窗口
                 var timer = new DispatcherTimer();
