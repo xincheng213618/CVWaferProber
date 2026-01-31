@@ -39,12 +39,12 @@ namespace WaferComm.StateMachine
             }
         }
 
-        public ProberStateMachine(IEventAggregator eventAggregator, IWaferProberClient client, int defaultMotionTimeout, int zMotionTimeout) : base(eventAggregator)
+        public ProberStateMachine(IEventAggregator eventAggregator, IWaferProberClient client, int defaultXYMotionTimeout, int defaultZMotionTimeout) : base(eventAggregator)
         {
             _eventAggregator = eventAggregator;
             _client = client;
 
-            _motionMonitor = new MotionMonitor(eventAggregator, defaultMotionTimeout, zMotionTimeout);
+            _motionMonitor = new MotionMonitor(eventAggregator, defaultXYMotionTimeout, defaultZMotionTimeout);
             _heaterMonitor = new HeaterMonitor(eventAggregator, client);
             // 初始化状态转移规则
             _allowedTransitions = InitializeTransitionRules();
@@ -206,7 +206,7 @@ namespace WaferComm.StateMachine
                     //@event.Command.CommandType.StartsWith("A"))
                 {
                     // 坐标运动完成，保持当前状态
-                    UpdateMotionStatusInProberStatus();
+                    //UpdateMotionStatusInProberStatus();
                 }
                 else if (@event.Command.CommandType == "Z")
                 {
@@ -219,7 +219,7 @@ namespace WaferComm.StateMachine
                 else if (@event.Command.CommandType == "D")
                 {
                     // Z Down完成
-                    UpdateMotionStatusInProberStatus();
+                    //UpdateMotionStatusInProberStatus();
                 }
                 //else if (@event.Command.CommandType == "Q")
                 //{
@@ -278,7 +278,7 @@ namespace WaferComm.StateMachine
                     _currentStatus.LastMotionCompleteTime = DateTime.Now;
                 }
             }
-
+            if (logger.IsDebugEnabled) logger.DebugFormat("MotionStatusUpdated => {0}", _currentStatus.MotionStatus.ToString());
             // 发布状态更新
             EventAggregator.Publish(new StateUpdatedEvent(GetStatus()));
         }
@@ -442,7 +442,7 @@ namespace WaferComm.StateMachine
             if (!@event.IsValid) return;
 
             string command = @event.Command;
-            logger.InfoFormat("RECV => {0}", command);
+            if(logger.IsDebugEnabled) logger.DebugFormat("RECV => {0}", command);
             // 更新状态信息
             UpdateStatusFromCommand(command);
 

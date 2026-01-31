@@ -661,12 +661,11 @@ namespace ChipMapping.ViewModels
 
                 // 核心修改：创建转换器时传入翻转开关 → flipY = true 就是上下翻转（你的核心需求）
                 // 如需左右翻转：new CoordinateConverter(screenSize, mathBounds, flipY: true, flipX: true)
-                CoordinateConverter converter = new CoordinateConverter(screenSize, mathBounds, flipY: false);
+                CoordinateConverter converter = new CoordinateConverter(screenSize, mathBounds);
 
                 foreach (var posMath in mappingData)
                 {
                     // 坐标转换（自动完成翻转）
-                    //var posSc = converter.MathToScreen(new System.Drawing.PointF((float)posMath.PosX, (float)posMath.PosY));
                     var posSc = converter.MathToScreen(new System.Drawing.PointF((float)posMath.AxisPosX, (float)posMath.AxisPosY));
 
                     // 屏幕坐标增加起始偏移
@@ -675,7 +674,7 @@ namespace ChipMapping.ViewModels
 
                     // 状态默认WAITING（保持原有逻辑）
                     var status = ChipStatus.WAITING;
-                    if (posMath.OutsiderRing < outsiderRing)
+                    if (posMath.OutsiderRing <= outsiderRing)
                     {
                         status = ChipStatus.SKIP;
                     }

@@ -1,7 +1,9 @@
 ﻿using CVWaferProber.Config;
+using CVWaferProber.Services;
 using CVWaferProber.ViewModels; // 新增：用于访问 MainViewModel
 using log4net;
 using log4net.Config;
+using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -44,18 +46,20 @@ namespace CVWaferProber
             // 设置兼容模式
             System.Windows.Forms.Application.EnableVisualStyles();
             System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
+
+            LogManagerService.ConfigureLog4Net();
             // 初始化 log4net
-            var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+            //var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
 
             // 使用 App.config 配置
             //XmlConfigurator.Configure(logRepository);
 
             // 或者使用单独的配置文件
-            var configFile = new System.IO.FileInfo("log4net.config");
-            XmlConfigurator.Configure(logRepository, configFile);
-
-            int RegisterAddress = 0x08;
-            byte iAddr = Convert.ToByte(RegisterAddress);
+            //var configFile = new System.IO.FileInfo("log4net.config");
+            //XmlConfigurator.ConfigureAndWatch(logRepository, configFile);
+            //XmlConfigurator.ConfigureAndWatch(new FileInfo("log4net.config"));
+            //int RegisterAddress = 0x08;
+            //byte iAddr = Convert.ToByte(RegisterAddress);
             //int indexFrame = 0x40;
             //byte[] bytes = BitConverter.GetBytes(indexFrame);
             //byte iAddr = bytes[1];

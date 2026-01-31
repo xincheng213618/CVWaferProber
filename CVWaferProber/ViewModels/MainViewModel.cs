@@ -2259,11 +2259,14 @@ namespace CVWaferProber.ViewModels
                     dieViewModel.TouchDownCounts = CustomMappingVM.TDCount;
                     _TestResults.Add(dieViewModel);
                 }
-                var sorted = _TestResults.OrderByDescending(x => x.Id).ToList();
+                var sorted = _TestResults.OrderBy(x => x.MapY).ToList();
                 TestResults.Clear();
                 foreach (var item in sorted)
                 {
-                    TestResults.Add(item);
+                    if(item.Status != ChipStatus.SKIP)
+                    {
+                        TestResults.Add(item);
+                    }
                 }
             }
             BuildSNIndex();

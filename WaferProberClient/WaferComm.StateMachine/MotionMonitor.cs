@@ -16,7 +16,7 @@ namespace WaferComm.StateMachine
         private readonly System.Timers.Timer _motionTimeoutTimer;
         private readonly object _motionLock = new object();
 
-        private MotionCommand _currentMotion;
+        private MotionCommand? _currentMotion;
         private DateTime _motionStartTime;
         private TimeSpan _defaultXYMotionTimeout = TimeSpan.FromSeconds(10);
         private TimeSpan _defaultZMotionTimeout = TimeSpan.FromSeconds(5);
@@ -24,15 +24,15 @@ namespace WaferComm.StateMachine
         private const int MAX_HISTORY_COUNT = 100;
 
         public MotionStatus CurrentMotionStatus { get; private set; } = MotionStatus.Idle;
-        public MotionCommand CurrentMotion => _currentMotion;
+        public MotionCommand? CurrentMotion => _currentMotion;
         public IEnumerable<MotionCommand> MotionHistory => _motionHistory.AsReadOnly();
 
-        public MotionMonitor(IEventAggregator eventAggregator, int defaultMotionTimeout, int zMotionTimeout) : base(eventAggregator)
+        public MotionMonitor(IEventAggregator eventAggregator, int defaultXYMotionTimeout, int defaultZMotionTimeout) : base(eventAggregator)
         {
             _eventAggregator = eventAggregator;
 
-            _defaultXYMotionTimeout = TimeSpan.FromSeconds(defaultMotionTimeout);
-            _defaultZMotionTimeout = TimeSpan.FromSeconds(zMotionTimeout);
+            _defaultXYMotionTimeout = TimeSpan.FromSeconds(defaultXYMotionTimeout);
+            _defaultZMotionTimeout = TimeSpan.FromSeconds(defaultZMotionTimeout);
             _motionTimeoutTimer = new System.Timers.Timer();
             _motionTimeoutTimer.Elapsed += OnMotionTimeout;
             _motionTimeoutTimer.AutoReset = false;
@@ -281,11 +281,6 @@ namespace WaferComm.StateMachine
                 _motionHistory.RemoveAt(0);
             }
 
-            // 记录日志
-            //string logMsg = success ?
-            //    $"运动完成: {currentMotionTmp}, 耗时: {currentMotionTmp.Duration.TotalSeconds:F2}秒" :
-            //    $"运动失败: {currentMotionTmp}, 错误: {currentMotionTmp.ErrorMessage}";
-
             // 发布运动完成事件
             _eventAggregator.Publish(new MotionCompletedEvent(_currentMotion, responseCode, success));
 
@@ -305,7 +300,7 @@ namespace WaferComm.StateMachine
             });
         }
 
-        private void OnMotionTimeout(object sender, ElapsedEventArgs e)
+        private void OnMotionTimeout(object? sender, ElapsedEventArgs e)
         {
             lock (_motionLock)
             {

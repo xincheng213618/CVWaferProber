@@ -209,6 +209,9 @@ namespace CVWaferProber.Services
             }
             Task? task = baseSerivce?.StartTesting(die, _selectedWPFlow, hasNext, isAuto);
 
+            //获取Motion Axis信息
+            proberClientService?.GetCurrentDieAxisAsync();
+            
             return task;
         }
         private void DoDieFlowExec(AutoTestingItem item)

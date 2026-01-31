@@ -1,8 +1,6 @@
 ﻿using CVCommCore;
 using CVWaferProber.Config;
-using CVWaferProber.Core.Events;
 using CVWaferProber.ViewModels;
-using OpenTK.Compute.OpenCL;
 using WaferComm.Client;
 using WaferComm.Core;
 using WaferComm.StateMachine;
@@ -48,6 +46,7 @@ namespace CVWaferProber.Services
             var eventAggregator = _clientProber.EventAggregator;
             eventAggregator.Subscribe<ConnectionStateChangedEvent>(OnClientProberStateChanged);
             eventAggregator.Subscribe<StateTransitionEvent>(OnStateTransition);
+            eventAggregator.Subscribe<CommandSentEvent>(OnCommandSented);
 
             var motionSettings = ConfigManager.Config.MotionSettings;
             ProberStateMachine proberState = new ProberStateMachine(eventAggregator, _clientProber,
@@ -57,6 +56,13 @@ namespace CVWaferProber.Services
             _proberState.StartAsync().Wait();
 
         }
+
+        private void OnCommandSented(CommandSentEvent @event)
+        {
+            string cmd = @event.Command.Trim('$', '#');
+            logger.DebugFormat("SEND => {0}", cmd);
+        }
+
         public void Initialize()
         {
 
@@ -78,7 +84,7 @@ namespace CVWaferProber.Services
         }
         private void OnProberStateUpdated(StateUpdatedEvent @event)
         {
-            if (logger.IsInfoEnabled) logger.InfoFormat("StateUpdated => {0}", @event.Status.ToString());
+            if (logger.IsDebugEnabled) logger.DebugFormat("StateUpdated => {0}", @event.Status.ToString());
             _connectionInfo.DevCurrentState = @event.Status.CurrentState;
             var dieVM = MainService.Instance.autoTestingItem?.GetCurrentDieVM();
             if (dieVM == null)
@@ -112,15 +118,13 @@ namespace CVWaferProber.Services
                 _clientProber.QueryStatusAsync();
                 _clientProber.GetCurrentTemperatureAsync();
             }
-            //else
-            //{
-            //    logger.InfoFormat("ConnectionStateChanged => IsConnected={2}", @event.ServerIp, @event.Port, @event.IsConnected);
-            //}
         }
-
+        public async Task GetCurrentDieAxisAsync()
+        {
+            await _clientProber.GetCurrentDieAxisAsync();
+        }
         public async Task SendResultAsync(int result)
         {
-            await _clientProber?.GetCurrentDieAxisAsync();
             await _clientProber?.SendResultAsync(result);
         }
 

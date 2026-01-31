@@ -84,7 +84,7 @@ namespace CVWaferProber.Services
             }
             finally
             {
-                logger.InfoFormat("DoNextAutoTesting => {0}/{1}", dieViewModel.MapAxisToString(), dieViewModel.Status.ToString());
+                logger.InfoFormat("Run CCD Flow End => {0}/{1}", dieViewModel.MapAxisToString(), dieViewModel.Status.ToString());
                 if (hasNext) DoAutoTestingNextCompleted(dieViewModel);
                 else DoEndTesting(dieViewModel,isAuto);
             }

@@ -5,9 +5,10 @@ namespace CVWaferProber.Models
 {
     public class AutoTestingItem
     {
-        public List<DieViewModel> TestingDieVMList { get; internal set; }
-        public WPFlowViewModel? CurSelectedWPFlow { get; internal set; }
-        public int CurTestingIndex { get; internal set; }
+        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(AutoTestingItem));
+        public List<DieViewModel> TestingDieVMList { get; private set; }
+        public WPFlowViewModel? CurSelectedWPFlow { get; private set; }
+        public int CurTestingIndex { get; private set; }
 
         public AutoTestingItem(List<DieViewModel> testingDieVMList, WPFlowViewModel? curSelectedWPFlow)
         {
@@ -26,10 +27,11 @@ namespace CVWaferProber.Models
         {
             DieViewModel? pre = null;
             DieViewModel? next = null;
+            logger.InfoFormat("GetNextDieVM  => {0}", CurTestingIndex);
             if (CurTestingIndex > 0) pre = TestingDieVMList[CurTestingIndex - 1];
             if (IsEnd) next = null;
             else next = TestingDieVMList[CurTestingIndex++];
-
+            //logger.InfoFormat("GetNextDieVM  Next => {0}", CurTestingIndex);
             return (pre, next);
         }
         /// <summary>

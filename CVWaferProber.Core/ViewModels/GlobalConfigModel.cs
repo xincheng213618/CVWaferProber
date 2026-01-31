@@ -1,17 +1,17 @@
 ﻿using CVWaferProber.Core.Config;
 using CVWaferProber.Core.Models;
-using System;
-using System.Collections.Generic;
+using log4net;
+using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace CVWaferProber.Core.ViewModels
 {
-    public class GlobalConfigModel
+    public class GlobalConfigModel : ViewModelBase
     {
+        public ObservableCollection<LogLevelItem> LogLevels { get; set; }
+
+        public string SelectedLogLevel { get; set; }
         public MappingSettings MapSettings { get; set; } = new();
         public MotionSettings MotionSettings { get; set; } = new();
         public ConnectionSettings ConnectionSettings { get; set; } = new();
@@ -36,6 +36,25 @@ namespace CVWaferProber.Core.ViewModels
 
         public GlobalConfigModel()
         {
+            // 初始化日志级别列表
+            LogLevels = new ObservableCollection<LogLevelItem>
+            {
+                new LogLevelItem("ALL", "全部 - 记录所有日志"),
+                new LogLevelItem("DEBUG", "调试 - 最详细的日志信息"),
+                new LogLevelItem("INFO", "信息 - 一般信息"),
+                new LogLevelItem("WARN", "警告 - 潜在问题"),
+                new LogLevelItem("ERROR", "错误 - 错误信息"),
+                new LogLevelItem("FATAL", "严重错误 - 严重错误"),
+                new LogLevelItem("OFF", "关闭 - 不记录任何日志")
+            };
+
+            SelectedLogLevel = GetCurrentLogLevel();
+        }
+        // 获取当前日志级别
+        public static string GetCurrentLogLevel()
+        {
+            var hierarchy = (log4net.Repository.Hierarchy.Hierarchy)LogManager.GetRepository();
+            return hierarchy.Root.Level.ToString();
         }
         /// <summary>
         /// 验证所有配置路径是否有效
@@ -69,6 +88,18 @@ namespace CVWaferProber.Core.ViewModels
                 Directory.CreateDirectory(path);
                 log4net.LogManager.GetLogger(typeof(GlobalConfigModel)).Info($"{(string)Application.Current.FindResource("Createdexportdirectory")}：{path}");
             }
+        }
+    }
+
+    public class LogLevelItem
+    {
+        public string Level { get; set; }
+        public string Description { get; set; }
+
+        public LogLevelItem(string level, string description)
+        {
+            Level = level;
+            Description = description;
         }
     }
 }

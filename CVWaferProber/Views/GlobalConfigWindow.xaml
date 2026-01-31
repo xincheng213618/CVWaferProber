@@ -32,6 +32,17 @@
                         Text="{Binding ConnectionSettings.Port}"/>
                 </StackPanel>
             </TabItem>
+            <TabItem Header="Log">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
+                    <Label Content="Logger:"/>
+                    <ComboBox
+                        ItemsSource="{Binding LogLevels}"
+                        DisplayMemberPath="Level"
+                        SelectedValue="{Binding SelectedLogLevel, Mode=TwoWay}"
+                        SelectedValuePath="Level"                      
+                        Width="120" Height="25" Margin="5,0"/>
+                </StackPanel>
+            </TabItem>
             <!--  MotionSettings Tab页  -->
             <TabItem Header="MotionSettings">
                 <StackPanel>

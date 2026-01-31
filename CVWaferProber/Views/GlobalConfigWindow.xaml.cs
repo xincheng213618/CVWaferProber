@@ -205,6 +205,8 @@ namespace CVWaferProber.Views
                 //
                 ProberClientService.Instance.SetConnectionSettings(ConfigModel.ConnectionSettings.ServerIP, ConfigModel.ConnectionSettings.Port);
                 ProberClientService.Instance.ReconnectAsync();
+
+                LogManagerService.ChangeLogLevel(ConfigModel.SelectedLogLevel);
             }
             catch (Exception ex)
             {
