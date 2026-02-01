@@ -3,6 +3,7 @@ using CVCommCore;
 using CVCommCore.CVImage;
 using CVDB.Services.Algorithm;
 using CVDB.Services.Image;
+using CVWaferProber.Config;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
@@ -94,7 +95,7 @@ namespace CVWaferProber.Services
             // 例如：从配置文件读取、使用固定路径、按日期创建目录等
 
             // 示例：按日期创建目录
-            string baseDirectory = _globalConfig?.AoiExportPath;// 可以改为从配置读取
+            string baseDirectory = ConfigManager.Config.ExportPathSettings.AoiExportPath;// 可以改为从配置读取
             string dateDirectory = DateTime.Now.ToString("yyyyMMdd");
             string fullPath = Path.Combine(baseDirectory, dateDirectory);
 
@@ -133,18 +134,18 @@ namespace CVWaferProber.Services
         //    }
         //}
 
-        public class DetailResult_CommFile_V2
-        {
-            public string ResultFileName { get; set; }
+        //public class DetailResult_CommFile_V2
+        //{
+        //    public string ResultFileName { get; set; }
 
-        }
+        //}
 
-        // 用于解析 Darkresult.json 的 DTO
-        public class DarkResultDto
-        {
-            public string GradeLevel { get; set; }
+        //用于解析 Darkresult.json 的 DTO
+        //public class DarkResultDto
+        //{
+        //    public string GradeLevel { get; set; }
 
-        }
+        //}
         public override async Task StartTestingAsync(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool tranStatus = true)
         {
             dieViewModel.ChangeStatus(ChipStatus.TESTING);

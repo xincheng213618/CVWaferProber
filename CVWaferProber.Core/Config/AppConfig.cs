@@ -18,10 +18,32 @@ namespace CVWaferProber.Core.Config
         public ConnectionSettings ConnectionSettings { get; set; } = new();
         public MotionSettings MotionSettings { get; set; } = new();
         public MappingSettings MapSettings { get; set; } = new();
+        public ExportPathSettings ExportPathSettings { get; set; } = new();
         public bool IsBreakOnError { get; set; } = true;
         public int BreakOnErrorNum { get; set; } = 2;
     }
 
+    public class ExportPathSettings
+    {
+        /// <summary>
+        /// VAM自动导出默认路径
+        /// </summary>
+        public string VamExportPath { get; set; } = @"D:\Project\VAM";
+        /// <summary>
+        /// AOI导出路径
+        /// </summary>
+        public string AoiExportPath { get; set; } = @"D:\Project\AOI";
+
+        /// <summary>
+        /// EQE导出路径
+        /// </summary>
+        public string EqeExportPath { get; set; } = @"D:\Project\EQE";
+
+        /// <summary>
+        /// IVL导出路径
+        /// </summary>
+        public string IvlExportPath { get; set; } = @"D:\Project\IVL";
+    }
     public class MappingSettings
     {
         public int OutsiderRing { get; set; } = 3;
