@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <None Remove="en-US\ST.Library.UI.resources.dll" />
+    <None Remove="Views\LOG.icon.jpg" />
     <None Remove="zh-CN\ST.Library.UI.resources.dll" />
   </ItemGroup>
 
@@ -123,6 +124,10 @@
 
   <ItemGroup>
     <Folder Include="Assets\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Views\LOG.icon.jpg" />
   </ItemGroup>
 
 </Project>
