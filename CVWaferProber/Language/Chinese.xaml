@@ -701,4 +701,12 @@
     <!-- 状态消息 -->
     <sys:String x:Key="StartupCompleted">系统启动完成，正在进入主界面...</sys:String>
     <sys:String x:Key="LaunchingMain">正在启动主应用程序...</sys:String>
+    <sys:String x:Key="Maping.AutoTesting">Auto Testing</sys:String>
+    <sys:String x:Key="Maping.ManualTesting">Manual Testing</sys:String>
+    <sys:String x:Key="Maping.Testing">Testing</sys:String>
+    <sys:String x:Key="Maping.TestCompleted">Test Completed</sys:String>
+    <sys:String x:Key="Maping.TestFailed">Test Failed</sys:String>
+    <sys:String x:Key="Maping.StartingTest">Starting test...</sys:String>
+    <sys:String x:Key="Maping.Die">die</sys:String>
+    <sys:String x:Key="Maping.Dies">dies</sys:String>
 </ResourceDictionary>
