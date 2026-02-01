@@ -28,7 +28,7 @@ namespace CVWaferProber.Models
 
         public override void Exec()
         {
-            Thread.Sleep(2000);
+            Thread.Sleep(1000);
         }
     }
 }
