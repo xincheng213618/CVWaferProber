@@ -205,27 +205,6 @@ namespace CVWaferProber
             Application.Current.MainWindow = _mainWindow;
             _mainWindow.Show();
         }
-        private void InitializeApp()
-        {
-            // 模拟初始化步骤
-            //_splash.UpdateProgress(0.1, "正在加载配置...");
-            System.Threading.Thread.Sleep(300);
-
-            //_splash.UpdateProgress(0.4, "连接设备中...");
-            System.Threading.Thread.Sleep(500);
-
-            //_splash.UpdateProgress(0.8, "初始化用户界面...");
-            System.Threading.Thread.Sleep(300);
-
-            //_splash.UpdateProgress(1.0, "启动完成！");
-            MainService.Instance.Startup();
-            // 3. 关闭启动窗口，显示主窗口
-            Dispatcher.Invoke(() =>
-            {
-                _splash.Close();
-                _mainWindow.Show();
-            });
-        }
 
         // 应用关闭时调用释放
         protected override void OnExit(ExitEventArgs e)
