@@ -1,4 +1,5 @@
 ﻿using CVDB.Services.Spectrum;
+using CVWaferProber.Config;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
 using CVWaferProber.ViewModels;
@@ -21,7 +22,7 @@ namespace CVWaferProber.Services
         public CVEQEViewModel CustomEQEVM { get; private set; }
 
         // 新增：全局配置对象（核心修改点1）
-        private readonly GlobalConfigModel _globalConfig;
+        //private readonly GlobalConfigModel _globalConfig;
 
         // 构造函数：完全复刻IVL，仅替换VM名称
         public EQEService(CVEQEViewModel customEQEVM, RCRestService rcService) : base(rcService)
@@ -113,7 +114,7 @@ namespace CVWaferProber.Services
 
                 // 2. 读取全局配置的EQE导出路径（核心修改点2）
                 // 优先级：配置路径 > 默认路径（保证降级兼容）
-                string basePath = _globalConfig?.EqeExportPath ?? @"D:\Project\EQE";
+                string basePath = ConfigManager.Config.ExportPathSettings?.EqeExportPath ?? @"D:\Project\EQE";
 
                 // 3. 确保目录存在（自动创建，无需用户手动操作）
                 if (!Directory.Exists(basePath))

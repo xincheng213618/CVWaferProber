@@ -160,17 +160,17 @@
                 Command="{Binding ContinuAutoTestCommand}"
                 Content="{DynamicResource BtnContinuAutoTest}"
                 Style="{StaticResource IndustrialToolbarButtonStyle}" />
-           <Button
-                Width="150"
-                Height="30"
-                Command="{Binding StopAutoTestCommand}"
-                Content="{DynamicResource BtnStopAutoTest}"
-                Style="{StaticResource IndustrialToolbarButtonStyle}" />
           <Button
                 Width="150"
                 Height="30"
                 Command="{Binding PauseAutoTestCommand}"
                 Content="{DynamicResource BtnPauseAutoTest}"
+                Style="{StaticResource IndustrialToolbarButtonStyle}" />
+            <Button
+                Width="150"
+                Height="30"
+                Command="{Binding StopAutoTestCommand}"
+                Content="{DynamicResource BtnStopAutoTest}"
                 Style="{StaticResource IndustrialToolbarButtonStyle}" />
         </ToolBar>
     </Grid>

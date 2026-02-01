@@ -1,4 +1,5 @@
 ﻿using ChipMapping.ViewModels;
+using CVWaferProber.Config;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
 using CVWaferProber.ViewModels;
@@ -15,7 +16,7 @@ namespace CVWaferProber.Services
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(IVLService));
         // 缓存当前测试的DieViewModel（供定时器回调使用）
         private DieViewModel _currentDieVM;
-        private ChipMappingControlViewModel _chipMappingControlViewModel;
+        //private ChipMappingControlViewModel _chipMappingControlViewModel;
 
         //
         // 存储当前测试的光谱数据（供生成CSV使用）
@@ -23,22 +24,24 @@ namespace CVWaferProber.Services
         public bool IsIVLCameraEnabled { get; set; }
         public CVSpectrumViewModel CustomIVLVM { get; private set; }
 
-        private readonly GlobalConfigModel _globalConfig;
-        public IVLService(CVSpectrumViewModel customIVLVM, ChipMappingControlViewModel chipMappingControlViewModel, RCRestService rcService) : base(rcService)
+        //private readonly GlobalConfigModel _globalConfig;
+        public IVLService(CVSpectrumViewModel customIVLVM, RCRestService rcService, CVSpectrumAnalyzer ivlAnalyzer) : base(rcService)
         {
             this.CustomIVLVM = customIVLVM;
-            this._chipMappingControlViewModel = chipMappingControlViewModel;
+            //this._chipMappingControlViewModel = chipMappingControlViewModel;
+            SetSpPanelView(ivlAnalyzer);
             // 初始化导出文件夹（确保目录存在）
             //AutoExportHelper.InitFolders();
         }
-        public IVLService(string proberId, ChipMappingControlViewModel chipMappingControlViewModel, RCRestService rcService) : this(new CVSpectrumViewModel(), chipMappingControlViewModel, rcService)
+        public IVLService(string proberId, RCRestService rcService, CVSpectrumAnalyzer ivlAnalyzer) :
+            this(new CVSpectrumViewModel(), rcService, ivlAnalyzer)
         {
             this.ProberId = proberId;
         }
         //引用SP面板的视图控件（从外部传递）
         private CVSpectrumAnalyzer? _spPanelView;
         private TabControl? _spInnerTabControl;
-        public void SetSpPanelView(CVSpectrumAnalyzer spPanelView)
+        private void SetSpPanelView(CVSpectrumAnalyzer spPanelView)
         {
             _spPanelView = spPanelView;
 
@@ -282,13 +285,13 @@ namespace CVWaferProber.Services
                                  $"{_currentSpectrumData.PeakWavelength:F2}," +
                                  $"{_currentSpectrumData.fPur:F4}," +
                                  $"{_currentSpectrumData.PeakWavelength:F2}," +
-                                 $"{_currentSpectrumData.FHW:F1}," +
-                                 $"{_chipMappingControlViewModel.Temperatures:F1}";
+                                 $"{_currentSpectrumData.FHW:F1},";
+                                 //$"{_chipMappingControlViewModel.Temperatures:F1}";
                 dataRows.Add(row);
             }
             return dataRows;
         }
-        WPFlowViewModel wpfFlowViewModel { get; set; }
+        //WPFlowViewModel wpfFlowViewModel { get; set; }
 
         public override void AutoExportData()
         {
@@ -323,7 +326,7 @@ namespace CVWaferProber.Services
             }
 
             // 读取全局配置的IVL导出路径（核心修改点2）
-            string ivlRootPath = _globalConfig?.IvlExportPath ?? @"D:\Project\IVL";
+            string ivlRootPath = ConfigManager.Config.ExportPathSettings?.IvlExportPath ?? @"D:\Project\IVL";
             // 确保目录存在
             if (!Directory.Exists(ivlRootPath))
             {

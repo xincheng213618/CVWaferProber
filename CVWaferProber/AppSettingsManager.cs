@@ -1,5 +1,4 @@
-﻿using CVAVMControl;
-using ST.Library.UI;
+﻿using ST.Library.UI;
 using System.Windows;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
@@ -8,7 +7,6 @@ namespace CVWaferProber
 {
     public static class AppSettingsManager
     {
-
         public static string CurrentLanguage => Properties.Settings.Default.AppLanguage;
        
         public static void ChangeLanguage(string language)
@@ -50,13 +48,10 @@ namespace CVWaferProber
             if(language== "Chinese")
             {
                 Lang.SetLanguage("zh-CN");
-              
-
             }
             else
             {
                 Lang.SetLanguage("en-US");
-            
             }
         }
 

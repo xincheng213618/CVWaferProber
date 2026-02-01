@@ -55,7 +55,7 @@ namespace CVWaferProber.Views
                 mainVm.AnchorableSP = AnchorableSP;         // 绑定XAML中的SP面板
                 mainVm.AnchorableVAM = AnchorableVAM;       // 绑定XAML中的VAM面板
 
-                mainVm.InitializeServiveVM(MyVAM);
+                mainVm.InitializeServiveVM(MyVAM, spaly);
 
                 // 监听SP面板显示/隐藏事件，重新获取控件引用
                 AnchorableSP.IsVisibleChanged += (s, e) =>
@@ -104,7 +104,7 @@ namespace CVWaferProber.Views
                     mainVm.ActivateSpectralInnerTabAction = ActivateSpectralInnerTab;
                     mainVm.ActivateIVLCameraInnerTabAction = ActivateIVLCameraInnerTab;
                     mainVm.ActivateEQEOuterTabAction = ActivateEQEOuterTab;
-                    mainVm.SpPanelViewModel = _spAnalyzer.DataContext as CVWPFSpectrometerCtrl.ViewModels.CVSpectrumViewModel;
+                    //mainVm.SpPanelViewModel = _spAnalyzer.DataContext as CVWPFSpectrometerCtrl.ViewModels.CVSpectrumViewModel;
                 }
             }), DispatcherPriority.Loaded);
         }

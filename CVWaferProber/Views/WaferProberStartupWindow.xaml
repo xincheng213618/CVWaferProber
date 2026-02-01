@@ -185,7 +185,7 @@
                         </Canvas>
                     </Viewbox>
 
-                    <TextBlock Text="PRECISION PROBER" 
+                    <TextBlock Text="{DynamicResource BrandName}" 
                                Foreground="#93C5FD" 
                                FontSize="24"
                                FontWeight="Bold"

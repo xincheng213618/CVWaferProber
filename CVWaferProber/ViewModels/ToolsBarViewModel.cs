@@ -1,4 +1,5 @@
 ﻿using CVWaferProber.Core.ViewModels;
+using System.Windows.Forms;
 using System.Windows.Input;
 using WaferComm.Client;
 using WaferComm.Core;
@@ -29,22 +30,15 @@ namespace CVWaferProber.ViewModels
         public bool CanToIntegratingSphere => _proberState.CurrentState == ProberState.WaferLoaded ||
             _proberState.CurrentState == ProberState.Stoped;
 
-        private bool _CanContinuAutoTest;
+        //private bool _CanContinuAutoTest;
         public bool CanStartAutoTest => _proberState.CurrentState == ProberState.WaferLoaded ||
             _proberState.CurrentState == ProberState.Stoped;
         public bool CanContinuAutoTest => _proberState.CurrentState == ProberState.Paused &&
             MainViewModel.Instance.IsNotProcessing;
         public bool CanStopAutoTest => MainViewModel.Instance.IsNotProcessing && 
-            (_proberState.CurrentState == ProberState.Testing ||
+            (_proberState.CurrentState == ProberState.Testing || _proberState.CurrentState == ProberState.WaferLoaded ||
             _proberState.CurrentState == ProberState.Paused || _proberState.CurrentState == ProberState.Stoped);
         public bool CanPauseAutoTest => _proberState.CurrentState == ProberState.Testing;
-
-        //private IEventAggregator? _EventAggregator;
-
-        //public event EventHandler ToIntegratingSpherePos;
-        //public event EventHandler ToAuxCameraPos;
-        //public event EventHandler ToMainCameraPos;
-        //public event EventHandler LiftAllPos;
 
         public ToolsBarViewModel(IWaferProberClient client, IStateMachine? proberState, IEventAggregator? eventAggregator = null)
         {
@@ -107,37 +101,19 @@ namespace CVWaferProber.ViewModels
         private async void ToIntegratingSphere()
         {
             await _client?.ZToIntegratingSphereAsync();
-            foreach (var item in MainViewModel.Instance.WPFlows)
-            {
-                if (item.FlowType == CVWaferProberFlowType.EQE)
-                {
-                    MainViewModel.Instance.SelectedWPFlow = item;
-                }
-            }
+            MainViewModel.Instance?.ToIntegratingSphere();
         }
 
         private async void ToAuxCamera()
         {
             await _client?.ZToAuxCameraAsync();
-            foreach (var item in MainViewModel.Instance.WPFlows)
-            {
-                if (item.FlowType == CVWaferProberFlowType.VAM)
-                {
-                    MainViewModel.Instance.SelectedWPFlow = item;
-                }
-            }
+            MainViewModel.Instance?.ToAuxCamera();
         }
 
         private async void ToMainCamera()
         {
             await _client?.ZToMainCameraAsync();
-            foreach (var item in MainViewModel.Instance.WPFlows)
-            {
-                if (item.FlowType == CVWaferProberFlowType.AOI)
-                {
-                    MainViewModel.Instance.SelectedWPFlow = item;
-                }
-            }
+            MainViewModel.Instance?.ToMainCamera();
         }
 
         private async void LiftAll()

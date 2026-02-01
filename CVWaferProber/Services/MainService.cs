@@ -66,11 +66,11 @@ namespace CVWaferProber.Services
         {
             proberClientService.Startup();
         }
-        public void InitializeService(string proberId, RCRestService rcService, CVVAMAnalyzer _cVVAMAnalyzer)
+        public void InitializeService(RCRestService rcService, CVVAMAnalyzer _cVVAMAnalyzer, CVWPFSpectrometerCtrl.CVSpectrumAnalyzer ivlAnalyzer)
         {
-            this.ProberId = proberId;
+            //this.ProberId = proberId;
             //
-            BaseSerivce ivlService = new IVLService(proberId, mappingService.CustomVM, rcService);
+            BaseSerivce ivlService = new IVLService(string.Empty,rcService, ivlAnalyzer);
             flowServices[CVWaferProberFlowType.IVL] = ivlService;
             ivlService.TestingCompleted += OnTestingCompleted;
             ivlService.AutoTestingNextCompleted += OnAutoTestingNextCompleted;
@@ -93,7 +93,7 @@ namespace CVWaferProber.Services
         private void InitializeClientProber()
         {
             proberClientService = ProberClientService.Instance;
-            proberClientService.Initialize();
+            //proberClientService.Initialize(MainViewModel.Instance.DataMappingVM);
 
             proberClientService.Subscribe<MotionAxisUpdatedEvent>(OnMotionAxisUpdated);
         }
@@ -261,6 +261,7 @@ namespace CVWaferProber.Services
             }
             else
             {
+                DoAutoTestEnd(null, true);
                 if (logger.IsWarnEnabled) logger.WarnFormat("AutoTesting is ended, pre = X:{0},Y:{1}", dieNext.diePre?.MapX, dieNext.diePre?.MapY);
             }
         }
@@ -299,14 +300,14 @@ namespace CVWaferProber.Services
             }
         }
 
-        private void DoAutoTestEnd(DieViewModel dieVM, bool isAuto)
+        private void DoAutoTestEnd(DieViewModel? dieVM, bool isAuto)
         {
             TestingCompleted?.Invoke(this, new TestCompletedEventArgs(dieVM, isAuto));
-            if (isAuto)
+            if (isAuto && dieVM != null)
             {
-                proberClientService.SendResultAsync(dieVM);
-                proberClientService.TestingCompleted();
+                proberClientService?.SendResultAsync(dieVM);
             }
+            proberClientService?.TestingCompleted();
         }
 
         private void OutputLog(List<DieViewModel> dieVMList)
@@ -356,7 +357,7 @@ namespace CVWaferProber.Services
             }
             proberClientService?.PausedAutoTest();
             //MainViewModel.Instance.IsProcessing=false;
-            MainViewModel.Instance.EnableBtnGUI(true);
+            MainViewModel.Instance.DataMappingVM.EnableBtnGUI(true);
             //MainViewModel.Instance.IsNotProcessing=true;
         }
 

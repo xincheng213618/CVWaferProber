@@ -1,14 +1,7 @@
 ﻿using AvalonDock;
 using AvalonDock.Layout;
-using ChipMapping.Models;
 using ChipMapping.ViewModels;
-using ColorVision.Core.Entities;
 using CVAVMControl;
-using CVDB.Services.Buz;
-using CVWaferProber.Config;
-using CVWaferProber.Core;
-using CVWaferProber.Core.Models;
-using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
 using CVWaferProber.Models;
 using CVWaferProber.MQTT;
@@ -18,25 +11,13 @@ using CVWaferProber.Views;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
-using System.Reactive.Linq;
 using System.Reflection;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Input;
-using System.Windows.Threading;
 using WaferComm.Core;
 using Application = System.Windows.Application;
-using Binding = System.Windows.Data.Binding;
-using CheckBox = System.Windows.Controls.CheckBox;
 using MessageBox = System.Windows.MessageBox;
-using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
-using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 
 
 namespace CVWaferProber.ViewModels
@@ -46,6 +27,7 @@ namespace CVWaferProber.ViewModels
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(MainViewModel));
 
         public static MainViewModel? Instance { get; private set; }
+        public MappingDataViewModel? DataMappingVM { get; set; }
         public ChipMappingControlViewModel? CustomMappingVM { get; set; }
         public CVCamImagerViewModel? CustomImageVM { get; set; }
         public CVSpectrumViewModel? CustomIVLVM { get; set; }
@@ -59,25 +41,13 @@ namespace CVWaferProber.ViewModels
         /// </summary>
         public ToolsBarViewModel? ToolsVM { get; set; }
         // SP面板ViewModel引用
-        public CVSpectrumViewModel? SpPanelViewModel { get; set; }
+        //public CVSpectrumViewModel? SpPanelViewModel { get; set; }
 
         // 切换委托（对应红框3个选项）
         public Action? ActivateSpectralInnerTabAction { get; set; }
         public Action? ActivateIVLCameraInnerTabAction { get; set; }
         public Action? ActivateEQEOuterTabAction { get; set; }
 
-        private FlowViewModel? _selectedFlow;
-        public FlowViewModel? SelectedFlow
-        {
-            get => _selectedFlow;
-            set
-            {
-                if (_selectedFlow != value)
-                {
-                    SetProperty(ref _selectedFlow, value);
-                }
-            }
-        }
         private ConnectionInfo _connectionInfo;
         public ConnectionInfo ConnectionInfo
         {
@@ -89,23 +59,6 @@ namespace CVWaferProber.ViewModels
             get => _rcConnectionInfo;
         }
 
-        private WPFlowViewModel? _selectedWPFlow;
-        public WPFlowViewModel? SelectedWPFlow
-        {
-            get => _selectedWPFlow;
-            set
-            {
-                if (_selectedWPFlow != value)
-                {
-                    SetProperty(ref _selectedWPFlow, value);
-                    ActivateCorrespondingPanel();
-                }
-            }
-        }
-
-        public ICommand LoadMappingFileCommand { get; }
-        public ICommand ClearMappingCommand { get; }
-        public ICommand FlowLoadCommand { get; }
         public ICommand ExitCommand { get; }
         // 打开帮助命令
         public ICommand OpenHelpCommand { get; }
@@ -118,20 +71,12 @@ namespace CVWaferProber.ViewModels
         public ICommand StartAutoTestCommand { get; }
         public ICommand StopAutoTestCommand { get; }
         public ICommand StartManTestCommand { get; }
-        public ICommand SaveTestResultCommand { get; }
-        public ICommand LoadTestResultCommand { get; }
         public ICommand IVLTestCommand { get; }
-        public ICommand OpenMappingFileCommand { get; }
-        public ICommand RefreshStatusCommand { get; }
-        public ICommand ResetStatusCommand { get; }
+
         public ICommand RCRegCommand { get; }
         public ICommand OpenVEyeWindowCommand { get; }
 
-        // ========== 1. AOI列的全选/反选命令 ==========
-        public ICommand InvertSelectAOICommand { get; }
-        public ICommand InvertSelectIVLCommand { get; }
-        public ICommand InvertSelectEQECommand { get; }
-        public ICommand InvertSelectVAMCommand { get; }
+
         public ICommand SysFlowCfgCommand { get; }
         //
         public ICommand ShowConnectionSettingsCommand { get; }
@@ -141,62 +86,8 @@ namespace CVWaferProber.ViewModels
         /// <summary>
         /// 
         /// </summary>
-        public ObservableCollection<DieViewModel> TestResults { get; } = new ObservableCollection<DieViewModel>();
-        public RangeEnabledObservableCollection<FlowViewModel> FlowItems { get; } = new RangeEnabledObservableCollection<FlowViewModel>();
-        public ObservableCollection<WPFlowViewModel> WPFlows { get; } = new ObservableCollection<WPFlowViewModel>();
-        public string _MappingCsvFilePath;
-        public string MappingCsvFilePath 
-        { 
-            get => _MappingCsvFilePath;
-            set
-            {
-                SetProperty(ref _MappingCsvFilePath, value);
-            }
-        }
-        public string ProberId { get; set; }
+        public bool IsNotProcessing => DataMappingVM.IsNotProcessing;
         public bool IsColorEnabled { get; set; }
-
-        private bool _isProcessing = false;
-
-        private string _Timestamp;
-        public string Timestamp
-        {
-            get => _Timestamp;
-            set
-            {
-                SetProperty(ref _Timestamp, value);
-            }
-        }
-
-        public bool IsNotProcessing => !_isProcessing;
-        public bool IsProcessing
-        {
-            get => _isProcessing;
-            set
-            {
-                SetProperty(ref _isProcessing, value);
-            }
-        }
-
-        private bool _isIVLCameraEnabled;
-        public bool IsIVLCameraEnabled
-        {
-            get => _isIVLCameraEnabled;
-            set
-            {
-                SetProperty(ref _isIVLCameraEnabled, value);
-            }
-        }
-
-        private bool _isAutoSN;
-        public bool IsAutoSN
-        {
-            get => _isAutoSN;
-            set
-            {
-                SetProperty(ref _isAutoSN, value);
-            }
-        }
 
         private string _AppVersion;
         public string AppVersion
@@ -279,249 +170,18 @@ namespace CVWaferProber.ViewModels
         }
         #endregion
 
-        #region SN查找功能
-        // SN查找输入属性
-        private string _searchSN;
-        public string SearchSN
-        {
-            get => _searchSN;
-            set => SetProperty(ref _searchSN, value);
-        }
-
-        // 筛选后的测试结果集合（绑定到DataGrid）
-        private ObservableCollection<DieViewModel> _filteredTestResults;
-        public ObservableCollection<DieViewModel> FilteredTestResults
-        {
-            get => _filteredTestResults;
-            set => SetProperty(ref _filteredTestResults, value);
-        }
-
-        // 查找命令
-        public ICommand SearchCommand { get; }
-        #endregion
-
         //private readonly Random _random = new Random();
 
-        private DataGrid? _dataGrid; // 引用DataGrid（静态列+动态列）
         private RCRestService rcService;
 
-        /// <summary>
-        /// false 外部控件关联触发
-        /// </summary>
-        private bool selfClick = true;
-
-        private object? _selectedItem;
-        public object? SelectedItem
-        {
-            get => _selectedItem;
-            set
-            {
-                SetProperty(ref _selectedItem, value);
-                ManScrollToItem(SelectedItem);
-                OnSelectedChanged(value);
-            }
-        }
-
         private CVMQTTWPClient mqtt;
-
-        public MainService mainService { get; private set; }
-
-        #region 静态列+动态列配置
-        /// <summary>
-        /// 静态列数量（前13列）
-        /// </summary>
-        private const int StaticColumnCount = 13;
-
-        /// <summary>
-        /// 静态列配置（前13列，不可选）
-        /// </summary>
-        private readonly List<ColumnConfig> _staticColumnConfigs = new List<ColumnConfig>
-        {
-            new ColumnConfig { ColumnHeader =(string)Application.Current.FindResource("GridHeader.No"), ColumnBindingPath = "Id", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
-            new ColumnConfig { ColumnHeader = (string)Application.Current.FindResource("Maping.GridHeader.Row"), ColumnBindingPath = "MapY", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
-            new ColumnConfig { ColumnHeader = (string)Application.Current.FindResource("Maping.GridHeader.Col"), ColumnBindingPath = "MapX", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
-            new ColumnConfig { ColumnHeader = "AOI Enabled", ColumnBindingPath = "IsAOIEnabled", ColumnType = ColumnType.CheckBox, IsOptional = false, ColumnKey = ColumnKey.AOI },
-            new ColumnConfig { ColumnHeader = "IVL Enabled", ColumnBindingPath = "IsIVLEnabled", ColumnType = ColumnType.CheckBox, IsOptional = false, ColumnKey = ColumnKey.IVL },
-            new ColumnConfig { ColumnHeader = "EQE Enabled", ColumnBindingPath = "IsEQEEnabled", ColumnType = ColumnType.CheckBox, IsOptional = false, ColumnKey = ColumnKey.EQE },
-            new ColumnConfig { ColumnHeader = "VAM Enabled", ColumnBindingPath = "IsVAMEnabled", ColumnType = ColumnType.CheckBox, IsOptional = false, ColumnKey = ColumnKey.VAM },
-            new ColumnConfig { ColumnHeader = (string)Application.Current.FindResource("Maping.GridHeader.SerialNumber"), ColumnBindingPath = "SerialNumber", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
-            new ColumnConfig { ColumnHeader = (string)Application.Current.FindResource("Maping.GridHeader.TestStatus"), ColumnBindingPath = "DisplayStatus", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
-            new ColumnConfig { ColumnHeader = (string)Application.Current.FindResource("Maping.GridHeader.Uniformity"), ColumnBindingPath = "DataValue", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
-            new ColumnConfig { ColumnHeader = (string)Application.Current.FindResource("Maping.GridHeader.StartTestTime"), ColumnBindingPath = "StartTestTime", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
-            new ColumnConfig { ColumnHeader = (string)Application.Current.FindResource("Maping.GridHeader.EndTestTime"), ColumnBindingPath = "EndTestTime", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
-            new ColumnConfig { ColumnHeader = (string)Application.Current.FindResource("Maping.GridHeader.TotalTime"), ColumnBindingPath = "TotalTime", ColumnType = ColumnType.Text, IsOptional = false, ColumnKey = ColumnKey.Other },
-
-        };
-
-        /// <summary>
-        /// 动态可选列配置（第14列及以后）
-        /// </summary>
-        private List<ColumnConfig> _dynamicColumnConfigs = new List<ColumnConfig>();
-
-        /// <summary>
-        /// 当前选中的动态列配置
-        /// </summary>
-        public ObservableCollection<ColumnConfig> SelectedDynamicColumns { get; set; }
-
         /// <summary>
         /// 打开Summary导出配置窗口命令
         /// </summary>
         public ICommand OpenSummaryConfigCommand { get; }
         public ICommand OpenGlobalConfigCommand { get; }
-        
-        #endregion
+        public MainService mainService { get; private set; }
 
-        #region 三态全选属性
-        // AOI三态全选
-        private bool? _selectAllAOI = false;
-        public bool? SelectAllAOI
-        {
-            get => _selectAllAOI;
-            set
-            {
-                if (!Equals(_selectAllAOI, value))
-                {
-                    _selectAllAOI = value;
-                    OnPropertyChanged(nameof(SelectAllAOI));
-
-                    if (value.HasValue && TestResults != null)
-                    {
-                        _isUpdatingFromHeader_AOI = true;
-                        try
-                        {
-                            foreach (var item in TestResults)
-                            {
-                                item.IsAOIEnabled = value.Value;
-                            }
-                            // 强制刷新DataGrid
-                            //_dataGrid?.Items.Refresh();
-                        }
-                        finally
-                        {
-                            _isUpdatingFromHeader_AOI = false;
-                        }
-                    }
-                }
-            }
-        }
-        private bool _isUpdatingFromHeader_AOI;
-
-        // IVL三态全选
-        private bool? _selectAllIVL = false;
-        public bool? SelectAllIVL
-        {
-            get => _selectAllIVL;
-            set
-            {
-                if (!Equals(_selectAllIVL, value))
-                {
-                    _selectAllIVL = value;
-                    OnPropertyChanged(nameof(SelectAllIVL));
-
-                    if (value.HasValue && TestResults != null)
-                    {
-                        _isUpdatingFromHeader_IVL = true;
-                        try
-                        {
-                            foreach (var item in TestResults)
-                            {
-                                item.IsIVLEnabled = value.Value;
-                            }
-                            //_dataGrid?.Items.Refresh();
-                        }
-                        finally
-                        {
-                            _isUpdatingFromHeader_IVL = false;
-                        }
-                    }
-                }
-            }
-        }
-        private bool _isUpdatingFromHeader_IVL;
-
-        // EQE三态全选
-        private bool? _selectAllEQE = false;
-        public bool? SelectAllEQE
-        {
-            get => _selectAllEQE;
-            set
-            {
-                if (!Equals(_selectAllEQE, value))
-                {
-                    _selectAllEQE = value;
-                    OnPropertyChanged(nameof(SelectAllEQE));
-
-                    if (value.HasValue && TestResults != null)
-                    {
-                        _isUpdatingFromHeader_EQE = true;
-                        try
-                        {
-                            foreach (var item in TestResults)
-                            {
-                                item.IsEQEEnabled = value.Value;
-                            }
-                            //_dataGrid?.Items.Refresh();
-                        }
-                        finally
-                        {
-                            _isUpdatingFromHeader_EQE = false;
-                        }
-                    }
-                }
-            }
-        }
-        private bool _isUpdatingFromHeader_EQE;
-
-        // VAM三态全选
-        private bool? _selectAllVAM = false;
-        public bool? SelectAllVAM
-        {
-            get => _selectAllVAM;
-            set
-            {
-                if (!Equals(_selectAllVAM, value))
-                {
-                    _selectAllVAM = value;
-                    OnPropertyChanged(nameof(SelectAllVAM));
-
-                    if (value.HasValue && TestResults != null)
-                    {
-                        _isUpdatingFromHeader_VAM = true;
-                        try
-                        {
-                            foreach (var item in TestResults)
-                            {
-                                item.IsVAMEnabled = value.Value;
-                            }
-                            //_dataGrid?.Items.Refresh();
-                        }
-                        finally
-                        {
-                            _isUpdatingFromHeader_VAM = false;
-                        }
-                    }
-                }
-            }
-        }
-        private bool _isUpdatingFromHeader_VAM;
-        #endregion
-
-        #region 良率计算
-        private string _yieldInfo = "0/0 (0.00%)";
-        public string YieldInfo
-        {
-            get => _yieldInfo;
-            set
-            {
-                if (_yieldInfo != value)
-                {
-                    _yieldInfo = value;
-                    OnPropertyChanged(nameof(YieldInfo));
-                    CustomMappingVM.YieldInfo = value;
-                }
-            }
-        }
-        #endregion
         private enum LogType
         {
             Debug,
@@ -541,11 +201,7 @@ namespace CVWaferProber.ViewModels
         public MainViewModel()
         {
             Instance = this;
-            _selectedItem = null;
-            _selectedFlow = null;
-            _dataGrid = null;
-            _isIVLCameraEnabled = false;
-            _isAutoSN = true;
+
             // 获取主程序集版本
             Version version = Assembly.GetEntryAssembly()?.GetName().Version;
 
@@ -553,22 +209,18 @@ namespace CVWaferProber.ViewModels
             rcService = new RCRestService();
             _rcConnectionInfo = rcService.ConnectionInfo;
             //
+            DataMappingVM = new MappingDataViewModel();
+            DataMappingVM.ActivateCorrespondingPanel += DataMappingVM_ActivateCorrespondingPanel;
+            //
             InitializeServive();
             // 初始化重置布局命令
-            SearchCommand = new RelayCommand(ExecuteSearch);
 
             OpenVEyeWindowCommand = new RelayCommand(OpenVEyeWindow);
-            RefreshStatusCommand = new RelayCommand(RefreshStatus);
-            OpenMappingFileCommand = new RelayCommand(OpenMappingFile);
             //StartAutoTestCommand = new RelayCommand(_ => StartAutoTest(),
             //    _ => CanStartAuto);
             StopAutoTestCommand = new RelayCommand(StopAutoTest);
             StartManTestCommand = new RelayCommand(StartManTest);
-            SaveTestResultCommand = new RelayCommand(SaveTestResult);
-            LoadTestResultCommand = new RelayCommand(LoadTestResult);
-            ResetStatusCommand = new RelayCommand(ResetStatus);
-            ClearMappingCommand = new RelayCommand(_ => ClearMapping());
-            FlowLoadCommand = new RelayCommand(_ => LoadBuzWPFlows());
+
             RCRegCommand = new RelayCommand(_ => RCReg());
             ReconnectDevCommand = new RelayCommand(_ => ReconnectDev());
             ReconnectRcCommand = new RelayCommand(_ => ReconnectRc());
@@ -583,23 +235,7 @@ namespace CVWaferProber.ViewModels
                     Application.Current.Shutdown();
                 }
             });
-            if (Application.Current != null)
-            {
-                Application.Current.Exit -= Application_Exit; // 先解绑保险
-                Application.Current.Exit += Application_Exit;
-            }
-            // 反选命令初始化
-            InvertSelectAOICommand = new RelayCommand(ExecuteInvertSelectAOI);
-            InvertSelectIVLCommand = new RelayCommand(ExecuteInvertSelectIVL);
-            InvertSelectEQECommand = new RelayCommand(ExecuteInvertSelectEQE);
-            InvertSelectVAMCommand = new RelayCommand(ExecuteInvertSelectVAM);
 
-            // 初始化数据源
-            TestResults = new ObservableCollection<DieViewModel>();
-            TestResults.CollectionChanged += AOIItems_CollectionChanged;
-            TestResults.CollectionChanged += IVLItems_CollectionChanged;
-            TestResults.CollectionChanged += EQEItems_CollectionChanged;
-            TestResults.CollectionChanged += VAMItems_CollectionChanged;
             //  打开Summary导出配置窗口
             // Summary配置命令
             OpenSummaryConfigCommand = new CVImgRelayCommand(OpenSummaryConfig);
@@ -607,16 +243,11 @@ namespace CVWaferProber.ViewModels
             // OpenSummaryConfigCommand = new RelayCommand(OpenSummaryConfig);
             SysFlowCfgCommand = new RelayCommand(SysFlowCfg);
 
-            LoadMappingFileCommand = new RelayCommand(async (obj) => await LoadMappingFileAsync(obj));
             ShowConnectionSettingsCommand = new RelayCommand(OpenProberDeviceDebug);
             ShowRCConnectionSettingsCommand = new RelayCommand(ShowRcConnectionSettings);
 
-            // 初始化列配置
-            InitColumnConfigs();
-
             // 初始化服务
             InitMysqlCfg();
-            ProberId = "CVProber01";
 
             Snowflake.Instance.SnowflakesInit(1, 1);
             //InitializeSimAutoTestTimer();
@@ -624,57 +255,24 @@ namespace CVWaferProber.ViewModels
             InitializeEvents();
 
             //LoadMappingFileFromCsv();
-            LoadBuzWPFlows();
             InitMQTT();
 
             InitRc();
 
-            SubscribeItems_AOI(TestResults);
-            SubscribeItems_IVL(TestResults);
-            SubscribeItems_EQE(TestResults);
-            SubscribeItems_VAM(TestResults);
+            //var ivlService = new IVLService(CustomIVLVM, CustomMappingVM, rcService);
+            //ivlService.SetSpPanelView(SpPanelView);
 
-            var ivlService = new IVLService(CustomIVLVM, CustomMappingVM, rcService);
-            ivlService.SetSpPanelView(SpPanelView);
-            // 自动加载上次会话数据（在 UI 初始化后异步执行）
-            try
-            {
-                Application.Current?.Dispatcher?.BeginInvoke(new Action(async () =>
-                {
-                    try
-                    {
-                        await LoadFromPersistenceAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        if (logger.IsErrorEnabled) logger.Error("Load previous session failed", ex);
-                    }
-                }), DispatcherPriority.Background);
-            }
-            catch { }
-
-            // 程序退出时自动保存当前会话
-            try
-            {
-                if (Application.Current != null)
-                {
-                    Application.Current.Exit += async (s, e) =>
-                    {
-                        try
-                        {
-                            await SaveLastSessionAsync();
-                        }
-                        catch { }
-                    };
-                }
-            }
-            catch { }
             // 加载上次保存的面板状态（需先在Settings中配置）
             //IsMappingPanelVisible = Properties.Settings.Default.IsMappingPanelVisible;
             //IsCameraPanelVisible = Properties.Settings.Default.IsCameraPanelVisible;
             //IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
 
             ToolsVM = new ToolsBarViewModel(ProberClientService.Instance.ProberClient, ProberClientService.Instance.StateMachine, EventAggregator);
+        }
+
+        private void DataMappingVM_ActivateCorrespondingPanel(object? sender, WPFlowViewModel e)
+        {
+            ActivateCorrespondingPanel(e);
         }
 
         private void ReconnectRc()
@@ -687,122 +285,6 @@ namespace CVWaferProber.ViewModels
         {
             mainService.ReconnectDev();
         }
-
-        private async Task LoadMappingFileAsync(object obj)
-        {
-            var openFileDialog = new OpenFileDialog
-            {
-                Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*",
-                DefaultExt = ".csv",
-                FileName = "result.csv",
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
-            };
-            if (openFileDialog.ShowDialog() == true)
-            {
-                try
-                {
-                    ResultService.LoadFromCSV(openFileDialog.FileName, TestResults);
-                    _dataGrid?.Items.Refresh();
-                    mainService.Maintenance();
-                    if (logger.IsInfoEnabled) logger.InfoFormat("Load result ok => {0}", openFileDialog.FileName);
-                }
-                catch (Exception ex)
-                {
-                    if (logger.IsErrorEnabled) logger.Error(ex);
-                }
-            }
-            //try
-            //{
-            //    // 支持传入文件路径：优先使用 parameter，其次使用现有 MappingCsvFilePath
-            //    if (obj is string path && !string.IsNullOrWhiteSpace(path))
-            //    {
-            //        MappingCsvFilePath = path;
-            //    }
-
-            //    // 如果存在有效的 Mapping CSV，则按原逻辑加载映射
-            //    if (!string.IsNullOrWhiteSpace(MappingCsvFilePath) && File.Exists(MappingCsvFilePath))
-            //    {
-            //        // 调用已有的加载逻辑
-            //        LoadMappingFileFromCsv();
-
-            //        // 若需要通知其它模块，可通过 EventAggregator 发布事件（可选）
-            //        // EventAggregator?.Publish(new MappingReloadedEvent(MappingCsvFilePath));
-
-            //        if (logger.IsInfoEnabled) logger.InfoFormat("Mapping file reloaded => {0}", MappingCsvFilePath);
-            //        return;
-            //    }
-
-            //    // 如果没有可用的 Mapping CSV，则尝试从持久化（上次会话）加载测试结果（实现“重载/记忆”功能）
-            //    if (string.IsNullOrWhiteSpace(MappingCsvFilePath) || !File.Exists(MappingCsvFilePath))
-            //    {
-            //        if (logger.IsWarnEnabled) logger.WarnFormat("Mapping file not found => {0}", MappingCsvFilePath);
-
-            //        // 弹窗改为提供选择：用户可以选择加载持久化数据或选取文件
-            //        var result = MessageBox.Show(
-            //            (string)Application.Current.FindResource("Maping.FileNotExist") + "\n\n" +
-            //            "是否从上次会话重载测试数据？（是 = 重载上次数据；否 = 选择文件）",
-            //            (string)Application.Current.FindResource("Prompt"),
-            //            MessageBoxButton.YesNoCancel,
-            //            MessageBoxImage.Question);
-
-            //        // Yes -> 从持久化加载
-            //        if (result == MessageBoxResult.Yes)
-            //        {
-            //            try
-            //            {
-            //                await LoadFromPersistenceAsync();
-
-            //                Application.Current?.Dispatcher?.Invoke(() =>
-            //                {
-            //                    _dataGrid?.Items.Refresh();
-            //                    if (logger.IsInfoEnabled) logger.Info("Loaded last session test results from persistence (LoadMappingFile).");
-            //                });
-            //            }
-            //            catch (Exception ex)
-            //            {
-            //                if (logger.IsErrorEnabled) logger.Error("Failed to load persisted test results", ex);
-            //                MessageBox.Show((string)Application.Current.FindResource("Maping.ReloadFailed") + $": {ex.Message}", (string)Application.Current.FindResource("State.Error"), MessageBoxButton.OK, MessageBoxImage.Error);
-            //            }
-
-            //            return;
-            //        }
-            //        // No -> 打开文件对话框让用户选择 Mapping CSV（保留原行为）
-            //        if (result == MessageBoxResult.No)
-            //        {
-            //            var openFileDialog = new Microsoft.Win32.OpenFileDialog
-            //            {
-            //                Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*",
-            //                DefaultExt = ".csv",
-            //                Title = (string)Application.Current.FindResource("Maping.OpenMappingFile")
-            //            };
-            //            if (openFileDialog.ShowDialog() == true)
-            //            {
-            //                MappingCsvFilePath = openFileDialog.FileName;
-            //                if (!string.IsNullOrWhiteSpace(MappingCsvFilePath) && File.Exists(MappingCsvFilePath))
-            //                {
-            //                    LoadMappingFileFromCsv();
-            //                    if (logger.IsInfoEnabled) logger.InfoFormat("Mapping file loaded => {0}", MappingCsvFilePath);
-            //                }
-            //                else
-            //                {
-            //                    MessageBox.Show((string)Application.Current.FindResource("Maping.FileNotExist"), (string)Application.Current.FindResource("Prompt"), MessageBoxButton.OK, MessageBoxImage.Warning);
-            //                }
-            //            }
-
-            //            return;
-            //        }
-
-            //        // Cancel -> 直接返回
-            //        return;
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    if (logger.IsErrorEnabled) logger.Error("Failed to reload mapping file or load persistence", ex);
-            //    MessageBox.Show($"{(string)Application.Current.FindResource("Maping.ReloadFailed")}: {ex.Message}", (string)Application.Current.FindResource("State.Error"), MessageBoxButton.OK, MessageBoxImage.Error);
-            //}
-        }
-
         private void InitRc()
         {
             Task.Factory.StartNew(() => {
@@ -836,23 +318,26 @@ namespace CVWaferProber.ViewModels
                 window.ShowDialog();
             });
         }
-        public void InitializeServiveVM(CVVAMAnalyzer _cVVAMAnalyzer)
+        public void InitializeServiveVM(CVVAMAnalyzer vam, CVSpectrumAnalyzer ivl)
         {
-            mainService.InitializeService(ProberId, rcService, _cVVAMAnalyzer);
+            mainService.InitializeService(rcService, vam, ivl);
 
             CustomMappingVM = mainService.GetMappingVM();
             CustomImageVM = mainService.GetAOIVM();
             CustomIVLVM = mainService.GetIVLVM();
             if (CustomIVLVM != null) CustomIVLVM.CustomEQEVM = mainService.GetEQEVM();
+            if (DataMappingVM != null)
+            {
+                DataMappingVM.CustomMappingVM = CustomMappingVM;
+                DataMappingVM.LoadBuzWPFlows();
+            }
         }
         private void InitializeServive()
         {
             mainService = MainService.Instance;
             _connectionInfo = ProberClientService.Instance.ConnectionInfo;
             //
-            mainService.TestingCompleted += OnTestingCompleted;
-            mainService.PreAutoTestingNextDie += OnAutoTestingNextDie;
-            mainService.ChipSelected += OnChipDieSelected;
+            DataMappingVM?.InitializeServive(mainService);
             //
             //Task.Factory.StartNew(async () =>
             //{
@@ -902,257 +387,15 @@ namespace CVWaferProber.ViewModels
             SysFlowCfgWindow cfgWindow = new SysFlowCfgWindow();
             cfgWindow.Show();
 
-            this.LoadBuzWPFlows();
+            DataMappingVM?.LoadBuzWPFlows();
         }
 
         #region 核心方法实现（修复+新增）
-        // ========== 静态列+动态列配置初始化 ==========
-        private void InitColumnConfigs()
-        {
-            // 初始化动态可选列（第14列及以后）
-            _dynamicColumnConfigs = new List<ColumnConfig>
-            {
-                new ColumnConfig
-                {
-                    ColumnHeader = "LightOnStatus",
-                    ColumnBindingPath = "LightOnStatus",
-                    IsSelected = false,
-                    IsOptional = true,
-                    ColumnType = ColumnType.Text,
-                    ColumnKey = ColumnKey.Other
-                },
-                new ColumnConfig
-                {
-                    ColumnHeader = "RegisterPixels",
-                    ColumnBindingPath = "RegisterPixels",
-                    IsSelected = false,
-                    IsOptional = true,
-                    ColumnType = ColumnType.Text,
-                    ColumnKey = ColumnKey.Other
-                },
-                new ColumnConfig
-                {
-                    ColumnHeader = "Final Class",
-                    ColumnBindingPath = "FinalClass",
-                    IsSelected = false,
-                    IsOptional = true,
-                    ColumnType = ColumnType.Text,
-                    ColumnKey = ColumnKey.Other
-                },
-                new ColumnConfig
-                {
-                    ColumnHeader = "AOI GradeLevel",
-                    ColumnBindingPath = "AOIGradeLevel",
-                    IsSelected = true,
-                    IsOptional = true,
-                    ColumnType = ColumnType.Text,
-                    ColumnKey = ColumnKey.Other
-                },
-                new ColumnConfig
-                {
-                    ColumnHeader = "Black Pattern",
-                    ColumnBindingPath = "BlackPattern",
-                    IsSelected = false,
-                    IsOptional = true,
-                    ColumnType = ColumnType.Text,
-                    ColumnKey = ColumnKey.Other
-                },
-                new ColumnConfig
-                {
-                    ColumnHeader = "Luminance(nit)",
-                    ColumnBindingPath = "Luminance",
-                    IsSelected = false,
-                    IsOptional = true,
-                    ColumnType = ColumnType.Text,
-                    ColumnKey = ColumnKey.Other
-                },
-                new ColumnConfig
-                {
-                    ColumnHeader = "Voltage(v)",
-                    ColumnBindingPath = "Voltage",
-                    IsSelected = false,
-                    IsOptional = true,
-                    ColumnType = ColumnType.Text,
-                    ColumnKey = ColumnKey.Other
-                },
-                new ColumnConfig
-                {
-                    ColumnHeader = "Current(mA)",
-                    ColumnBindingPath = "Current",
-                    IsSelected = false,
-                    IsOptional = true,
-                    ColumnType = ColumnType.Text,
-                    ColumnKey = ColumnKey.Other
-                },
-                new ColumnConfig
-                {
-                    ColumnHeader = "Dominant Wavelength",
-                    ColumnBindingPath = "DominantWavelength",
-                    IsSelected = false,
-                    IsOptional = true,
-                    ColumnType = ColumnType.Text,
-                    ColumnKey = ColumnKey.Other
-                },
-                new ColumnConfig
-                {
-                    ColumnHeader = "Temperature(℃)",
-                    ColumnBindingPath = "Temperature",
-                    IsSelected = false,
-                    IsOptional = true,
-                    ColumnType = ColumnType.Text,
-                    ColumnKey = ColumnKey.Other
-                },
-                new ColumnConfig
-                {
-                    ColumnHeader = "Pixel Logic",
-                    ColumnBindingPath = "PixelLogic",
-                    IsSelected = false,
-                    IsOptional = true,
-                    ColumnType = ColumnType.Text,
-                    ColumnKey = ColumnKey.Other
-                },
-                new ColumnConfig
-                {
-                    ColumnHeader = "Pin Pressure",
-                    ColumnBindingPath = "Pressure",
-                    IsSelected = false,
-                    IsOptional = true,
-                    ColumnType = ColumnType.Text,
-                    ColumnKey = ColumnKey.Other
-                },  
-                new ColumnConfig
-                {
-                    ColumnHeader = "TouchDown Counts",
-                    ColumnBindingPath = "TouchDownCounts",
-                    IsSelected = false,
-                    IsOptional = true,
-                    ColumnType = ColumnType.Text,
-                    ColumnKey = ColumnKey.Other
-                },
-                new ColumnConfig
-                {
-                    ColumnHeader = "Probing Card SN",
-                    ColumnBindingPath = "ProbingCardSN",
-                    IsSelected = false,
-                    IsOptional = true,
-                    ColumnType = ColumnType.Text,
-                    ColumnKey = ColumnKey.Other
-                },
-                new ColumnConfig
-                {
-                    ColumnHeader = "AxisX",
-                    ColumnBindingPath = "MotionAxisX",
-                    IsSelected = true,
-                    IsOptional = true,
-                    ColumnType = ColumnType.Text,
-                    ColumnKey = ColumnKey.Other
-                }, 
-                new ColumnConfig
-                {
-                    ColumnHeader = "AxisY",
-                    ColumnBindingPath = "MotionAxisY",
-                    IsSelected = true,
-                    IsOptional = true,
-                    ColumnType = ColumnType.Text,
-                    ColumnKey = ColumnKey.Other
-                }, 
-                new ColumnConfig
-                {
-                    ColumnHeader = "AxisZ",
-                    ColumnBindingPath = "MotionAxisZ",
-                    IsSelected = true,
-                    IsOptional = true,
-                    ColumnType = ColumnType.Text,
-                    ColumnKey = ColumnKey.Other
-                },
-            };
-
-            // 初始化选中的动态列（默认不选）
-            SelectedDynamicColumns = new ObservableCollection<ColumnConfig>(
-                _dynamicColumnConfigs.Where(c => c.IsSelected));
-        }
-        private void OnSelectedChanged(object? value)
-        {
-            if (IsNotProcessing)
-            {
-                // 选中项变化时的逻辑
-                if (value != null && value is DieViewModel die)
-                {
-                    if (selfClick)
-                    {
-                        CustomMappingVM?.SetSelectedChip((uint)die.Id);
-                        DieResultDisplay(die);
-                    }
-                    else selfClick = true;
-                }
-            }
-        }
-
-        // ========== 动态列更新（仅处理第14列及以后） ==========
-        public void UpdateDataGridColumns()
-        {
-            if (_dataGrid == null) return;
-
-            // 步骤1：保留前13列静态列，删除所有动态列
-            while (_dataGrid.Columns.Count > StaticColumnCount)
-            {
-                _dataGrid.Columns.RemoveAt(StaticColumnCount);
-            }
-
-            // 步骤2：添加选中的动态列
-            foreach (var config in SelectedDynamicColumns)
-            {
-                if (config.ColumnType == ColumnType.CheckBox)
-                {
-                    var templateColumn = new DataGridTemplateColumn
-                    {
-                        Header = config.ColumnHeader
-                    };
-                    var checkBoxFactory = new FrameworkElementFactory(typeof(CheckBox));
-                    checkBoxFactory.SetBinding(CheckBox.IsCheckedProperty, new Binding(config.ColumnBindingPath)
-                    {
-                        Mode = BindingMode.OneWay,
-                        UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
-                    });
-                    checkBoxFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, System.Windows.HorizontalAlignment.Center);
-                    checkBoxFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, System.Windows.VerticalAlignment.Center);
-                    templateColumn.CellTemplate = new DataTemplate { VisualTree = checkBoxFactory };
-                    _dataGrid.Columns.Add(templateColumn);
-                }
-                else
-                {
-                    _dataGrid.Columns.Add(new DataGridTextColumn
-                    {
-                        Header = config.ColumnHeader,
-                        Binding = new Binding(config.ColumnBindingPath)
-                        {
-                            Mode= BindingMode.OneWay,
-                            TargetNullValue = "",
-                            StringFormat = config.ColumnBindingPath.Contains("Time") ? "yyyy-MM-dd HH:mm:ss" : null
-                        }
-                    });
-                }
-            }
-        }
 
         // ========== 打开Summary配置窗口（仅显示动态列） ==========
         private void OpenSummaryConfig()
         {
-            var configWindow = new SummaryConfigWindow(_dynamicColumnConfigs);
-            if (configWindow.ShowDialog() == true)
-            {
-                // 更新选中的动态列
-                SelectedDynamicColumns.Clear();
-                foreach (var config in configWindow.SelectedColumns)
-                {
-                    SelectedDynamicColumns.Add(config);
-                    // 同步更新配置状态
-                    var targetConfig = _dynamicColumnConfigs.First(c => c.ColumnBindingPath == config.ColumnBindingPath);
-                    targetConfig.IsSelected = config.IsSelected;
-                }
-                // 刷新动态列
-                UpdateDataGridColumns();
-            }
+            DataMappingVM?.OpenSummaryConfig();
         }
         /// <summary>
         /// 执行打开全局配置窗口
@@ -1169,278 +412,6 @@ namespace CVWaferProber.ViewModels
                 globalConfigWindow.ShowDialog();
             });
         }
-        #region 三态全选状态更新
-        private void UpdateSelectAllAOIState()
-        {
-            if (TestResults == null || TestResults.Count == 0)
-            {
-                SelectAllAOI = false;
-                return;
-            }
-
-            int selectedCount = TestResults.Count(item => item.IsAOIEnabled);
-            int totalCount = TestResults.Count;
-
-            bool? newState = selectedCount switch
-            {
-                0 => false,
-                var c when c == totalCount => true,
-                _ => null
-            };
-
-            if (!Equals(SelectAllAOI, newState))
-            {
-                SelectAllAOI = newState;
-                OnPropertyChanged(nameof(SelectAllAOI));
-            }
-        }
-
-        private void UpdateSelectAllIVLState()
-        {
-            if (TestResults == null || TestResults.Count == 0)
-            {
-                SelectAllIVL = false;
-                return;
-            }
-
-            int selectedCount = TestResults.Count(item => item.IsIVLEnabled);
-            int totalCount = TestResults.Count;
-
-            bool? newState = selectedCount switch
-            {
-                0 => false,
-                var c when c == totalCount => true,
-                _ => null
-            };
-
-            if (!Equals(SelectAllIVL, newState))
-            {
-                SelectAllIVL = newState;
-                OnPropertyChanged(nameof(SelectAllIVL));
-            }
-        }
-
-        private void UpdateSelectAllEQEState()
-        {
-            if (TestResults == null || TestResults.Count == 0)
-            {
-                SelectAllEQE = false;
-                return;
-            }
-
-            int selectedCount = TestResults.Count(item => item.IsEQEEnabled);
-            int totalCount = TestResults.Count;
-
-            bool? newState = selectedCount switch
-            {
-                0 => false,
-                var c when c == totalCount => true,
-                _ => null
-            };
-
-            if (!Equals(SelectAllEQE, newState))
-            {
-                SelectAllEQE = newState;
-                OnPropertyChanged(nameof(SelectAllEQE));
-            }
-        }
-
-        private void UpdateSelectAllVAMState()
-        {
-            if (TestResults == null || TestResults.Count == 0)
-            {
-                SelectAllVAM = false;
-                return;
-            }
-
-            int selectedCount = TestResults.Count(item => item.IsVAMEnabled);
-            int totalCount = TestResults.Count;
-
-            bool? newState = selectedCount switch
-            {
-                0 => false,
-                var c when c == totalCount => true,
-                _ => null
-            };
-
-            if (!Equals(SelectAllVAM, newState))
-            {
-                SelectAllVAM = newState;
-                OnPropertyChanged(nameof(SelectAllVAM));
-            }
-        }
-
-        #endregion
-        #region 反选方法（添加刷新） 
-        private void ExecuteInvertSelectAOI(object obj)
-        {
-            foreach (var item in TestResults)
-            {
-                item.IsAOIEnabled = !item.IsAOIEnabled;
-            }
-            _dataGrid?.Items.Refresh();
-            UpdateSelectAllAOIState();
-        }
-
-        private void ExecuteInvertSelectIVL(object obj)
-        {
-            foreach (var item in TestResults)
-            {
-                item.IsIVLEnabled = !item.IsIVLEnabled;
-            }
-            _dataGrid?.Items.Refresh();
-            UpdateSelectAllIVLState();
-        }
-
-        private void ExecuteInvertSelectEQE(object obj)
-        {
-            foreach (var item in TestResults)
-            {
-                item.IsEQEEnabled = !item.IsEQEEnabled;
-            }
-            _dataGrid?.Items.Refresh();
-            UpdateSelectAllEQEState();
-        }
-
-        private void ExecuteInvertSelectVAM(object obj)
-        {
-            foreach (var item in TestResults)
-            {
-                item.IsVAMEnabled = !item.IsVAMEnabled;
-            }
-            _dataGrid?.Items.Refresh();
-            UpdateSelectAllVAMState();
-        }
-
-        #endregion
-
-        #region 良率计算
-        public void CalculateYieldBySerialNumber()
-        {
-            try
-            {
-                if (TestResults == null || !TestResults.Any())
-                {
-                    YieldInfo = "0/0 (0.00%)";
-                    return;
-                }
-
-                var testedDices = TestResults.Where(d => !string.IsNullOrWhiteSpace(d.SerialNumber)).ToList();
-                if (!testedDices.Any())
-                {
-                    YieldInfo = "0/0 (0.00%)";
-                    return;
-                }
-
-                int successCount = testedDices.Count(d =>
-                    d.Status == ChipStatus.OK ||
-                    d.Status == ChipStatus.IVL_COMPLETED ||
-                    d.Status == ChipStatus.EQE_COMPLETED);
-
-                double yieldRate = (double)successCount / testedDices.Count * 100;
-                YieldInfo = $"{successCount}/{testedDices.Count} ({yieldRate:F2}%)";
-            }
-            catch (Exception ex)
-            {
-                logger.Error("Yield Calculation Exception", ex);
-                YieldInfo = $"{(string)Application.Current.FindResource("CalculationException")}";
-            }
-        }
-        #endregion
-
-        #region 自动导出Summary（适配静态+动态列）
-
-        private void AutoExportSummaryResult()
-        {
-            try
-            {
-                if (TestResults == null || !TestResults.Any())
-                {
-                    logger.Info("No test results, skipping Summary export" );
-                    return;
-                }
-
-                //固定导出根路径为 D:/Project
-                string exportRootPath = @"D:\Project";
-
-                // 自动创建目录（如果不存在）
-                if (!Directory.Exists(exportRootPath))
-                {
-                    Directory.CreateDirectory(exportRootPath);
-                    logger.Info($"Export directory has been created automatically：{exportRootPath}");//已自动创建导出目录
-                }
-
-                // 拼接最终保存路径（目录 + 带时间戳的文件名）
-                var savePath = Path.Combine(
-                    exportRootPath,
-                    $"Summary_Result_{DateTime.Now:yyyyMMddHHmmss}.csv");
-
-                // 合并静态列+选中的动态列
-                var allSelectedColumns = new List<ColumnConfig>();
-                allSelectedColumns.AddRange(_staticColumnConfigs);
-                allSelectedColumns.AddRange(SelectedDynamicColumns);
-
-                // 写入CSV
-                using (var writer = new StreamWriter(savePath, false, System.Text.Encoding.UTF8))
-                {
-                    // 表头
-                    var headers = allSelectedColumns.Select(c => c.ColumnHeader).ToList();
-                    writer.WriteLine(string.Join(",", headers));
-
-                    // 数据行
-                    foreach (var die in TestResults)
-                    {
-                        var rowData = new List<string>();
-                        foreach (var config in allSelectedColumns)
-                        {
-                            var prop = die.GetType().GetProperty(config.ColumnBindingPath);
-                            if (prop == null)
-                            {
-                                rowData.Add("");
-                                continue;
-                            }
-
-                            var value = prop.GetValue(die);
-                            if (value == null || value == DBNull.Value)
-                            {
-                                rowData.Add("");
-                            }
-                            else if (value is bool boolValue)
-                            {
-                                rowData.Add(boolValue ? "Y" : "N");
-                            }
-                            else if (value is DateTime dateTimeValue)
-                            {
-                                rowData.Add(dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss"));
-                            }
-                            else
-                            {
-                                rowData.Add(value.ToString());
-                            }
-                        }
-                        // 处理包含逗号的字段，添加双引号包裹
-                        writer.WriteLine(string.Join(",", rowData.Select(d => d.Contains(",") ? $"\"{d}\"" : d)));
-                    }
-                }
-
-                logger.Info($"The summary results have been automatically exported：{savePath}");//" : "Summary结果已自动导出")}
-                //Application.Current.Dispatcher.Invoke(() =>
-                //{
-                //    MessageBox.Show($"{(IsEnglishMode ? "The summary results have been exported to" : "Summary结果已导出至")}：{savePath}", IsEnglishMode? "Export successful" : "导出成功",
-                //        MessageBoxButton.OK, MessageBoxImage.Information);
-                //});
-            }
-            catch (Exception ex)
-            {
-                logger.Error( "Failed to export Summary results", ex);//" : "Summary结果导出失败"
-                //Application.Current.Dispatcher.Invoke(() =>
-                //{
-                //    MessageBox.Show($"导出失败：{ex.Message}", "错误",
-                //        MessageBoxButton.OK, MessageBoxImage.Error);
-                //});
-            }
-        }
-        #endregion
 
         #endregion
 
@@ -1458,63 +429,6 @@ namespace CVWaferProber.ViewModels
 
                 window.ShowDialog();
             });
-        }
-
-        private void OnChipDieSelected(object? sender, ChipViewModel chip)
-        {
-            if (chip == null || TestResults.Count == 0)
-            {
-                SelectedItem = null;
-                return;
-            }
-
-            var targetDie = TestResults.FirstOrDefault(die => die.Id == chip.Id);
-            if (targetDie != null)
-            {
-                selfClick = false;
-                SelectedItem = targetDie;
-                ManScrollToItem(targetDie);
-            }
-        }
-
-        // SN索引字典
-        private Dictionary<string, List<DieViewModel>> _snIndex = new Dictionary<string, List<DieViewModel>>(StringComparer.OrdinalIgnoreCase);
-
-        private void BuildSNIndex()
-        {
-            _snIndex.Clear();
-            foreach (var die in TestResults)
-            {
-                if (string.IsNullOrEmpty(die.SerialNumber)) continue;
-                if (!_snIndex.ContainsKey(die.SerialNumber))
-                {
-                    _snIndex[die.SerialNumber] = new List<DieViewModel>();
-                }
-                _snIndex[die.SerialNumber].Add(die);
-            }
-        }
-
-        private void ExecuteSearch(object parameter = null)
-        {
-            if (string.IsNullOrWhiteSpace(SearchSN))
-            {
-                FilteredTestResults = new ObservableCollection<DieViewModel>(TestResults);
-            }
-            else
-            {
-                var searchKey = SearchSN.Trim();
-                if (_snIndex.TryGetValue(searchKey, out var results))
-                {
-                    FilteredTestResults = new ObservableCollection<DieViewModel>(results);
-                }
-                else
-                {
-                    var query = TestResults.Where(die =>
-                        !string.IsNullOrEmpty(die.SerialNumber) &&
-                        die.SerialNumber.Contains(searchKey, StringComparison.OrdinalIgnoreCase));
-                    FilteredTestResults = new ObservableCollection<DieViewModel>(query);
-                }
-            }
         }
 
         private void ExecuteOpenHelp(object obj)
@@ -1559,21 +473,6 @@ namespace CVWaferProber.ViewModels
             return System.Reflection.Assembly.GetExecutingAssembly().Location;
         }
 
-        private void OnTestingCompleted(object? sender, TestCompletedEventArgs e)
-        {
-            DoEndTesting(e.IsAuto);
-        }
-        private void OnAutoTestingNextDie(object? sender, (DieViewModel? preDie, DieViewModel nextDie) e)
-        {
-            Application.Current.Dispatcher.Invoke(() => { MoveNextSel(e); });
-        }
-
-        private void MoveNextSel((DieViewModel? preDie, DieViewModel nextDie) e)
-        {
-            if (e.preDie != null) e.preDie.UnSelected();
-            SelectedItem = e.nextDie;
-        }
-
         private void OpenVEyeWindow(object? obj)
         {
             ExternalWindow newWindow = new ExternalWindow();
@@ -1583,40 +482,14 @@ namespace CVWaferProber.ViewModels
         {
             mqtt = CVMQTTWPClient.Instance.Init("RC_local");
         }
-
-        private void ResetStatus(object? obj)
-        {
-            foreach (var die in TestResults)
-            {
-                die.ResetStatus();
-            }
-            CalculateYieldBySerialNumber();
-        }
-
         private void RCReg()
         {
             bool bR = rcService.RcRegist();
             if (bR)
             {
-                LoadFlow();
-            }
-        }
+                var flows = rcService.RcLoadFlows();
 
-        private void LoadBuzWPFlows()
-        {
-            List<TScgdBuzProductDetail> flows = WaferProberDBService.LoadBuzFlows();
-            WPFlows.Clear();
-            if (flows != null && flows.Count > 0)
-            {
-                foreach (var flow in flows)
-                {
-                    WPFlows.Add(new WPFlowViewModel(flow));
-                }
-                if (WPFlows.Count > 0) SelectedWPFlow = WPFlows[0];
-            }
-            else
-            {
-                
+               DataMappingVM.LoadFlow(flows);
             }
         }
 
@@ -1626,564 +499,29 @@ namespace CVWaferProber.ViewModels
             get => testingStatus;
             set => SetProperty(ref testingStatus, value);
         }
-        private void LoadFlow()
-        {
-            var flows = rcService.RcLoadFlows();
-            FlowItems.Clear();
-            SelectedFlow = null;
-            if (flows != null)
-            {
-                foreach (var flow in flows)
-                {
-                    FlowItems.Add(new FlowViewModel(flow));
-                }
-                if (FlowItems.Count > 0) SelectedFlow = FlowItems[FlowItems.Count - 1];
-            }
-        }
 
-        private void SaveTestResult(object? obj)
-        {
-            var saveFileDialog = new SaveFileDialog
-            {
-                Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*",
-                DefaultExt = ".csv",
-                FileName = string.Format("{0}_{1}_result.csv", ProberId, _Timestamp),
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
-            };
-
-            if (saveFileDialog.ShowDialog() == true)
-            {
-                try
-                {
-                    ResultService.SaveToCSV(saveFileDialog.FileName, TestResults);
-                    if (logger.IsInfoEnabled) logger.InfoFormat("Save result ok => {0}", saveFileDialog.FileName);
-                }
-                catch (Exception ex)
-                {
-                    if (logger.IsErrorEnabled) logger.Error(ex);
-                }
-            }
-        }
-
-        private void LoadTestResult(object? obj)
-        {
-            // 支持三种用法：
-            // 1) obj is string path -> 打开对话框或直接加载该CSV（保持原逻辑）
-            // 2) obj == null -> 从上次会话持久化文件加载（用户点击“重载”且未选择文件）
-            // 3) 保持原有打开文件对话框行为
-            if (obj is string path && !string.IsNullOrWhiteSpace(path))
-            {
-                // 通过指定路径加载 CSV
-                try
-                {
-                    ResultService.LoadFromCSV(path, TestResults);
-                    _dataGrid?.Items.Refresh();
-                    if (logger.IsInfoEnabled) logger.InfoFormat("Load result ok => {0}", path);
-                }
-                catch (Exception ex)
-                {
-                    if (logger.IsErrorEnabled) logger.Error(ex);
-                }
-                return;
-            }
-
-            if (obj == null)
-            {
-                // 从持久化位置加载上次数据
-                Task.Run(async () =>
-                {
-                    try
-                    {
-                        await LoadFromPersistenceAsync();
-                        Application.Current?.Dispatcher?.Invoke(() =>
-                        {
-                            _dataGrid?.Items.Refresh();
-                            if (logger.IsInfoEnabled) logger.Info("Loaded last session test results from persistence.");
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        if (logger.IsErrorEnabled) logger.Error("Failed to load persisted test results", ex);
-                    }
-                });
-                return;
-            }
-
-            // 旧行为：打开对话框让用户选择文件
-            var openFileDialog = new OpenFileDialog
-            {
-                Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*",
-                DefaultExt = ".csv",
-                FileName = "result.csv",
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
-            };
-            if (openFileDialog.ShowDialog() == true)
-            {
-                try
-                {
-                    ResultService.LoadFromCSV(openFileDialog.FileName, TestResults);
-                    _dataGrid?.Items.Refresh();
-                    if (logger.IsInfoEnabled) logger.InfoFormat("Load result ok => {0}", openFileDialog.FileName);
-                }
-                catch (Exception ex)
-                {
-                    if (logger.IsErrorEnabled) logger.Error(ex);
-                }
-            }
-        }
-        // 新增：从持久化文件加载 DTO 并应用到 TestResults（不覆盖 Mapping 布局，只覆盖属性/结果）
-        private async Task LoadFromPersistenceAsync()
-        {
-            try
-            {
-                var dtos = await TestResultPersistenceService.LoadAsync();
-                if (dtos == null || dtos.Count == 0) return;
-
-                Application.Current?.Dispatcher?.Invoke(() =>
-                {
-                    ApplyDtosToTestResults(dtos);
-                    _dataGrid?.Items.Refresh();
-                    BuildSNIndex();
-                    CalculateYieldBySerialNumber();
-
-                    // 自动选中：优先选中 DTO 中第一个有 SerialNumber 且在 TestResults 中存在的记录，
-                    // 若没有则选中 TestResults 的第一项（保证 UI 有选中项）
-                    try
-                    {
-                        DieViewModel? toSelect = null;
-
-                        var dtoWithSN = dtos.FirstOrDefault(d => !string.IsNullOrWhiteSpace(d.SerialNumber));
-                        if (dtoWithSN != null)
-                        {
-                            toSelect = TestResults.FirstOrDefault(t =>
-                                !string.IsNullOrWhiteSpace(t.SerialNumber) &&
-                                t.SerialNumber.Equals(dtoWithSN.SerialNumber, System.StringComparison.OrdinalIgnoreCase));
-                        }
-
-                        if (toSelect == null && TestResults.Count > 0)
-                        {
-                            toSelect = TestResults[0];
-                        }
-
-                        if (toSelect != null)
-                        {
-                            selfClick = false; // 防止触发外部关联选中逻辑误判
-                            SelectedItem = toSelect;
-                            ManScrollToItem(toSelect);
-                            if (logger.IsInfoEnabled) logger.InfoFormat("Auto-selected item after loading persistence => Id={0}, SN={1}", toSelect.Id, toSelect.SerialNumber);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        if (logger.IsWarnEnabled) logger.Warn("Auto-select after LoadFromPersistenceAsync failed", ex);
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                if (logger.IsErrorEnabled) logger.Error("LoadFromPersistenceAsync failed", ex);
-            }
-        }
-
-        private void ApplyDtosToTestResults(List<TestResultDto> dtos)
-        {
-            if (dtos == null || dtos.Count == 0) return;
-            foreach (var dto in dtos)
-            {
-                try
-                {
-                    DieViewModel? die = null;
-                    if (dto.Id != 0)
-                        die = TestResults.FirstOrDefault(d => d.Id == dto.Id);
-                    if (die == null && !string.IsNullOrEmpty(dto.SerialNumber))
-                    {
-                        var sn = dto.SerialNumber.Trim();
-                        die = TestResults.FirstOrDefault(d => !string.IsNullOrEmpty(d.SerialNumber) &&
-                            d.SerialNumber.Trim().Equals(sn, System.StringComparison.OrdinalIgnoreCase));
-                    }
-                    if (die == null && dto.MapX.HasValue && dto.MapY.HasValue)
-                        die = TestResults.FirstOrDefault(d => d.MapX == dto.MapX && d.MapY == dto.MapY);
-
-                    if (die == null) continue;
-
-                    // 只覆盖测试结果相关字段，保留 mapping 中的其它信息
-                    die.IsAOIEnabled = dto.IsAOIEnabled;
-                    die.IsIVLEnabled = dto.IsIVLEnabled;
-                    die.IsEQEEnabled = dto.IsEQEEnabled;
-                    die.IsVAMEnabled = dto.IsVAMEnabled;
-                    die.SerialNumber = dto.SerialNumber;
-
-                    // 解析 DisplayStatus：增强容错
-                    if (!string.IsNullOrWhiteSpace(dto.DisplayStatus))
-                    {
-                        string raw = dto.DisplayStatus.Trim().Trim('"').Trim();
-                        bool applied = false;
-
-                        // 1) 尝试按枚举名解析（例如 "OK", "WAITING"）
-                        if (Enum.TryParse<ChipStatus>(raw, true, out var enumStatus))
-                        {
-                            die.ChangeStatusOnly(enumStatus);
-                            applied = true;
-                        }
-
-                        if (!applied)
-                        {
-                            // 2) 先使用当前语言尝试解析
-                            try
-                            {
-                                var targetStatus = ChipStatusTool.GetStatusFromDisplay(raw, die.IsChinese);
-                                // 有些实现可能返回默认值 - 只在明显不同的时候应用
-                                die.ChangeStatusOnly(targetStatus);
-                                applied = true;
-                            }
-                            catch
-                            {
-                                applied = false;
-                            }
-                        }
-
-                        if (!applied)
-                        {
-                            // 3) 再尝试使用另一种语言解析作为回退
-                            try
-                            {
-                                var targetStatus2 = ChipStatusTool.GetStatusFromDisplay(raw, !die.IsChinese);
-                                die.ChangeStatusOnly(targetStatus2);
-                                applied = true;
-                            }
-                            catch { applied = false; }
-                        }
-
-                        // 如果仍未成功，则忽略（保持原状态），并记录日志
-                        if (!applied && logger.IsWarnEnabled)
-                        {
-                            logger.WarnFormat("Failed to parse DisplayStatus '{0}' for Die Id={1}, SN={2}", dto.DisplayStatus, die.Id, die.SerialNumber);
-                        }
-                    }
-
-                    // 修复：更新DataValue（修改底层ChipData）
-                    if (die.chipViewModel?.ChipData != null && !string.IsNullOrEmpty(dto.DataValue))
-                    {
-                        if (double.TryParse(dto.DataValue, out double dataValue))
-                        {
-                            die.chipViewModel.ChipData.DataValue = dataValue;
-                            die.RefreshDataValue();
-                        }
-                    }
-
-                    die.StartTestTime = dto.StartTestTime;
-                    die.EndTestTime = dto.EndTestTime;
-                    die.TotalTime = dto.TotalTime;
-
-                    die.AOIGradeLevel = dto.AOIGradeLevel;
-                    //die.LightOnStatus = dto.LightOnStatus;
-                    //die.RegisterPixels = dto.RegisterPixels;
-                    //die.FinalClass = dto.FinalClass;
-                    die.BlackPattern = dto.BlackPattern;
-                    //die.Temperature = dto.Temperature;
-                    //die.PixelLogic = dto.PixelLogic;
-                    //die.Pressure = dto.Pressure;
-                    //die.TouchDownCounts = dto.TouchDownCounts;
-                    //die.ProbingCardSN = dto.ProbingCardSN;
-
-                }
-                catch (Exception ex)
-                {
-                    if (logger.IsWarnEnabled) logger.Warn("Apply DTO to TestResults failed for one item", ex);
-                }
-            }
-        }
-        // 新增：应用退出事件处理（同步调用以确保在进程退出前执行保存）
-        private void Application_Exit(object? sender, ExitEventArgs e)
-        {
-            try
-            {
-                // 在线程池运行保存任务并等待有限时间，避免 UI 线程死锁
-                var saveTask = Task.Run(async () =>
-                {
-                    try
-                    {
-                        await SaveLastSessionAsync().ConfigureAwait(false);
-                    }
-                    catch (Exception ex)
-                    {
-                        if (logger.IsWarnEnabled) logger.Warn("SaveLastSessionAsync failed on Exit", ex);
-                    }
-
-                    try
-                    {
-                        // CSV 导出也放到线程池内执行
-                        SaveTestResultsToDefaultFile();
-                    }
-                    catch (Exception ex)
-                    {
-                        if (logger.IsWarnEnabled) logger.Warn("Auto CSV save failed on Exit", ex);
-                    }
-                });
-
-                // 等待保存任务完成，但不要无限期阻塞，5 秒超时可避免长时间卡死
-                if (!saveTask.Wait(TimeSpan.FromSeconds(5)))
-                {
-                    if (logger.IsWarnEnabled) logger.Warn("Saving last session timed out on Exit.");
-                }
-            }
-            catch (Exception ex)
-            {
-                // 确保不抛出异常阻塞退出流程
-                if (logger.IsErrorEnabled) logger.Error("Application_Exit unexpected error", ex);
-            }
-        }
-
-        // 新增：把 TestResults 自动保存为 CSV 的默认位置（Documents\CVWaferProber\AutoSaves）
-        private void SaveTestResultsToDefaultFile()
-        {
-            try
-            {
-                if (TestResults == null || !TestResults.Any())
-                {
-                    if (logger.IsInfoEnabled) logger.Info("No test results to auto-save on exit.");
-                    return;
-                }
-
-                string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "CVWaferProber", "AutoSaves");
-                Directory.CreateDirectory(folder);
-                string fileName = $"TestResults_Auto_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-                string fullPath = Path.Combine(folder, fileName);
-
-                // 使用已有 ResultService 写 CSV（此方法会同步写文件）
-                ResultService.SaveToCSV(fullPath, TestResults);
-
-                if (logger.IsInfoEnabled) logger.InfoFormat("Auto-saved test results to => {0}", fullPath);
-            }
-            catch (Exception ex)
-            {
-                if (logger.IsErrorEnabled) logger.Error("SaveTestResultsToDefaultFile failed", ex);
-            }
-        }
-        // 在程序退出时保存当前 TestResults 到持久化文件
-        private async Task SaveLastSessionAsync()
-        {
-            try
-            {
-                var dtos = TestResults.Select(r => TestResultDto.FromObject(r)).Where(x => x != null).ToList();
-                await TestResultPersistenceService.SaveAsync(dtos);
-                if (logger.IsInfoEnabled) logger.Info("Saved last session test results to persistence.");
-            }
-            catch (Exception ex)
-            {
-                if (logger.IsErrorEnabled) logger.Error("SaveLastSessionAsync failed", ex);
-            }
-        }
-
-        private void RefreshStatus(object? obj)
-        {
-            _dataGrid?.Items.Refresh();
-        }
-
-        private void DieResultDisplay(DieViewModel dieViewModel)
-        {
-            //if (string.IsNullOrEmpty(dieViewModel.SerialNumber))
-            //{
-            //    CustomIVLVM.ClearResult();
-            //    CustomImageVM?.ClearImageResult();
-            //}
-            // if (dieViewModel.Status == ChipStatus.IVL_TESTING || dieViewModel.Status == ChipStatus.IVL_COMPLETED)
-            // {
-            //ivlService.IVLResultDisplay(dieViewModel);
-            //
-            // else
-            // {
-            //aoiService.AOIResultDisplay(dieViewModel);
-            // }
-            //eqeService.EQEResultDisplay(dieViewModel);
-            //vamService.VAMResultDisplay(dieViewModel);
-            MainService.Instance.ResultDisplay(dieViewModel);
-            // 新增：计算良率
-            CalculateYieldBySerialNumber();
-        }
-
-        private List<TestItem> _testQueue;
-
-        public void StartAutoFlow()
-        {
-            if (SelectedWPFlow == null)
-            {
-                logger.Error("No test process (Flow) selected");
-                return;
-            }
-
-            _testQueue = GetSelectedTestItems();
-            if (_testQueue.Count == 0)
-            {
-                MessageBox.Show($"{(string)Application.Current.FindResource("Nodata")}", $"{ (string)Application.Current.FindResource("Prompt")}" , MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
-
-            TestingReady(_testQueue);
-            EnableBtnGUI(false);
-            mainService.StartAutoTesting(_selectedWPFlow, GetSelectedDieTestItems());
-        }
-        private List<DieViewModel> GetSelectedDieTestItems()
-        {
-            var testQueue = new List<DieViewModel>();
-            var fType = _selectedWPFlow?.FlowType;
-            foreach (var die in TestResults)
-            {
-                if (die.IsAOIEnabled && fType == CVWaferProberFlowType.AOI)
-                {
-                    testQueue.Add(die);
-                }
-                if (die.IsIVLEnabled && (fType == CVWaferProberFlowType.IVL ||
-                    fType == CVWaferProberFlowType.IVL_SP || 
-                    fType == CVWaferProberFlowType.IVL_Camera))
-                {
-                    testQueue.Add(die);
-                }
-                if (die.IsEQEEnabled && fType == CVWaferProberFlowType.EQE)
-                {
-                    testQueue.Add(die);
-                }
-                if (die.IsVAMEnabled && fType == CVWaferProberFlowType.VAM)
-                {
-                    testQueue.Add(die);
-                }
-            }
-
-            Stopwatch sw = Stopwatch.StartNew();
-            var resultList= SortEfficiently(testQueue);
-            sw.Stop();
-            Stopwatch sw2 = Stopwatch.StartNew();
-            var resultList1 = GetSortedResultsLinq(testQueue);
-            sw2.Stop();
-            logger.InfoFormat("SortEfficiently={0},GetSortedResultsLinq={1}", sw.Elapsed.ToString(), sw2.Elapsed.ToString());
-            return resultList;
-        }
-        public List<DieViewModel> GetSortedResultsLinq(List<DieViewModel> testQueue)
-        {
-            return new List<DieViewModel>(
-                testQueue
-                    .GroupBy(d => d.MapY)
-                    .OrderBy(g => g.Key)
-                    .SelectMany((g, index) =>
-                        index % 2 == 0
-                            ? g.OrderBy(d => d.MapX)
-                            : g.OrderByDescending(d => d.MapX))
-                    .ToList()
-            );
-        }
-        public List<DieViewModel> SortEfficiently(List<DieViewModel> testQueue)
-        {
-            // 先按 Y 和 X 排序
-            var list = testQueue.OrderBy(d => d.MapY).ThenBy(d => d.MapX).ToList();
-            var result = new List<DieViewModel>();
-
-            int? currentY = int.MinValue;
-            List<DieViewModel> currentGroup = new List<DieViewModel>();
-            int groupIndex = 0;
-
-            foreach (var item in list)
-            {
-                if (item.MapY != currentY)
-                {
-                    // 处理上一个组
-                    if (groupIndex % 2 == 1)
-                    {
-                        currentGroup.Reverse(); // 奇数组反向
-                    }
-
-                    result.AddRange(currentGroup);
-                    currentGroup = new List<DieViewModel>();
-                    currentY = item.MapY;
-                    groupIndex++;
-                }
-
-                currentGroup.Add(item);
-            }
-
-            // 处理最后一个组
-            if (groupIndex % 2 == 1)
-            {
-                currentGroup.Reverse();
-            }
-            result.AddRange(currentGroup);
-
-            return result;
-        }
         public CVSpectrumAnalyzer? SpPanelView { get; set; }
         //private TabControl? _innerTabControl;
-        private void StartManFlow()
-        {
-            if (SelectedWPFlow != null && SelectedItem is DieViewModel die)
-            {
-                EnableBtnGUI(false);
-                ManTestingReady(die);
-                mainService.DoDieFlowExec(_selectedWPFlow, die, false, false);
-                ActivateCorrespondingPanel();
-            }
-        }
 
-        private void DoEndTesting(bool isAuto)
-        {
-            EnableBtnGUI(true);
-            CalculateYieldBySerialNumber();
-            AutoExportSummaryResult();
-        }
-
-        private void ManTestingReady(DieViewModel die)
-        {
-            string timestamp = DateTime.Now.ToString("yyyyMMdd'T'HHmmss.fff");
-            die.TestingReady(ProberId, timestamp);
-            if (_isAutoSN) Timestamp = timestamp;
-        }
-
-        private void TestingReady(List<TestItem> testItems)
-        {
-            CustomMappingVM.DisabledInput = IsProcessing = true;
-
-            string timestamp = DateTime.Now.ToString("yyyyMMdd'T'HHmmss.fff");
-            if (_isAutoSN) Timestamp = timestamp;
-            foreach (var itemT in testItems)
-            {
-                itemT.Die.TestingReady(ProberId, timestamp);
-            }
-        }
 
         private void StartAutoTest()
         {
-            StartAutoFlow();
+            DataMappingVM?.StartAutoFlow();
         }
 
         private void StartManTest(object? obj)
-        { 
-            StartManFlow();
-        }
-
-        public void EnableBtnGUI(bool enabled)
         {
-            CustomMappingVM.DisabledInput = IsProcessing = !enabled;
-
-            OnPropertyChanged(nameof(IsNotProcessing));
-
-            ToolsVM?.FireUI();
+            DataMappingVM?.StartManFlow();
         }
+
+
 
         private void StopAutoTest(object? obj)
         {
 
         }
 
-        private void OpenMappingFile(object? obj)
-        {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = (string)Application.Current.FindResource("CSVFile");//CSV Files (*.csv)|*.csv|All Files (*.*)|*.*"
 
-            if (openFileDialog.ShowDialog() == true)
-            {
-                MappingCsvFilePath = openFileDialog.FileName;
-                LoadMappingFileFromCsv();
-                mainService.Maintenance();
-            }
-        }
         public void PauseAutoFlow()
         {
             mainService.PauseAutoTesting();
@@ -2192,117 +530,11 @@ namespace CVWaferProber.ViewModels
         {
             mainService.ContinuAutoTesting();
         }
-        public void StopAutoFlow()
-        {
-            if (_testQueue == null) return;
 
-            foreach (var item in _testQueue)
-            {
-                item.Die.UnSelected();
-
-            }
-            //EnableBtn(true);
-
-            mainService.StopAutoTesting();
-
-            CalculateYieldBySerialNumber();
-        }
-
-        private void ClearMapping()
-        {
-            CustomMappingVM?.Cleanup();
-            CustomMappingVM.Chips.Clear();
-            TestResults.Clear();
-        }
-
-        public void LoadMappingFile(string  mappingFile)
-        {
-            MappingCsvFilePath = mappingFile;
-            Application.Current?.Dispatcher?.Invoke(() =>
-            {
-                LoadMappingFileFromCsv();
-            });
-        }
-
-        private void LoadMappingFileFromCsv()
-        {
-            List<CVMappingData> mappingData = null;
-            if (!System.IO.File.Exists(MappingCsvFilePath))
-            {
-                if (logger.IsWarnEnabled) logger.WarnFormat("File not exist => {0}", MappingCsvFilePath);
-                return;
-            }
-            bool bR = CsvMappingDataTool.LoadMappingCsv(MappingCsvFilePath, ref mappingData);
-            if (bR && mappingData != null && mappingData.Count > 0)
-            {
-                CustomMappingVM.RefreshFromMap(mappingData);
-                ObservableCollection<DieViewModel> _TestResults = new ObservableCollection<DieViewModel>();
-                foreach (var map in CustomMappingVM.Chips)
-                {
-                    DieViewModel dieViewModel = new DieViewModel(map);
-                    // 从CustomMappingVM获取值并赋值给DieViewModel
-                    dieViewModel.Temperature = CustomMappingVM.Temperatures.ToString("F1"); // double转string（保留1位小数）
-                    dieViewModel.Pressure = CustomMappingVM.Pressure;                      // 直接赋值
-                    dieViewModel.ProbingCardSN = CustomMappingVM.SN;                       // SN对应ProbingCardSN
-                    dieViewModel.TouchDownCounts = CustomMappingVM.TDCount;
-                    _TestResults.Add(dieViewModel);
-                }
-                var sorted = _TestResults.OrderBy(x => x.MapY).ToList();
-                TestResults.Clear();
-                foreach (var item in sorted)
-                {
-                    if(item.Status != ChipStatus.SKIP)
-                    {
-                        TestResults.Add(item);
-                    }
-                }
-            }
-            BuildSNIndex();
-            if (string.IsNullOrWhiteSpace(SearchSN))
-            {
-                FilteredTestResults = new ObservableCollection<DieViewModel>(TestResults);
-
-            }
-            else
-            {
-                ExecuteSearch();
-            }
-
-            CalculateYieldBySerialNumber();
-        }
-
-        public void SetDataGrid(DataGrid dataGrid)
-        {
-            _dataGrid = dataGrid;
-            // 初始化动态列
-            UpdateDataGridColumns();
-        }
-
-        private void ManScrollToItem(object? toItem)
-        {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                if (_dataGrid != null && toItem != null)
-                {
-                    _dataGrid.ScrollIntoView(toItem);
-                    _dataGrid.UpdateLayout();
-                }
-            });
-        }
-
-        public void SelectItemById(uint id)
-        {
-            var itemToSelect = TestResults.FirstOrDefault(item => item.Id == id);
-            if (itemToSelect != null)
-            {
-                selfClick = false;
-                SelectedItem = itemToSelect;
-            }
-        }
 
         public void SetSelectedDataGridItem(object? obj)
         {
-            if (obj != null) SelectItemById((uint)obj);
+            if (obj != null) DataMappingVM?.SelectItemById((uint)obj);
         }
 
         public class TestItem
@@ -2310,36 +542,7 @@ namespace CVWaferProber.ViewModels
             public DieViewModel Die { get; set; }
             public string TestType { get; set; }
         }
-
-        private List<TestItem> GetSelectedTestItems()
-        {
-            var testQueue = new List<TestItem>();
-
-            foreach (var die in TestResults)
-            {
-                if (die.IsAOIEnabled)
-                {
-                    testQueue.Add(new TestItem { Die = die, TestType = "AOI" });
-                }
-                if (die.IsIVLEnabled)
-                {
-                    testQueue.Add(new TestItem { Die = die, TestType = "IVL" });
-                }
-                if (die.IsEQEEnabled)
-                {
-                    testQueue.Add(new TestItem { Die = die, TestType = "EQE" });
-                }
-                if (die.IsVAMEnabled)
-                {
-                    testQueue.Add(new TestItem { Die = die, TestType = "VAM" });
-                }
-             
-            }
-
-            return testQueue;
-        }
-
-        private void ActivateCorrespondingPanel()
+        private void ActivateCorrespondingPanel(WPFlowViewModel SelectedWPFlow)
         {
             if (SelectedWPFlow == null) return;
 
@@ -2385,170 +588,31 @@ namespace CVWaferProber.ViewModels
             DockingManager.UpdateLayout();
         }
 
-        #region AOI 全选/部分选中事件
-        private void AOIItems_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        public void ToIntegratingSphere()
         {
-            if (e.NewItems != null)
-            {
-                SubscribeItems_AOI(e.NewItems.Cast<DieViewModel>());
-            }
-
-            if (e.OldItems != null)
-            {
-                UnsubscribeItems_AOI(e.OldItems.Cast<DieViewModel>());
-            }
-
-            UpdateSelectAllAOIState();
+            DataMappingVM?.ToIntegratingSphere();
         }
 
-        private void SubscribeItems_AOI(IEnumerable<DieViewModel> items)
+        public void ToAuxCamera()
         {
-            foreach (var item in items)
-            {
-                item.PropertyChanged += AOI_Item_PropertyChanged;
-            }
+            DataMappingVM?.ToAuxCamera();
         }
 
-        private void UnsubscribeItems_AOI(IEnumerable<DieViewModel> items)
+        public void ToMainCamera()
         {
-            foreach (var item in items)
-            {
-                item.PropertyChanged -= AOI_Item_PropertyChanged;
-            }
+            DataMappingVM?.ToMainCamera();
         }
 
-        private void AOI_Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        public void StopAutoFlow()
         {
-            if (e.PropertyName == nameof(DieViewModel.IsAOIEnabled) && !_isUpdatingFromHeader_AOI)
-            {
-                UpdateSelectAllAOIState();
-            }
-        }
-        #endregion
-
-        #region IVL 全选/部分选中事件
-        private void IVLItems_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.NewItems != null)
-            {
-                SubscribeItems_IVL(e.NewItems.Cast<DieViewModel>());
-            }
-
-            if (e.OldItems != null)
-            {
-                UnsubscribeItems_IVL(e.OldItems.Cast<DieViewModel>());
-            }
-
-            UpdateSelectAllIVLState();
+            DataMappingVM?.StopAutoFlow();
         }
 
-        private void SubscribeItems_IVL(IEnumerable<DieViewModel> items)
+        public void StartAutoFlow()
         {
-            foreach (var item in items)
-            {
-                item.PropertyChanged += IVL_Item_PropertyChanged;
-            }
+            DataMappingVM?.StartAutoFlow();
         }
 
-        private void UnsubscribeItems_IVL(IEnumerable<DieViewModel> items)
-        {
-            foreach (var item in items)
-            {
-                item.PropertyChanged -= IVL_Item_PropertyChanged;
-            }
-        }
-
-        private void IVL_Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(DieViewModel.IsIVLEnabled) && !_isUpdatingFromHeader_IVL)
-            {
-                UpdateSelectAllIVLState();
-            }
-        }
-        #endregion
-
-        #region EQE 全选/部分选中事件
-        private void EQEItems_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.NewItems != null)
-            {
-                SubscribeItems_EQE(e.NewItems.Cast<DieViewModel>());
-            }
-
-            if (e.OldItems != null)
-            {
-                UnsubscribeItems_EQE(e.OldItems.Cast<DieViewModel>());
-            }
-
-            UpdateSelectAllEQEState();
-        }
-
-        private void SubscribeItems_EQE(IEnumerable<DieViewModel> items)
-        {
-            foreach (var item in items)
-            {
-                item.PropertyChanged += EQE_Item_PropertyChanged;
-            }
-        }
-
-        private void UnsubscribeItems_EQE(IEnumerable<DieViewModel> items)
-        {
-            foreach (var item in items)
-            {
-                item.PropertyChanged -= EQE_Item_PropertyChanged;
-            }
-        }
-
-        private void EQE_Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(DieViewModel.IsEQEEnabled) && !_isUpdatingFromHeader_EQE)
-            {
-                UpdateSelectAllEQEState();
-            }
-        }
-        #endregion
-
-        #region VAM 全选/部分选中事件
-        private void VAMItems_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.NewItems != null)
-            {
-                SubscribeItems_VAM(e.NewItems.Cast<DieViewModel>());
-            }
-
-            if (e.OldItems != null)
-            {
-                UnsubscribeItems_VAM(e.OldItems.Cast<DieViewModel>());
-            }
-
-            UpdateSelectAllVAMState();
-        }
-
-        private void SubscribeItems_VAM(IEnumerable<DieViewModel> items)
-        {
-            foreach (var item in items)
-            {
-                item.PropertyChanged += VAM_Item_PropertyChanged;
-            }
-        }
-
-        private void UnsubscribeItems_VAM(IEnumerable<DieViewModel> items)
-        {
-            foreach (var item in items)
-            {
-                item.PropertyChanged -= VAM_Item_PropertyChanged;
-            }
-        }
-
-        private void VAM_Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(DieViewModel.IsVAMEnabled) && !_isUpdatingFromHeader_VAM)
-            {
-                UpdateSelectAllVAMState();
-            }
-        }
-
-        #endregion
         #endregion
     }
 }

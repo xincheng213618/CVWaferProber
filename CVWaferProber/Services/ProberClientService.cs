@@ -13,8 +13,9 @@ namespace CVWaferProber.Services
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(ProberClientService));
 
         private ConnectionInfo _connectionInfo;
-        private IWaferProberClient? _clientProber;
-        private IStateMachine? _proberState;
+        private IWaferProberClient _clientProber;
+        private IStateMachine _proberState;
+        private MappingDataViewModel? _mappingDataViewModel;
         public IWaferProberClient ProberClient { get => _clientProber; }
         public IStateMachine StateMachine { get => _proberState; }
         public ConnectionInfo ConnectionInfo { get => _connectionInfo; }
@@ -70,21 +71,10 @@ namespace CVWaferProber.Services
             logger.DebugFormat("SEND => {0}", cmd);
         }
 
-        public void Initialize()
+        public void InitializeMapVM(MappingDataViewModel mappingDataViewModel)
         {
-
+            _mappingDataViewModel = mappingDataViewModel;
         }
-        //public void Initialize(IWaferProberClient clientProber, IStateMachine proberState)
-        //{
-        //this._clientProber = clientProber;
-        //this._proberState = proberState;
-
-        //var eventAggregator = _clientProber.EventAggregator;
-        //eventAggregator.Subscribe<ConnectionStateChangedEvent>(OnClientProberStateChanged);
-        //eventAggregator.Subscribe<StateTransitionEvent>(OnStateTransition);
-        ////
-        //eventAggregator.Subscribe<StateUpdatedEvent>(OnProberStateUpdated);
-        //}
         public void ContinuAutoTest()
         {
             _proberState?.TransitionToAsync(ProberState.Testing);
@@ -105,11 +95,11 @@ namespace CVWaferProber.Services
         {
             if (@event.ToState == ProberState.Ready)
             {
-                _clientProber.GetMappingAsync();
+                _clientProber?.GetMappingAsync();
             }
             else if (@event.ToState == ProberState.WaferLoaded)
             {
-                MainViewModel.Instance?.LoadMappingFile(_proberState.GetStatus().CurrentMappingFile);
+                _mappingDataViewModel?.LoadMappingFile(_proberState.GetStatus().CurrentMappingFile);
                 //Task.Delay(2000).ContinueWith(_ =>
                 //{
                 //});
@@ -191,16 +181,24 @@ namespace CVWaferProber.Services
             return reVal;
         }
 
-        public async Task<bool> MoveToAsync(DieViewModel die, bool isFirst)
+        public async Task<bool> MoveToAsync(DieViewModel die, bool isFirst = false)
         {
             if (_clientProber != null)
             {
                 if (_clientProber.IsConnected)
                 {
-                    var isOK = await MoveAbsoluteAxisAsync(die);
-                    //第一die时需要发送扎针
-                    if (isFirst) isOK = isOK && await ZUpAsync(die);
-                    return isOK;
+                    if(_proberState.CurrentState != ProberState.Maintenance)
+                    {
+                        var isOK = await MoveAbsoluteAxisAsync(die);
+                        //第一die时需要发送扎针
+                        if (isFirst) isOK = isOK && await ZUpAsync(die);
+                        return isOK;
+                    }
+                    else
+                    {
+                        if (logger.IsWarnEnabled) logger.Warn("Currently in manual mode, cannot send.");
+                        return false;
+                    }
                 }
                 else
                 {

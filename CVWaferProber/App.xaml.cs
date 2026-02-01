@@ -169,29 +169,29 @@ namespace CVWaferProber
                 Shutdown(); // 初始化失败则关闭应用
             }
             // 新增：应用启动后尝试调用 ResetStatusCommand（通过 Dispatcher 延迟，确保 MainViewModel 已构造）
-            try
-            {
-                Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    try
-                    {
-                        var vm = MainViewModel.Instance;
-                        if (vm != null && vm.ResetStatusCommand != null)
-                        {
-                            if (vm.ResetStatusCommand.CanExecute(null))
-                                vm.ResetStatusCommand.Execute(null);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        log.Warn("Invoke ResetStatusCommand failed.", ex);
-                    }
-                }), DispatcherPriority.ApplicationIdle);
-            }
-            catch (Exception dex)
-            {
-                log.Warn("Failed to schedule ResetStatusCommand invocation.", dex);
-            }
+            //try
+            //{
+            //    Dispatcher.BeginInvoke(new Action(() =>
+            //    {
+            //        try
+            //        {
+            //            var vm = MainViewModel.Instance;
+            //            if (vm != null && vm.ResetStatusCommand != null)
+            //            {
+            //                if (vm.ResetStatusCommand.CanExecute(null))
+            //                    vm.ResetStatusCommand.Execute(null);
+            //            }
+            //        }
+            //        catch (Exception ex)
+            //        {
+            //            log.Warn("Invoke ResetStatusCommand failed.", ex);
+            //        }
+            //    }), DispatcherPriority.ApplicationIdle);
+            //}
+            //catch (Exception dex)
+            //{
+            //    log.Warn("Failed to schedule ResetStatusCommand invocation.", dex);
+            //}
         }
         private DockMainWindow _mainWindow;
 

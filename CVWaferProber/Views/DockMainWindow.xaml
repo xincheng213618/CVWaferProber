@@ -209,7 +209,7 @@
                                         CanFloat="False"
                                         CanHide="True">
                                         <DockPanel x:Name="PanelMapping">
-                                            <comp:MappingDataControl x:Name="mappingDataControl" />
+                                            <comp:MappingDataControl x:Name="mappingDataControl" DataContext="{Binding DataMappingVM}"/>
                                         </DockPanel>
                                     </avalon:LayoutAnchorable>
                                 </avalon:LayoutAnchorablePane>

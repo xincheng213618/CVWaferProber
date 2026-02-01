@@ -12,6 +12,9 @@
     <Compile Update="Components\DevProberDebugControl.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Components\MessageDialog.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Components\ToolsBarControl.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -51,6 +54,9 @@
   </ItemGroup>
   <ItemGroup>
     <Page Update="Components\DevProberDebugControl.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Components\MessageDialog.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Components\ToolsBarControl.xaml">

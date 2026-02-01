@@ -26,20 +26,22 @@ namespace ChipMapping.ViewModels
         private string _mousePositionText = "X: 0, Y: 0";
         private double _renderProgress;
         private bool _isRendering;
+        private float _dieWidth = 10;
+        private float _dieHeight = 8;
         //private ChipStatus _filterStatus = ChipStatus.Normal | ChipStatus.Warning | ChipStatus.Error | ChipStatus.Offline;
         private ChipStatus _filterStatus = ChipStatus.OK | ChipStatus.WAITING;
 
         /// <summary>
         /// 外圈显示
         /// </summary>
-        public int OutsiderRing { get; set; } = 3;
+        public int OutsiderRing { get; set; } = 2;
         // 行列布局参数
         private int _rows = 30;
         private int _columns = 40;
         private double _horizontalSpacing = 20;
         private double _verticalSpacing = 16;
-        private double _startX = 5;
-        private double _startY = 5;
+        private double _startX = 15;
+        private double _startY = 20;
         private int _screenWidth = 640;
         private int _screenHeight = 480;
        
@@ -70,7 +72,7 @@ namespace ChipMapping.ViewModels
         public ChipMappingControlViewModel()
         {
             FilteredChips = CollectionViewSource.GetDefaultView(Chips);
-            FilteredChips.Filter = ChipFilter;
+            //FilteredChips.Filter = ChipFilter;
 
             RefreshCommand = new RelayCommand(_ => Refresh());
             ZoomInCommand = new RelayCommand(_ => Scale *= 1.1);
@@ -200,11 +202,11 @@ namespace ChipMapping.ViewModels
             set
             {
                 // 清除之前选中的芯片
-                if (_selectedChip != null)
+                if (_selectedChip != null && value != _selectedChip)
                 {
                     _selectedChip.IsSelected = false;
                 }
-
+                if (_DisabledInput) { return; }
                 if (SetProperty(ref _selectedChip, value))
                 {
                     // 设置新选中的芯片
@@ -590,8 +592,8 @@ namespace ChipMapping.ViewModels
 
                 var chipViewModel = new ChipViewModel(chipData)
                 {
-                    Width = 12,
-                    Height = 9
+                    Width = _dieWidth,
+                    Height = _dieHeight,
                 };
 
                 Chips.Add(chipViewModel);
@@ -681,7 +683,8 @@ namespace ChipMapping.ViewModels
                     {
                         status = ChipStatus.WAITING;
                     }
-                    var lv = _random.Next(30, 100);
+                    double? lv = null;
+                    //var lv = _random.Next(30, 100);
 
                     var chipData = new ChipData
                     {
@@ -698,8 +701,8 @@ namespace ChipMapping.ViewModels
 
                     var chipViewModel = new ChipViewModel(chipData)
                     {
-                        Width = 12,
-                        Height = 9
+                        Width = _dieWidth,
+                        Height = _dieHeight
                     };
 
                     Chips.Add(chipViewModel);

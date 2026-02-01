@@ -2037,7 +2037,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
         #region 光谱
         // 导出CSV的方法（参数：保存路径、Measurements数据列表、波长数组）
-        private ChipMappingControlViewModel _chipMappingControlViewModel;
+        //private ChipMappingControlViewModel _chipMappingControlViewModel;
         public void ExportToCsv(string fileName, ObservableCollection<SpectrumMeasurement> measurements, float[]? wavelengths, float fPlambda = 1.0f)
         {
             if (measurements == null || !measurements.Any() )
@@ -2126,7 +2126,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         item.fPur.ToString(),
                         item.PeakIntensity.ToString("F2"),
                         item.FHW.ToString("F2"),
-                        $"{_chipMappingControlViewModel?.Temperatures:F1}"
+                        //$"{_chipMappingControlViewModel?.Temperatures:F1}"
                      };
 
                     // 5. 强度值处理（与之前逻辑一致）

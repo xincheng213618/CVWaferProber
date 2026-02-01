@@ -17,7 +17,7 @@ namespace ChipMapping.ViewModels
         //private Point _map_position;
         private double _width = 6;
         private double _height = 3;
-       private double _width_old = 6;
+        private double _width_old = 6;
         private double _height_old = 3;
         private bool _isSelected;
         private bool _isBlinking;
@@ -143,12 +143,12 @@ namespace ChipMapping.ViewModels
         }
 
         public string ToolTip =>
-            $"Die ID: {Id}\n" +
+            //$"Die ID: {Id}\n" +
             $"Row/Y,Col/X: \n({Row}, {Column})\n" +
-            $"Screen(X,Y): \n({Position.X:F0}, {Position.Y:F0})\n" +
-            $"Original(X,Y): \n({RawPosition.X:F3}, {RawPosition.Y:F3})\n" +
+            //$"Screen(X,Y): \n({Position.X:F0}, {Position.Y:F0})\n" +
+            //$"Original(X,Y): \n({RawPosition.X:F3}, {RawPosition.Y:F3})\n" +
             $"Status: {Status}\n" +
-            $"Brightness: {string.Format("{0:F4}",DataValue)}\n";
+            $"Uniformity: {string.Format("{0:F4}",DataValue)}\n";
             //$"尺寸: {Width}×{Height}";
     }
 }

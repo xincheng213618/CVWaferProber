@@ -29,7 +29,7 @@ namespace CVWaferProber.ViewModels
                     _serialNumber = value;
                     OnPropertyChanged(nameof(SerialNumber));
                     // 通知MainViewModel更新良率
-                    MainViewModel.Instance?.CalculateYieldBySerialNumber();
+                    //MainViewModel.Instance?.CalculateYieldBySerialNumber();
                 }
             }
         }

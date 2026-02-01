@@ -500,6 +500,8 @@
     <sys:String x:Key="StatusPanel.IVL_COMPLETED">IVL检测完成</sys:String>
     <sys:String x:Key="StatusPanel.VAM_TESTING">VAM正在检测</sys:String>
     <sys:String x:Key="StatusPanel.VAM_COMPLETED">VAM检测完成</sys:String>
+    <sys:String x:Key="StatusPanel.EQE_TESTING">EQE正在检测</sys:String>
+    <sys:String x:Key="StatusPanel.EQE_COMPLETED">EQE检测完成</sys:String>
     <sys:String x:Key="StatusPanel.FAILED">运行失败</sys:String>
     <sys:String x:Key="StatusPanel.OVERTIME">超时</sys:String>
     <sys:String x:Key="StatusPanel.PAUSED">未知</sys:String>
@@ -646,6 +648,7 @@
     <sys:String x:Key="Notinitialized">消息处理器未初始化</sys:String>
 
     <!--  《语言资源文件》  -->
+    <sys:String x:Key="Btn.MoveToMsg">确认移动</sys:String>
     <sys:String x:Key="Btn.Ok">确定</sys:String>
     <sys:String x:Key="Btn.Cancel">取消</sys:String>
     <sys:String x:Key="Btn.Yes">是</sys:String>
@@ -654,7 +657,18 @@
     <sys:String x:Key="Btn.Save">保存</sys:String>
     <sys:String x:Key="Btn.Open">打开</sys:String>
     <sys:String x:Key="Btn.Select">选择</sys:String>
+    <!-- 按钮文本 -->
+    <sys:String x:Key="OKButtonText">确定</sys:String>
+    <sys:String x:Key="CancelButtonText">取消</sys:String>
+    <sys:String x:Key="YesButtonText">是</sys:String>
+    <sys:String x:Key="NoButtonText">否</sys:String>
 
+    <!-- 标题文本 -->
+    <sys:String x:Key="MessageTitle">消息</sys:String>
+    <sys:String x:Key="WarningTitle">警告</sys:String>
+    <sys:String x:Key="ErrorTitle">错误</sys:String>
+    <sys:String x:Key="ConfirmTitle">确认</sys:String>
+    
     <!--  新增 HandyControl 弹窗专属资源（覆盖默认值，直接复制）  -->
     <sys:String x:Key="HC_Ok">确定</sys:String>
     <sys:String x:Key="HC_Cancel">取消</sys:String>
@@ -669,7 +683,7 @@
     <sys:String x:Key="Toolbar.ToAuxCamera">移至VAM相机位</sys:String>
     <sys:String x:Key="Toolbar.ToIntegratingSphere">移至积分球位</sys:String>
 
-    <!-- 在现有资源基础上添加 © 2026 Precision Instruments. 保留所有权利 -->
+    <!-- 在现有资源基础上添加 © 2026 ColorVision Instruments. 保留所有权利 -->
     <sys:String x:Key="CopyrightNotice">版权所有 © {0} {1}。保留所有权利。</sys:String>
     <sys:String x:Key="Copyright">版权所有</sys:String>
     <sys:String x:Key="AllRightsReserved">保留所有权利</sys:String>
@@ -677,10 +691,10 @@
     <sys:String x:Key="CurrentYear">2026</sys:String>
 
     <!-- 品牌信息 -->
-    <sys:String x:Key="BrandName">PRECISION PROBER</sys:String>
-    <sys:String x:Key="BrandTagline">晶圆检测系统</sys:String>
+    <sys:String x:Key="BrandName">COLORVISION PROBER</sys:String>
+    <sys:String x:Key="BrandTagline">视彩晶圆检测系统</sys:String>
     <!-- 启动界面 -->
-    <sys:String x:Key="AppTitle">CV晶圆探针台控制系统</sys:String>
+    <sys:String x:Key="AppTitle">视彩晶圆探针台控制系统</sys:String>
     <sys:String x:Key="StartupTitle">系统初始化</sys:String>
     <sys:String x:Key="StartupProgress">启动进度</sys:String>
     <sys:String x:Key="Initializing">正在初始化...</sys:String>

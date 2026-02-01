@@ -275,7 +275,6 @@
                     Height="{Binding CanvasHeight}"
                     Background="{StaticResource GridPattern}"
                     MouseLeave="MainCanvas_MouseLeave"
-                    MouseLeftButtonDown="MainCanvas_MouseLeftButtonDown"
                     MouseMove="MainCanvas_MouseMove">
 
                     <Canvas.LayoutTransform>
@@ -296,7 +295,7 @@
                         </ItemsControl.ItemContainerStyle>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Rectangle Style="{StaticResource ChipRectangleStyle}">
+                                <Rectangle Style="{StaticResource ChipRectangleStyle}" MouseRightButtonDown="Rectangle_MouseRightButtonDown" MouseLeftButtonDown="Rectangle_MouseLeftButtonDown">
                                     <Rectangle.RenderTransform>
                                         <TranslateTransform X="{Binding Width, Converter={StaticResource CenterOffsetConverter}}" Y="{Binding Height, Converter={StaticResource CenterOffsetConverter}}" />
                                     </Rectangle.RenderTransform>

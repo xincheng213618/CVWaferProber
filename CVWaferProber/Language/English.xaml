@@ -486,6 +486,8 @@
     <sys:String x:Key="StatusPanel.IVL_COMPLETED">IVL_COMPLETED</sys:String>
     <sys:String x:Key="StatusPanel.VAM_TESTING">VAM_TESTING</sys:String>
     <sys:String x:Key="StatusPanel.VAM_COMPLETED">VAM_COMPLETED</sys:String>
+    <sys:String x:Key="StatusPanel.EQE_TESTING">EQE_TESTING</sys:String>
+    <sys:String x:Key="StatusPanel.EQE_COMPLETED">EQE_COMPLETED</sys:String>
     <sys:String x:Key="StatusPanel.SKIP">SKIP</sys:String>
 
     <!--  提示信息  -->
@@ -632,6 +634,7 @@
     <sys:String x:Key="Hasbeeninitialized">The message handler has been initialized</sys:String>
     <sys:String x:Key="Notinitialized">The message handler has not been initialized</sys:String>
     <!--  《语言资源文件》  -->
+    <sys:String x:Key="Btn.MoveToMsg">Confirm moving</sys:String>
     <sys:String x:Key="Btn.Ok">Ok</sys:String>
     <sys:String x:Key="Btn.Cancel">Cancel</sys:String>
     <sys:String x:Key="Btn.Yes">Yes</sys:String>
@@ -640,7 +643,17 @@
     <sys:String x:Key="Btn.Save">Save</sys:String>
     <sys:String x:Key="Btn.Open">Open</sys:String>
     <sys:String x:Key="Btn.Select">Select</sys:String>
+    <!-- 按钮文本 -->
+    <sys:String x:Key="OKButtonText">OK</sys:String>
+    <sys:String x:Key="CancelButtonText">Cancel</sys:String>
+    <sys:String x:Key="YesButtonText">Yes</sys:String>
+    <sys:String x:Key="NoButtonText">No</sys:String>
 
+    <!-- 标题文本 -->
+    <sys:String x:Key="MessageTitle">Message</sys:String>
+    <sys:String x:Key="WarningTitle">Warning</sys:String>
+    <sys:String x:Key="ErrorTitle">Error</sys:String>
+    <sys:String x:Key="ConfirmTitle">Confirm</sys:String>
     <!--  新增 HandyControl 弹窗专属资源（覆盖默认值，直接复制）  -->
     <sys:String x:Key="HC_Ok">OK</sys:String>
     <sys:String x:Key="HC_Cancel">Cancel</sys:String>
@@ -662,8 +675,8 @@
     <sys:String x:Key="CompanyName">Color Vision Ltd.</sys:String>
     <sys:String x:Key="CurrentYear">2026</sys:String>
     <!-- Brand Information -->
-    <sys:String x:Key="BrandName">PRECISION PROBER</sys:String>
-    <sys:String x:Key="BrandTagline">Wafer Probing System</sys:String>
+    <sys:String x:Key="BrandName">COLORVISION PROBER</sys:String>
+    <sys:String x:Key="BrandTagline">CV Wafer Probing System</sys:String>
     <!-- Startup Window -->
     <sys:String x:Key="AppTitle">CV Wafer Prober Control System</sys:String>
     <sys:String x:Key="StartupTitle">System Initialization</sys:String>
