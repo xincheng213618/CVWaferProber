@@ -92,6 +92,8 @@ namespace CVWaferProber.Core.Models
                     ChipStatus.AOI_LINE_NG => (string)Application.Current.FindResource("StatusPanel.AOI_LINE_NG"),
                     ChipStatus.IVL_TESTING => (string)Application.Current.FindResource("StatusPanel.IVL_TESTING"),
                     ChipStatus.IVL_COMPLETED => (string)Application.Current.FindResource("StatusPanel.IVL_COMPLETED"),
+                    ChipStatus.VAM_TESTING => (string)Application.Current.FindResource("StatusPanel.VAM_TESTING"),
+                    ChipStatus.VAM_COMPLETED => (string)Application.Current.FindResource("StatusPanel.VAM_COMPLETED"),
                     ChipStatus.FAILED => (string)Application.Current.FindResource("StatusPanel.FAILED"),
                     ChipStatus.OVERTIME => (string)Application.Current.FindResource("StatusPanel.OVERTIME"),
                     ChipStatus.SKIP => (string)Application.Current.FindResource("StatusPanel.SKIP"),

@@ -32,7 +32,14 @@ namespace CVWaferProber.Services
         }
         public void Startup()
         {
-            _clientProber?.ConnectAsync(_connectionInfo.ServerIP, _connectionInfo.Port).Wait();
+            try
+            {
+                _clientProber?.ConnectAsync(_connectionInfo.ServerIP, _connectionInfo.Port).Wait();
+            }
+            catch (Exception e)
+            {
+                logger.Error(e);
+            }
         }
         private ProberClientService()
         {
@@ -103,6 +110,9 @@ namespace CVWaferProber.Services
             else if (@event.ToState == ProberState.WaferLoaded)
             {
                 MainViewModel.Instance?.LoadMappingFile(_proberState.GetStatus().CurrentMappingFile);
+                //Task.Delay(2000).ContinueWith(_ =>
+                //{
+                //});
             }
             if (logger.IsInfoEnabled) logger.InfoFormat("StateTransition {0} => {1}", @event.FromState.ToString(), @event.ToState.ToString());
             //if (logger.IsInfoEnabled) logger.InfoFormat("CurrentState = {0}", _proberState.CurrentState.ToString());
@@ -130,7 +140,55 @@ namespace CVWaferProber.Services
 
         public async Task SendResultAsync(DieViewModel dieVM)
         {
-            await SendResultAsync(dieVM.Status == Core.Models.Enums.ChipStatus.OK ? 1 : 2);
+            Core.Models.Enums.ChipStatus status = Core.Models.Enums.ChipStatus.WAITING;
+            if(dieVM.Status.HasValue) { status = dieVM.Status.Value; }
+            await SendResultAsync(GetResultVal(status));
+        }
+
+        private int GetResultVal(Core.Models.Enums.ChipStatus status)
+        {
+            int reVal = 2;
+            switch (status)
+            {
+                case Core.Models.Enums.ChipStatus.WAITING:
+                    break;
+                case Core.Models.Enums.ChipStatus.TESTING:
+                    break;
+                case Core.Models.Enums.ChipStatus.OK:
+                case Core.Models.Enums.ChipStatus.IVL_COMPLETED:
+                case Core.Models.Enums.ChipStatus.EQE_COMPLETED:
+                case Core.Models.Enums.ChipStatus.VAM_COMPLETED:
+                    reVal = 1;
+                    break;
+                case Core.Models.Enums.ChipStatus.AOI_NG:
+                    break;
+                case Core.Models.Enums.ChipStatus.DW_NG:
+                    break;
+                case Core.Models.Enums.ChipStatus.BLIND:
+                    break;
+                case Core.Models.Enums.ChipStatus.CAL_NG:
+                    break;
+                case Core.Models.Enums.ChipStatus.I2C_NG:
+                    break;
+                case Core.Models.Enums.ChipStatus.AOI_LINE_NG:
+                    break;
+                case Core.Models.Enums.ChipStatus.IVL_TESTING:
+                    break;
+                case Core.Models.Enums.ChipStatus.EQE_TESTING:
+                    break;
+                case Core.Models.Enums.ChipStatus.VAM_TESTING:
+                    break;
+                case Core.Models.Enums.ChipStatus.FAILED:
+                    break;
+                case Core.Models.Enums.ChipStatus.OVERTIME:
+                    break;
+                case Core.Models.Enums.ChipStatus.SKIP:
+                    break;
+                default:
+                    reVal = 2;
+                    break;
+            }
+            return reVal;
         }
 
         public async Task<bool> MoveToAsync(DieViewModel die, bool isFirst)
@@ -160,21 +218,21 @@ namespace CVWaferProber.Services
         {
             var absAxis = die.ToMapAxis();
             die.MStatus = MotionStatus.MovingAbsolute;
-            if (logger.IsInfoEnabled) logger.InfoFormat("Prober client Moving Absolute Axis => {0}", die.MapAxisToString());
+            if (logger.IsInfoEnabled) logger.InfoFormat("Moving Absolute Map Axis To Die => {0}", die.MapAxisToString());
             _clientProber?.MoveAbsoluteAsync(absAxis.y, absAxis.x);
             return await WaitingMotionMoveAsync(die);
         }
         private async Task<bool> ZUpAsync(DieViewModel die)
         {
             die.MStatus = MotionStatus.ZUpMoving;
-            if (logger.IsInfoEnabled) logger.Info("Prober client ZUp Moving");
+            if (logger.IsInfoEnabled) logger.Info("ZUp Moving");
             _clientProber?.StartTestConfirmAsync();
             return await WaitingZMotionAsync(die, MotionStatus.ZUp);
         }
         private async Task<bool> ZDownAsync(DieViewModel die)
         {
             die.MStatus = MotionStatus.ZDownMoving;
-            if (logger.IsInfoEnabled) logger.Info("Prober client ZDown Moving");
+            if (logger.IsInfoEnabled) logger.Info("ZDown Moving");
             _clientProber?.GetZDownStatusAsync();
             return await WaitingZMotionAsync(die, MotionStatus.ZDown);
         }

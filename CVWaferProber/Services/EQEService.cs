@@ -33,23 +33,24 @@ namespace CVWaferProber.Services
         }
 
         // 核心测试启动方法：移除所有Camera相关逻辑，保留IVL核心流程
-        public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool tranStatus = true)
+        public override async Task StartTestingAsync(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool tranStatus = true)
         {
             // 标记EQE测试中（替换IVL的状态枚举）
             dieViewModel.ChangeStatus(ChipStatus.EQE_TESTING);
             // 清空EQE结果
-            CustomEQEVM.ClearAllDisplays();
+            System.Windows.Application.Current?.Dispatcher?.Invoke(() =>
+            {
+                CustomEQEVM.ClearAllDisplays();
+            });
 
             // EQE固定切换到Spectrum Tab
             //CustomEQEVM.SelectedTab = CVWPFSpectrometerCtrl.Models.TabType.Spectrum;
 
             // 缓存当前DieVM
             _currentDieVM = dieViewModel;
-           
-            // 启动测试异步任务
-            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, hasNext, tranStatus);
 
-            return task;
+            // 启动测试异步任务
+            await RunFlowAsync(_selectedWPFlow, dieViewModel, hasNext, tranStatus);
         }
         // EQE结果展示方法：移除Camera参数，仅保留SerialNumber
         public override void ResultDisplay(DieViewModel dieViewModel)

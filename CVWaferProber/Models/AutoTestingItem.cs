@@ -27,11 +27,18 @@ namespace CVWaferProber.Models
         {
             DieViewModel? pre = null;
             DieViewModel? next = null;
-            logger.InfoFormat("GetNextDieVM  => {0}", CurTestingIndex);
             if (CurTestingIndex > 0) pre = TestingDieVMList[CurTestingIndex - 1];
-            if (IsEnd) next = null;
-            else next = TestingDieVMList[CurTestingIndex++];
-            //logger.InfoFormat("GetNextDieVM  Next => {0}", CurTestingIndex);
+            if (IsEnd)
+            {
+                next = null;
+                if (logger.IsInfoEnabled) logger.Info("Get NextDie => IsEnded");
+            }
+            else
+            {
+                next = TestingDieVMList[CurTestingIndex];
+                if (logger.IsInfoEnabled) logger.InfoFormat("Get NextDie => {0}/{1}/{2}", CurTestingIndex, next.MapAxisToString(), next.Status.ToString());
+                CurTestingIndex++;
+            }
             return (pre, next);
         }
         /// <summary>
@@ -40,12 +47,16 @@ namespace CVWaferProber.Models
         /// <returns>回滚后的当前DieViewModel，如果无法回滚则返回null</returns>
         public DieViewModel? RollbackToPrevious()
         {
-            CurTestingIndex--;
-            return TestingDieVMList[CurTestingIndex];
+            if (CurTestingIndex > 0)
+            {
+                CurTestingIndex--;
+                return TestingDieVMList[CurTestingIndex];
+            }
+
+            return null;
         }
         public DieViewModel? GetCurrentDieVM()
         {
-            //if (IsEnd) return null;
             if (CurTestingIndex > 0) return TestingDieVMList[CurTestingIndex - 1];
             else return null;
         }

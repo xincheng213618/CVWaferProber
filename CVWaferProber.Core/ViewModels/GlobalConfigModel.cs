@@ -11,6 +11,7 @@ namespace CVWaferProber.Core.ViewModels
     {
         public ObservableCollection<LogLevelItem> LogLevels { get; set; }
 
+        public bool IsBreakOnError { get; set; }
         public string SelectedLogLevel { get; set; }
         public MappingSettings MapSettings { get; set; } = new();
         public MotionSettings MotionSettings { get; set; } = new();

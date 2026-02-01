@@ -484,6 +484,8 @@
     <sys:String x:Key="StatusPanel.AOI_LINE_NG">AOI_LINE_NG</sys:String>
     <sys:String x:Key="StatusPanel.IVL_TESTING">IVL_TESTING</sys:String>
     <sys:String x:Key="StatusPanel.IVL_COMPLETED">IVL_COMPLETED</sys:String>
+    <sys:String x:Key="StatusPanel.VAM_TESTING">VAM_TESTING</sys:String>
+    <sys:String x:Key="StatusPanel.VAM_COMPLETED">VAM_COMPLETED</sys:String>
     <sys:String x:Key="StatusPanel.SKIP">SKIP</sys:String>
 
     <!--  提示信息  -->

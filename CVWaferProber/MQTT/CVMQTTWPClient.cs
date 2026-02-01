@@ -103,7 +103,7 @@ namespace CVWaferProber.MQTT
                             if (logger.IsDebugEnabled) logger.DebugFormat("MQTT Subscribe => {0}", svr.DownChannel);
                         }
                     }
-                    if (logger.IsInfoEnabled) logger.Info("QueryServices ok");
+                    if (logger.IsInfoEnabled) logger.Info("MQTT QueryServices ok");
                 }
                 else
                 {

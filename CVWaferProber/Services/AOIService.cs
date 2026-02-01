@@ -225,12 +225,11 @@ namespace CVWaferProber.Services
             public string GradeLevel { get; set; }
 
         }
-        public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool tranStatus = true)
+        public override async Task StartTestingAsync(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool tranStatus = true)
         {
             dieViewModel.ChangeStatus(ChipStatus.TESTING);
             ClearResult();
-            Task task = RunFlowAsync(_selectedWPFlow, dieViewModel, hasNext, tranStatus);
-            return task;
+            await RunFlowAsync(_selectedWPFlow, dieViewModel, hasNext, tranStatus);
         }
 
         private void ClearResult()

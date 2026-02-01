@@ -708,7 +708,7 @@ namespace CVAVMControl
             catch (Exception ex)
             {
                 logger.Error("处理CVCIE文件失败", ex);
-                MessageBox.Show($"处理文件失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                //MessageBox.Show($"处理文件失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         // 原有方法保持不变，修改ProcessCVCIEFile方法，添加裁切逻辑

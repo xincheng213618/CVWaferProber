@@ -44,7 +44,7 @@ namespace CVWaferProber.Services
 
         }
 
-        public override Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool tranStatus = true)
+        public override async Task StartTestingAsync(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool tranStatus = true)
         {
             // 新增：强制切换到Overview标签页（修复FindName错误）
             Application.Current.Dispatcher.Invoke(() =>
@@ -110,14 +110,12 @@ namespace CVWaferProber.Services
             };
 
             // 测试流程结束后，停止定时器（避免内存泄漏）
-            task.ContinueWith(t =>
+           await task.ContinueWith(t =>
             {
                 refreshTimer.Enabled = false;
                 refreshTimer.Dispose();
                 logger.Info("Test process completed, stop the refresh timer");// : "测试流程结束，停止刷新定时器"
             }, TaskScheduler.FromCurrentSynchronizationContext());
-
-            return task;
         }
         public override void ResultDisplay(DieViewModel dieViewModel)
         {
@@ -143,8 +141,12 @@ namespace CVWaferProber.Services
         protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
         {
             //IVLResultDisplay(dieViewModel);
-            CustomIVLVM.ClearResult();
-            CustomIVLVM.LoadData(dieViewModel.SerialNumber, dieViewModel.IsIVLCameraEnabled);
+
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                CustomIVLVM.ClearResult();
+                CustomIVLVM.LoadData(dieViewModel.SerialNumber, dieViewModel.IsIVLCameraEnabled);
+            });
 
             // 【关键修改1】只生成CSV内容，不直接导出文件
             //string csvContent = GenerateCsvContent(dieViewModel, "IVL");

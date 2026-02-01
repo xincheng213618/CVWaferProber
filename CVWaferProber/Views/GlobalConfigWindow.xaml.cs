@@ -159,7 +159,9 @@ namespace CVWaferProber.Views
                         ConfigModel.EqeExportPath = savedConfig.EqeExportPath;
                         ConfigModel.IvlExportPath = savedConfig.IvlExportPath;
 
-                      
+
+                        ConfigModel.IsBreakOnError = savedConfig.IsBreakOnError;
+
                         ConfigModel.ConnectionSettings.ServerIP = ConfigManager.Config.ConnectionSettings.ServerIP;
                         ConfigModel.ConnectionSettings.Port = ConfigManager.Config.ConnectionSettings.Port;
                         //
@@ -198,6 +200,7 @@ namespace CVWaferProber.Views
                 ConfigManager.Config.MotionSettings.DefaultZMotionTimeout = ConfigModel.MotionSettings.DefaultZMotionTimeout;
                 //
                 ConfigManager.Config.MapSettings.OutsiderRing = ConfigModel.MapSettings.OutsiderRing;
+                ConfigManager.Config.IsBreakOnError = ConfigModel.IsBreakOnError;
                 //
                 ConfigManager.SaveConfig();
                 //

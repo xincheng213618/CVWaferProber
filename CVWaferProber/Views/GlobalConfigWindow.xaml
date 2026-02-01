@@ -52,8 +52,10 @@
                         Text="{Binding MotionSettings.DefaultXYMotionTimeout}"/>
                     <Label Content="DefaultZMotionTimeout(s):"/>
                     <TextBox
-                        Margin="10,0,10,0"
+                        Margin="10,0,10,10"
                         Text="{Binding MotionSettings.DefaultZMotionTimeout}"/>
+                    <!--<Label Content="IsBreakOnError:"/>-->
+                    <CheckBox Content="IsBreakOnError" IsChecked="{Binding IsBreakOnError}"/>
                 </StackPanel>
             </TabItem>
             <!--  MotionSettings Tab页  -->

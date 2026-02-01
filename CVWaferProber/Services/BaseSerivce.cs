@@ -30,13 +30,13 @@ namespace CVWaferProber.Services
             this.EventAggregator = eventAggregator;
         }
 
-        public Task StartTesting(string timestamp, DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool isAuto)
+        public async Task StartTestingAsync(string timestamp, DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool isAuto)
         {
             string sn = BuildFlowSN(dieViewModel, timestamp);
             dieViewModel.SerialNumber = sn;
-            return StartTesting(dieViewModel, _selectedWPFlow, hasNext, isAuto);
+            await StartTestingAsync(dieViewModel, _selectedWPFlow, hasNext, isAuto);
         }
-        public abstract Task StartTesting(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool isAuto);
+        public abstract Task StartTestingAsync(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool isAuto);
         protected async Task RunFlowAsync(WPFlowViewModel _selectedWPFlow, DieViewModel dieViewModel, bool hasNext, bool isAuto)
         {
             try
@@ -84,16 +84,11 @@ namespace CVWaferProber.Services
             }
             finally
             {
-                logger.InfoFormat("Run CCD Flow End => {0}/{1}", dieViewModel.MapAxisToString(), dieViewModel.Status.ToString());
+                if(logger.IsInfoEnabled) logger.InfoFormat("One Die test ended. => {0}/{1}", dieViewModel.MapAxisToString(), dieViewModel.Status.ToString());
                 if (hasNext) DoAutoTestingNextCompleted(dieViewModel);
                 else DoEndTesting(dieViewModel,isAuto);
             }
         }
-
-        //private void DoAutoTestingPaused(DieViewModel dieViewModel)
-        //{
-        //    AutoTestingPaused?.Invoke(this, dieViewModel);
-        //}
 
         private void DoAutoTestingNextCompleted(DieViewModel dieViewModel)
         {

@@ -492,7 +492,7 @@ namespace CVWaferProber.ViewModels
                             {
                                 item.IsVAMEnabled = value.Value;
                             }
-                            _dataGrid?.Items.Refresh();
+                            //_dataGrid?.Items.Refresh();
                         }
                         finally
                         {
@@ -611,28 +611,13 @@ namespace CVWaferProber.ViewModels
             ShowConnectionSettingsCommand = new RelayCommand(OpenProberDeviceDebug);
             ShowRCConnectionSettingsCommand = new RelayCommand(ShowRcConnectionSettings);
 
-            // 初始化筛选集合
-            FilteredTestResults = new ObservableCollection<DieViewModel>(TestResults);
-            TestResults.CollectionChanged += (s, e) =>
-            {
-                if (string.IsNullOrWhiteSpace(SearchSN))
-                {
-                    FilteredTestResults = new ObservableCollection<DieViewModel>(TestResults);
-                }
-                else
-                {
-                    ExecuteSearch();
-                }
-            };
-
             // 初始化列配置
             InitColumnConfigs();
 
             // 初始化服务
             InitMysqlCfg();
             ProberId = "CVProber01";
-            //MappingCsvFilePath = "E:\\work\\cv\\New版\\晶圆台\\CVWaferProber\\ChipMapping\\ScanData_sc.csv";
-            //if (!System.IO.File.Exists(MappingCsvFilePath)) MappingCsvFilePath = "ScanData_sc.csv";
+
             Snowflake.Instance.SnowflakesInit(1, 1);
             //InitializeSimAutoTestTimer();
 
@@ -859,7 +844,7 @@ namespace CVWaferProber.ViewModels
             mainService.InitializeService(ProberId, rcService);
             //
             mainService.TestingCompleted += OnTestingCompleted;
-            mainService.AutoTestingNextDie += OnAutoTestingNextDie;
+            mainService.PreAutoTestingNextDie += OnAutoTestingNextDie;
             mainService.ChipSelected += OnChipDieSelected;
             //
             CustomMappingVM = mainService.GetMappingVM();
@@ -2357,7 +2342,7 @@ namespace CVWaferProber.ViewModels
 
             if (DockingManager == null || AnchorableSP == null)
             {
-                logger.Warn( "SP panel not initialized, cannot activate" );//"SP面板未初始化，无法激活"
+                //logger.Warn( "SP panel not initialized, cannot activate" );//"SP面板未初始化，无法激活"
                 return;
             }
 

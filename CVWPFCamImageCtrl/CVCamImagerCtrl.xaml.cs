@@ -93,7 +93,7 @@ namespace CVWPFCamImageCtrl
         {
             if (_model == null || MainImageDataGrid == null)
             {
-                logger.Info("Error: _model or MainImageDataGrid is null");
+                //logger.Info("Error: _model or MainImageDataGrid is null");
                 return;
             }
 

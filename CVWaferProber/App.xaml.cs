@@ -197,7 +197,6 @@ namespace CVWaferProber
 
         private void OnStartupCompleted(object sender, EventArgs e)
         {
-            MainService.Instance.Startup();
             // 关闭启动窗口
             _splash.Close();
 
