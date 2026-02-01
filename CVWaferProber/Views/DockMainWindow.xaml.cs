@@ -55,6 +55,8 @@ namespace CVWaferProber.Views
                 mainVm.AnchorableSP = AnchorableSP;         // 绑定XAML中的SP面板
                 mainVm.AnchorableVAM = AnchorableVAM;       // 绑定XAML中的VAM面板
 
+                mainVm.InitializeServiveVM(MyVAM);
+
                 // 监听SP面板显示/隐藏事件，重新获取控件引用
                 AnchorableSP.IsVisibleChanged += (s, e) =>
                 {

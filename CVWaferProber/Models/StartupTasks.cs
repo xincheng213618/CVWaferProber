@@ -17,7 +17,7 @@ namespace CVWaferProber.Models
 
         public override void Exec()
         {
-            MainService.Instance.Startup();
+            //MainService.Instance.Startup();
         }
     }
     public class CommStartupTask : StartupTask

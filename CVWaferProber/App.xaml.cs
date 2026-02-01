@@ -201,7 +201,7 @@ namespace CVWaferProber
             _splash.Close();
 
             // 创建并显示主窗口
-            _mainWindow = new DockMainWindow();
+            if (_mainWindow == null) _mainWindow = new DockMainWindow();
             _mainWindow.Show();
         }
         private void InitializeApp()

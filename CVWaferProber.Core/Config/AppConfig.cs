@@ -18,7 +18,8 @@ namespace CVWaferProber.Core.Config
         public ConnectionSettings ConnectionSettings { get; set; } = new();
         public MotionSettings MotionSettings { get; set; } = new();
         public MappingSettings MapSettings { get; set; } = new();
-        public bool IsBreakOnError { get; set; } = false;
+        public bool IsBreakOnError { get; set; } = true;
+        public int BreakOnErrorNum { get; set; } = 2;
     }
 
     public class MappingSettings

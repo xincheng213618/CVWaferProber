@@ -1,6 +1,7 @@
 ﻿using ColorVision.FileIO;
 using ConoscopeDemo;
 using CVAVMControl;
+using CVCommCore.CVImage;
 using CVWaferProber.Core;
 using CVWaferProber.Core.Events;
 using CVWaferProber.Core.ViewModels;
@@ -499,7 +500,9 @@ namespace CVAVMControl
         {
             if (!string.IsNullOrEmpty(@event.ResultFileName) && System.IO.File.Exists(@event.ResultFileName))
             {
-                ProcessCVCIEFile(@event.ResultFileName);
+                this.Dispatcher.Invoke(() => { 
+                    ProcessCVCIEFile(@event.ResultFileName);
+                });
             }
             else
             {
@@ -604,9 +607,19 @@ namespace CVAVMControl
                 YMat?.Dispose();
                 ZMat?.Dispose();
 
+                CVCIEFileInfo cvfileInfo = new CVCIEFileInfo();
                 CVCIEFile fileInfo = new CVCIEFile();
-                CVFileUtil.Read(filename, out fileInfo);
-
+                bool bR = CVCommCore.Core.CVFileUtils.ReadImageFile(filename, ref cvfileInfo);
+                if (!bR)
+                {
+                    if (logger.IsErrorEnabled) logger.ErrorFormat("Read ImageFile error => {0}", filename);
+                    return;
+                }
+                fileInfo.Bpp = cvfileInfo.FrameInfo.bppInt;
+                fileInfo.Channels = cvfileInfo.FrameInfo.channelsInt;
+                fileInfo.Cols = cvfileInfo.FrameInfo.widthInt;
+                fileInfo.Rows = cvfileInfo.FrameInfo.heightInt;
+                fileInfo.Data = cvfileInfo.data;
                 // 保存原始数据
                 byte[] originalData = fileInfo.Data; // 重要：保存原始数据引用
 
@@ -634,6 +647,20 @@ namespace CVAVMControl
                     cropJson
                 );
 
+                OpenCvSharp.MatType singleChannelTypeFinal = fileInfo.Bpp switch
+                {
+                    8 => MatType.CV_8UC1,
+                    16 => MatType.CV_16UC1,
+                    32 => MatType.CV_32FC1,
+                    64 => MatType.CV_64FC1,
+                    _ => throw new NotSupportedException($"Bpp {fileInfo.Bpp} not supported")
+                };
+                // 分离XYZ通道
+                int cropChannelSize = dstW * dstH * (fileInfo.Bpp / 8);
+                byte[] croppedX = new byte[cropChannelSize];
+                byte[] croppedY = new byte[cropChannelSize];
+                byte[] croppedZ = new byte[cropChannelSize];
+
                 if (cropResult == CV_AliResType.SUCCESS)
                 {
                     fileInfo.Cols = dstW;
@@ -644,7 +671,6 @@ namespace CVAVMControl
                     // 假设DLL裁切函数会在原数组上进行修改
                     // 如果DLL返回新数组，需要相应调整
 
-                    int cropChannelSize = dstW * dstH * (fileInfo.Bpp / 8);
                     int cropAllPixLen = cropChannelSize * fileInfo.Channels;
 
                     // 检查裁切后数据是否有效
@@ -653,24 +679,11 @@ namespace CVAVMControl
                         dataXyz = new byte[cropAllPixLen];
                         Buffer.BlockCopy(originalData, 0, dataXyz, 0, cropAllPixLen);
 
-                        // 分离XYZ通道
-                        byte[] croppedX = new byte[cropChannelSize];
-                        byte[] croppedY = new byte[cropChannelSize];
-                        byte[] croppedZ = new byte[cropChannelSize];
-
                         Buffer.BlockCopy(dataXyz, 0, croppedX, 0, cropChannelSize);
                         Buffer.BlockCopy(dataXyz, cropChannelSize, croppedY, 0, cropChannelSize);
                         Buffer.BlockCopy(dataXyz, cropChannelSize * 2, croppedZ, 0, cropChannelSize);
 
                         // 创建Mat对象
-                        OpenCvSharp.MatType singleChannelTypeFinal = fileInfo.Bpp switch
-                        {
-                            8 => MatType.CV_8UC1,
-                            16 => MatType.CV_16UC1,
-                            32 => MatType.CV_32FC1,
-                            64 => MatType.CV_64FC1,
-                            _ => throw new NotSupportedException($"Bpp {fileInfo.Bpp} not supported")
-                        };
 
                         XMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedX);
                         YMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedY);
@@ -686,6 +699,12 @@ namespace CVAVMControl
                     logger.Warn("DLL裁切失败，使用原始数据");
                     // 使用原始数据创建Mat
                     // ... 原有创建Mat的代码 ...
+                    Buffer.BlockCopy(originalData, 0, croppedX, 0, cropChannelSize);
+                    Buffer.BlockCopy(originalData, cropChannelSize, croppedY, 0, cropChannelSize);
+                    Buffer.BlockCopy(originalData, cropChannelSize*2, croppedZ, 0, cropChannelSize);
+                    XMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedX);
+                    YMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedY);
+                    ZMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedZ);
                 }
 
                 // 后续代码保持不变...
@@ -702,7 +721,7 @@ namespace CVAVMControl
                 }
 
                 UpdateDisplay();
-                fileInfo.Dispose();
+                //fileInfo.Dispose();
                 _isDataValid = true;
             }
             catch (Exception ex)

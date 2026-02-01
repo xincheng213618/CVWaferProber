@@ -10,9 +10,10 @@ namespace CVWaferProber.Services
     public class VAMService : BaseSerivce
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(VAMService));
-        CVVAMAnalyzer cVVAMAnalyzer = new CVVAMAnalyzer();
-        public VAMService(RCRestService rcService) : base(rcService, CVWPEventAggregatorInstance.Instance)
+        private CVVAMAnalyzer cVVAMAnalyzer;
+        public VAMService(RCRestService rcService, CVVAMAnalyzer _cVVAMAnalyzer) : base(rcService, CVWPEventAggregatorInstance.Instance)
         {
+            cVVAMAnalyzer = _cVVAMAnalyzer;
         }
         protected override ChipStatus GetResultStatus(string serialNumber)
         {

@@ -1,4 +1,5 @@
 ﻿using ChipMapping.ViewModels;
+using CVAVMControl;
 using CVCommCore;
 using CVWaferProber.Config;
 using CVWaferProber.Models;
@@ -55,7 +56,6 @@ namespace CVWaferProber.Services
             if (aoiService != null) return aoiService.CustomImageVM;
             return null;
         }
-        
         public ChipMappingControlViewModel? GetMappingVM()
         {
             if (mappingService != null) return mappingService.CustomVM;
@@ -66,7 +66,7 @@ namespace CVWaferProber.Services
         {
             proberClientService.Startup();
         }
-        public void InitializeService(string proberId, RCRestService rcService)
+        public void InitializeService(string proberId, RCRestService rcService, CVVAMAnalyzer _cVVAMAnalyzer)
         {
             this.ProberId = proberId;
             //
@@ -85,7 +85,7 @@ namespace CVWaferProber.Services
             eqeService.TestingCompleted += OnTestingCompleted;
             eqeService.AutoTestingNextCompleted += OnAutoTestingNextCompleted;
 
-            BaseSerivce vamService = new VAMService(rcService);
+            BaseSerivce vamService = new VAMService(rcService, _cVVAMAnalyzer);
             flowServices[CVWaferProberFlowType.VAM] = vamService;
             vamService.TestingCompleted += OnTestingCompleted;
             vamService.AutoTestingNextCompleted += OnAutoTestingNextCompleted;
@@ -141,7 +141,7 @@ namespace CVWaferProber.Services
 
         private bool IsTestBreak(DieViewModel dieVM)
         {
-            return (dieVM.Status != Core.Models.Enums.ChipStatus.OK) &&
+            return !IsDieCompleted(dieVM) &&
                 ConfigManager.Config.IsBreakOnError;
         }
 

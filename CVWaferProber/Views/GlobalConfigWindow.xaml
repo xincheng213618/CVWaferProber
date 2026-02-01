@@ -55,7 +55,10 @@
                         Margin="10,0,10,10"
                         Text="{Binding MotionSettings.DefaultZMotionTimeout}"/>
                     <!--<Label Content="IsBreakOnError:"/>-->
-                    <CheckBox Content="IsBreakOnError" IsChecked="{Binding IsBreakOnError}"/>
+                    <StackPanel Margin="10,0,10,10" Orientation="Horizontal">
+                        <CheckBox Content="IsBreakOnError" IsChecked="{Binding IsBreakOnError}"/>
+                        <TextBox Margin="10,0,0,0" Width="80" Text="{Binding BreakOnErrorNum}"/>
+                    </StackPanel>
                 </StackPanel>
             </TabItem>
             <!--  MotionSettings Tab页  -->

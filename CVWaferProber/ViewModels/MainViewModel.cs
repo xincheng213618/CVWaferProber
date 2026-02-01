@@ -3,6 +3,7 @@ using AvalonDock.Layout;
 using ChipMapping.Models;
 using ChipMapping.ViewModels;
 using ColorVision.Core.Entities;
+using CVAVMControl;
 using CVDB.Services.Buz;
 using CVWaferProber.Config;
 using CVWaferProber.Core;
@@ -548,12 +549,11 @@ namespace CVWaferProber.ViewModels
             // 获取主程序集版本
             Version version = Assembly.GetEntryAssembly()?.GetName().Version;
 
-            _AppVersion = string.Format("V{0}",version.ToString());
+            _AppVersion = string.Format("V{0}", version.ToString());
             rcService = new RCRestService();
             _rcConnectionInfo = rcService.ConnectionInfo;
             //
-            InitializeMainServive();
-           
+            InitializeServive();
             // 初始化重置布局命令
             SearchCommand = new RelayCommand(ExecuteSearch);
 
@@ -836,22 +836,24 @@ namespace CVWaferProber.ViewModels
                 window.ShowDialog();
             });
         }
+        public void InitializeServiveVM(CVVAMAnalyzer _cVVAMAnalyzer)
+        {
+            mainService.InitializeService(ProberId, rcService, _cVVAMAnalyzer);
 
-        private void InitializeMainServive()
+            CustomMappingVM = mainService.GetMappingVM();
+            CustomImageVM = mainService.GetAOIVM();
+            CustomIVLVM = mainService.GetIVLVM();
+            if (CustomIVLVM != null) CustomIVLVM.CustomEQEVM = mainService.GetEQEVM();
+        }
+        private void InitializeServive()
         {
             mainService = MainService.Instance;
             _connectionInfo = ProberClientService.Instance.ConnectionInfo;
-            mainService.InitializeService(ProberId, rcService);
             //
             mainService.TestingCompleted += OnTestingCompleted;
             mainService.PreAutoTestingNextDie += OnAutoTestingNextDie;
             mainService.ChipSelected += OnChipDieSelected;
             //
-            CustomMappingVM = mainService.GetMappingVM();
-            CustomImageVM = mainService.GetAOIVM();
-            CustomIVLVM = mainService.GetIVLVM();
-            if (CustomIVLVM != null) CustomIVLVM.CustomEQEVM = mainService.GetEQEVM();
-
             //Task.Factory.StartNew(async () =>
             //{
             //    await Task.Delay(2000);
@@ -1109,7 +1111,7 @@ namespace CVWaferProber.ViewModels
                     var checkBoxFactory = new FrameworkElementFactory(typeof(CheckBox));
                     checkBoxFactory.SetBinding(CheckBox.IsCheckedProperty, new Binding(config.ColumnBindingPath)
                     {
-                        Mode = BindingMode.TwoWay,
+                        Mode = BindingMode.OneWay,
                         UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
                     });
                     checkBoxFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, System.Windows.HorizontalAlignment.Center);
@@ -1124,6 +1126,7 @@ namespace CVWaferProber.ViewModels
                         Header = config.ColumnHeader,
                         Binding = new Binding(config.ColumnBindingPath)
                         {
+                            Mode= BindingMode.OneWay,
                             TargetNullValue = "",
                             StringFormat = config.ColumnBindingPath.Contains("Time") ? "yyyy-MM-dd HH:mm:ss" : null
                         }

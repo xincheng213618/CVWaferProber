@@ -159,8 +159,8 @@ namespace CVWaferProber.Views
                         ConfigModel.EqeExportPath = savedConfig.EqeExportPath;
                         ConfigModel.IvlExportPath = savedConfig.IvlExportPath;
 
-
-                        ConfigModel.IsBreakOnError = savedConfig.IsBreakOnError;
+                        ConfigModel.IsBreakOnError = ConfigManager.Config.IsBreakOnError;
+                        ConfigModel.BreakOnErrorNum = ConfigManager.Config.BreakOnErrorNum;
 
                         ConfigModel.ConnectionSettings.ServerIP = ConfigManager.Config.ConnectionSettings.ServerIP;
                         ConfigModel.ConnectionSettings.Port = ConfigManager.Config.ConnectionSettings.Port;
@@ -201,6 +201,7 @@ namespace CVWaferProber.Views
                 //
                 ConfigManager.Config.MapSettings.OutsiderRing = ConfigModel.MapSettings.OutsiderRing;
                 ConfigManager.Config.IsBreakOnError = ConfigModel.IsBreakOnError;
+                ConfigManager.Config.BreakOnErrorNum = ConfigModel.BreakOnErrorNum;
                 //
                 ConfigManager.SaveConfig();
                 //
