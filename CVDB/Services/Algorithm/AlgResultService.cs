@@ -20,13 +20,6 @@ namespace CVDB.Services.Algorithm
         {
             return MysqlControler.GetInstance().Sql.Select<VScgdAlgorithmResultMaster>().Where(a => a.BatchCode.Equals(batchCode) && a.ImgFileType == algType).ToList();
         }
-        // 【新增重载】按批次号+多个类型查询主记录（精准筛选相机原图）
-        public static List<VScgdAlgorithmResultMaster> LoadAlgResultByBatchCodeAndTypes(string batchCode, List<int> algTypes)
-        {
-            return MysqlControler.GetInstance().Sql.Select<VScgdAlgorithmResultMaster>()
-                   .Where(a => a.BatchCode.Equals(batchCode) && algTypes.Contains(a.ImgFileType)).ToList();
-        }
-
         public static List<TScgdAlgorithmResultDetailPoiCieFile> GetPOIDetailResultFileByPid(int pid)
         {
             return MysqlControler.GetInstance().Sql.Select<TScgdAlgorithmResultDetailPoiCieFile>().Where(a => a.Pid == pid).ToList();
