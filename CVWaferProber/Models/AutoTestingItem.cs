@@ -9,6 +9,7 @@ namespace CVWaferProber.Models
         public List<DieViewModel> TestingDieVMList { get; private set; }
         public WPFlowViewModel? CurSelectedWPFlow { get; private set; }
         public int CurTestingIndex { get; private set; }
+        public int ErrorCount { get; private set; }
 
         public AutoTestingItem(List<DieViewModel> testingDieVMList, WPFlowViewModel? curSelectedWPFlow)
         {
@@ -64,8 +65,22 @@ namespace CVWaferProber.Models
         public void UpdateCurDieMotionAxis(ProberMotionAxisStatus axis)
         {
             var cur = GetCurrentDieVM();
-            if(cur == null) return;
+            if (cur == null) return;
             cur.UpdateMotionAxis(axis);
+        }
+
+        public int CheckError(DieViewModel dieVM, int maxCount = 10)
+        {
+            int errCount = 0;
+            int cnt = 0;
+            for (int i = CurTestingIndex; i > 0; i--, cnt++)
+            {
+                var die = TestingDieVMList[i - 1];
+                if (die.IsNG) errCount++;
+                else errCount = 0;
+                if (cnt > maxCount) break;
+            }
+            return errCount;
         }
     }
 }

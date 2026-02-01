@@ -3,6 +3,7 @@ using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
 using CVWaferProber.Utils;
+using ScottPlot.Plottables;
 using System.Windows;
 using WaferComm.StateMachine;
 using Application = System.Windows.Application;
@@ -33,16 +34,16 @@ namespace CVWaferProber.ViewModels
             }
         }
 
-        public bool IsIVLCameraEnabled {  get; set; }
-        public bool IsChinese {  get; set; }
+        public bool IsIVLCameraEnabled { get; set; }
+        public bool IsChinese { get; set; }
 
         // AOI复选框绑定属性
         private bool _isAOIEnabled;
         public bool IsAOIEnabled
         {
             get => _isAOIEnabled;
-            set { 
-                if(Status != ChipStatus.SKIP)
+            set {
+                if (Status != ChipStatus.SKIP)
                 {
                     _isAOIEnabled = value;
                 }
@@ -138,7 +139,7 @@ namespace CVWaferProber.ViewModels
             FirePropertyChanged();
         }
 
-        public void TestingReady(string proberId,string timestamp)
+        public void TestingReady(string proberId, string timestamp)
         {
             this.EndTestTime = null;
             this.SerialNumber = SNBuilder.Build(proberId, timestamp, this);
@@ -209,13 +210,19 @@ namespace CVWaferProber.ViewModels
 
         public void UpdateMotionAxis(ProberMotionAxisStatus axis)
         {
-           this.MotionAxisX = axis.CurrentAxisX;
-           this.MotionAxisY = axis.CurrentAxisY;
-           this.MotionAxisZ = axis.CurrentAxisZ;
+            this.MotionAxisX = axis.CurrentAxisX;
+            this.MotionAxisY = axis.CurrentAxisY;
+            this.MotionAxisZ = axis.CurrentAxisZ;
             OnPropertyChanged(nameof(MotionAxisX));
             OnPropertyChanged(nameof(MotionAxisY));
             OnPropertyChanged(nameof(MotionAxisZ));
         }
+
+        public bool IsCompleted => this.Status == Core.Models.Enums.ChipStatus.OK ||
+              this.Status == Core.Models.Enums.ChipStatus.VAM_COMPLETED ||
+              this.Status == Core.Models.Enums.ChipStatus.IVL_COMPLETED ||
+              this.Status == Core.Models.Enums.ChipStatus.EQE_COMPLETED;
+        public bool IsNG => !IsCompleted;
 
         #region 动态属性
         private string _aoiGradeLevel = "na"; // 默认值设为"na"

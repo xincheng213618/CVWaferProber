@@ -120,8 +120,10 @@ namespace CVWaferProber.Services
                 //
                 bool canExecute = !autoTestingItem.IsPaused;
 
-                if (IsTestBreak(dieVM))
+                int errorCount = autoTestingItem.CheckError(dieVM);
+                if (IsTestBreak(dieVM, errorCount))
                 {
+                    if (logger.IsWarnEnabled) logger.WarnFormat("The maximum number of error max. => {0}/{1}", errorCount,ConfigManager.Config.BreakOnErrorNum);
                     PauseAutoTesting();
                 }
                 else if (canExecute)
@@ -139,10 +141,11 @@ namespace CVWaferProber.Services
             }
         }
 
-        private bool IsTestBreak(DieViewModel dieVM)
+        private bool IsTestBreak(DieViewModel dieVM, int errorCount)
         {
             return !IsDieCompleted(dieVM) &&
-                ConfigManager.Config.IsBreakOnError;
+                ConfigManager.Config.IsBreakOnError &&
+                 ConfigManager.Config.BreakOnErrorNum <= errorCount;
         }
 
         /// <summary>
@@ -223,10 +226,10 @@ namespace CVWaferProber.Services
                 default:
                     break;
             }
-            await baseSerivce?.StartTestingAsync(die, _selectedWPFlow, hasNext, isAuto);
-
             //获取Motion Axis信息
             proberClientService?.GetCurrentDieAxisAsync();
+            //
+            await baseSerivce?.StartTestingAsync(die, _selectedWPFlow, hasNext, isAuto);
         }
         private void DoNextDieFlowExec(AutoTestingItem item)
         {
