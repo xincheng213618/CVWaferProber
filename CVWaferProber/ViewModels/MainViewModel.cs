@@ -87,7 +87,6 @@ namespace CVWaferProber.ViewModels
         /// 
         /// </summary>
         public bool IsNotProcessing => DataMappingVM.IsNotProcessing;
-        public bool IsColorEnabled { get; set; }
 
         private string _AppVersion;
         public string AppVersion

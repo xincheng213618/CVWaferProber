@@ -239,7 +239,7 @@ namespace CVWaferProber.Services
                 //if(logger.IsInfoEnabled) logger.InfoFormat("Next Die={0}/{1}", dieNext.die.MapAxisToString(), dieNext.die.Status.ToString());
                 if (dieNext.die.Status == Core.Models.Enums.ChipStatus.WAITING)
                 {
-                    if(logger.IsDebugEnabled) logger.DebugFormat("CCD optical inspection starting... => {0}", dieNext.die.MapAxisToString());
+                    if(logger.IsDebugEnabled) logger.DebugFormat("Starting Visual Inspection... => {0}", dieNext.die.MapAxisToString());
                     PreAutoTestingNextDie?.Invoke(this, (dieNext.diePre, dieNext.die));
                     //logger.InfoFormat("DoAutoDieFlowExecAsync={0}/{1}", dieNext.die.MapAxisToString(), dieNext.die.Status.ToString());
                     Task.Factory.StartNew(async () =>

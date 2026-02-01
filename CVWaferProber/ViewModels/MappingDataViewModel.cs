@@ -12,7 +12,6 @@ using CVWaferProber.Models;
 using CVWaferProber.Services;
 using CVWaferProber.Views;
 using FreeSql;
-using Microsoft.WindowsAPICodePack.Dialogs;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -27,7 +26,6 @@ using static CVWaferProber.ViewModels.MainViewModel;
 using Application = System.Windows.Application;
 using Binding = System.Windows.Data.Binding;
 using CheckBox = System.Windows.Controls.CheckBox;
-using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 
@@ -241,6 +239,8 @@ namespace CVWaferProber.ViewModels
         }
         private bool _isUpdatingFromHeader_VAM;
         #endregion
+
+        public bool IsColorEnabled { get; set; }
 
         public string ProberId { get; set; }
 
@@ -2089,27 +2089,32 @@ namespace CVWaferProber.ViewModels
 
             if (toSelect != null)
             {
-                var result = MessageDialog.Show(
-                    $"{FindResource("Btn.MoveToMsg")} {toSelect.MapAxisToString()}",
-                    $"{FindResource("Prompt")}", // 使用默认标题
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
-
-                if (result == MessageBoxResult.Yes)
-                {
-                //    // 用户点击了"是"
-                //    MessageDialog.Show("文件已删除！");
-                //}
-                //if (MessageBox.Show($"{FindResource("Btn.MoveToMsg")} {toSelect.MapAxisToString()}", $"{FindResource("Prompt")}", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-                //{
-                    ProberClientService.Instance?.MoveToAsync(toSelect);
-                }
+                OnMoveTo(toSelect);
             }
         }
 
         private string FindResource(string resourceKey)
         {
             return Application.Current.FindResource(resourceKey).ToString();
+        }
+
+        public void OnMoveTo(DieViewModel selectedItem)
+        {
+            if (IsProcessing) 
+            {
+                logger.Warn("Testing in Progress - Do Not Operate");
+                return; 
+            }
+            var result = MessageDialog.Show(
+                   $"{FindResource("Btn.MoveToMsg")} {selectedItem.MapAxisToString()}",
+                   $"{FindResource("Prompt")}", // 使用默认标题
+                   MessageBoxButton.YesNo,
+                   MessageBoxImage.Question);
+            //var result = MessageBox.Show($"{FindResource("Btn.MoveToMsg")} {selectedItem.MapAxisToString()}", $"{FindResource("Prompt")}", MessageBoxButton.YesNo);
+            if (result == MessageBoxResult.Yes)
+            {
+                ProberClientService.Instance?.MoveToAsync(selectedItem);
+            }
         }
     }
 }

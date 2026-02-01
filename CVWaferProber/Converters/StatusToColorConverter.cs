@@ -16,7 +16,7 @@ namespace CVWaferProber.Converters
 
             if (MainViewModel.Instance != null)
             {
-                bool isColorEnabled = MainViewModel.Instance.IsColorEnabled; // 或者通过其他方式获取
+                bool isColorEnabled = MainViewModel.Instance.DataMappingVM.IsColorEnabled; // 或者通过其他方式获取
                 if (!isColorEnabled) return Brushes.White;
             }
 

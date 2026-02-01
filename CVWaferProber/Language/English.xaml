@@ -634,7 +634,7 @@
     <sys:String x:Key="Hasbeeninitialized">The message handler has been initialized</sys:String>
     <sys:String x:Key="Notinitialized">The message handler has not been initialized</sys:String>
     <!--  《语言资源文件》  -->
-    <sys:String x:Key="Btn.MoveToMsg">Confirm moving</sys:String>
+    <sys:String x:Key="Btn.MoveToMsg">Confirm move to</sys:String>
     <sys:String x:Key="Btn.Ok">Ok</sys:String>
     <sys:String x:Key="Btn.Cancel">Cancel</sys:String>
     <sys:String x:Key="Btn.Yes">Yes</sys:String>

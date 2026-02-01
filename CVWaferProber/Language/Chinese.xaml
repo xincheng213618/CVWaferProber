@@ -11,7 +11,7 @@
     <sys:String x:Key="BtnPauseAutoTest">暂停联机测试</sys:String>
     <sys:String x:Key="BtnStopAutoTest">停止测试并退片</sys:String>
     <sys:String x:Key="BtnStartManTest">手动测试</sys:String>
-    <sys:String x:Key="BtnRefreshStatus">刷新结果列表状态</sys:String>
+    <sys:String x:Key="BtnRefreshStatus">刷新结果列表</sys:String>
     <sys:String x:Key="BtnFlowLoad">流程加载</sys:String>
     <sys:String x:Key="BtnSearch">查找</sys:String>
     <sys:String x:Key="BtnReRegist">登录</sys:String>
