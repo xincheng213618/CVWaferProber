@@ -127,7 +127,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Views\LOG.ico" />
+    <Resource Include="Views\LOG.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>
