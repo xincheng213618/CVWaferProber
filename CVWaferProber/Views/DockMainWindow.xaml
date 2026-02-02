@@ -13,7 +13,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:CVWaferProber.ViewModels"
     Title="{DynamicResource AppTitle}"
-    Icon="/Views/LOG.ico"
+    Icon="/Img/LOG.ico"
     WindowStartupLocation="CenterScreen"
     WindowState="Maximized"
     mc:Ignorable="d">
