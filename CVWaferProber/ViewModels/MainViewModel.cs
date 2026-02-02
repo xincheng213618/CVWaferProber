@@ -649,7 +649,7 @@ namespace CVWaferProber.ViewModels
             // 同时监听状态变化，确保最终进度到100
             Task.Run(async () =>
             {
-                while (IsProcessing && currentDie.Status != ChipStatus.OK
+                while (DataMappingVM.IsProcessing && currentDie.Status != ChipStatus.OK
                        && currentDie.Status != ChipStatus.FAILED
                        && currentDie.Status != ChipStatus.IVL_COMPLETED
                        && currentDie.Status != ChipStatus.EQE_COMPLETED
