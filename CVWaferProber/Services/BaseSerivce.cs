@@ -41,7 +41,9 @@ namespace CVWaferProber.Services
         {
             try
             {
-                dieViewModel.CurrentTestStep = (TestStep)3; // 测试中
+                // 步骤3：标记为【测试执行中】，并重置执行中子进度
+                dieViewModel.CurrentTestStep = TestStep.Executing;
+                dieViewModel.ExecSubProgress = 0;
                 // 优化：直接await异步方法，避免先赋值再await+访问Result的冗余写法
                 var resp = await AsyncRunFlow(_selectedWPFlow.Name, dieViewModel.SerialNumber, _selectedWPFlow.Timeout);
 

@@ -13,9 +13,10 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:CVWaferProber.ViewModels"
     Title="{DynamicResource AppTitle}"
+    Icon="/Views/LOG.ico"
     WindowStartupLocation="CenterScreen"
     WindowState="Maximized"
-    mc:Ignorable="d" Icon="/Views/LOG.icon.jpg">
+    mc:Ignorable="d">
 
     <Window.DataContext>
         <vm:MainViewModel />
@@ -177,10 +178,10 @@
         </Menu>
 
         <!--  顶部工具栏  -->
-        <DockPanel Grid.Row="1" x:Name="PanelToolbar" >
-            <comp:ToolsBarControl DataContext="{Binding ToolsVM}"/>
+        <DockPanel x:Name="PanelToolbar" Grid.Row="1">
+            <comp:ToolsBarControl DataContext="{Binding ToolsVM}" />
         </DockPanel>
-        
+
         <avalon:DockingManager x:Name="DockingManager" Grid.Row="2">
             <avalon:DockingManager.Theme>
                 <avalon:GenericTheme />
@@ -209,7 +210,7 @@
                                         CanFloat="False"
                                         CanHide="True">
                                         <DockPanel x:Name="PanelMapping">
-                                            <comp:MappingDataControl x:Name="mappingDataControl" DataContext="{Binding DataMappingVM}"/>
+                                            <comp:MappingDataControl x:Name="mappingDataControl" DataContext="{Binding DataMappingVM}" />
                                         </DockPanel>
                                     </avalon:LayoutAnchorable>
                                 </avalon:LayoutAnchorablePane>
@@ -300,7 +301,7 @@
             <StatusBarItem HorizontalAlignment="Right">
                 <StackPanel Margin="0,0,10,0" Orientation="Horizontal">
                     <!--  连接状态指示器  -->
-                     <!--Command="{Binding ShowRCConnectionSettingsCommand}"-->
+                    <!--  Command="{Binding ShowRCConnectionSettingsCommand}"  -->
                     <Button
                         Padding="5,0"
                         MouseDoubleClick="Button_Rc_MouseDoubleClick"
@@ -327,7 +328,7 @@
                         Background="#CCCCCC" />
 
                     <!--  连接状态指示器  -->
-                        <!-- Command="{Binding ReconnectDevCommand}" -->
+                    <!--  Command="{Binding ReconnectDevCommand}"  -->
                     <Button
                         Padding="0,0"
                         MouseDoubleClick="Button_DoubleClick"
