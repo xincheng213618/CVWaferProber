@@ -159,6 +159,7 @@ namespace CVWaferProber.Views
                         ConfigModel.EqeExportPath = savedConfig.EqeExportPath;
                         ConfigModel.IvlExportPath = savedConfig.IvlExportPath;
 
+                        ConfigModel.IsAutoStop = ConfigManager.Config.IsAutoStop;
                         ConfigModel.IsBreakOnError = ConfigManager.Config.IsBreakOnError;
                         ConfigModel.BreakOnErrorNum = ConfigManager.Config.BreakOnErrorNum;
 
@@ -201,6 +202,7 @@ namespace CVWaferProber.Views
                 //
                 ConfigManager.Config.MapSettings.OutsiderRing = ConfigModel.MapSettings.OutsiderRing;
                 ConfigManager.Config.IsBreakOnError = ConfigModel.IsBreakOnError;
+                ConfigManager.Config.IsAutoStop = ConfigModel.IsAutoStop;
                 ConfigManager.Config.BreakOnErrorNum = ConfigModel.BreakOnErrorNum;
 
                 ConfigManager.Config.ExportPathSettings.AoiExportPath = ConfigModel.AoiExportPath;

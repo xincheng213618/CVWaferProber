@@ -289,7 +289,14 @@ namespace CVWaferProber.Services
                 die.CurrentTestStep = (TestStep)3; // 测试中
                 if (!hasNext)
                 {
-                    await proberClientService.StopTestAsync();
+                    if (ConfigManager.Config.IsAutoStop)
+                    {
+                        StopAutoTest();
+                    }
+                    else
+                    {
+                        NewAutoTesting();
+                    }
                 }
             }
             else
@@ -306,6 +313,16 @@ namespace CVWaferProber.Services
                     DoAutoTestEnd(die, isAuto);
                 }
             }
+        }
+
+        private void StopAutoTest()
+        {
+            proberClientService?.StopTestAsync();
+        }
+
+        private void NewAutoTesting()
+        {
+            proberClientService?.TestingCompleted();
         }
 
         private void DoAutoTestEnd(DieViewModel? dieVM, bool isAuto)

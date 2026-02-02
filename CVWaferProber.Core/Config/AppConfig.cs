@@ -21,6 +21,7 @@ namespace CVWaferProber.Core.Config
         public ExportPathSettings ExportPathSettings { get; set; } = new();
         public bool IsBreakOnError { get; set; } = true;
         public int BreakOnErrorNum { get; set; } = 2;
+        public bool IsAutoStop { get; set; } = false;
     }
 
     public class ExportPathSettings
