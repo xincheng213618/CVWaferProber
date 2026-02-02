@@ -279,34 +279,84 @@ namespace CVWaferProber.Services
         private async Task DoAutoDieFlowExecAsync(WPFlowViewModel _selectedWPFlow, DieViewModel die, bool isFirst, bool hasNext, bool isAuto)
         {
             if (logger.IsInfoEnabled) logger.InfoFormat("Process Current Die={0}[isFirst:{1}/HasNext:{2}/Auto:{3}] => {4}", die.ToMapAxis().ToString(), isFirst, hasNext, isAuto, die.SerialNumber);
-            // 阶段1：移动到Die位置
-            die.CurrentTestStep = 1; // 移动中
-            var isOK = await proberClientService.MoveToAsync(die, isFirst);
-            if (isOK)
+            try
             {
-                die.CurrentTestStep = 2; // 移动完成，初始化中
-                await DoDieFlowExec(_selectedWPFlow, die, hasNext, isAuto);
-                die.CurrentTestStep = 3; // 测试中
-                
-                if (!hasNext)
+                // 阶段1：移动到Die位置
+                die.CurrentTestStep = 1; // 移动中
+                logger.Debug($"Step 1: Moving to die {die.MapAxisToString()}");
+
+                var isOK = await proberClientService.MoveToAsync(die, isFirst);
+
+                if (isOK)
                 {
-                    await proberClientService.StopTestAsync();
-                }
-            }
-            else
-            {
-                die.ChangeStatus(Core.Models.Enums.ChipStatus.FAILED);
-                die.CurrentTestStep = 4; // 测试失败
-                if (logger.IsErrorEnabled) logger.Error("Prober client Move Absolute failed");
-                if (autoTestingItem != null)
-                {
-                    PauseAutoTesting();
+                    die.CurrentTestStep = 2; // 移动完成，初始化中
+                    logger.Debug($"Step 2: Move completed, initializing for {die.SerialNumber}");
+
+                    // 阶段2：执行测试流程
+                    die.CurrentTestStep = 3; // 测试中
+                    logger.Debug($"Step 3: Testing started for {die.SerialNumber}");
+
+                    await DoDieFlowExec(_selectedWPFlow, die, hasNext, isAuto);
+
+                    // 测试完成后
+                    die.CurrentTestStep = 4; // 测试完成
+                    logger.Debug($"Step 4: Testing completed for {die.SerialNumber}");
+
+                    if (!hasNext)
+                    {
+                        await proberClientService.StopTestAsync();
+                    }
                 }
                 else
                 {
-                    DoAutoTestEnd(die, isAuto);
+                    die.ChangeStatus(Core.Models.Enums.ChipStatus.FAILED);
+                    die.CurrentTestStep = 4; // 测试失败
+                    logger.Error($"Step 4: Move failed for {die.MapAxisToString()}");
+
+                    if (autoTestingItem != null)
+                    {
+                        PauseAutoTesting();
+                    }
+                    else
+                    {
+                        DoAutoTestEnd(die, isAuto);
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                logger.Error($"Error in DoAutoDieFlowExecAsync for {die.SerialNumber}", ex);
+                die.CurrentTestStep = 4; // 确保在异常情况下也标记为完成
+                throw;
+            }
+            //// 阶段1：移动到Die位置
+            //die.CurrentTestStep = 1; // 移动中
+            //var isOK = await proberClientService.MoveToAsync(die, isFirst);
+            //if (isOK)
+            //{
+            //    die.CurrentTestStep = 2; // 移动完成，初始化中
+            //    await DoDieFlowExec(_selectedWPFlow, die, hasNext, isAuto);
+            //    die.CurrentTestStep = 3; // 测试中
+
+            //    if (!hasNext)
+            //    {
+            //        await proberClientService.StopTestAsync();
+            //    }
+            //}
+            //else
+            //{
+            //    die.ChangeStatus(Core.Models.Enums.ChipStatus.FAILED);
+            //    die.CurrentTestStep = 4; // 测试失败
+            //    if (logger.IsErrorEnabled) logger.Error("Prober client Move Absolute failed");
+            //    if (autoTestingItem != null)
+            //    {
+            //        PauseAutoTesting();
+            //    }
+            //    else
+            //    {
+            //        DoAutoTestEnd(die, isAuto);
+            //    }
+            //}
 
 
         }

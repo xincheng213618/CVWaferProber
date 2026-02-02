@@ -12,6 +12,7 @@ using CVWaferProber.Views;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
+using System.ComponentModel;
 using System.IO;
 using System.Reflection;
 using System.Windows;
@@ -625,42 +626,64 @@ namespace CVWaferProber.ViewModels
             IsTestProgressVisible = true;
             TestProgressValue = 0;
 
-            // 订阅CurrentTestStep的变化，更新进度
-            currentDie.PropertyChanged += (s, e) =>
+            // 1. 订阅 CurrentTestStep 的变化，实时更新进度
+            PropertyChangedEventHandler stepHandler = (s, e) =>
             {
                 if (e.PropertyName == nameof(DieViewModel.CurrentTestStep))
                 {
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        // 根据步骤映射进度（可根据实际流程调整比例）
+                        // 根据当前步骤设置进度（更细粒度的划分）
                         TestProgressValue = currentDie.CurrentTestStep switch
                         {
-                            0 => 0,
-                            1 => 25,
-                            2 => 50,
-                            3 => 75,
-                            4 => 100,
+                            0 => 0,    // 未开始
+                            1 => 25,   // 移动中
+                            2 => 50,   // 移动完成，初始化中
+                            3 => 75,   // 测试中
+                            4 => 100,  // 测试完成
                             _ => TestProgressValue
                         };
+
+                        // 添加日志以便调试
+                        logger.Debug($"Progress updated: Step={currentDie.CurrentTestStep}, Progress={TestProgressValue}%");
                     });
                 }
             };
-            // 强制进度值不回退（符合用户视觉习惯）
-            if (TestProgressValue < _testProgressValue)
-                TestProgressValue = _testProgressValue;
-            // 同时监听状态变化，确保最终进度到100
+
+            // 订阅状态变化
+            currentDie.PropertyChanged += stepHandler;
+
+            // 2. 添加一个后台任务来监控整体进度（作为辅助）
             Task.Run(async () =>
             {
-                while (DataMappingVM.IsProcessing && currentDie.Status != ChipStatus.OK
-                       && currentDie.Status != ChipStatus.FAILED
-                       && currentDie.Status != ChipStatus.IVL_COMPLETED
-                       && currentDie.Status != ChipStatus.EQE_COMPLETED
-                       && currentDie.Status != ChipStatus.VAM_COMPLETED)
+                try
                 {
-                    await Task.Delay(100);
+                    // 等待测试完成（通过状态判断）
+                    while (currentDie.CurrentTestStep < 4 &&
+                           currentDie.Status != ChipStatus.OK &&
+                           currentDie.Status != ChipStatus.FAILED &&
+                           currentDie.Status != ChipStatus.IVL_COMPLETED &&
+                           currentDie.Status != ChipStatus.EQE_COMPLETED &&
+                           currentDie.Status != ChipStatus.VAM_COMPLETED)
+                    {
+                        await Task.Delay(100);
+                    }
+
+                    // 测试完成后确保进度条到100%
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        TestProgressValue = 100;
+                        logger.Debug($"Test completed, final progress: {TestProgressValue}%");
+                    });
                 }
-                // 测试结束后强制进度到100
-                Application.Current.Dispatcher.Invoke(() => TestProgressValue = 100);
+                finally
+                {
+                    // 清理事件订阅
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        currentDie.PropertyChanged -= stepHandler;
+                    });
+                }
             });
         }
         #endregion

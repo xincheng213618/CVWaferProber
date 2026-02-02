@@ -13,6 +13,7 @@
     <UserControl.Resources>
         <cv:StatusToColorConverter x:Key="StatusColorConverter" />
         <ccv:NotBooleanConverter x:Key="NotBooleanConverter" />
+        <cv:ProgressBarClipConverter x:Key="ProgressBarClipConverter" />
         <!--  全局配色/圆角常量  -->
         <SolidColorBrush x:Key="PrimaryColor" Color="#FF0078D7" />
         <SolidColorBrush x:Key="PrimaryDarkColor" Color="#FF005FB8" />
@@ -768,8 +769,60 @@
                                             Foreground="#FF0078D7"
                                             Maximum="100"
                                             Minimum="0"
-                                            Value="{Binding DataContext.TestProgressValue, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" />
-
+                                            Value="{Binding TestProgressValue, Mode=OneWay}">
+                                            <ProgressBar.Resources>
+                                                <Style TargetType="ProgressBar">
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="ProgressBar">
+                                                                <Grid x:Name="TemplateRoot">
+                                                                    <Border
+                                                                        x:Name="PART_Track"
+                                                                        Background="{TemplateBinding Background}"
+                                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                                                        CornerRadius="3" />
+                                                                    <Border
+                                                                        x:Name="PART_Indicator"
+                                                                        HorizontalAlignment="Left"
+                                                                        Background="{TemplateBinding Foreground}"
+                                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                                                        CornerRadius="3">
+                                                                        <Border.Clip>
+                                                                            <RectangleGeometry>
+                                                                                <RectangleGeometry.Rect>
+                                                                                    <MultiBinding Converter="{StaticResource ProgressBarClipConverter}">
+                                                                                        <Binding ElementName="PART_Indicator" Path="ActualWidth" />
+                                                                                        <Binding Path="Value" RelativeSource="{RelativeSource TemplatedParent}" />
+                                                                                        <Binding Path="Maximum" RelativeSource="{RelativeSource TemplatedParent}" />
+                                                                                    </MultiBinding>
+                                                                                </RectangleGeometry.Rect>
+                                                                            </RectangleGeometry>
+                                                                        </Border.Clip>
+                                                                    </Border>
+                                                                </Grid>
+                                                                <ControlTemplate.Triggers>
+                                                                    <!--  添加平滑动画  -->
+                                                                    <Trigger Property="IsIndeterminate" Value="False">
+                                                                        <Trigger.EnterActions>
+                                                                            <BeginStoryboard>
+                                                                                <Storyboard>
+                                                                                    <DoubleAnimation
+                                                                                        DecelerationRatio="0.5"
+                                                                                        Storyboard.TargetProperty="Value"
+                                                                                        Duration="0:0:0.3" />
+                                                                                </Storyboard>
+                                                                            </BeginStoryboard>
+                                                                        </Trigger.EnterActions>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </ProgressBar.Resources>
+                                        </ProgressBar>
                                     </DockPanel>
                                 </Border>
                                 <!--<Border
