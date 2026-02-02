@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+	<ApplicationIcon>LOG.ico</ApplicationIcon>
     <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
@@ -12,8 +13,13 @@
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="FontAwesome6.Fonts" Version="2.5.1" />
     <PackageReference Include="log4net" Version="2.0.17" />
+	  
   </ItemGroup>
-
+	<ItemGroup>
+		<Content Include="LOG.ico">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CVWaferProber.Core\CVWaferProber.Core.csproj" />
     <ProjectReference Include="..\WaferProberClient\WaferComm.Client\WaferComm.Client.csproj" />
