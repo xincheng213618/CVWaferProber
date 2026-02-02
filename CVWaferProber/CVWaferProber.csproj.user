@@ -77,9 +77,9 @@
     <Page Update="Views\ExternalWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="Views\MainWindow.xaml">
+    <Resource Update="Views\MainWindow.xaml">
       <SubType>Designer</SubType>
-    </Page>
+    </Resource>
     <Page Update="Components\MappingDataControl.xaml">
       <SubType>Designer</SubType>
     </Page>

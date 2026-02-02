@@ -30,6 +30,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Page Remove="Views\MainWindow.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Views\MainWindow.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ChipMapping\ChipMapping.csproj" />
     <ProjectReference Include="..\CVAVMControl\CVVAMControl.csproj" />
     <ProjectReference Include="..\CVDB\CVDB.csproj" />
