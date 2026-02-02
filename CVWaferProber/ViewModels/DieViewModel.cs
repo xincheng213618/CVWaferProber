@@ -32,7 +32,12 @@ namespace CVWaferProber.ViewModels
                 }
             }
         }
-
+        private int _currentTestStep; // 0:未开始, 1:移动完成, 2:初始化完成, 3:测试中, 4:完成
+        public int CurrentTestStep
+        {
+            get => _currentTestStep;
+            set => SetProperty(ref _currentTestStep, value);
+        }
         public bool IsIVLCameraEnabled {  get; set; }
         public bool IsChinese {  get; set; }
 

@@ -2117,6 +2117,8 @@ namespace CVWaferProber.ViewModels
             {
                 EnableBtnGUI(false);
                 ManTestingReady(die);
+                // 新增：启动当前Die的测试进度条
+                StartTestProgress(die);
                 mainService.DoDieFlowExec(_selectedWPFlow, die, false, false);
                 ActivateCorrespondingPanel();
             }
@@ -2127,6 +2129,8 @@ namespace CVWaferProber.ViewModels
             EnableBtnGUI(true);
             CalculateYieldBySerialNumber();
             AutoExportSummaryResult();
+            // 新增：测试完成，重置进度条
+            ResetTestProgress();
         }
 
         private void ManTestingReady(DieViewModel die)
@@ -2549,6 +2553,74 @@ namespace CVWaferProber.ViewModels
         }
 
         #endregion
+        #endregion
+
+        #region 进度条相关
+        // 测试进度条 - 进度值（0~100）
+        private int _testProgressValue;
+        public int TestProgressValue
+        {
+            get => _testProgressValue;
+            set => SetProperty(ref _testProgressValue, value);
+        }
+
+        // 测试进度条 - 是否显示（与IsProcessing联动，测试中显示，结束隐藏/重置）
+        private bool _isTestProgressVisible;
+        public bool IsTestProgressVisible
+        {
+            get => _isTestProgressVisible;
+            set => SetProperty(ref _isTestProgressVisible, value);
+        }
+
+        // 新增：重置进度条（测试完成/暂停时调用）
+        public void ResetTestProgress()
+        {
+            TestProgressValue = 0;
+            IsTestProgressVisible = false;
+        }
+
+        // 新增：启动进度条（测试开始时调用，自动开始0→100递增）
+        public void StartTestProgress(DieViewModel currentDie)
+        {
+            IsTestProgressVisible = true;
+            TestProgressValue = 0;
+
+            // 订阅CurrentTestStep的变化，更新进度
+            currentDie.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(DieViewModel.CurrentTestStep))
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        // 根据步骤映射进度（可根据实际流程调整比例）
+                        TestProgressValue = currentDie.CurrentTestStep switch
+                        {
+                            0 => 0,
+                            1 => 25,
+                            2 => 50,
+                            3 => 75,
+                            4 => 100,
+                            _ => TestProgressValue
+                        };
+                    });
+                }
+            };
+
+            // 同时监听状态变化，确保最终进度到100
+            Task.Run(async () =>
+            {
+                while (IsProcessing && currentDie.Status != ChipStatus.OK
+                       && currentDie.Status != ChipStatus.FAILED
+                       && currentDie.Status != ChipStatus.IVL_COMPLETED
+                       && currentDie.Status != ChipStatus.EQE_COMPLETED
+                       && currentDie.Status != ChipStatus.VAM_COMPLETED)
+                {
+                    await Task.Delay(100);
+                }
+                // 测试结束后强制进度到100
+                Application.Current.Dispatcher.Invoke(() => TestProgressValue = 100);
+            });
+        }
         #endregion
     }
 }
