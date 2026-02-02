@@ -245,8 +245,8 @@ namespace CVWaferProber.Services
                     //logger.InfoFormat("DoAutoDieFlowExecAsync={0}/{1}", dieNext.die.MapAxisToString(), dieNext.die.Status.ToString());
                     Task.Factory.StartNew(async () =>
                     {
-                        // 新增：启动当前Die的进度条（MainViewModel.Instance调用）
-                        MainViewModel.Instance?.StartTestProgress(dieNext.die);
+                        
+                       
                         await DoAutoDieFlowExecAsync(item.CurSelectedWPFlow, dieNext.die, dieNext.diePre == null, item.HasNext, true);
                     });
                 }
@@ -282,12 +282,12 @@ namespace CVWaferProber.Services
             {
                 if (logger.IsInfoEnabled) logger.InfoFormat("Process Current Die={0}[isFirst:{1}/HasNext:{2}/Auto:{3}] => {4}", die.ToMapAxis().ToString(), isFirst, hasNext, isAuto, die.SerialNumber);
                 // 阶段1：移动到Die位置
-                die.CurrentTestStep = (TestStep)1; // 移动中
+             
                 var isOK = await proberClientService.MoveToAsync(die, isFirst);
                 if (!isOK)
                 {
                     die.ChangeStatus(Core.Models.Enums.ChipStatus.FAILED);
-                    die.CurrentTestStep = TestStep.Failed;
+                   
                     if (logger.IsErrorEnabled) logger.Error("Prober client Move Absolute failed");
                     if (autoTestingItem != null)
                     {
@@ -298,7 +298,7 @@ namespace CVWaferProber.Services
                         DoAutoTestEnd(die, isAuto);
                     }
                 }
-                die.CurrentTestStep = TestStep.Initializing;
+               
                 await DoDieFlowExec(_selectedWPFlow, die, hasNext, isAuto);
                 if (!hasNext)
                 {
@@ -307,7 +307,7 @@ namespace CVWaferProber.Services
             }
             catch(Exception ex)
             {
-                die.CurrentTestStep = TestStep.Failed;
+               
                 logger.Error("Auto die flow exec failed", ex);
                 PauseAutoTesting();
             }
@@ -361,8 +361,8 @@ namespace CVWaferProber.Services
             autoTestingItem = null;
             //_clientProber?.StopAsync();
             proberClientService?.StopTestAsync();
-            // 新增：停止测试，重置进度条
-            MainViewModel.Instance?.ResetTestProgress();
+           
+           
         }
 
         public void PauseAutoTesting(bool isRollback = true)
@@ -375,8 +375,8 @@ namespace CVWaferProber.Services
             proberClientService?.PausedAutoTest();
             //MainViewModel.Instance.IsProcessing=false;
             MainViewModel.Instance.DataMappingVM.EnableBtnGUI(true);
-            // 新增：暂停测试，重置进度条
-            MainViewModel.Instance?.ResetTestProgress();
+           
+           
             MainViewModel.Instance.DataMappingVM.EnableBtnGUI(true);
             //MainViewModel.Instance.IsNotProcessing=true;
         }
