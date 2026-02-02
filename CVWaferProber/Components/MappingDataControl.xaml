@@ -477,7 +477,6 @@
                                             <!--  FlowLoad按钮 - 第1列  -->
                                             <Button
                                                 Grid.Column="0"
-                                                Width="100"
                                                 Height="25"
                                                 Margin="5,0,0,0"
                                                 Padding="5,1"
@@ -514,23 +513,10 @@
                                                 ToolTip="{DynamicResource BtnStopAutoTest}" />
                                             -->
 
-                                            <!--  手动测试按钮 - 第4列  -->
-                                            <Button
-                                                Grid.Column="1"
-                                                Height="25"
-                                                Width="100"
-                                                Margin="5,0,0,0"
-                                                Padding="5,1"
-                                                HorizontalAlignment="Stretch"
-                                                VerticalAlignment="Center"
-                                                BorderThickness="0"
-                                                Command="{Binding StartManTestCommand}"
-                                                Content="{DynamicResource BtnStartManTest}"
-                                                IsEnabled="{Binding IsNotProcessing}"
-                                                ToolTip="{DynamicResource BtnStartManTest}" />
                                             <!--  刷新状态按钮 - 第2列  -->
                                             <Button
-                                                Grid.Column="4"
+                                                Grid.Column="1"
+                                                Grid.ColumnSpan="2"
                                                 Height="25"
                                                 Margin="15,0,0,0"
                                                 Padding="5,1"
@@ -540,6 +526,7 @@
                                                 Command="{Binding RefreshStatusCommand}"
                                                 Content="{DynamicResource BtnRefreshStatus}"
                                                 ToolTip="{DynamicResource BtnRefreshStatus}" />
+
                                             <!--  颜色状态复选框 - 第3列（自适应宽度）  -->
                                             <CheckBox
                                                 Grid.Column="3"
@@ -547,6 +534,20 @@
                                                 VerticalAlignment="Center"
                                                 Content="{DynamicResource ChkColorStatus}"
                                                 IsChecked="{Binding IsColorEnabled}" />
+
+                                            <!--  手动测试按钮 - 第4列  -->
+                                            <Button
+                                                Grid.Column="4"
+                                                Height="25"
+                                                Margin="5,0,0,0"
+                                                Padding="5,1"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Center"
+                                                BorderThickness="0"
+                                                Command="{Binding StartManTestCommand}"
+                                                Content="{DynamicResource BtnStartManTest}"
+                                                IsEnabled="{Binding IsNotProcessing}"
+                                                ToolTip="{DynamicResource BtnStartManTest}" />
 
                                             <!--  保存测试结果按钮 - 第5列  -->
                                             <Button
@@ -707,19 +708,15 @@
                                 </Border>-->
 
                                 <!--  状态指示  -->
-                                <!--<Border
+                                <Border
                                     Padding="10"
                                     HorizontalAlignment="Stretch"
                                     Background="#FFFFFFFF"
                                     CornerRadius="6"
                                     Visibility="{Binding IsTestProgressVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                -->
-                                <!--  核心：用DockPanel替代StackPanel，LastChildFill=True（最后一个子元素占满剩余空间）  -->
-                                <!--
+                                    <!--  核心：用DockPanel替代StackPanel，LastChildFill=True（最后一个子元素占满剩余空间）  -->
                                     <DockPanel HorizontalAlignment="Stretch" LastChildFill="True">
-                                -->
-                                <!--  加载动画：固定在左侧，DockPanel.Dock="Left"  -->
-                                <!--
+                                        <!--  加载动画：固定在左侧，DockPanel.Dock="Left"  -->
                                         <Ellipse
                                             Width="12"
                                             Height="12"
@@ -745,9 +742,7 @@
                                                 </EventTrigger>
                                             </Ellipse.Triggers>
                                         </Ellipse>
-                                -->
-                                <!--  测试状态文本：固定在动画右侧，DockPanel.Dock="Left"  -->
-                                <!--
+                                        <!--  测试状态文本：固定在动画右侧，DockPanel.Dock="Left"  -->
                                         <TextBlock
                                             Name="TestingStatus"
                                             Margin="0,0,8,0"
@@ -755,9 +750,7 @@
                                             DockPanel.Dock="Left"
                                             Foreground="#FF666666"
                                             Text="{DynamicResource Maping.Measurementinprogress}" />
-                                -->
-                                <!--  百分比文字：固定右侧，绑定进度值并格式化为XX%  -->
-                                <!--
+                                        <!--  百分比文字：固定右侧，绑定进度值并格式化为XX%  -->
                                         <TextBlock
                                             Margin="8,0,0,0"
                                             VerticalAlignment="Center"
@@ -765,9 +758,7 @@
                                             FontSize="12"
                                             Foreground="#FF0078D7"
                                             Text="{Binding TestProgressValue, Mode=OneWay, StringFormat={}{0:0}%, FallbackValue=0%}" />
-                                -->
-                                <!--  进度条：作为DockPanel最后一个子元素，自动占满剩余整行（删除固定Width）  -->
-                                <!--
+                                        <!--  进度条：作为DockPanel最后一个子元素，自动占满剩余整行（删除固定Width）  -->
                                         <ProgressBar
                                             Height="6"
                                             Margin="0,3,0,0"
@@ -780,20 +771,16 @@
                                             Value="{Binding TestProgressValue, Mode=OneWay}" />
 
                                     </DockPanel>
-                                </Border>-->
-                                <Border
+                                </Border>
+                                <!--<Border
                                     Padding="10"
-                                    HorizontalAlignment="Stretch"
                                     Background="#FFFFFFFF"
                                     CornerRadius="6"
-                                    Visibility="{Binding IsTestProgressVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                    <DockPanel HorizontalAlignment="Stretch" LastChildFill="True">
-                                        <!--  加载动画  -->
+                                    Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <StackPanel Orientation="Horizontal">
                                         <Ellipse
                                             Width="12"
                                             Height="12"
-                                            Margin="0,0,8,0"
-                                            DockPanel.Dock="Left"
                                             Fill="#FF198754">
                                             <Ellipse.RenderTransform>
                                                 <RotateTransform x:Name="SpinnerTransform" Angle="0" CenterX="6" CenterY="6" />
@@ -814,33 +801,14 @@
                                                 </EventTrigger>
                                             </Ellipse.Triggers>
                                         </Ellipse>
-                                        <!--  精细化步骤描述（替代原有固定文本）  -->
                                         <TextBlock
-                                            VerticalAlignment="Center"
-                                            DockPanel.Dock="Left"
-                                            Foreground="#FF666666"
-                                            Text="{Binding TestStepDesc}" />
-                                        <!--  进度百分比  -->
-                                        <TextBlock
+                                            Name="TestingStatus"
                                             Margin="8,0,0,0"
                                             VerticalAlignment="Center"
-                                            DockPanel.Dock="Right"
-                                            FontSize="12"
-                                            Foreground="#FF0078D7"
-                                            Text="{Binding TestProgressValue, Mode=OneWay, StringFormat={}{0:0}%}" />
-                                        <!--  精细化进度条  -->
-                                        <ProgressBar
-                                            Height="6"
-                                            Margin="0,3,0,0"
-                                            VerticalAlignment="Center"
-                                            Background="#FFE0E0E0"
-                                            BorderThickness="0"
-                                            Foreground="#FF0078D7"
-                                            Maximum="100"
-                                            Minimum="0"
-                                            Value="{Binding TestProgressValue, Mode=OneWay}" />
-                                    </DockPanel>
-                                </Border>
+                                            Foreground="#FF666666"
+                                            Text="{DynamicResource Maping.Measurementinprogress}" />
+                                    </StackPanel>
+                                </Border>-->
                             </StackPanel>
                         </Border>
 
@@ -856,7 +824,6 @@
                                 IsReadOnly="False"
                                 ItemsSource="{Binding FilteredTestResults}"
                                 SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
-                                MouseDoubleClick="DataGrid_MouseDoubleClick"
                                 SelectionMode="Single"
                                 SelectionUnit="FullRow"
                                 VerticalScrollBarVisibility="Auto">
