@@ -100,7 +100,7 @@ namespace CVWaferProber.Views
                 // 3. 绑定MainViewModel的切换方法
                 if (DataContext is MainViewModel mainVm)
                 {
-                    mainVm.SpPanelView = _spAnalyzer;
+                    //mainVm.SpPanelView = _spAnalyzer;
                     mainVm.ActivateSpectralInnerTabAction = ActivateSpectralInnerTab;
                     mainVm.ActivateIVLCameraInnerTabAction = ActivateIVLCameraInnerTab;
                     mainVm.ActivateEQEOuterTabAction = ActivateEQEOuterTab;

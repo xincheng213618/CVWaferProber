@@ -498,9 +498,6 @@ namespace CVWaferProber.ViewModels
             set => SetProperty(ref testingStatus, value);
         }
 
-        public CVSpectrumAnalyzer? SpPanelView { get; set; }
-
-
         public void PauseAutoFlow()
         {
             mainService.PauseAutoTesting();
