@@ -2,6 +2,7 @@
 using AvalonDock.Layout;
 using ChipMapping.ViewModels;
 using CVAVMControl;
+using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
 using CVWaferProber.Models;
 using CVWaferProber.MQTT;
@@ -216,7 +217,7 @@ namespace CVWaferProber.ViewModels
             OpenVEyeWindowCommand = new RelayCommand(OpenVEyeWindow);
             //StartAutoTestCommand = new RelayCommand(_ => StartAutoTest(),
             //    _ => CanStartAuto);
-            StopAutoTestCommand = new RelayCommand(StopAutoTest);
+            //StopAutoTestCommand = new RelayCommand(StopAutoTest);
 
             RCRegCommand = new RelayCommand(_ => RCReg());
             ReconnectDevCommand = new RelayCommand(_ => ReconnectDev());
@@ -498,52 +499,6 @@ namespace CVWaferProber.ViewModels
         }
 
         public CVSpectrumAnalyzer? SpPanelView { get; set; }
-        //private TabControl? _innerTabControl;
-        private void StartManFlow()
-        {
-            if (SelectedWPFlow != null && SelectedItem is DieViewModel die)
-            {
-                EnableBtnGUI(false);
-                ManTestingReady(die);
-                // 新增：启动当前Die的测试进度条
-                StartTestProgress(die);
-                mainService.DoDieFlowExec(_selectedWPFlow, die, false, false);
-                ActivateCorrespondingPanel();
-            }
-        }
-
-        private void DoEndTesting(bool isAuto)
-        {
-            EnableBtnGUI(true);
-            CalculateYieldBySerialNumber();
-            AutoExportSummaryResult();
-            // 新增：测试完成，重置进度条
-            ResetTestProgress();
-        }
-
-        private void ManTestingReady(DieViewModel die)
-        {
-            string timestamp = DateTime.Now.ToString("yyyyMMdd'T'HHmmss.fff");
-            die.TestingReady(ProberId, timestamp);
-            if (_isAutoSN) Timestamp = timestamp;
-        }
-
-        private void TestingReady(List<TestItem> testItems)
-        {
-            CustomMappingVM.DisabledInput = IsProcessing = true;
-
-
-        private void StartAutoTest()
-        {
-            DataMappingVM?.StartAutoFlow();
-        }
-
-    
-
-        private void StopAutoTest(object? obj)
-        {
-
-        }
 
 
         public void PauseAutoFlow()
@@ -638,7 +593,7 @@ namespace CVWaferProber.ViewModels
         }
 
         #endregion
-        #endregion
+        //#endregion
 
         #region 进度条相关
         #region 精细化测试进度-UI绑定属性

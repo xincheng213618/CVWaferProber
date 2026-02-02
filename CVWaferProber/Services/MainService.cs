@@ -2,6 +2,7 @@
 using CVAVMControl;
 using CVCommCore;
 using CVWaferProber.Config;
+using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Models;
 using CVWaferProber.ViewModels;
 using CVWaferProber.WinMsg;
@@ -279,13 +280,13 @@ namespace CVWaferProber.Services
         {
             if (logger.IsInfoEnabled) logger.InfoFormat("Process Current Die={0}[isFirst:{1}/HasNext:{2}/Auto:{3}] => {4}", die.ToMapAxis().ToString(), isFirst, hasNext, isAuto, die.SerialNumber);
             // 阶段1：移动到Die位置
-            die.CurrentTestStep = 1; // 移动中
+            die.CurrentTestStep = (TestStep)1; // 移动中
             var isOK = await proberClientService.MoveToAsync(die, isFirst);
             if (isOK)
             {
-                die.CurrentTestStep = 2; // 移动完成，初始化中
+                die.CurrentTestStep = (TestStep)2; // 移动完成，初始化中
                 await DoDieFlowExec(_selectedWPFlow, die, hasNext, isAuto);
-                die.CurrentTestStep = 3; // 测试中
+                die.CurrentTestStep = (TestStep)3; // 测试中
                 if (!hasNext)
                 {
                     await proberClientService.StopTestAsync();
@@ -294,7 +295,7 @@ namespace CVWaferProber.Services
             else
             {
                 die.ChangeStatus(Core.Models.Enums.ChipStatus.FAILED);
-                die.CurrentTestStep = 4; // 测试失败
+                die.CurrentTestStep = (TestStep)4; // 测试失败
                 if (logger.IsErrorEnabled) logger.Error("Prober client Move Absolute failed");
                 if (autoTestingItem != null)
                 {
@@ -366,7 +367,7 @@ namespace CVWaferProber.Services
             }
             proberClientService?.PausedAutoTest();
             //MainViewModel.Instance.IsProcessing=false;
-            MainViewModel.Instance.EnableBtnGUI(true);
+            MainViewModel.Instance.DataMappingVM.EnableBtnGUI(true);
             // 新增：暂停测试，重置进度条
             MainViewModel.Instance?.ResetTestProgress();
             MainViewModel.Instance.DataMappingVM.EnableBtnGUI(true);

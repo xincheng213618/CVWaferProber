@@ -762,6 +762,8 @@ namespace CVWaferProber.ViewModels
             EnableBtnGUI(true);
             CalculateYieldBySerialNumber();
             AutoExportSummaryResult();
+            // 新增：测试完成，重置进度条
+            MainViewModel.Instance.ResetTestProgress();
         }
         public void EnableBtnGUI(bool enabled)
         {
@@ -818,6 +820,8 @@ namespace CVWaferProber.ViewModels
                 EnableBtnGUI(false);
                 ManTestingReady(die);
                 mainService.DoDieFlowExec(_selectedWPFlow, die, false, false);
+                // 新增：启动当前Die的测试进度条
+                MainViewModel.Instance.StartTestProgress(die);
                 ActivateCorrespondingPanel?.Invoke(this, _selectedWPFlow);
             }
         }
