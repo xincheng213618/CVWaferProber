@@ -2556,71 +2556,106 @@ namespace CVWaferProber.ViewModels
         #endregion
 
         #region 进度条相关
-        // 测试进度条 - 进度值（0~100）
+        #region 精细化测试进度-UI绑定属性
+        // 1. 当前正在测试的芯片（绑定进度条上下文）
+        private DieViewModel _currentTestingDie;
+        public DieViewModel CurrentTestingDie
+        {
+            get => _currentTestingDie;
+            private set => SetProperty(ref _currentTestingDie, value);
+        }
+
+        // 2. 全局测试进度值（0~100，绑定ProgressBar.Value）
         private int _testProgressValue;
         public int TestProgressValue
         {
             get => _testProgressValue;
-            set => SetProperty(ref _testProgressValue, value);
+            private set => SetProperty(ref _testProgressValue, Math.Clamp(value, 0, 100));
         }
 
-        // 测试进度条 - 是否显示（与IsProcessing联动，测试中显示，结束隐藏/重置）
+        // 3. 当前测试步骤描述（绑定TextBlock，显示精细化状态）
+        private string _testStepDesc;
+        public string TestStepDesc
+        {
+            get => _testStepDesc;
+            private set => SetProperty(ref _testStepDesc, value);
+        }
+
+        // 4. 进度条是否显示（替代原有IsTestProgressVisible）
         private bool _isTestProgressVisible;
         public bool IsTestProgressVisible
         {
             get => _isTestProgressVisible;
-            set => SetProperty(ref _isTestProgressVisible, value);
+            private set => SetProperty(ref _isTestProgressVisible, value);
         }
+        #endregion
 
-        // 新增：重置进度条（测试完成/暂停时调用）
-        public void ResetTestProgress()
+        #region 精细化进度计算+更新方法
+        // 对外提供：开始测试（绑定到测试启动方法）
+        public void StartTestProgress(DieViewModel die)
         {
-            TestProgressValue = 0;
-            IsTestProgressVisible = false;
-        }
-
-        // 新增：启动进度条（测试开始时调用，自动开始0→100递增）
-        public void StartTestProgress(DieViewModel currentDie)
-        {
-            IsTestProgressVisible = true;
-            TestProgressValue = 0;
-
-            // 订阅CurrentTestStep的变化，更新进度
-            currentDie.PropertyChanged += (s, e) =>
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                if (e.PropertyName == nameof(DieViewModel.CurrentTestStep))
-                {
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        // 根据步骤映射进度（可根据实际流程调整比例）
-                        TestProgressValue = currentDie.CurrentTestStep switch
-                        {
-                            0 => 0,
-                            1 => 25,
-                            2 => 50,
-                            3 => 75,
-                            4 => 100,
-                            _ => TestProgressValue
-                        };
-                    });
-                }
-            };
-
-            // 同时监听状态变化，确保最终进度到100
-            Task.Run(async () =>
-            {
-                while (IsProcessing && currentDie.Status != ChipStatus.OK
-                       && currentDie.Status != ChipStatus.FAILED
-                       && currentDie.Status != ChipStatus.IVL_COMPLETED
-                       && currentDie.Status != ChipStatus.EQE_COMPLETED
-                       && currentDie.Status != ChipStatus.VAM_COMPLETED)
-                {
-                    await Task.Delay(100);
-                }
-                // 测试结束后强制进度到100
-                Application.Current.Dispatcher.Invoke(() => TestProgressValue = 100);
+                die.ResetTestStepStatus();
+                CurrentTestingDie = die;
+                IsTestProgressVisible = true;
+                UpdateDieTestProgress(die); // 初始化进度
             });
         }
+
+        // 对外提供：更新芯片进度（DieViewModel步骤变化时调用）
+        public void UpdateDieTestProgress(DieViewModel die)
+        {
+            if (CurrentTestingDie != die) return; // 只更新当前测试芯片的进度
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                // 核心：步骤->进度百分比的映射规则（可根据业务调整）
+                TestProgressValue = die.CurrentTestStep switch
+                {
+                    TestStep.None => 0,
+                    TestStep.Moving => 15,
+                    TestStep.Initializing => 30,
+                    // 执行中：基础50% + 子进度*(35/100) → 50%~85%
+                    TestStep.Executing => 50 + (die.ExecSubProgress * 35) / 100,
+                    TestStep.ParsingResult => 85,
+                    TestStep.Completed => 100,
+                    TestStep.Failed => 100,
+                    _ => 0
+                };
+
+                // 更新步骤描述
+                TestStepDesc = die.TestStepDesc;
+            });
+        }
+
+        // 对外提供：重置进度（测试完成/暂停/失败时调用）
+        public void ResetTestProgress()
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                CurrentTestingDie?.ResetTestStepStatus();
+                CurrentTestingDie = null;
+                TestProgressValue = 0;
+                TestStepDesc = GetLangResource("TestStep_None");
+                IsTestProgressVisible = false;
+            });
+        }
+
+        // 辅助：获取多语言资源
+        private string GetLangResource(string key)
+        {
+            try
+            {
+                return (string)Application.Current.FindResource(key);
+            }
+            catch
+            {
+                return key;
+            }
+        }
+        #endregion
+
         #endregion
     }
 }
