@@ -291,11 +291,12 @@ namespace CVWaferProber.Services
                 {
                     if (ConfigManager.Config.IsAutoStop)
                     {
-                        StopAutoTest();
+                        StopAutoTestAndExitWafer();
                     }
                     else
                     {
-                        NewAutoTesting();
+                        DoAutoTestEnd(die, isAuto);
+                        //AutoTestingCompleted();
                     }
                 }
             }
@@ -315,13 +316,15 @@ namespace CVWaferProber.Services
             }
         }
 
-        private void StopAutoTest()
+        private void StopAutoTestAndExitWafer()
         {
             proberClientService?.StopTestAsync();
+            if (logger.IsInfoEnabled) logger.Info("Stop testing and exit the wafer.");
         }
 
-        private void NewAutoTesting()
+        private void AutoTestingCompleted()
         {
+            if (logger.IsInfoEnabled) logger.Info("Auto Testing Completed");
             proberClientService?.TestingCompleted();
         }
 
@@ -333,6 +336,7 @@ namespace CVWaferProber.Services
                 proberClientService?.SendResultAsync(dieVM);
             }
             proberClientService?.TestingCompleted();
+            if (logger.IsInfoEnabled) logger.Info("Auto Testing End");
         }
 
         private void OutputLog(List<DieViewModel> dieVMList)
@@ -389,6 +393,7 @@ namespace CVWaferProber.Services
             MainViewModel.Instance?.ResetTestProgress();
             MainViewModel.Instance.DataMappingVM.EnableBtnGUI(true);
             //MainViewModel.Instance.IsNotProcessing=true;
+            if (logger.IsInfoEnabled) logger.Info("Pause auto testing");
         }
 
         public void ContinuAutoTesting()
