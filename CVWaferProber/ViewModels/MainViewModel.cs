@@ -70,7 +70,6 @@ namespace CVWaferProber.ViewModels
 
         public ICommand StartAutoTestCommand { get; }
         public ICommand StopAutoTestCommand { get; }
-        public ICommand StartManTestCommand { get; }
         public ICommand IVLTestCommand { get; }
 
         public ICommand RCRegCommand { get; }
@@ -218,7 +217,6 @@ namespace CVWaferProber.ViewModels
             //StartAutoTestCommand = new RelayCommand(_ => StartAutoTest(),
             //    _ => CanStartAuto);
             StopAutoTestCommand = new RelayCommand(StopAutoTest);
-            StartManTestCommand = new RelayCommand(StartManTest);
 
             RCRegCommand = new RelayCommand(_ => RCReg());
             ReconnectDevCommand = new RelayCommand(_ => ReconnectDev());
@@ -508,12 +506,7 @@ namespace CVWaferProber.ViewModels
             DataMappingVM?.StartAutoFlow();
         }
 
-        private void StartManTest(object? obj)
-        {
-            DataMappingVM?.StartManFlow();
-        }
-
-
+    
 
         private void StopAutoTest(object? obj)
         {

@@ -31,7 +31,7 @@ namespace CVWaferProber.Components
         private void DataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             var dataGrid = sender as DataGrid;
-            if (dataGrid?.SelectedItem != null)
+            if (dataGrid?.SelectedItem != null && e.RightButton == MouseButtonState.Pressed)
             {
                 // 获取双击的行数据
                 var selectedItem = dataGrid.SelectedItem as DieViewModel;

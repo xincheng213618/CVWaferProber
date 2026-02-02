@@ -45,6 +45,8 @@ namespace CVWaferProber.ViewModels
         public ICommand SaveTestResultCommand { get; }
         public ICommand LoadTestResultCommand { get; }
         public ICommand ResetStatusCommand { get; }
+        public ICommand StartManTestCommand { get; }
+
 
         #region AOI列的全选/反选命令
         // ========== 1. AOI列的全选/反选命令 ==========
@@ -404,6 +406,8 @@ namespace CVWaferProber.ViewModels
             RefreshStatusCommand = new RelayCommand(RefreshStatus);
             OpenMappingFileCommand = new RelayCommand(OpenMappingFile);
 
+            StartManTestCommand = new RelayCommand(StartManTest);
+
             SearchCommand = new RelayCommand(ExecuteSearch);
             SaveTestResultCommand = new RelayCommand(SaveTestResult);
             LoadTestResultCommand = new RelayCommand(LoadTestResult);
@@ -733,6 +737,11 @@ namespace CVWaferProber.ViewModels
             mainService.TestingCompleted += OnTestingCompleted;
             mainService.PreAutoTestingNextDie += OnAutoTestingNextDie;
         }
+        private void StartManTest(object? obj)
+        {
+            StartManFlow();
+        }
+
 
         private void OnTestingCompleted(object? sender, TestCompletedEventArgs e)
         {
