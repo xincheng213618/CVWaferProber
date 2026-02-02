@@ -287,6 +287,7 @@ namespace CVWaferProber.Services
                 die.CurrentTestStep = 2; // 移动完成，初始化中
                 await DoDieFlowExec(_selectedWPFlow, die, hasNext, isAuto);
                 die.CurrentTestStep = 3; // 测试中
+                
                 if (!hasNext)
                 {
                     await proberClientService.StopTestAsync();

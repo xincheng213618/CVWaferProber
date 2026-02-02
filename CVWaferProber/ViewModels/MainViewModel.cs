@@ -645,7 +645,9 @@ namespace CVWaferProber.ViewModels
                     });
                 }
             };
-
+            // 强制进度值不回退（符合用户视觉习惯）
+            if (TestProgressValue < _testProgressValue)
+                TestProgressValue = _testProgressValue;
             // 同时监听状态变化，确保最终进度到100
             Task.Run(async () =>
             {

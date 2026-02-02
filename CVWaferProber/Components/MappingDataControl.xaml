@@ -233,9 +233,9 @@
         BorderThickness="0">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="6.8*" />
+                <RowDefinition Height="7*" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="4.55*" />
+                <RowDefinition Height="4*" />
             </Grid.RowDefinitions>
 
             <Grid Grid.Row="0">
@@ -757,7 +757,7 @@
                                             DockPanel.Dock="Right"
                                             FontSize="12"
                                             Foreground="#FF0078D7"
-                                            Text="{Binding TestProgressValue, Mode=OneWay, StringFormat={}{0:0}%, FallbackValue=0%}" />
+                                            Text="{Binding DataContext.TestProgressValue, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay, StringFormat={}{0:0}%, FallbackValue=0%}" />
                                         <!--  进度条：作为DockPanel最后一个子元素，自动占满剩余整行（删除固定Width）  -->
                                         <ProgressBar
                                             Height="6"
@@ -768,7 +768,7 @@
                                             Foreground="#FF0078D7"
                                             Maximum="100"
                                             Minimum="0"
-                                            Value="{Binding TestProgressValue, Mode=OneWay}" />
+                                            Value="{Binding DataContext.TestProgressValue, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" />
 
                                     </DockPanel>
                                 </Border>
