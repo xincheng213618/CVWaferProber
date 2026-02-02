@@ -282,7 +282,7 @@ namespace CVWaferProber.Services
             {
                 if (logger.IsInfoEnabled) logger.InfoFormat("Process Current Die={0}[isFirst:{1}/HasNext:{2}/Auto:{3}] => {4}", die.ToMapAxis().ToString(), isFirst, hasNext, isAuto, die.SerialNumber);
                 // 阶段1：移动到Die位置
-             
+                die.CurrentTestStep = 1;
                 var isOK = await proberClientService.MoveToAsync(die, isFirst);
                 if (!isOK)
                 {
@@ -361,7 +361,7 @@ namespace CVWaferProber.Services
             autoTestingItem = null;
             //_clientProber?.StopAsync();
             proberClientService?.StopTestAsync();
-           
+           MainViewModel.Instance?.ResetTestProgress();
            
         }
 
@@ -375,9 +375,9 @@ namespace CVWaferProber.Services
             proberClientService?.PausedAutoTest();
             //MainViewModel.Instance.IsProcessing=false;
             MainViewModel.Instance.DataMappingVM.EnableBtnGUI(true);
-           
-           
-            MainViewModel.Instance.DataMappingVM.EnableBtnGUI(true);
+
+
+            MainViewModel.Instance?.ResetTestProgress();
             //MainViewModel.Instance.IsNotProcessing=true;
         }
 
