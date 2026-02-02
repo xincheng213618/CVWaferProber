@@ -246,7 +246,7 @@ namespace CVWaferProber.Services
                     Task.Factory.StartNew(async () =>
                     {
                         
-                       
+                       MainViewModel.Instance?.StartTestProgress(dieNext.die);
                         await DoAutoDieFlowExecAsync(item.CurSelectedWPFlow, dieNext.die, dieNext.diePre == null, item.HasNext, true);
                     });
                 }
@@ -278,41 +278,36 @@ namespace CVWaferProber.Services
         }
         private async Task DoAutoDieFlowExecAsync(WPFlowViewModel _selectedWPFlow, DieViewModel die, bool isFirst, bool hasNext, bool isAuto)
         {
-            try
+            if (logger.IsInfoEnabled) logger.InfoFormat("Process Current Die={0}[isFirst:{1}/HasNext:{2}/Auto:{3}] => {4}", die.ToMapAxis().ToString(), isFirst, hasNext, isAuto, die.SerialNumber);
+            // 阶段1：移动到Die位置
+            die.CurrentTestStep = 1; // 移动中
+            var isOK = await proberClientService.MoveToAsync(die, isFirst);
+            if (isOK)
             {
-                if (logger.IsInfoEnabled) logger.InfoFormat("Process Current Die={0}[isFirst:{1}/HasNext:{2}/Auto:{3}] => {4}", die.ToMapAxis().ToString(), isFirst, hasNext, isAuto, die.SerialNumber);
-                // 阶段1：移动到Die位置
-                die.CurrentTestStep = 1;
-                var isOK = await proberClientService.MoveToAsync(die, isFirst);
-                if (!isOK)
-                {
-                    die.ChangeStatus(Core.Models.Enums.ChipStatus.FAILED);
-                   
-                    if (logger.IsErrorEnabled) logger.Error("Prober client Move Absolute failed");
-                    if (autoTestingItem != null)
-                    {
-                        PauseAutoTesting();
-                    }
-                    else
-                    {
-                        DoAutoTestEnd(die, isAuto);
-                    }
-                }
-               
+                die.CurrentTestStep = 2; // 移动完成，初始化中
                 await DoDieFlowExec(_selectedWPFlow, die, hasNext, isAuto);
+                die.CurrentTestStep = 3; // 测试中
                 if (!hasNext)
                 {
                     await proberClientService.StopTestAsync();
                 }
             }
-            catch(Exception ex)
+            else
             {
-               
-                logger.Error("Auto die flow exec failed", ex);
-                PauseAutoTesting();
+                die.ChangeStatus(Core.Models.Enums.ChipStatus.FAILED);
+                die.CurrentTestStep = 4; // 测试失败
+                if (logger.IsErrorEnabled) logger.Error("Prober client Move Absolute failed");
+                if (autoTestingItem != null)
+                {
+                    PauseAutoTesting();
+                }
+                else
+                {
+                    DoAutoTestEnd(die, isAuto);
+                }
             }
 
-           
+
         }
 
         private void DoAutoTestEnd(DieViewModel? dieVM, bool isAuto)
