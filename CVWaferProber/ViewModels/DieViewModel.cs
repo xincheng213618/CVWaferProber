@@ -6,6 +6,7 @@ using CVWaferProber.Utils;
 using ScottPlot.Plottables;
 using System.Windows;
 using WaferComm.StateMachine;
+using CVWaferProber.Core.Models.Enums;
 using Application = System.Windows.Application;
 
 namespace CVWaferProber.ViewModels
@@ -32,6 +33,60 @@ namespace CVWaferProber.ViewModels
                     //MainViewModel.Instance?.CalculateYieldBySerialNumber();
                 }
             }
+        }
+        private TestStep _currentTestStep = TestStep.None;
+        public TestStep CurrentTestStep
+        {
+            get => _currentTestStep;
+            set
+            {
+                if (SetProperty(ref _currentTestStep, value))
+                {
+                    // 步骤变化时，自动更新步骤描述和进度映射
+                    OnPropertyChanged(nameof(TestStepDesc));
+                    MainViewModel.Instance?.UpdateDieTestProgress(this);
+                }
+            }
+        }
+        // 2. 步骤对应的多语言描述（绑定到UI状态文本）
+        public string TestStepDesc
+        {
+            get
+            {
+                return CurrentTestStep switch
+                {
+                    TestStep.None => (string)Application.Current.FindResource("TestStep_None"),
+                    TestStep.Moving => (string)Application.Current.FindResource("TestStep_Moving"),
+                    TestStep.Initializing => (string)Application.Current.FindResource("TestStep_Initializing"),
+                    TestStep.Executing => (string)Application.Current.FindResource("TestStep_Executing"),
+                    TestStep.ParsingResult => (string)Application.Current.FindResource("TestStep_ParsingResult"),
+                    TestStep.Completed => (string)Application.Current.FindResource("TestStep_Completed"),
+                    TestStep.Failed => (string)Application.Current.FindResource("TestStep_Failed"),
+                    _ => "Unknown Step"
+                };
+            }
+        }
+        // 3. 执行中子进度（仅Executing步骤有效，0~100，用于50%~85%的精细进度）
+        private int _execSubProgress;
+        public int ExecSubProgress
+        {
+            get => _execSubProgress;
+            set
+            {
+                if (SetProperty(ref _execSubProgress, Math.Clamp(value, 0, 100)) && CurrentTestStep == TestStep.Executing)
+                {
+                    MainViewModel.Instance?.UpdateDieTestProgress(this);
+                }
+            }
+        }
+        // 新增：重置所有测试进度状态（测试开始/重置时调用）
+        public void ResetTestStepStatus()
+        {
+            CurrentTestStep = TestStep.None;
+            ExecSubProgress = 0;
+            StartTestTime = null;
+            EndTestTime = null;
+            TotalTime = null;
         }
 
         public bool IsIVLCameraEnabled { get; set; }

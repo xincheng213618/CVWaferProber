@@ -662,13 +662,13 @@
     <sys:String x:Key="HC_Close">Close</sys:String>
     <sys:String x:Key="Createdexportdirectory">Created export directory</sys:String>
 
-    <!-- Toolbar -->
+    <!--  Toolbar  -->
     <sys:String x:Key="Toolbar.LiftAll">Lift All</sys:String>
     <sys:String x:Key="Toolbar.ToMainCamera">To AOI Camera</sys:String>
     <sys:String x:Key="Toolbar.ToAuxCamera">To VAM Camera</sys:String>
     <sys:String x:Key="Toolbar.ToIntegratingSphere">To Integrating Sphere</sys:String>
 
-    <!-- 在现有资源基础上添加 -->
+    <!--  在现有资源基础上添加  -->
     <sys:String x:Key="CopyrightNotice">Copyright © {0} {1}. All rights reserved.</sys:String>
     <sys:String x:Key="Copyright">Copyright</sys:String>
     <sys:String x:Key="AllRightsReserved">All rights reserved</sys:String>
@@ -687,7 +687,7 @@
     <sys:String x:Key="SerialNumber">Serial Number</sys:String>
     <sys:String x:Key="BuildDate">Build Date</sys:String>
 
-    <!-- Startup Tasks -->
+    <!--  Startup Tasks  -->
     <sys:String x:Key="Task_Hardware">Initializing Hardware Interface</sys:String>
     <sys:String x:Key="Task_Motion">Loading Motion Control System</sys:String>
     <sys:String x:Key="Task_ProbeCard">Connecting Probe Card Controller</sys:String>
@@ -697,7 +697,7 @@
     <sys:String x:Key="Task_Safety">Starting Safety Monitoring</sys:String>
     <sys:String x:Key="Task_Ready">Ready</sys:String>
 
-    <!-- Status Messages -->
+    <!--  Status Messages  -->
     <sys:String x:Key="StartupCompleted">System startup completed! Launching main interface...</sys:String>
     <sys:String x:Key="LaunchingMain">Launching main application...</sys:String>
 
@@ -711,4 +711,13 @@
     <sys:String x:Key="Maping.StartingTest">Starting test...</sys:String>
     <sys:String x:Key="Maping.Die">die</sys:String>
     <sys:String x:Key="Maping.Dies">dies</sys:String>
+
+
+    <sys:String x:Key="TestStep_None">Not started</sys:String>
+    <sys:String x:Key="TestStep_Moving">Machine is moving...</sys:String>
+    <sys:String x:Key="TestStep_Initializing">Module initializing...</sys:String>
+    <sys:String x:Key="TestStep_Executing">The test instruction is being executed ...</sys:String>
+    <sys:String x:Key="TestStep_ParsingResult">Result analysis in progress...</sys:String>
+    <sys:String x:Key="TestStep_Completed">Test completed</sys:String>
+    <sys:String x:Key="TestStep_Failed">Test failure</sys:String>
 </ResourceDictionary>
