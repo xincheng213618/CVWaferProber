@@ -662,6 +662,6 @@ namespace CVWaferProber.ViewModels
             });
         }
         #endregion
-#endregion
+
     }
 }
