@@ -16,6 +16,8 @@ using Color = System.Windows.Media.Color;
 using MessageBox = System.Windows.MessageBox;
 using CVWaferProber.Models;
 using CVWaferProber.Language;
+using System;
+using System.Diagnostics;
 
 namespace CVWaferProber
 {
@@ -46,8 +48,24 @@ namespace CVWaferProber
 
         //private CVWaferProber.Views.SplashScreen _splash;
         private CVWaferProber.Views.WaferProberStartupWindow _splash;
+
+        private const string AppMutexName = "CVWaferProber_79E62ABA-AEAB-4AD5-A973-F281F69E8271"; // 替换为唯一标识符
+        private static Mutex _mutex;
+        private static bool _isFirstInstance;
+
         protected override void OnStartup(StartupEventArgs e)
         {
+            // 尝试创建命名的 Mutex
+            _mutex = new Mutex(true, AppMutexName, out _isFirstInstance);
+
+            if (!_isFirstInstance)
+            {
+                // 如果已经存在实例，激活它并退出
+                ActivateExistingInstance();
+                Shutdown();
+                return;
+            }
+
             // 设置兼容模式
             System.Windows.Forms.Application.EnableVisualStyles();
             System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
@@ -211,9 +229,14 @@ namespace CVWaferProber
         {
             try
             {
-                // 调用DLL释放方法
-                CV_Ali_release();
-               log.Info("CV_algorithm.dll Resource released successfully");
+                // 确保在程序退出时释放 Mutex
+                if (_isFirstInstance)
+                {
+                    _mutex?.ReleaseMutex();
+                    // 调用DLL释放方法
+                    CV_Ali_release();
+                    log.Info("CV_algorithm.dll Resource released successfully");
+                }
             }
             catch (Exception ex)
             {
@@ -222,6 +245,47 @@ namespace CVWaferProber
             base.OnExit(e);
         }
 
+        private void ActivateExistingInstance()
+        {
+            // 查找已有的窗口并激活
+            var currentProcess = Process.GetCurrentProcess();
+            var processes = Process.GetProcessesByName(currentProcess.ProcessName);
+
+            foreach (var process in processes)
+            {
+                if (process.Id != currentProcess.Id)
+                {
+                    // 激活主窗口
+                    IntPtr mainWindowHandle = process.MainWindowHandle;
+                    if (mainWindowHandle != IntPtr.Zero)
+                    {
+                        BringWindowToForeground(mainWindowHandle);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 将窗口带到前台
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        [DllImport("user32.dll")]
+        private static extern bool IsIconic(IntPtr hWnd);
+
+        private const int SW_RESTORE = 9;
+
+        private void BringWindowToForeground(IntPtr hWnd)
+        {
+            if (IsIconic(hWnd))
+            {
+                ShowWindow(hWnd, SW_RESTORE);
+            }
+            SetForegroundWindow(hWnd);
+        }
     }
 
 }
