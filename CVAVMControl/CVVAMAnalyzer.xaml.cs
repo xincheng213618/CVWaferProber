@@ -723,10 +723,19 @@ namespace CVAVMControl
                 UpdateDisplay();
                 //fileInfo.Dispose();
                 _isDataValid = true;
+                // 主动触发一次选中0°的逻辑
+                var targetItem = cbDisplayAngle.Items
+                    .OfType<ComboBoxItem>()
+                    .FirstOrDefault(item => item.Tag?.ToString() == "0");
+                if (targetItem != null)
+                {
+                    cbDisplayAngle.SelectedItem = targetItem;
+                }
             }
             catch (Exception ex)
             {
                 logger.Error("处理CVCIE文件失败", ex);
+                _isDataValid = false;
                 //MessageBox.Show($"处理文件失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -2198,14 +2207,13 @@ namespace CVAVMControl
         private bool _isFirstLoad = true;
         private void CbDisplayAngle_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // 步骤1：首次加载（启动时）直接标记为非首次，不执行后续逻辑
-            if (_isDeletingAngle) return; // 删除过程中跳过
-            if (_isFirstLoad)
+            // 1. 新增：如果数据还没加载完成，直接返回
+            if (!_isDataValid)
             {
-                _isFirstLoad = false;
                 return;
             }
 
+            // 2. 原有逻辑（去掉了_isFirstLoad的判断）
             if (cbDisplayAngle.SelectedItem is ComboBoxItem item && item.Tag is string angleStr)
             {
                 if (int.TryParse(angleStr, out int angle))
@@ -2233,6 +2241,41 @@ namespace CVAVMControl
                     }
                 }
             }
+            // 步骤1：首次加载（启动时）直接标记为非首次，不执行后续逻辑
+            //if (_isDeletingAngle) return; // 删除过程中跳过
+            ////if (_isFirstLoad)
+            ////{
+            ////    _isFirstLoad = false;
+            ////    return;
+            ////}
+
+            //if (cbDisplayAngle.SelectedItem is ComboBoxItem item && item.Tag is string angleStr)
+            //{
+            //    if (int.TryParse(angleStr, out int angle))
+            //    {
+            //        displayAngle = angle;
+            //        _selectedAngle = angle;
+            //        _selectedRadius = -1;
+
+            //        if (IsMatSafe(YMat))
+            //        {
+            //            bool dllCallSuccess = CallVamDllForDiameterLine(angle);
+            //            if (dllCallSuccess)
+            //            {
+            //                UpdateDisplay();
+            //            }
+            //            else
+            //            {
+            //                MessageBox.Show($"{FindResource("Interfacecallfailed")}", $"{FindResource("Prompt")}");
+            //                UpdateDisplay();
+            //            }
+            //        }
+            //        else
+            //        {
+            //            MessageBox.Show($"{FindResource("Reopen")}", $"{FindResource("Prompt")}");
+            //        }
+            //    }
+            //}
         }
 
 
