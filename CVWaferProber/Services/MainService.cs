@@ -2,7 +2,6 @@
 using CVAVMControl;
 using CVCommCore;
 using CVWaferProber.Config;
-using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Models;
 using CVWaferProber.ViewModels;
 using CVWaferProber.WinMsg;

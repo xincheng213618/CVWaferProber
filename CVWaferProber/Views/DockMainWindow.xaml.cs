@@ -44,6 +44,7 @@ namespace CVWaferProber.Views
             InitializeComponent();
             InitializeLogging();
             InitializeSPControls();
+            this.Loaded += DockMainWindow_Loaded;
             this.Closed += DockMainWindow_Closed;
             // 注册窗口按键监听（关键：捕获所有按键）
             this.KeyDown += DockMainWindow_KeyDown;
@@ -66,6 +67,11 @@ namespace CVWaferProber.Views
                     }
                 };
             }
+        }
+
+        private void DockMainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            MainService.Instance.Startup();
         }
 
         private void DockMainWindow_Closed(object? sender, EventArgs e)

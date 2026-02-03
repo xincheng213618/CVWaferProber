@@ -191,8 +191,8 @@
     <sys:String x:Key="GlobalConfig.SaveSuccess">Configuration saved successfully!</sys:String>
     <sys:String x:Key="GlobalConfig.PathInvalid">Please select a valid folder path！</sys:String>
     <!--  VAM相关  -->
-    <sys:String x:Key="VAM.OpenCVCIEFile">Open CVCIE File</sys:String>
-    <sys:String x:Key="VAM.SelectCVCIEFile">Select CVCIE File</sys:String>
+    <sys:String x:Key="VAM.OpenCVCIEFile">Open VAM File</sys:String>
+    <sys:String x:Key="VAM.SelectCVCIEFile">Select VAM File</sys:String>
     <sys:String x:Key="VAM.PseudocolorImage">Falsecolor Image</sys:String>
     <sys:String x:Key="VAM.ViewingAngle">Viewing Angle:</sys:String>
     <sys:String x:Key="VAM.DisplayChannel">Display Channel:</sys:String>
@@ -370,9 +370,9 @@
     <sys:String x:Key="MotionControl.Format">Format:</sys:String>
     <sys:String x:Key="MotionControl.SendMoveCommand">Send Move Command[J+]</sys:String>
     <sys:String x:Key="MotionControl.LZAllUp">ZAll Up[gu]</sys:String>
-    <sys:String x:Key="MotionControl.ZPosMainCamera">Main Camera Pos[gm]</sys:String>
-    <sys:String x:Key="MotionControl.ZPosAUXCamera">Auxiliary Camera Pos[ga]</sys:String>
-    <sys:String x:Key="MotionControl.ZPosINT">Integrating sphere Pos[gi]</sys:String>
+    <sys:String x:Key="MotionControl.ZPosMainCamera">To AOI Camera[gm]</sys:String>
+    <sys:String x:Key="MotionControl.ZPosAUXCamera">To VAM Camera[ga]</sys:String>
+    <sys:String x:Key="MotionControl.ZPosINT"> To IS[gi]</sys:String>
     <sys:String x:Key="MotionControl.ZPosQ">Query Pos[gc]</sys:String>
 
     <!--  自定义指令  -->

@@ -201,8 +201,8 @@
     <sys:String x:Key="Menu.ProberDeviceDebug">机台调试</sys:String>
 
     <!--  VAM相关  -->
-    <sys:String x:Key="VAM.OpenCVCIEFile">打开CVCIE文件</sys:String>
-    <sys:String x:Key="VAM.SelectCVCIEFile">选择CVCIE文件</sys:String>
+    <sys:String x:Key="VAM.OpenCVCIEFile">VAM文件载入</sys:String>
+    <sys:String x:Key="VAM.SelectCVCIEFile">选择VAM文件</sys:String>
     <sys:String x:Key="VAM.PseudocolorImage">伪彩色图像</sys:String>
     <sys:String x:Key="VAM.ViewingAngle">显示角度:</sys:String>
     <sys:String x:Key="VAM.DisplayChannel">显示通道:</sys:String>
@@ -386,8 +386,8 @@
     <sys:String x:Key="MotionControl.Format">格式:</sys:String>
     <sys:String x:Key="MotionControl.SendMoveCommand">发送运动指令[J+]</sys:String>
     <sys:String x:Key="MotionControl.LZAllUp">龙门Z抬起[gu]</sys:String>
-    <sys:String x:Key="MotionControl.ZPosMainCamera">移主相机位[gm]</sys:String>
-    <sys:String x:Key="MotionControl.ZPosAUXCamera">移辅相机位[ga]</sys:String>
+    <sys:String x:Key="MotionControl.ZPosMainCamera">移AOI相机位[gm]</sys:String>
+    <sys:String x:Key="MotionControl.ZPosAUXCamera">移VAM相机位[ga]</sys:String>
     <sys:String x:Key="MotionControl.ZPosINT">移积分球位[gi]</sys:String>
     <sys:String x:Key="MotionControl.ZPosQ">龙门Z位置查询[gc]</sys:String>
 
