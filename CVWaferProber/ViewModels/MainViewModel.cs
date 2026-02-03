@@ -588,6 +588,7 @@ namespace CVWaferProber.ViewModels
         public void StartAutoFlow()
         {
             DataMappingVM?.StartAutoFlow();
+            OnPropertyChanged(nameof(IsNotProcessing));
         }
 
         #endregion
