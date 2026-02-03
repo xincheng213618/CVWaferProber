@@ -6,6 +6,9 @@
     <UseWPF>true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <AssemblyVersion>2026.02.03.0</AssemblyVersion>
+    <FileVersion>2026.02.03.0</FileVersion>
+    <Copyright>Copyright © 2026 视彩光电</Copyright>
   </PropertyGroup>
 
   <ItemGroup>

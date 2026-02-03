@@ -7,6 +7,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Platforms>AnyCPU;x64</Platforms>
+    <AssemblyVersion>2026.02.03.0</AssemblyVersion>
+    <FileVersion>2026.02.03.0</FileVersion>
+    <Copyright>Copyright © 2026 视彩光电</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
