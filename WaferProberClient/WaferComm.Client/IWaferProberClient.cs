@@ -23,6 +23,13 @@ namespace WaferComm.Client
         /// 连接服务器
         /// </summary>
         Task ConnectAsync(string ip, int port);
+        /// <summary>
+        /// 尝试连接服务器
+        /// </summary>
+        /// <param name="ip"></param>
+        /// <param name="port"></param>
+        /// <returns></returns>
+        Task<bool> TryConnectAsync(string ip, int port);
 
         /// <summary>
         /// 断开连接

@@ -27,6 +27,21 @@ namespace WaferComm.Client
             readTimeout = 10;//Second
             EventAggregator = eventAggregator ?? new EventAggregator();
         }
+        public async Task<bool> TryConnectAsync(string ip, int port)
+        {
+            try
+            {
+                TcpClient tcpClient = new TcpClient();
+                await tcpClient.ConnectAsync(ip, port);
+                tcpClient.Close();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                EventAggregator.Publish(new CommunicationErrorEvent("连接失败", ex, "Connect"));
+                return false;
+            }
+        }
 
         public async Task ConnectAsync(string ip, int port)
         {
@@ -56,7 +71,7 @@ namespace WaferComm.Client
             catch (Exception ex)
             {
                 EventAggregator.Publish(new CommunicationErrorEvent("连接失败", ex, "Connect"));
-                throw;
+                //throw;
             }
         }
         public async Task DisconnectAsync()

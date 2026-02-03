@@ -1,4 +1,5 @@
 ﻿using CVWaferProber.Language;
+using CVWaferProber.Models;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -7,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using TaskStatus = CVWaferProber.Models.TaskStatus;
 
 namespace CVWaferProber.Views
 {
@@ -109,7 +111,7 @@ namespace CVWaferProber.Views
             for (int i = 0; i < startupTasks.Count; i++)
             {
                 // 模拟每个任务的执行时间
-                System.Threading.Thread.Sleep(800);
+                //System.Threading.Thread.Sleep(800);
                 var task = startupTasks[i];
                 task.Exec();
                 // 更新进度
@@ -177,23 +179,61 @@ namespace CVWaferProber.Views
         {
             if (taskIndex >= 0 && taskIndex < startupTasks.Count)
             {
-                // 更新之前任务的状态
+                //// 更新之前任务的状态
+                //if (currentTaskIndex >= 0 && currentTaskIndex < startupTasks.Count)
+                //{
+                //    startupTasks[currentTaskIndex].IsActive = false;
+                //    startupTasks[currentTaskIndex].IsCompleted = true;
+                //    startupTasks[currentTaskIndex].StatusColor = "#10B981";
+                //    startupTasks[currentTaskIndex].StatusIcon = "✓";
+                //}
+
+                //// 更新当前任务
+                //currentTaskIndex = taskIndex;
+                //startupTasks[taskIndex].IsActive = true;
+                //startupTasks[taskIndex].StatusColor = "#60A5FA";
+                //startupTasks[taskIndex].StatusIcon = "⟳";
+
+                //// 更新状态消息
+                //StatusMessage.Text = startupTasks[taskIndex].Description + "...";
+
+                //// 刷新UI
+                //StatusList.Items.Refresh();
+                // 更新之前任务的状态（如果存在）
                 if (currentTaskIndex >= 0 && currentTaskIndex < startupTasks.Count)
                 {
-                    startupTasks[currentTaskIndex].IsActive = false;
-                    startupTasks[currentTaskIndex].IsCompleted = true;
-                    startupTasks[currentTaskIndex].StatusColor = "#10B981";
-                    startupTasks[currentTaskIndex].StatusIcon = "✓";
+                    // 之前任务的状态已经在上一次调用中设置，这里不需要再设置
                 }
 
                 // 更新当前任务
                 currentTaskIndex = taskIndex;
-                startupTasks[taskIndex].IsActive = true;
-                startupTasks[taskIndex].StatusColor = "#60A5FA";
-                startupTasks[taskIndex].StatusIcon = "⟳";
 
-                // 更新状态消息
-                StatusMessage.Text = startupTasks[taskIndex].Description + "...";
+                if (startupTasks[taskIndex].Status == TaskStatus.Completed)
+                {
+                    // 任务成功
+                    //startupTasks[taskIndex].Status = TaskStatus.Completed;
+                    startupTasks[taskIndex].StatusColor = "#10B981"; // 绿色
+                    startupTasks[taskIndex].StatusIcon = "✓";
+                    startupTasks[taskIndex].IsActive = false;
+                    startupTasks[taskIndex].IsCompleted = true;
+
+                    // 更新状态消息
+                    StatusMessage.Text = startupTasks[taskIndex].Description + " 成功";
+                    StatusMessage.Foreground = System.Windows.Media.Brushes.Green;
+                }
+                else
+                {
+                    // 任务失败
+                    //startupTasks[taskIndex].Status = TaskStatus.Failed;
+                    startupTasks[taskIndex].StatusColor = "#EF4444"; // 红色
+                    startupTasks[taskIndex].StatusIcon = "✗";
+                    startupTasks[taskIndex].IsActive = false;
+                    startupTasks[taskIndex].IsCompleted = false;
+
+                    // 更新状态消息
+                    StatusMessage.Text = startupTasks[taskIndex].Description + " 失败";
+                    StatusMessage.Foreground = System.Windows.Media.Brushes.Red;
+                }
 
                 // 刷新UI
                 StatusList.Items.Refresh();
@@ -214,86 +254,6 @@ namespace CVWaferProber.Views
         {
             System.Windows.Application.Current.Shutdown();
         }
-    }
-
-    // 启动任务类
-    public abstract class StartupTask : INotifyPropertyChanged
-    {
-        private string _description;
-        private string _statusColor;
-        private bool _isActive;
-        private bool _isCompleted;
-        private string _statusIcon;
-
-        public string Description
-        {
-            get => _description;
-            set { _description = value; OnPropertyChanged(nameof(Description)); }
-        }
-
-        public string StatusColor
-        {
-            get => _statusColor;
-            set { _statusColor = value; OnPropertyChanged(nameof(StatusColor)); }
-        }
-
-        public bool IsActive
-        {
-            get => _isActive;
-            set
-            {
-                _isActive = value;
-                OnPropertyChanged(nameof(IsActive));
-
-                // 当状态变为非活动时，确保IsCompleted保持正确
-                if (!value && !_isCompleted)
-                {
-                    StatusColor = "#6B7280";
-                }
-            }
-        }
-
-        public bool IsCompleted
-        {
-            get => _isCompleted;
-            set
-            {
-                _isCompleted = value;
-                OnPropertyChanged(nameof(IsCompleted));
-
-                // 当任务完成时，自动设置为非活动
-                if (value)
-                {
-                    IsActive = false;
-                    StatusColor = "#10B981";
-                    StatusIcon = "✓";
-                }
-            }
-        }
-
-        public string StatusIcon
-        {
-            get => _statusIcon;
-            set { _statusIcon = value; OnPropertyChanged(nameof(StatusIcon)); }
-        }
-
-        public StartupTask(string description, string statusColor)
-        {
-            Description = description;
-            StatusColor = statusColor;
-            IsActive = false;
-            IsCompleted = false;
-            StatusIcon = "";
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        public abstract void Exec();
     }
 
     public static class BuildDateHelper

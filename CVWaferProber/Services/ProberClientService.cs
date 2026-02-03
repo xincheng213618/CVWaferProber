@@ -416,5 +416,19 @@ namespace CVWaferProber.Services
         {
             _clientProber.EventAggregator.Subscribe<T>(handler);
         }
+
+        public async Task<bool> TryConnectAsync()
+        {
+            try
+            {
+                bool bR = await _clientProber?.TryConnectAsync(_connectionInfo.ServerIP, _connectionInfo.Port);
+                return bR;
+            }
+            catch (Exception e)
+            {
+                logger.Error(e);
+                return false;
+            }
+        }
     }
 }

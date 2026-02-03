@@ -66,6 +66,13 @@ namespace CVWaferProber.Services
         {
             proberClientService.Startup();
         }
+
+        public bool TryConnectAsync()
+        {
+            var task = proberClientService.TryConnectAsync();
+            task.Wait();
+            return task.Result;
+        }
         public void InitializeService(RCRestService rcService, CVVAMAnalyzer _cVVAMAnalyzer, CVWPFSpectrometerCtrl.CVSpectrumAnalyzer ivlAnalyzer)
         {
             //this.ProberId = proberId;

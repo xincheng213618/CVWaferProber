@@ -1,23 +1,18 @@
 ﻿using CVWaferProber.Config;
+using CVWaferProber.Language;
+using CVWaferProber.Models;
 using CVWaferProber.Services;
-using CVWaferProber.ViewModels; // 新增：用于访问 MainViewModel
-using log4net;
 using CVWaferProber.Views;
-using System.IO;
-using System.Reflection;
+using log4net;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Threading;
 using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
 using Color = System.Windows.Media.Color;
 using MessageBox = System.Windows.MessageBox;
-using CVWaferProber.Models;
-using CVWaferProber.Language;
-using System;
-using System.Diagnostics;
 
 namespace CVWaferProber
 {
@@ -101,7 +96,7 @@ namespace CVWaferProber
             // 1. 创建并显示启动窗口
             _splash = new CVWaferProber.Views.WaferProberStartupWindow();
             _splash.AddStartupTasks(new MainStartupTask());
-            _splash.AddStartupTasks(new CommStartupTask(LanguageManager.Instance.GetString("Task_Motion"), "#6B7280"));
+            _splash.AddStartupTasks(new MotionStartupTask());
             _splash.AddStartupTasks(new CommStartupTask(LanguageManager.Instance.GetString("Task_Vision"), "#6B7280"));
             _splash.InitializeStartupTasks();
             _splash.StartupCompleted += OnStartupCompleted;
