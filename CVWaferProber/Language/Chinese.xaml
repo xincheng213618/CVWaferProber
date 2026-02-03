@@ -694,7 +694,7 @@
     <sys:String x:Key="BrandName">COLORVISION PROBER</sys:String>
     <sys:String x:Key="BrandTagline">视彩晶圆检测系统</sys:String>
     <!-- 启动界面 -->
-    <sys:String x:Key="AppTitle">视彩晶圆探针台控制系统</sys:String>
+    <sys:String x:Key="AppTitle">视彩晶圆检测系统</sys:String>
     <sys:String x:Key="StartupTitle">系统初始化</sys:String>
     <sys:String x:Key="StartupProgress">启动进度</sys:String>
     <sys:String x:Key="Initializing">正在初始化...</sys:String>

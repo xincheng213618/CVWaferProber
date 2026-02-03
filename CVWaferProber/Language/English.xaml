@@ -678,7 +678,7 @@
     <sys:String x:Key="BrandName">COLORVISION PROBER</sys:String>
     <sys:String x:Key="BrandTagline">CV Wafer Probing System</sys:String>
     <!-- Startup Window -->
-    <sys:String x:Key="AppTitle">CV Wafer Prober Control System</sys:String>
+    <sys:String x:Key="AppTitle">CV Wafer Probing System</sys:String>
     <sys:String x:Key="StartupTitle">System Initialization</sys:String>
     <sys:String x:Key="StartupProgress">Startup Progress</sys:String>
     <sys:String x:Key="Initializing">Initializing...</sys:String>
