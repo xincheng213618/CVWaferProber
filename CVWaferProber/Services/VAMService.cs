@@ -4,6 +4,7 @@ using CVWaferProber.Core.Events;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace CVWaferProber.Services
 {
@@ -19,38 +20,41 @@ namespace CVWaferProber.Services
         {
             return ChipStatus.FAILED;
         }
-        protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
+        protected override async Task<ChipStatus> FlowResultDisplay(DieViewModel dieViewModel)
         {
             if (string.IsNullOrEmpty(dieViewModel.SerialNumber)) return ChipStatus.FAILED;
-
-            var results = ImageResultService.LoadCIEResultByBatchCode(dieViewModel.SerialNumber);
-            if (results != null && results.Count == 1)
+            await Task.Run(() =>
             {
-                var result = results[0];
-                if (result.ResultCode.HasValue && result.ResultCode.Value == 0)
+                var results = ImageResultService.LoadCIEResultByBatchCode(dieViewModel.SerialNumber);
+                if (results != null && results.Count == 1)
                 {
-                    string cieFileName = result.FileUrl;
-                    logger.InfoFormat("VAM result cie => {0}", cieFileName);
-                    EventAggregator?.Publish(new VAMFlowCompletedEvent(cieFileName));
-
-                    // 2.延迟1秒后发布自动导出事件（确保文件加载完成）
-                    Task.Delay(1000).ContinueWith(t =>
+                    var result = results[0];
+                    if (result.ResultCode.HasValue && result.ResultCode.Value == 0)
                     {
-                        EventAggregator?.Publish(new VAMAutoExportCsvEvent
+                        string cieFileName = result.FileUrl;
+                        logger.InfoFormat("VAM result cie => {0}", cieFileName);
+                        EventAggregator?.Publish(new VAMFlowCompletedEvent(cieFileName));
+
+                        // 2.延迟1秒后发布自动导出事件（确保文件加载完成）
+                        Task.Delay(1000).ContinueWith(t =>
                         {
-                            CvcieFilePath = cieFileName
+                            EventAggregator?.Publish(new VAMAutoExportCsvEvent
+                            {
+                                CvcieFilePath = cieFileName
+                            });
                         });
-                    });
+                    }
+                    else
+                    {
+                        if (logger.IsErrorEnabled) logger.ErrorFormat("VAM result is failed => {0}", JsonConvert.SerializeObject(result));
+                    }
                 }
                 else
                 {
-                    if (logger.IsErrorEnabled) logger.ErrorFormat("VAM result is failed => {0}", JsonConvert.SerializeObject(result));
+                    if (logger.IsErrorEnabled) logger.ErrorFormat("VAM result is empty or count > 1 => {0}", results != null ? results.Count : 0);
                 }
-            }
-            else
-            {
-                if (logger.IsErrorEnabled) logger.ErrorFormat("VAM result is empty or count > 1 => {0}", results != null ? results.Count : 0);
-            }
+            });
+            
             return ChipStatus.VAM_COMPLETED;
         }
 

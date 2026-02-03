@@ -5,6 +5,7 @@ using CVWaferProber.Core.ViewModels;
 using CVWaferProber.ViewModels;
 using CVWPFSpectrometerCtrl.ViewModels;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace CVWaferProber.Services
 {
@@ -78,16 +79,20 @@ namespace CVWaferProber.Services
         }
 
         // 核心流程结果展示：移除Camera相关参数，替换为EQE逻辑
-        protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
+        protected override async Task<ChipStatus> FlowResultDisplay(DieViewModel dieViewModel)
         {
-            var results = SpectrumResultService.LoadEQEResultByBatchCode(dieViewModel.SerialNumber);
-            CustomEQEVM.ClearResult();
-            CustomEQEVM.LoadEQEData(results);
-            //EventAggregator?.Publish(new EQEFlowCompletedEvent(results));
-            //EQEResultDisplay(dieViewModel);
-            //CustomEQEVM.ClearResult();
-            //CustomEQEVM.LoadEQEData(dieViewModel.SerialNumber);
-            // 测试完成后自动触发导出
+            await Task.Run(() =>
+            {
+                var results = SpectrumResultService.LoadEQEResultByBatchCode(dieViewModel.SerialNumber);
+                CustomEQEVM.ClearResult();
+                CustomEQEVM.LoadEQEData(results);
+                //EventAggregator?.Publish(new EQEFlowCompletedEvent(results));
+                //EQEResultDisplay(dieViewModel);
+                //CustomEQEVM.ClearResult();
+                //CustomEQEVM.LoadEQEData(dieViewModel.SerialNumber);
+                // 测试完成后自动触发导出
+
+            });
            
             return ChipStatus.EQE_COMPLETED; // 替换为EQE完成状态
         }

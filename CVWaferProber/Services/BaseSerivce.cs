@@ -7,6 +7,8 @@ using CVWaferProber.ViewModels;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using WaferComm.Core;
+using System.Windows;
+using Application = System.Windows.Application;
 
 namespace CVWaferProber.Services
 {
@@ -22,7 +24,9 @@ namespace CVWaferProber.Services
         public event EventHandler<TestCompletedEventArgs> TestingCompleted;
         public event EventHandler<DieViewModel> AutoTestingNextCompleted;
         //public event EventHandler<DieViewModel> AutoTestingPaused;
-
+     
+        // 保留原方法为私有，避免子类直接调用
+      
         public BaseSerivce(RCRestService rcService, IEventAggregator? eventAggregator = null)
         {
             this.rcService = rcService;
@@ -41,63 +45,146 @@ namespace CVWaferProber.Services
         {
             try
             {
-                // 优化：直接await异步方法，避免先赋值再await+访问Result的冗余写法
-                var resp = await AsyncRunFlow(_selectedWPFlow.Name, dieViewModel.SerialNumber, _selectedWPFlow.Timeout);
+                // 阶段1：准备阶段 (0-20%)
+                UpdateProgress(dieViewModel, 10);
 
-                if (resp != null && resp.IsSuccess)
+                // 阶段2：发送测试请求 (20-40%)
+                var resp = rcService.RcRunFlowByName(_selectedWPFlow.Name, dieViewModel.SerialNumber);
+                UpdateProgress(dieViewModel, 30);
+
+                if (resp)
                 {
-                    ChipStatus status = FlowResultDisplay(dieViewModel);
-                    dieViewModel.ChangeStatus(status, true);
+                    // 阶段3：等待测试执行 (40-80%)
+                    UpdateProgress(dieViewModel, 40);
+
+                    var flowResult = await PollFlowResultWithRxAsync(dieViewModel.SerialNumber,
+                        new CancellationTokenSource(TimeSpan.FromSeconds(_selectedWPFlow.Timeout)).Token);
+
+                    UpdateProgress(dieViewModel, 80);
+
+                    // 阶段4：处理结果 (80-100%)
+                    if (flowResult != null && flowResult.IsSuccess)
+                    {
+                        ChipStatus status = await FlowResultDisplay(dieViewModel);
+                        dieViewModel.ChangeStatus(status, true);
+                        UpdateProgress(dieViewModel, 95);
+                    }
+                    else
+                    {
+                        ChipStatus status = GetResultStatus(dieViewModel.SerialNumber);
+                        dieViewModel.ChangeStatus(status, true);
+                        UpdateProgress(dieViewModel, 95);
+                    }
+
+                    UpdateProgress(dieViewModel, 100, "测试完成");
                 }
                 else
                 {
-                    ChipStatus status = GetResultStatus(dieViewModel.SerialNumber);
-                    dieViewModel.ChangeStatus(status, true);
+                    logger.Error($"流程 {_selectedWPFlow.Name} 启动失败");
+                    dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
+                    UpdateProgress(dieViewModel, 100, "流程启动失败");
                 }
             }
-            // 优化1：优先捕获TaskCanceledException（超时/取消场景）
             catch (TaskCanceledException ex)
             {
-                logger.Debug($"Flow execution was cancelled (timeout/cancel signal): {ex.Message}");
-                // 超时/取消时标记为失败，也可根据业务定义专属状态（如ChipStatus.CANCELLED）
+                logger.Warn($"流程执行超时: {ex.Message}");
                 dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
-            }
-            // 优化2：保留OperationCanceledException作为兜底
-            catch (OperationCanceledException ex)
-            {
-                logger.Debug($"Flow operation was cancelled: {ex.Message}");
-                dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
-            }
-            catch (InvalidOperationException ex)
-            {
-                logger.Error($"Flow execution failed (invalid operation): {ex.Message}", ex);
-                dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
-                // 业务异常可选择不抛出，避免上层崩溃
-                // throw; 
+                UpdateProgress(dieViewModel, 100, "测试超时");
             }
             catch (Exception ex)
             {
-                logger.Error($"Flow execution failed (unknown error): {ex.Message}", ex);
+                logger.Error($"流程执行失败: {ex.Message}", ex);
                 dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
-                // 未知异常按需抛出，便于上层排查
+                UpdateProgress(dieViewModel, 100, $"执行失败: {ex.Message}");
                 throw;
             }
             finally
             {
-                if(logger.IsInfoEnabled) logger.InfoFormat("One Die test ended. => {0}/{1}", dieViewModel.MapAxisToString(), dieViewModel.Status.ToString());
-                if (hasNext) DoAutoTestingNextCompleted(dieViewModel);
-                else DoEndTesting(dieViewModel,isAuto);
+                if (logger.IsInfoEnabled)
+                    logger.InfoFormat("Die测试结束: {0}/{1} => {2}",
+                        dieViewModel.MapAxisToString(), dieViewModel.Status.ToString(), dieViewModel.SerialNumber);
+
+                if (hasNext)
+                    DoAutoTestingNextCompleted(dieViewModel);
+                else
+                    DoEndTesting(dieViewModel, isAuto);
+            }
+            //try
+            //{
+
+            //    // 优化：直接await异步方法，避免先赋值再await+访问Result的冗余写法
+            //    var resp = await AsyncRunFlow(_selectedWPFlow.Name, dieViewModel.SerialNumber, _selectedWPFlow.Timeout);
+
+            //    if (resp != null && resp.IsSuccess)
+            //    {
+            //        ChipStatus status = await FlowResultDisplay(dieViewModel);
+            //        dieViewModel.ChangeStatus(status, true);
+            //    }
+            //    else
+            //    {
+            //        ChipStatus status = GetResultStatus(dieViewModel.SerialNumber);
+            //        dieViewModel.ChangeStatus(status, true);
+            //    }
+            //}
+            //// 优化1：优先捕获TaskCanceledException（超时/取消场景）
+            //catch (TaskCanceledException ex)
+            //{
+            //    logger.Debug($"Flow execution was cancelled (timeout/cancel signal): {ex.Message}");
+            //    // 超时/取消时标记为失败，也可根据业务定义专属状态（如ChipStatus.CANCELLED）
+            //    dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
+            //}
+            //// 优化2：保留OperationCanceledException作为兜底
+            //catch (OperationCanceledException ex)
+            //{
+            //    logger.Debug($"Flow operation was cancelled: {ex.Message}");
+            //    dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
+            //}
+            //catch (InvalidOperationException ex)
+            //{
+            //    logger.Error($"Flow execution failed (invalid operation): {ex.Message}", ex);
+            //    dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
+            //    // 业务异常可选择不抛出，避免上层崩溃
+            //    // throw; 
+            //}
+            //catch (Exception ex)
+            //{
+            //    logger.Error($"Flow execution failed (unknown error): {ex.Message}", ex);
+            //    dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
+            //    // 未知异常按需抛出，便于上层排查
+            //    throw;
+            //}
+            //finally
+            //{
+            //    if(logger.IsInfoEnabled) logger.InfoFormat("One Die test ended. => {0}/{1}", dieViewModel.MapAxisToString(), dieViewModel.Status.ToString());
+            //    if (hasNext) DoAutoTestingNextCompleted(dieViewModel);
+            //    else DoEndTesting(dieViewModel,isAuto);
+            //}
+        }
+        /// <summary>
+        /// 更新进度
+        /// </summary>
+        protected void UpdateProgress(DieViewModel dieViewModel, double progress, string stage = "")
+        {
+            try
+            {
+                Application.Current?.Dispatcher?.Invoke(() =>
+                {
+                    MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgress(progress, stage);
+                });
+            }
+            catch (Exception ex)
+            {
+                logger.Warn($"更新进度失败: {ex.Message}");
             }
         }
-
         private void DoAutoTestingNextCompleted(DieViewModel dieViewModel)
         {
             AutoTestingNextCompleted?.Invoke(this, dieViewModel);
         }
 
         protected abstract ChipStatus GetResultStatus(string serialNumber);
-        protected abstract ChipStatus FlowResultDisplay(DieViewModel dieViewModel);
-
+        //protected abstract ChipStatus FlowResultDisplay(DieViewModel dieViewModel);
+        protected abstract Task<ChipStatus> FlowResultDisplay(DieViewModel dieViewModel);
         protected async Task<RespDataBaseFlowResultDTO?> AsyncRunFlow(string fname, string sn, int timeout)
         {
             // 优化3：使用using包裹CancellationTokenSource，确保资源释放

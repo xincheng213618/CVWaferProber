@@ -2842,66 +2842,70 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
         public void ClearAllDisplays()
         {
-            // 清空图表
-            PlotModel.Series.Clear();
-            PlotModel.Annotations.Clear();
-            ResetAxisToDefault();
-            PlotModel.InvalidatePlot(true);
-
-            // 清空总览图
-            OverviewSpectralPlotModel.Series.Clear();
-            OverviewSpectralPlotModel.Annotations.Clear();
-            OverviewIVPlotModel.Series.Clear();
-            OverviewIVPlotModel.Annotations.Clear();
-            OverviewILPlotModel.Series.Clear();
-            OverviewILPlotModel.Annotations.Clear();
-            OverviewVLPlotModel.Series.Clear();
-            OverviewVLPlotModel.Annotations.Clear();
-            // 刷新总览图
-            OverviewSpectralPlotModel.InvalidatePlot(true);
-            OverviewIVPlotModel.InvalidatePlot(true);
-            OverviewILPlotModel.InvalidatePlot(true);
-            OverviewVLPlotModel.InvalidatePlot(true);
-
-            // 清空所有数据集合
-            Measurements.Clear();
-            ILMeasurements.Clear();
-            IVMeasurements.Clear();
-            VLMeasurements.Clear();
-            //IVLCameraMeasurements.Clear();
-            SpectralGridItems?.Clear();
-            PlotModel.Series.Clear();
-            // 新增：清空EQE图表
-            EQEPlotModel.Series.Clear();
-            //彻底清空viewModel的数据
-            IL_viewModel.Clear();
-            IV_viewModel.Clear();
-            VL_viewModel.Clear();
-            //IVLCamera_viewModel.Clear();
-            //IVLCameraImageSrc = null;
-
-            // 清空选中状态
-            SelectedMeasurement = null;
-            //SelectedCameraMeasurement = null;
-
-            // 清空IVLCamera图像
-            //IVLCameraImageSrc = null;
-
-            // 清空ScottPlot控件
-            if (PlotControl != null)
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                PlotControl.Plot.Clear();
-                PlotControl.Refresh();
-            }
+                // 清空图表
+                PlotModel.Series.Clear();
+                PlotModel.Annotations.Clear();
+                ResetAxisToDefault();
+                PlotModel.InvalidatePlot(true);
 
-            // 清空SpectrumControl
-            //if (_spectralCtrl != null)
-            //{
-            //    _spectralCtrl.SpectralData.SetData(new float[0], new float[0]);
-            //    _spectralCtrl.InvalidateVisual();
-            //}
-            // 新增：清空EQE曲线缓存
-            _eqeSeriesCache.Clear();
+                // 清空总览图
+                OverviewSpectralPlotModel.Series.Clear();
+                OverviewSpectralPlotModel.Annotations.Clear();
+                OverviewIVPlotModel.Series.Clear();
+                OverviewIVPlotModel.Annotations.Clear();
+                OverviewILPlotModel.Series.Clear();
+                OverviewILPlotModel.Annotations.Clear();
+                OverviewVLPlotModel.Series.Clear();
+                OverviewVLPlotModel.Annotations.Clear();
+                // 刷新总览图
+                OverviewSpectralPlotModel.InvalidatePlot(true);
+                OverviewIVPlotModel.InvalidatePlot(true);
+                OverviewILPlotModel.InvalidatePlot(true);
+                OverviewVLPlotModel.InvalidatePlot(true);
+
+                // 清空所有数据集合
+                Measurements.Clear();
+                ILMeasurements.Clear();
+                IVMeasurements.Clear();
+                VLMeasurements.Clear();
+                //IVLCameraMeasurements.Clear();
+                SpectralGridItems?.Clear();
+                PlotModel.Series.Clear();
+                // 新增：清空EQE图表
+                EQEPlotModel.Series.Clear();
+                //彻底清空viewModel的数据
+                IL_viewModel.Clear();
+                IV_viewModel.Clear();
+                VL_viewModel.Clear();
+                //IVLCamera_viewModel.Clear();
+                //IVLCameraImageSrc = null;
+
+                // 清空选中状态
+                SelectedMeasurement = null;
+                //SelectedCameraMeasurement = null;
+
+                // 清空IVLCamera图像
+                //IVLCameraImageSrc = null;
+
+                // 清空ScottPlot控件
+                if (PlotControl != null)
+                {
+                    PlotControl.Plot.Clear();
+                    PlotControl.Refresh();
+                }
+
+                // 清空SpectrumControl
+                //if (_spectralCtrl != null)
+                //{
+                //    _spectralCtrl.SpectralData.SetData(new float[0], new float[0]);
+                //    _spectralCtrl.InvalidateVisual();
+                //}
+                // 新增：清空EQE曲线缓存
+                _eqeSeriesCache.Clear();
+            });
+           
         }
 
         private void LoadCameraData(string serialNumber)
