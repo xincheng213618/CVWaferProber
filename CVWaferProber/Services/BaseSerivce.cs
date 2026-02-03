@@ -41,7 +41,7 @@ namespace CVWaferProber.Services
         {
             try
             {
-                dieViewModel.CurrentTestStep = (TestStep)3; // 测试中
+                dieViewModel.CurrentTestStep = 3; // 测试中
                 // 优化：直接await异步方法，避免先赋值再await+访问Result的冗余写法
                 var resp = await AsyncRunFlow(_selectedWPFlow.Name, dieViewModel.SerialNumber, _selectedWPFlow.Timeout);
 
@@ -55,7 +55,7 @@ namespace CVWaferProber.Services
                     ChipStatus status = GetResultStatus(dieViewModel.SerialNumber);
                     dieViewModel.ChangeStatus(status, true);
                 }
-                dieViewModel.CurrentTestStep = (TestStep)4; // 测试完成
+                dieViewModel.CurrentTestStep = 4; // 测试完成
             }
             // 优化1：优先捕获TaskCanceledException（超时/取消场景）
             catch (TaskCanceledException ex)
@@ -86,9 +86,9 @@ namespace CVWaferProber.Services
             }
             finally
             {
-                if(logger.IsInfoEnabled) logger.InfoFormat("One Die test ended. => {0}/{1}", dieViewModel.MapAxisToString(), dieViewModel.Status.ToString());
+                if (logger.IsInfoEnabled) logger.InfoFormat("One Die test ended. => {0}/{1}", dieViewModel.MapAxisToString(), dieViewModel.Status.ToString());
                 if (hasNext) DoAutoTestingNextCompleted(dieViewModel);
-                else DoEndTesting(dieViewModel,isAuto);
+                else DoEndTesting(dieViewModel, isAuto);
             }
         }
 
