@@ -62,7 +62,6 @@ namespace CVWaferProber.Services
             _proberState = proberState;
             eventAggregator.Subscribe<StateUpdatedEvent>(OnProberStateUpdated);
             _proberState.StartAsync().Wait();
-
         }
 
         private void OnCommandSented(CommandSentEvent @event)

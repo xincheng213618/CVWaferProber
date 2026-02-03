@@ -590,7 +590,7 @@ namespace CVAVMControl
         {
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
-                Filter = "CVCIE Files (*.cvcie)|*.cvcie|All Files (*.*)|*.*",
+                Filter = "VAM Files (*.cvcie)|*.cvcie|All Files (*.*)|*.*",
                 Title = select
             };
             if (openFileDialog.ShowDialog() == true)

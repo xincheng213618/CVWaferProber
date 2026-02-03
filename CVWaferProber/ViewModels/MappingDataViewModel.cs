@@ -1440,10 +1440,14 @@ namespace CVWaferProber.ViewModels
             UpdateDataGridColumns();
         }
 
-
         public void LoadMappingFile(string mappingFile)
         {
             MappingCsvFilePath = mappingFile;
+            Task.Factory.StartNew(() => LoadMappingFileFromCsvAsync());
+        }
+
+        private void LoadMappingFileFromCsvAsync()
+        {
             System.Windows.Application.Current?.Dispatcher?.Invoke(() =>
             {
                 LoadMappingFileFromCsv();
