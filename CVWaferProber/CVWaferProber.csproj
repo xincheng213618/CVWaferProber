@@ -116,6 +116,10 @@
     <None Update="cfg\MySql.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Img\LOG.ico">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
     <None Update="LOG.ico">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
