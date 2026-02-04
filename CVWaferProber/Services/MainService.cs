@@ -384,7 +384,15 @@ namespace CVWaferProber.Services
 
                     if (!hasNext)
                     {
-                        await proberClientService.StopTestAsync();
+                        if (ConfigManager.Config.IsAutoStop)
+                        {
+                            StopAutoTestAndExitWafer();
+                        }
+                        else
+                        {
+                            DoAutoTestEnd(die, isAuto);
+                            //AutoTestingCompleted();
+                        }
                     }
                 }
                 else
@@ -418,6 +426,18 @@ namespace CVWaferProber.Services
                 throw;
             }
         }
+        private void StopAutoTestAndExitWafer()
+        {
+            proberClientService?.StopTestAsync();
+            if (logger.IsInfoEnabled) logger.Info("Stop testing and exit the wafer.");
+        }
+
+        private void AutoTestingCompleted()
+        {
+            if (logger.IsInfoEnabled) logger.Info("Auto Testing Completed");
+            proberClientService?.TestingCompleted();
+        }
+
         /// <summary>
         /// 执行Die测试并更新进度
         /// </summary>

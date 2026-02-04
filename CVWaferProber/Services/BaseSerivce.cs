@@ -109,56 +109,6 @@ namespace CVWaferProber.Services
                 else
                     DoEndTesting(dieViewModel, isAuto);
             }
-            //try
-            //{
-
-            //    // 优化：直接await异步方法，避免先赋值再await+访问Result的冗余写法
-            //    var resp = await AsyncRunFlow(_selectedWPFlow.Name, dieViewModel.SerialNumber, _selectedWPFlow.Timeout);
-
-            //    if (resp != null && resp.IsSuccess)
-            //    {
-            //        ChipStatus status = await FlowResultDisplay(dieViewModel);
-            //        dieViewModel.ChangeStatus(status, true);
-            //    }
-            //    else
-            //    {
-            //        ChipStatus status = GetResultStatus(dieViewModel.SerialNumber);
-            //        dieViewModel.ChangeStatus(status, true);
-            //    }
-            //}
-            //// 优化1：优先捕获TaskCanceledException（超时/取消场景）
-            //catch (TaskCanceledException ex)
-            //{
-            //    logger.Debug($"Flow execution was cancelled (timeout/cancel signal): {ex.Message}");
-            //    // 超时/取消时标记为失败，也可根据业务定义专属状态（如ChipStatus.CANCELLED）
-            //    dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
-            //}
-            //// 优化2：保留OperationCanceledException作为兜底
-            //catch (OperationCanceledException ex)
-            //{
-            //    logger.Debug($"Flow operation was cancelled: {ex.Message}");
-            //    dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
-            //}
-            //catch (InvalidOperationException ex)
-            //{
-            //    logger.Error($"Flow execution failed (invalid operation): {ex.Message}", ex);
-            //    dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
-            //    // 业务异常可选择不抛出，避免上层崩溃
-            //    // throw; 
-            //}
-            //catch (Exception ex)
-            //{
-            //    logger.Error($"Flow execution failed (unknown error): {ex.Message}", ex);
-            //    dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
-            //    // 未知异常按需抛出，便于上层排查
-            //    throw;
-            //}
-            //finally
-            //{
-            //    if(logger.IsInfoEnabled) logger.InfoFormat("One Die test ended. => {0}/{1}", dieViewModel.MapAxisToString(), dieViewModel.Status.ToString());
-            //    if (hasNext) DoAutoTestingNextCompleted(dieViewModel);
-            //    else DoEndTesting(dieViewModel,isAuto);
-            //}
         }
         /// <summary>
         /// 更新进度
