@@ -46,6 +46,8 @@ namespace CVWaferProber.Services
                 {
                     foreach (var result in results)
                     {
+                        AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
+                        //if (resultType != AlgorithmResultType.OLED_AOI_ALL) continue;
                         var aoiDetails = AlgResultService.GetCommDetailResult(result.Id);
                         if (aoiDetails != null && aoiDetails.Count == 1)
                         {
@@ -257,6 +259,22 @@ namespace CVWaferProber.Services
                 {
                     if (masterResult == null) continue;
 
+                    if(masterResult.ImgFileType == 46)
+                    {
+                        string filePath = masterResult.ImgResult;
+
+                        // 检查文件是否存在
+                        if (!File.Exists(filePath))
+                        {
+                            logger.Warn($"Analysis Image File does not exist: {filePath}");
+                            continue;
+                        }
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            AddImageToDataGrid(imageId++, filePath);
+                        });
+                        continue;
+                    }
                     // 通过主结果ID获取POI CIE文件详情
                     var poiDetails = AlgResultService.GetPOIDetailResultFileByPid(masterResult.Id);
                     if (poiDetails == null || poiDetails.Count == 0) continue;
@@ -266,14 +284,6 @@ namespace CVWaferProber.Services
                         if (string.IsNullOrEmpty(poiDetail.FileUrl)) continue;
 
                         string filePath = poiDetail.FileUrl;
-
-                        // 过滤po.dat文件
-                        string fileName = Path.GetFileNameWithoutExtension(filePath).ToLower();
-                        if (fileName.Equals("po") || fileName.Equals("po.dat"))
-                        {
-                            logger.Debug($"Filter the po.dat file: {Path.GetFileName(filePath)}");
-                            continue;
-                        }
 
                         // 检查文件是否存在
                         if (!File.Exists(filePath))
@@ -285,16 +295,7 @@ namespace CVWaferProber.Services
                         // 添加到ViewModel
                         Application.Current.Dispatcher.Invoke(() =>
                         {
-                            var imageItem = new ImageItem(imageId++)
-                            {
-                                FileName = Path.GetFileName(filePath),
-                                ImagePath = filePath,
-                                FileSizeMB = new FileInfo(filePath).Length / (1024.0 * 1024.0),
-                                Status = "Ready"
-                            };
-
-                            // Analysis Image添加到ProcessedImageResults集合
-                            CustomImageVM?.AddImage(imageItem);
+                            AddImageToDataGrid(imageId++, filePath);
                         });
 
                         logger.Debug($"added Analysis Image: {Path.GetFileName(filePath)}");
@@ -307,6 +308,20 @@ namespace CVWaferProber.Services
             {
                 logger.Error($"Loading batch {batchCode} Analysis Image failed", ex);
             }
+        }
+
+        private void AddImageToDataGrid(int id, string filePath)
+        {
+            var imageItem = new ImageItem(id)
+            {
+                FileName = Path.GetFileName(filePath),
+                ImagePath = filePath,
+                FileSizeMB = new FileInfo(filePath).Length / (1024.0 * 1024.0),
+                Status = "Ready"
+            };
+
+            // Analysis Image添加到ProcessedImageResults集合
+            CustomImageVM?.AddImage(imageItem);
         }
 
         /// <summary>

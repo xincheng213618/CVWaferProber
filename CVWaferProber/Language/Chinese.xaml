@@ -50,7 +50,7 @@
     <sys:String x:Key="Maping.Automeasurementinprogress">自动测量运行中...</sys:String>
 
 
-    <sys:String x:Key="Dock.Layout.Title.Mapping">映射</sys:String>
+    <sys:String x:Key="Dock.Layout.Title.Mapping">Mapping</sys:String>
     <sys:String x:Key="Dock.Layout.Title.CameraImage">相机图像</sys:String>
 
     <sys:String x:Key="Dock.Layout.Title.SP">光谱/IVL/EQE</sys:String>

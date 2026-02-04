@@ -29,13 +29,13 @@ namespace CVDB.Services.Algorithm
         {
             return MysqlControler.GetInstance().Sql
                 .Select<TScgdAlgorithmResultDetailPoiCieFile>()
-                .Where(a => a.Pid == pid)
-                .ToList()
-                // 源头过滤：剔除所有文件名含po.dat的记录（不区分大小写）
-                .Where(file => !string.IsNullOrEmpty(file.FileUrl)
-                        && !Path.GetFileName(file.FileUrl).ToLower().Contains("po.dat")
-                         || !Path.GetFileName(file.FileUrl).ToLower().Contains("pos.dat"))
+                .Where(a => a.Pid == pid && a.FileType == 7)
                 .ToList();
+            //// 源头过滤：剔除所有文件名含po.dat的记录（不区分大小写）
+            //.Where(file => !string.IsNullOrEmpty(file.FileUrl)
+            //        && !Path.GetFileName(file.FileUrl).ToLower().Contains("po.dat")
+            //         || !Path.GetFileName(file.FileUrl).ToLower().Contains("pos.dat"))
+            //.ToList();
         }
         public static List<TScgdAlgorithmResultDetailCommon> GetCommDetailResult(int pid)
         {
