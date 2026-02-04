@@ -13,6 +13,19 @@
     <UserControl.Resources>
         <cv:StatusToColorConverter x:Key="StatusColorConverter" />
         <ccv:NotBooleanConverter x:Key="NotBooleanConverter" />
+        <Storyboard x:Key="ProgressPulseAnimation" RepeatBehavior="Forever">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0.7" />
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.5" Value="1.0" />
+                <DiscreteDoubleKeyFrame KeyTime="0:0:1.0" Value="0.7" />
+            </DoubleAnimationUsingKeyFrames>
+
+            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Foreground).(SolidColorBrush.Color)">
+                <DiscreteColorKeyFrame KeyTime="0:0:0" Value="#FF198754" />
+                <DiscreteColorKeyFrame KeyTime="0:0:0.5" Value="#FF20B45A" />
+                <DiscreteColorKeyFrame KeyTime="0:0:1.0" Value="#FF198754" />
+            </ColorAnimationUsingKeyFrames>
+        </Storyboard>
         <!--  全局配色/圆角常量  -->
         <SolidColorBrush x:Key="PrimaryColor" Color="#FF0078D7" />
         <SolidColorBrush x:Key="PrimaryDarkColor" Color="#FF005FB8" />
@@ -745,36 +758,101 @@
                                         <RowDefinition Height="*" />
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
                                     <!--  总进度条：ProgressBarAll → 绑定TotalTestProgress  -->
                                     <!--  总进度条  -->
                                     <ProgressBar
                                         x:Name="ProgressBarAll"
-                                        Height="10"
                                         Grid.Row="0"
+                                        Height="10"
                                         Foreground="#FF198754"
                                         IsIndeterminate="False"
                                         Maximum="100"
                                         Minimum="0"
-                                        Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                        Value="{Binding TotalTestProgress}" />
+                                        Value="{Binding TotalTestProgress}">
+                                        <ProgressBar.Triggers>
+                                            <EventTrigger RoutedEvent="Loaded">
+                                                <BeginStoryboard Storyboard="{StaticResource ProgressPulseAnimation}" />
+                                            </EventTrigger>
+                                        </ProgressBar.Triggers>
 
+                                        <ProgressBar.Style>
+                                            <Style BasedOn="{StaticResource {x:Type ProgressBar}}" TargetType="ProgressBar">
+                                                <Setter Property="Visibility" Value="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsManualTesting}" Value="True">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                    <Trigger Property="IsIndeterminate" Value="False">
+                                                        <Setter Property="Foreground">
+                                                            <Setter.Value>
+                                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                                    <GradientStop Offset="0" Color="#FF198754" />
+                                                                    <GradientStop Offset="0.5" Color="#FF20B45A" />
+                                                                    <GradientStop Offset="1" Color="#FF198754" />
+                                                                </LinearGradientBrush>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </ProgressBar.Style>
+                                    </ProgressBar>
+                                    <!--  进度文本  -->
+                                    <!--  总进度文本：手动测试时和总进度条一起隐藏（核心新增Style逻辑）  -->
+                                    <TextBlock
+                                        x:Name="ProgressTextAll"
+                                        Grid.Row="0"
+                                        Grid.Column="0"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        Foreground="#666"
+                                        Text="{Binding ProgressTextAll}"
+                                        TextTrimming="CharacterEllipsis">
+                                        <!--  新增：和总进度条完全一致的显示/隐藏逻辑  -->
+                                        <TextBlock.Style>
+                                            <Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="TextBlock">
+                                                <!--  基础状态：测试中（IsProcessing=true）显示，未开始则隐藏  -->
+                                                <Setter Property="Visibility" Value="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                                <!--  触发状态：手动测试时强制隐藏，和总进度条联动  -->
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsManualTesting}" Value="True">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
                                     <!--  单个Die进度条  -->
                                     <ProgressBar
                                         x:Name="ProgressBar"
                                         Grid.Row="1"
+                                        Height="10"
                                         Margin="0,5"
                                         Foreground="#FF198754"
                                         IsIndeterminate="False"
                                         Maximum="100"
                                         Minimum="0"
                                         Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                        Value="{Binding SingleDieTestProgress}" />
+                                        Value="{Binding SingleDieTestProgress}">
+                                        <ProgressBar.Triggers>
+                                            <EventTrigger RoutedEvent="Loaded">
+                                                <BeginStoryboard Storyboard="{StaticResource ProgressPulseAnimation}" />
+                                            </EventTrigger>
+                                        </ProgressBar.Triggers>
+
+                                    </ProgressBar>
 
                                     <!--  进度文本  -->
                                     <TextBlock
-                                        Grid.Row="2"
-                                        Margin="0,2,0,5"
+                                        Grid.Row="1"
+                                        Grid.Column="1"
                                         HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
                                         FontSize="11"
                                         Foreground="#666"
                                         Text="{Binding ProgressText}"

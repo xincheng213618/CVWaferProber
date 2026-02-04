@@ -15,7 +15,7 @@ namespace CVWaferProber.Services
 {
     public class MainService : ReflectionSingleton<MainService>
     {
-        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(MainService));
+        public static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(MainService));
 
         #region 进度管理相关
 
@@ -131,7 +131,7 @@ namespace CVWaferProber.Services
         private void OnAutoTestingNextCompleted(object? sender, DieViewModel dieVM)
         {
             // 更新进度：完成当前Die测试
-            UpdateProgressForDieCompletion(dieVM);
+            //UpdateProgressForDieCompletion(dieVM);
             //发送结果给机台
             proberClientService?.SendResultAsync(dieVM);
             //
@@ -165,20 +165,20 @@ namespace CVWaferProber.Services
         /// <summary>
         /// 更新Die测试完成进度
         /// </summary>
-        private void UpdateProgressForDieCompletion(DieViewModel dieVM)
-        {
-            try
-            {
-                MainViewModel.Instance?.DataMappingVM?.CompleteSingleDieTest();
+        //private void UpdateProgressForDieCompletion(DieViewModel dieVM)
+        //{
+        //    try
+        //    {
+        //        MainViewModel.Instance?.DataMappingVM?.CompleteSingleDieTest();
 
-                if (logger.IsDebugEnabled)
-                    logger.DebugFormat($"进度更新: {dieVM.MapAxisToString()} 测试完成");
-            }
-            catch (Exception ex)
-            {
-                logger.Error("更新进度失败 (Complete)", ex);
-            }
-        }
+        //        if (logger.IsDebugEnabled)
+        //            logger.DebugFormat($"进度更新: {dieVM.MapAxisToString()} 测试完成");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        logger.Error("更新进度失败 (Complete)", ex);
+        //    }
+        //}
         private bool IsTestBreak(DieViewModel dieVM, int errorCount)
         {
             return !IsDieCompleted(dieVM) &&
@@ -363,22 +363,15 @@ namespace CVWaferProber.Services
             //}
             try
             {
-                // 1. 开始测试阶段 - 更新进度
-                MainViewModel.Instance?.DataMappingVM?.StartSingleDieTest(die);
-                MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgressByStage(
-                    MappingDataViewModel.TestStage.Initialization, 1.0);
-
-                // 2. 移动位置阶段 - 更新进度
-                MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgressByStage(
-                    MappingDataViewModel.TestStage.MovingToPosition, 0.5);
-
+           
                 var isOK = await proberClientService.MoveToAsync(die, isFirst);
 
-                MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgressByStage(
-                    MappingDataViewModel.TestStage.MovingToPosition, 1.0);
+             
 
                 if (isOK)
                 {
+                    // 新增：开始单Die进度跟踪
+                    MainViewModel.Instance?.DataMappingVM?.StartSingleDieTest(die);
                     // 3. 执行测试流程 - 分阶段更新进度
                     await ExecuteDieTestWithProgress(_selectedWPFlow, die, hasNext, isAuto);
 
@@ -399,9 +392,7 @@ namespace CVWaferProber.Services
                 {
                     die.ChangeStatus(Core.Models.Enums.ChipStatus.FAILED);
 
-                    // 更新进度为失败状态
-                    MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgress(100, "移动失败");
-                    MainViewModel.Instance?.DataMappingVM?.CompleteSingleDieTest();
+                 
 
                     if (logger.IsErrorEnabled) logger.Error("探针台移动失败");
 
@@ -419,10 +410,7 @@ namespace CVWaferProber.Services
             {
                 logger.Error($"执行Die测试失败: {ex.Message}", ex);
 
-                // 更新进度为错误状态
-                MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgress(100, $"错误: {ex.Message}");
-                MainViewModel.Instance?.DataMappingVM?.CompleteSingleDieTest();
-
+          
                 throw;
             }
         }
@@ -448,7 +436,8 @@ namespace CVWaferProber.Services
                 logger.Error("未选择测试流程");
                 return;
             }
-
+            // 新增：开始单Die进度跟踪
+            MainViewModel.Instance?.DataMappingVM?.StartSingleDieTest(die);
             BaseSerivce? baseService = null;
             switch (_selectedWPFlow?.FlowType)
             {
@@ -479,31 +468,14 @@ namespace CVWaferProber.Services
 
             try
             {
-                // 开始流程执行阶段
-                MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgressByStage(
-                    MappingDataViewModel.TestStage.FlowExecution, 0.2);
-
                 // 执行测试流程
                 await baseService.StartTestingAsync(die, _selectedWPFlow, hasNext, isAuto);
 
-                // 流程执行完成，进入结果处理阶段
-                MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgressByStage(
-                    MappingDataViewModel.TestStage.FlowExecution, 1.0);
-                MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgressByStage(
-                    MappingDataViewModel.TestStage.ResultProcessing, 0.5);
-
-                // 最终完成阶段
-                MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgressByStage(
-                    MappingDataViewModel.TestStage.ResultProcessing, 1.0);
-                MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgressByStage(
-                    MappingDataViewModel.TestStage.Finalization, 1.0);
             }
             catch (Exception ex)
             {
                 logger.Error($"测试流程执行失败: {ex.Message}", ex);
 
-                // 即使失败也更新进度
-                MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgress(100, $"流程执行失败: {ex.Message}");
                 throw;
             }
         }
@@ -516,6 +488,19 @@ namespace CVWaferProber.Services
                 proberClientService?.SendResultAsync(dieVM);
             }
             proberClientService?.TestingCompleted();
+            // 新增：手动测试异常结束时，重置IsManualTesting
+            if (!isAuto)
+            {
+                Application.Current?.Dispatcher?.Invoke(() =>
+                {
+                    // 替换：MainViewModel.Instance?.DataMappingVM.IsManualTesting = false;
+                    var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                    if (mappingVM != null)
+                    {
+                        mappingVM.IsManualTesting = false;
+                    }
+                });
+            }
             if (logger.IsInfoEnabled) logger.Info("Auto Testing End");
         }
 

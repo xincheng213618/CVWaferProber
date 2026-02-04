@@ -46,56 +46,56 @@ namespace CVWaferProber.Services
             try
             {
                 // 阶段1：准备阶段 (0-20%)
-                UpdateProgress(dieViewModel, 10);
+                //UpdateProgress(dieViewModel, 10);
 
                 // 阶段2：发送测试请求 (20-40%)
                 var resp = rcService.RcRunFlowByName(_selectedWPFlow.Name, dieViewModel.SerialNumber);
-                UpdateProgress(dieViewModel, 30);
+               // UpdateProgress(dieViewModel, 30);
 
                 if (resp)
                 {
                     // 阶段3：等待测试执行 (40-80%)
-                    UpdateProgress(dieViewModel, 40);
+                    //UpdateProgress(dieViewModel, 40);
 
                     var flowResult = await PollFlowResultWithRxAsync(dieViewModel.SerialNumber,
                         new CancellationTokenSource(TimeSpan.FromSeconds(_selectedWPFlow.Timeout)).Token);
 
-                    UpdateProgress(dieViewModel, 80);
+                   // UpdateProgress(dieViewModel, 80);
 
                     // 阶段4：处理结果 (80-100%)
                     if (flowResult != null && flowResult.IsSuccess)
                     {
                         ChipStatus status = await FlowResultDisplay(dieViewModel);
                         dieViewModel.ChangeStatus(status, true);
-                        UpdateProgress(dieViewModel, 95);
+                        //UpdateProgress(dieViewModel, 95);
                     }
                     else
                     {
                         ChipStatus status = GetResultStatus(dieViewModel.SerialNumber);
                         dieViewModel.ChangeStatus(status, true);
-                        UpdateProgress(dieViewModel, 95);
+                        //UpdateProgress(dieViewModel, 95);
                     }
 
-                    UpdateProgress(dieViewModel, 100, "测试完成");
+                   // UpdateProgress(dieViewModel, 100, "测试完成");
                 }
                 else
                 {
                     logger.Error($"流程 {_selectedWPFlow.Name} 启动失败");
                     dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
-                    UpdateProgress(dieViewModel, 100, "流程启动失败");
+                    //UpdateProgress(dieViewModel, 100, "流程启动失败");
                 }
             }
             catch (TaskCanceledException ex)
             {
                 logger.Warn($"流程执行超时: {ex.Message}");
                 dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
-                UpdateProgress(dieViewModel, 100, "测试超时");
+                //UpdateProgress(dieViewModel, 100, "测试超时");
             }
             catch (Exception ex)
             {
                 logger.Error($"流程执行失败: {ex.Message}", ex);
                 dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
-                UpdateProgress(dieViewModel, 100, $"执行失败: {ex.Message}");
+                //UpdateProgress(dieViewModel, 100, $"执行失败: {ex.Message}");
                 throw;
             }
             finally
@@ -113,20 +113,7 @@ namespace CVWaferProber.Services
         /// <summary>
         /// 更新进度
         /// </summary>
-        protected void UpdateProgress(DieViewModel dieViewModel, double progress, string stage = "")
-        {
-            try
-            {
-                Application.Current?.Dispatcher?.Invoke(() =>
-                {
-                    MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgress(progress, stage);
-                });
-            }
-            catch (Exception ex)
-            {
-                logger.Warn($"更新进度失败: {ex.Message}");
-            }
-        }
+       
         private void DoAutoTestingNextCompleted(DieViewModel dieViewModel)
         {
             AutoTestingNextCompleted?.Invoke(this, dieViewModel);
