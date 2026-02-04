@@ -33,6 +33,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private PlotModel _ILPlotModel;
         private PlotModel _VLPlotModel;
         private PlotModel _PLPlotModel;
+        private PlotModel _VIPlotModel;
         // 新增：EQE光谱曲线图
         //private PlotModel _eqePlotModel;
         // 总览图光谱X轴固定范围（350~800nm）
@@ -46,6 +47,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         // ViewModel中新增：总览图的4个独立PlotModel
         public PlotModel OverviewSpectralPlotModel { get; private set; } = new PlotModel();
         public PlotModel OverviewIVPlotModel { get; private set; } = new PlotModel();
+        public PlotModel OverviewVIPlotModel { get; private set; } = new PlotModel();
         public PlotModel OverviewILPlotModel { get; private set; } = new PlotModel();
         public PlotModel OverviewVLPlotModel { get; private set; } = new PlotModel();
         public PlotModel OverviewPower_LPlotModel { get; private set; } = new PlotModel();
@@ -65,6 +67,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         public ICommand ExportCommand { get; }
         private ILViewModel IL_viewModel;
         private IVViewModel IV_viewModel;
+        private VIViewModel VI_viewModel;
         private VLViewModel VL_viewModel;
         private Power_LViewModel Power_L_viewModel;
         private IVLCameraViewModel IVLCamera_viewModel;
@@ -86,241 +89,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             get => _plotModel;
             set => SetProperty(ref _plotModel, value);
         }
-        // 新增：EQE曲线图属性
-        //public PlotModel EQEPlotModel
-        //{
-        //    get => _eqePlotModel;
-        //    set => SetProperty(ref _eqePlotModel, value);
-        //}
-        // 新增：EQE曲线颜色配置
-        //private SolidColorBrush _eqeLineColor = new SolidColorBrush(Colors.Red);
-        //public SolidColorBrush EQELineColor
-        //{
-        //    get => _eqeLineColor;
-        //    set
-        //    {
-        //        if (_eqeLineColor != value)
-        //        {
-        //            _eqeLineColor = value;
-        //            OnPropertyChanged(nameof(EQELineColor));
-
-        //            // 转换为OxyColor
-        //            OxyColor newOxyColor = ConvertToOxyColor(value);
-
-        //            // ===== 根据IsShowAllData判断更新范围（和SpectralLineColor逻辑对齐）=====
-        //            if (IsShowAllData && SelectedMeasurement != null)
-        //            {
-        //                // 勾选显示所有数据：仅更新选中行的EQE曲线颜色
-        //                UpdateSelectedEQECurveColor(newOxyColor);
-        //            }
-        //            else
-        //            {
-        //                // 未勾选：更新所有EQE数据的颜色 + 刷新所有曲线
-        //                UpdateAllEQEMeasurementsLineColor(newOxyColor);
-        //                UpdateEQEChartLineColor();
-        //            }
-        //        }
-        //    }
-        //}
-        // 新增：仅更新选中EQE曲线的颜色（勾选显示所有数据时用）
-        //private void UpdateSelectedEQECurveColor(OxyColor newColor)
-        //{
-        //    if (_eqeSeriesCache.Count == 0 || SelectedMeasurement == null) return;
-
-        //    // 从EQE曲线缓存中找到选中行的曲线
-        //    if (_eqeSeriesCache.TryGetValue(SelectedMeasurement.No, out LineSeries selectedEQESeries))
-        //    {
-        //        selectedEQESeries.Color = newColor;
-        //        selectedEQESeries.MarkerFill = newColor; // 标记点同步颜色
-        //        selectedEQESeries.MarkerStroke = newColor;
-        //        EQEPlotModel.InvalidatePlot(true); // 实时刷新EQE图表
-        //    }
-
-        //    // 同步更新总览图中的EQE选中曲线颜色（如果有）
-        //    if (OverviewSpectralPlotModel?.Series != null)
-        //    {
-        //        var overviewEQESelectedSeries = OverviewSpectralPlotModel.Series.OfType<LineSeries>()
-        //            .FirstOrDefault(s => s.Title?.Contains($"No:{SelectedMeasurement.No}") == true);
-        //        if (overviewEQESelectedSeries != null)
-        //        {
-        //            overviewEQESelectedSeries.Color = newColor;
-        //            OverviewSpectralPlotModel.InvalidatePlot(true);
-        //        }
-        //    }
-        //}
-
-        // 新增：更新所有EQE测量数据的行颜色（未勾选显示所有数据时用）
-        //private void UpdateAllEQEMeasurementsLineColor(OxyColor newColor)
-        //{
-        //    // 可扩展：如果需要给EQE测量项单独存储颜色，可在此处遍历更新
-        //    // 示例：如果有EQEMeasurement实体，可添加EQERowLineColor属性并批量更新
-        //    foreach (var measurement in Measurements)
-        //    {
-        //        // 若需区分光谱/EQE颜色，可给SpectrumMeasurement新增EQERowLineColor属性
-        //        // measurement.EQERowLineColor = newColor;
-        //    }
-        //}
-        // 1. 新增：绑定DataGrid选中项的属性
-        //private SpectrumMeasurement _selectedEQERow;
-        //public SpectrumMeasurement SelectedEQERow
-        //{
-        //    get => _selectedEQERow;
-        //    set
-        //    {
-        //        if (SetProperty(ref _selectedEQERow, value))
-        //        {
-        //            OnPropertyChanged(nameof(SelectedEQERow));
-        //            if (IsShowAllEQEData)
-        //            {
-        //                // 显示所有数据时：置顶+高亮选中曲线
-        //                UpdateEQESelectedCurveHighlight();
-        //            }
-        //            else
-        //            {
-        //                // 未显示所有数据时：清空图表，仅显示当前选中项的曲线
-        //                ResetEQEPlotView(); // 先清空图表
-        //                if (value != null)
-        //                {
-        //                    DrawSingleEQECurve(value); // 仅绘制选中项的曲线
-        //                }
-        //                else
-        //                {
-        //                    ShowEQEEmptyChartMessage(); // 无选中项时显示提示
-        //                }
-        //            }
-        //        }
-        //    }
-        //}
-
-        //// 新增：仅绘制单条EQE曲线的方法
-        //private void DrawSingleEQECurve(SpectrumMeasurement selectedItem)
-        //{
-        //    if (selectedItem == null) return;
-
-        //    // 创建当前选中项的曲线
-        //    var lineSeries = new LineSeries
-        //    {
-        //        Title = $"EQE-{selectedItem.No}",
-        //        Color = ConvertToOxyColor(EQELineColor),
-        //        StrokeThickness = 2.0,
-        //        IsVisible = true
-        //    };
-
-        //    // 填充选中项的波长+强度数据
-        //    for (int i = 0; i < selectedItem.Wavelengths.Length; i++)
-        //    {
-        //        if (!float.IsNaN(selectedItem.Intensities[i]) && !float.IsInfinity(selectedItem.Intensities[i]))
-        //        {
-        //            lineSeries.Points.Add(new DataPoint(
-        //                selectedItem.Wavelengths[i],
-        //                selectedItem.Intensities[i]
-        //            ));
-        //        }
-        //    }
-
-        //    // 添加到EQE图表（此时图表已被清空）
-        //    EQEPlotModel.Series.Add(lineSeries);
-        //    EQEPlotModel.InvalidatePlot(true); // 刷新图表
-        //}
-
-        //// 新增：显示所有数据时，高亮+置顶选中EQE曲线（性能优先）
-        //private void UpdateEQESelectedCurveHighlight()
-        //{
-        //    if (_eqeSeriesCache.Count == 0 || SelectedEQERow == null)
-        //        return;
-
-        //    // 1. 重置所有EQE曲线为未选中样式
-        //    foreach (var (measNo, series) in _eqeSeriesCache)
-        //    {
-        //        bool isSelected = measNo == SelectedEQERow.No;
-        //        // 未选中样式：半透明循环色 + 细线条 + 无标记点
-        //        series.Color = isSelected
-        //            ? ConvertToOxyColor(EQELineColor)
-        //            : GetUnselectedEQEColor(measNo);
-        //        series.StrokeThickness = isSelected ? 2.5 : 1.5;
-        //        //series.MarkerType = isSelected ? MarkerType.Circle : MarkerType.None;
-        //        //series.MarkerSize = isSelected ? 3 : 0;
-        //    }
-
-        //    // 2. 置顶选中曲线（核心逻辑）
-        //    BringEQESeriesToFront(SelectedEQERow.No);
-
-        //    // 3. 刷新图表
-        //    EQEPlotModel.InvalidatePlot(true);
-        //}
-        //// 复用原有方法：获取未选中EQE曲线颜色
-        //private OxyColor GetUnselectedEQEColor(int measNo)
-        //{
-        //    var unselectedColors = new[]
-        //    {
-        //        OxyColor.FromAColor(115, OxyColors.Blue),
-        //        OxyColor.FromAColor(115, OxyColors.Green),
-        //        OxyColor.FromAColor(115, OxyColors.Purple),
-        //        OxyColor.FromAColor(115, OxyColors.Orange),
-        //        OxyColor.FromAColor(115, OxyColors.Teal),
-        //        OxyColor.FromAColor(115, OxyColors.Magenta),
-        //        OxyColor.FromAColor(115, OxyColors.Gold),
-        //        OxyColor.FromAColor(115, OxyColors.Cyan),
-        //        OxyColor.FromAColor(115, OxyColors.Lime),
-        //        OxyColor.FromAColor(115, OxyColors.Indigo),
-        //        OxyColor.FromAColor(115, OxyColors.Pink),
-        //        OxyColor.FromAColor(115, OxyColors.Olive),
-        //        OxyColor.FromAColor(115, OxyColors.SkyBlue)
-        //    };
-        //    return unselectedColors[measNo % unselectedColors.Length];
-        //}
-        //// 新增：未显示所有数据时，重置EQE图表并显示单条选中曲线
-        //private void ResetAndUpdateEQEChart()
-        //{
-        //    // 完全重置EQE图表
-        //    ResetEQEPlotView();
-
-        //    if (SelectedEQERow != null)
-        //    {
-        //        // 仅绘制选中行的EQE曲线
-        //        UpdateEQEChartFromSelectedMeasurement();
-        //    }
-        //    else
-        //    {
-        //        // 无选中项时显示空提示
-        //        ShowEQEEmptyChartMessage();
-        //    }
-        //}
-        //// 2. 新增：根据选中行更新EQE图表的方法
-        //private void UpdateEQEChartToSelectedRow()
-        //{
-        //    if (SelectedEQERow == null)
-        //    {
-        //        // 无选中项时清空图表
-        //        EQEPlotModel.Series.Clear();
-        //        EQEPlotModel.InvalidatePlot(true);
-        //        return;
-        //    }
-
-        //    // 清空原有曲线，绘制选中行对应的EQE曲线
-        //    EQEPlotModel.Series.Clear();
-
-        //    var lineSeries = new LineSeries
-        //    {
-        //        Title = $"EQE-{SelectedEQERow.No}", // 曲线标题（对应行序号）
-        //        Color = ConvertToOxyColor(EQELineColor), // 用配置的EQE线条颜色
-        //        StrokeThickness = 2.0, // 选中曲线加粗
-        //        //MarkerType = MarkerType.Circle, // 显示标记点（增强辨识度）
-        //        MarkerSize = 3
-        //    };
-
-        //    // 填充选中行的波长+光谱数据到曲线
-        //    for (int i = 0; i < SelectedEQERow.Wavelengths.Length; i++)
-        //    {
-        //        lineSeries.Points.Add(new DataPoint(
-        //            SelectedEQERow.Wavelengths[i],
-        //            SelectedEQERow.Intensities[i] // 这里替换为实际EQE计算值（若有独立EQE数据则用对应字段）
-        //        ));
-        //    }
-
-        //    EQEPlotModel.Series.Add(lineSeries);
-        //    EQEPlotModel.InvalidatePlot(true); // 刷新图表
-        //}
+      
         private bool _isShowAllData;
         public bool IsShowAllData
         {
@@ -334,18 +103,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             }
         }
-        //private bool _isShowAllEQEData;
-        //public bool IsShowAllEQEData
-        //{
-        //    get => _isShowAllEQEData;
-        //    set
-        //    {
-        //        _isShowAllEQEData = value;
-        //        OnPropertyChanged();
-        //        // 新增：同步更新EQE图表
-        //        UpdateEQEChartByShowAllState();
-        //    }
-        //}
+        
         public SpectrumMeasurement SelectedMeasurement
         {
             get => _selectedMeasurement;
@@ -420,6 +178,20 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 }
             }
         }
+        private SolidColorBrush _viLineColor = new SolidColorBrush(Colors.Blue);
+        public SolidColorBrush VILineColor
+        {
+            get => _viLineColor;
+            set
+            {
+                if (_viLineColor != value)
+                {
+                    _viLineColor = value;
+                    OnPropertyChanged(nameof(VILineColor));
+                    UpdateIVChartLineColor();
+                }
+            }
+        }
         private void UpdateIVChartLineColor()
         {
             if (IVPlotModel?.Series != null && IVLineColor != null)
@@ -439,6 +211,27 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     lineSeries.MarkerStroke = oxyColor;
                 }
                 IVPlotModel.InvalidatePlot(true);
+            }
+        }
+        private void UpdateVIChartLineColor()
+        {
+            if (VIPlotModel?.Series != null && VILineColor != null)
+            {
+                // 解决颜色转换错误：使用OxyColor.FromArgb转换
+                OxyColor oxyColor = OxyColor.FromArgb(
+                    VILineColor.Color.A,
+                    VILineColor.Color.R,
+                    VILineColor.Color.G,
+                    VILineColor.Color.B);
+
+                foreach (var lineSeries in VIPlotModel.Series.OfType<LineSeries>())
+                {
+                    lineSeries.Color = oxyColor;
+                    // 确保IV图表的数据点颜色也与线条一致
+                    lineSeries.MarkerFill = oxyColor;
+                    lineSeries.MarkerStroke = oxyColor;
+                }
+                VIPlotModel.InvalidatePlot(true);
             }
         }
         private SolidColorBrush _ilLineColor = new SolidColorBrush(Colors.Blue);
@@ -719,6 +512,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             // 刷新所有总览图
             OverviewSpectralPlotModel?.InvalidatePlot(true);
             OverviewIVPlotModel?.InvalidatePlot(true);
+            OverviewVIPlotModel?.InvalidatePlot(true);
             OverviewILPlotModel?.InvalidatePlot(true);
             OverviewVLPlotModel?.InvalidatePlot(true);
             // 显式触发属性变更，确保UI感知到PlotModel的更新
@@ -736,6 +530,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             get => _IVPlotModel;
             set => SetProperty(ref _IVPlotModel, value);
+        }
+        public PlotModel VIPlotModel
+        {
+            get => _VIPlotModel;
+            set => SetProperty(ref _VIPlotModel, value);
         }
         public PlotModel ILPlotModel
         {
@@ -829,6 +628,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             SpectralGridItems = new ObservableCollection<SpectralGridItem>(); // 初始化右侧DataGrid数据源
             InitializePlotModel();
             InitializeIVPlotModel();
+            InitializeVIPlotModel();
             InitializeILPlotModel();
             InitializeVLPlotModel();
             InitializePower_LPlotModel();
@@ -877,7 +677,17 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             };
 
             VisibleSpectrumColormap = new ScottPlot.Colormaps.Custom(visibleSpectrumColors);
-
+            //SwitchModeCommand = new RelayCommand((param) =>
+            //{
+            //    if (param is string mode)
+            //    {
+            //        IsIVMode = (mode == "IV");
+            //    }
+            //    else
+            //    {
+            //        IsIVMode = !IsIVMode;
+            //    }
+            //});
             // 初始化数据
             InitializeSampleData();
 
@@ -1066,7 +876,10 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             //OverviewIVPlotModel?.InvalidatePlot(true);
         }
-
+        private void VIResetStatus(object obj)
+        {
+            //OverviewIVPlotModel?.InvalidatePlot(true);
+        }
         // 初始化总览图的PlotModel（克隆子Tab配置并绑定数据）
         private void InitializeOverviewPlotModels()
         {
@@ -1074,6 +887,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             // 1. 克隆子Tab的图表配置（轴、样式）
             OverviewSpectralPlotModel = ClonePlotModel(PlotModel, Title); // 克隆光谱子Tab配置
             OverviewIVPlotModel = ClonePlotModel(IVPlotModel, "IV");       // 克隆IV子Tab配置
+            OverviewVIPlotModel = ClonePlotModel(VIPlotModel, "VI");
             OverviewILPlotModel = ClonePlotModel(ILPlotModel, "IL");       // 克隆IL子Tab配置
                                                                            // OverviewVLPlotModel = ClonePlotModel(VLPlotModel, "VL");       // 克隆VL子Tab配置
             OverviewPower_LPlotModel = ClonePlotModel(PLPlotModel, "Power-L");
@@ -1083,6 +897,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             // 3. 通知UI更新
             OnPropertyChanged(nameof(OverviewSpectralPlotModel));
             OnPropertyChanged(nameof(OverviewIVPlotModel));
+            OnPropertyChanged(nameof(OverviewVIPlotModel));
             OnPropertyChanged(nameof(OverviewILPlotModel));
             OnPropertyChanged(nameof(OverviewVLPlotModel));
             OnPropertyChanged(nameof(OverviewPower_LPlotModel));
@@ -1183,7 +998,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             // 1. 清空总览图所有Series
             OverviewSpectralPlotModel.Series.Clear();
             OverviewIVPlotModel.Series.Clear();
+            OverviewVIPlotModel.Series.Clear();
             OverviewILPlotModel.Series.Clear();
+            
             OverviewVLPlotModel.Series.Clear();
             OverviewPower_LPlotModel.Series.Clear();
             // 2. 绑定光谱数据
@@ -1266,7 +1083,23 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 OverviewIVPlotModel.Series.Add(ivSeries);
                 RefreshAxisRange(OverviewIVPlotModel);
             }
-
+            // 3. 绑定VI数据（修正轴顺序：电流Y，电压X）
+            if (IVMeasurements.Any())
+            {
+                var viSeries = new LineSeries
+                {
+                    ItemsSource = IVMeasurements.Select(m => new DataPoint(m.Voltage,m.Current )),
+                    Color = OxyColors.Red,
+                    StrokeThickness = 1.5,
+                    MarkerType = MarkerType.Circle,
+                    //MarkerSize = 2,
+                    MarkerFill = OxyColors.Red,
+                    CanTrackerInterpolatePoints = true,
+                    TrackerFormatString = "{0}\n {1}: {2:0.00}\n {3}: {4:0.00}"
+                };
+                OverviewVIPlotModel.Series.Add(viSeries);
+                RefreshAxisRange(OverviewVIPlotModel);
+            }
             // 4. 绑定IL数据
             if (ILMeasurements.Any())
             {
@@ -1285,23 +1118,6 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 RefreshAxisRange(OverviewILPlotModel);
             }
 
-            // 5. 绑定VL数据
-            //if (VLMeasurements.Any())
-            //{
-            //    var vlSeries = new LineSeries
-            //    {
-            //        ItemsSource = VLMeasurements.Select(m => new DataPoint(m.Voltage, m.Luminance)),
-            //        Color = OxyColors.Purple,
-            //        StrokeThickness = 1.5,
-            //        MarkerType = MarkerType.Circle,
-            //        //MarkerSize = 2,
-            //        MarkerFill = OxyColors.Purple,
-            //        CanTrackerInterpolatePoints = true,
-            //        TrackerFormatString = "{0}\n {1}: {2:0.00}\n {3}: {4:0.00}"
-            //    };
-            //    OverviewVLPlotModel.Series.Add(vlSeries);
-            //    RefreshAxisRange(OverviewVLPlotModel);
-            //}
             if (Power_LMeasurements.Any())
             {
                 var powerLSeries = new LineSeries
@@ -2698,7 +2514,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             IVMeasurements = viewModel.Measurements;
 
         }
+        private void InitializeVIPlotModel()
+        {
+            VIViewModel viewModel = new VIViewModel();
+            VI_viewModel = viewModel;
+            VIPlotModel = viewModel.PlotModel;
+            IVMeasurements = viewModel.Measurements;
 
+        }
         //电流/亮度
         private void InitializeILPlotModel()
         {
@@ -2880,6 +2703,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             Measurements.Clear();
             IL_viewModel.Clear();
             IV_viewModel.Clear();
+            VI_viewModel.Clear();
             VL_viewModel.Clear();
             IVLCamera_viewModel.Clear();
             IVLCameraImageSrc = null;
@@ -2914,6 +2738,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             OverviewSpectralPlotModel.Annotations.Clear();
             OverviewIVPlotModel.Series.Clear();
             OverviewIVPlotModel.Annotations.Clear();
+            OverviewVIPlotModel.Series.Clear();
+            OverviewVIPlotModel.Annotations.Clear();
             OverviewILPlotModel.Series.Clear();
             OverviewILPlotModel.Annotations.Clear();
             OverviewVLPlotModel.Series.Clear();
@@ -2923,6 +2749,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             // 刷新总览图
             OverviewSpectralPlotModel.InvalidatePlot(true);
             OverviewIVPlotModel.InvalidatePlot(true);
+            OverviewVIPlotModel.InvalidatePlot(true);
             OverviewILPlotModel.InvalidatePlot(true);
             OverviewVLPlotModel.InvalidatePlot(true);
             OverviewPower_LPlotModel.InvalidatePlot(true); // 清空Power-L总览图
@@ -2940,6 +2767,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             //彻底清空viewModel的数据
             IL_viewModel.Clear();
             IV_viewModel.Clear();
+            VI_viewModel.Clear();
             VL_viewModel.Clear();
             Power_L_viewModel.Clear();
             IVLCamera_viewModel.Clear();
@@ -3005,6 +2833,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
             IL_viewModel.LoadData(lv_results, il_results);
             IV_viewModel.LoadData(serialNumber);
+            VI_viewModel.LoadData(serialNumber);
             VL_viewModel.LoadData(lv_results, il_results);
             IVLCamera_viewModel.LoadData(lv_results, il_results);
             Power_L_viewModel.LoadData(lv_results, il_results, il_results); // 按需传入正确的参数集合
@@ -3027,6 +2856,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 return;
             }
             IV_viewModel.LoadData(serialNumber);
+            VI_viewModel.LoadData(serialNumber);
+
             var results = SpectrumResultService.LoadResultByBatchCode(DeviceCode, serialNumber);
             if (results == null || results.Count == 0) return;
 
@@ -3430,8 +3261,30 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
         #endregion
 
+        #region IV/VI模式切换
+        //public ICommand SwitchModeCommand { get; private set; }
+        //private bool _isIVMode = true;
+        //public bool IsIVMode
+        //{
+        //    get => _isIVMode;
+        //    set
+        //    {
+        //        if (SetProperty(ref _isIVMode, value))
+        //        {
+        //            OnPropertyChanged(nameof(IsIVMode));
+        //            OnPropertyChanged(nameof(IsVIMode));
+        //            OnPropertyChanged(nameof(IVPanelVisibility));
+        //            OnPropertyChanged(nameof(VIPanelVisibility));
+        //        }
+        //    }
+        //}
 
+        //public bool IsVIMode => !_isIVMode;
 
+        //public Visibility IVPanelVisibility => IsIVMode ? Visibility.Visible : Visibility.Collapsed;
+        //public Visibility VIPanelVisibility => IsVIMode ? Visibility.Visible : Visibility.Collapsed;
+
+        #endregion
         #region EQE 激活方法
         //外层TabControl的选中索引（绑定XAML的外层TabControl.SelectedIndex）
         private int _outerTabSelectedIndex;

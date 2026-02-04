@@ -14,6 +14,7 @@
     </UserControl.DataContext>
     <UserControl.Resources>
         <con:BooleanToWidthConverter x:Key="BooleanToWidthConverter" />
+        <con:BooleanToIndexConverter x:Key="BooleanToIndexConverter" />
     </UserControl.Resources>
 
     <!--  外层TabControl：标题固定在底部  -->
@@ -77,10 +78,17 @@
 
                             <!--  总览-IV图表  -->
                             <oxy:PlotView
+                                x:Name="OverviewIVPlotView"
                                 Grid.Row="0"
                                 Grid.Column="1"
                                 Margin="5"
                                 Model="{Binding OverviewIVPlotModel}" />
+                            <oxy:PlotView
+                                x:Name="OverviewVIPlotView"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Margin="5"
+                                Model="{Binding OverviewVIPlotModel}" />
 
                             <!--  总览-IL图表  -->
                             <oxy:PlotView
@@ -390,6 +398,7 @@
                                 <RowDefinition Height="6*" />
                                 <RowDefinition Height="4*" />
                             </Grid.RowDefinitions>
+                            <!--  第一行  -->
                             <StackPanel
                                 Grid.Row="0"
                                 Margin="5,5,5,2"
@@ -474,6 +483,19 @@
                                     <SolidColorBrush Color="WhiteSmoke" />
                                     <SolidColorBrush Color="White" />
                                 </ComboBox>
+                                <!--  新增：IV/VI模式下拉框  -->
+                                <TextBlock
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource Sp.Chartmode}" />
+                                <ComboBox
+                                    x:Name="cboIVVIMode"
+                                    Width="100"
+                                    Height="20"
+                                    SelectionChanged="cboIVVIMode_SelectionChanged">
+                                    <ComboBoxItem Content="{DynamicResource Sp.IVMode}" Tag="{DynamicResource Sp.IVModetag}" />
+                                    <ComboBoxItem Content="{DynamicResource Sp.VIMode}" Tag="{DynamicResource Sp.VIModetag}" />
+                                </ComboBox>
                                 <!--<Button
                                     x:Name="HongZhi"
                                     Width="60"
@@ -484,11 +506,24 @@
                                     Content="{DynamicResource BtnResetStatus}" />-->
                             </StackPanel>
                             <!--  IV图表区域  -->
+
                             <oxy:PlotView
+                                x:Name="IVPanel"
                                 Grid.Row="1"
                                 Margin="5"
                                 Loaded="PlotView_Loaded"
                                 Model="{Binding IVPlotModel}" />
+
+                            <oxy:PlotView
+                                x:Name="VIPanel"
+                                Grid.Row="1"
+                                Margin="5"
+                                Loaded="PlotView_Loaded"
+                                Model="{Binding VIPlotModel}" />
+
+
+
+
 
                             <!--  IV DataGrid区域  -->
                             <DataGrid
