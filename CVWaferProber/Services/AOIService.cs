@@ -12,6 +12,7 @@ using CVWPFCamImageCtrl;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using Application = System.Windows.Application;
 
 namespace CVWaferProber.Services
@@ -37,10 +38,11 @@ namespace CVWaferProber.Services
             return GetDieResultStatus(serialNumber);
         }
 
-        protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
+        protected override async Task<ChipStatus> FlowResultDisplay(DieViewModel dieViewModel)
         {
-            Task.Run(() =>
+            await Task.Run(() =>
             {
+
                 var results = AlgResultService.LoadAlgResultByBatchCode(dieViewModel.SerialNumber!);
                 if (results != null && results.Count > 0)
                 {
@@ -72,9 +74,10 @@ namespace CVWaferProber.Services
                     }
                 }
             });
-
+           
             // 加载图像结果
-            LoadImageResult(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
+            LoadImageResultAsync(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
+         
             return ChipStatus.OK;
         }
 
@@ -150,9 +153,15 @@ namespace CVWaferProber.Services
         //}
         public override async Task StartTestingAsync(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool tranStatus = true)
         {
+            
             dieViewModel.ChangeStatus(ChipStatus.TESTING);
+         
             ClearResult();
+      
             await RunFlowAsync(_selectedWPFlow, dieViewModel, hasNext, tranStatus);
+      
+
+
         }
 
         private void ClearResult()
@@ -189,9 +198,11 @@ namespace CVWaferProber.Services
 
         public override void ResultDisplay(DieViewModel dieViewModel)
         {
+
             if (string.IsNullOrEmpty(dieViewModel.SerialNumber))
             {
                 CustomImageVM?.ClearImageResult();
+
                 return;
             }
             else
@@ -205,34 +216,41 @@ namespace CVWaferProber.Services
         /// 核心：加载AOI测试结果图片
         /// 从两个数据库表分别获取Analysis Image和Camera Measurement
         /// </summary>
-        private void LoadImageResult(ChipData? chipData, string serialNumber)
+        private async Task LoadImageResultAsync(ChipData? chipData, string serialNumber)
         {
             if (string.IsNullOrEmpty(serialNumber) || CustomImageVM == null)
             {
                 logger.Warn("LoadImageResult：Serial number is empty or CustomImageVM is not initialized");
                 return;
             }
-
-            Task.Run(() =>
+            try
             {
-                try
-                {
-                    // 1. 加载Analysis Image（从TScgdAlgorithmResultDetailPoiCieFile获取）
-                    LoadAnalysisImages(serialNumber);
+                // 步骤1：加载Analysis Image（40→50）
+              
+                await Task.Run(() => LoadAnalysisImages(serialNumber));
+             
+            
 
-                    // 2. 加载Camera Measurement（从VScgdMeasureResultImg获取）
-                    LoadCameraMeasurements(serialNumber);
+                // 步骤2：加载Camera Measurement（50→70）
+                await Task.Run(() => LoadCameraMeasurements(serialNumber));
+             
 
-                    // 3. 加载POI分析数据
-                    LoadPoiAnalysisData(serialNumber, chipData);
+                // 步骤3：加载POI分析数据（70→90）
+                await Task.Run(() => LoadPoiAnalysisData(serialNumber, chipData));
+             
+              
 
-                    logger.Info($"Serial number {serialNumber} image loading completed");
-                }
-                catch (Exception ex)
-                {
-                    logger.Error($"Failed to load the image with serial numberNumber}}", ex);
-                }
-            });
+                logger.Info($"Serial number {serialNumber} image loading completed");
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Failed to load the image with serial number {serialNumber}", ex);
+              
+            }
+
+
+
+
         }
 
         /// <summary>
@@ -390,6 +408,8 @@ namespace CVWaferProber.Services
                     logger.Debug($"已添加Camera Measurement: {Path.GetFileName(filePath)} (FileType: {result.FileType})");
                 }
 
+
+
                 logger.Info($"Batch {batchCode} Camera Measurement loaded successfully, {addedCount} files added in total");
             }
             catch (Exception ex)
@@ -405,6 +425,7 @@ namespace CVWaferProber.Services
         {
             try
             {
+
                 var algResults = AlgResultService.LoadAlgResultByBatchCode(batchCode);
                 if (algResults == null || algResults.Count == 0) return;
 
@@ -442,6 +463,7 @@ namespace CVWaferProber.Services
                         LoadPoiMarkers(masterResult.Id);
                     }
                 }
+
 
                 // 如果需要显示亮度均匀性文本，可以在这里处理
                 if (!string.IsNullOrEmpty(brightnessText))

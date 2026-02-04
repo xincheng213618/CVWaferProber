@@ -18,11 +18,15 @@ namespace CVWPFSpectrometerCtrl
 
             InitializeComponent();
             //EQEGrid.DataContext = CVEQEViewModel.GetInstance();
-             //_spectralData.GenerateSampleData(550, 50);
-             //SpectralDisplay.SpectralData = _spectralData;
-
-             //_spectralData.GenerateMultiPeakData();
-             Loaded += (s, e) =>
+            //_spectralData.GenerateSampleData(550, 50);
+            //SpectralDisplay.SpectralData = _spectralData;
+            // 初始化ComboBox默认选中第一项
+            if (cboIVVIMode != null && cboIVVIMode.Items.Count > 0)
+            {
+                cboIVVIMode.SelectedIndex = 0;
+            }
+            //_spectralData.GenerateMultiPeakData();
+            Loaded += (s, e) =>
             {
                 if (this.DataContext is CVSpectrumViewModel viewModel)
                 {
@@ -50,5 +54,30 @@ namespace CVWPFSpectrometerCtrl
             }
         }
 
+        private void cboIVVIMode_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            // 获取ComboBox的当前选中索引
+            int selectedIndex = cboIVVIMode.SelectedIndex;
+
+            // 根据索引控制Panel的显示/隐藏
+            if (selectedIndex == 0)
+            {
+                // 显示IVPanel，隐藏VIPanel
+                IVPanel.Visibility = Visibility.Visible;
+                OverviewIVPlotView.Visibility = Visibility.Visible;
+                VIPanel.Visibility = Visibility.Collapsed;
+                OverviewVIPlotView.Visibility = Visibility.Collapsed;
+              
+            }
+            else if (selectedIndex == 1)
+            {
+                // 显示VIPanel，隐藏IVPanel
+                IVPanel.Visibility = Visibility.Collapsed;
+                OverviewIVPlotView.Visibility = Visibility.Collapsed;
+                VIPanel.Visibility = Visibility.Visible;
+                OverviewVIPlotView.Visibility = Visibility.Visible;
+             
+            }
+        }
     }
 }

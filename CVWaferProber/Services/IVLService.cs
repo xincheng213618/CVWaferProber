@@ -6,6 +6,7 @@ using CVWaferProber.ViewModels;
 using CVWPFSpectrometerCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
 using System.IO;
+using System.Threading.Tasks;
 using Application = System.Windows.Application;
 
 namespace CVWaferProber.Services
@@ -141,21 +142,24 @@ namespace CVWaferProber.Services
             return ChipStatus.FAILED;
         }
 
-        protected override ChipStatus FlowResultDisplay(DieViewModel dieViewModel)
+        protected override async Task<ChipStatus> FlowResultDisplay(DieViewModel dieViewModel)
         {
             //IVLResultDisplay(dieViewModel);
-
-            Application.Current?.Dispatcher.Invoke(() =>
+            await Task.Run(() => 
             {
-                CustomIVLVM.ClearResult();
-                CustomIVLVM.LoadData(dieViewModel.SerialNumber, dieViewModel.IsIVLCameraEnabled);
+                Application.Current?.Dispatcher.Invoke(() =>
+                {
+                    CustomIVLVM.ClearResult();
+                    CustomIVLVM.LoadData(dieViewModel.SerialNumber, dieViewModel.IsIVLCameraEnabled);
+                });
+
+                // 【关键修改1】只生成CSV内容，不直接导出文件
+                //string csvContent = GenerateCsvContent(dieViewModel, "IVL");
+                // 【关键修改2】构建Summary数据（对接AutoExportHelper的TestSummaryData）
+                //AutoExportHelper.TestSummaryData summaryData = BuildIVLSummaryData(dieViewModel);
+
+                
             });
-
-            // 【关键修改1】只生成CSV内容，不直接导出文件
-            //string csvContent = GenerateCsvContent(dieViewModel, "IVL");
-            // 【关键修改2】构建Summary数据（对接AutoExportHelper的TestSummaryData）
-            //AutoExportHelper.TestSummaryData summaryData = BuildIVLSummaryData(dieViewModel);
-
             return ChipStatus.IVL_COMPLETED;
         }
         /// <summary>

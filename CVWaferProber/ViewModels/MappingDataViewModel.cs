@@ -397,6 +397,12 @@ namespace CVWaferProber.ViewModels
             _dataGrid = null;
             _isIVLCameraEnabled = false;
             _isAutoSN = true;
+            // 初始化进度条
+            SingleDieTestProgress = 0;
+            TotalTestProgress = 0;
+            TotalTestCount = 0;
+            CompletedTestCount = 0;
+            CurrentDieIndex = 0;
 
             SearchCommand = new RelayCommand(OnSearch);
 
@@ -736,7 +742,10 @@ namespace CVWaferProber.ViewModels
 
             mainService.TestingCompleted += OnTestingCompleted;
             mainService.PreAutoTestingNextDie += OnAutoTestingNextDie;
+
+          
         }
+      
         private void StartManTest(object? obj)
         {
             StartManFlow();
@@ -759,18 +768,12 @@ namespace CVWaferProber.ViewModels
         }
         private void DoEndTesting(bool isAuto)
         {
+            CompletedTestCount = 1;
             EnableBtnGUI(true);
             CalculateYieldBySerialNumber();
             AutoExportSummaryResult();
-            // 新增：测试完成，重置进度条
-            // 延迟一小段时间再隐藏进度条，让用户看到100%完成
-            Task.Delay(500).ContinueWith(_ =>
-            {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    MainViewModel.Instance?.ResetTestProgress();
-                });
-            });
+            
+            
         }
         public void EnableBtnGUI(bool enabled)
         {
@@ -800,6 +803,8 @@ namespace CVWaferProber.ViewModels
             mainService.StopAutoTesting();
 
             CalculateYieldBySerialNumber();
+
+           
         }
         public void StartAutoFlow()
         {
@@ -816,6 +821,7 @@ namespace CVWaferProber.ViewModels
                 return;
             }
 
+       
             TestingReady(_testQueue);
             EnableBtnGUI(false);
             mainService.StartAutoTesting(_selectedWPFlow, GetSelectedDieTestItems());
@@ -824,11 +830,11 @@ namespace CVWaferProber.ViewModels
         {
             if (SelectedWPFlow != null && SelectedItem is DieViewModel die)
             {
+          
+                TotalTestCount = 1;
+                CompletedTestCount = 0;
                 EnableBtnGUI(false);
                 ManTestingReady(die);
-                // 新增：启动当前Die的测试进度条
-                MainViewModel.Instance.StartTestProgress(die);
-
                 mainService.DoDieFlowExec(_selectedWPFlow, die, false, false);
                 ActivateCorrespondingPanel?.Invoke(this, _selectedWPFlow);
             }
@@ -2141,5 +2147,276 @@ namespace CVWaferProber.ViewModels
                 ProberClientService.Instance?.MoveToAsync(selectedItem);
             }
         }
+
+
+        #region 进度条相关属性（增强版）
+
+        // 单个Die测试进度（0-100）
+        private double _singleDieTestProgress;
+        public double SingleDieTestProgress
+        {
+            get => _singleDieTestProgress;
+            set
+            {
+                if (SetProperty(ref _singleDieTestProgress, Math.Max(0, Math.Min(100, value))))
+                {
+                    // 更新总进度
+                    UpdateTotalProgress();
+                    // 更新进度文本
+                    OnPropertyChanged(nameof(ProgressText));
+                }
+            }
+        }
+
+        // 总进度（0-100）
+        private double _totalTestProgress;
+        public double TotalTestProgress
+        {
+            get => _totalTestProgress;
+            set
+            {
+                if (SetProperty(ref _totalTestProgress, Math.Max(0, Math.Min(100, value))))
+                {
+                    OnPropertyChanged(nameof(ProgressText));
+                }
+            }
+        }
+
+        // 总测试数量
+        private int _totalTestCount;
+        public int TotalTestCount
+        {
+            get => _totalTestCount;
+            set => SetProperty(ref _totalTestCount, value);
+        }
+
+        // 当前已完成测试数量
+        private int _completedTestCount;
+        public int CompletedTestCount
+        {
+            get => _completedTestCount;
+            set
+            {
+                if (SetProperty(ref _completedTestCount, value))
+                {
+                    UpdateTotalProgress();
+                    OnPropertyChanged(nameof(ProgressText));
+                }
+            }
+        }
+
+        // 当前正在测试的Die索引（从1开始）
+        private int _currentDieIndex;
+        public int CurrentDieIndex
+        {
+            get => _currentDieIndex;
+            set => SetProperty(ref _currentDieIndex, value);
+        }
+
+        // 当前测试的Die信息
+        private string _currentDieInfo = string.Empty;
+        public string CurrentDieInfo
+        {
+            get => _currentDieInfo;
+            set => SetProperty(ref _currentDieInfo, value);
+        }
+
+        // 进度文本显示
+        public string ProgressText
+        {
+            get
+            {
+                return $"测试进度: {CompletedTestCount}/{TotalTestCount} 完成 (总进度: {TotalTestProgress:F1}%) | 当前Die: {CurrentDieInfo} (进度: {SingleDieTestProgress:F1}%)";
+            }
+        }
+
+        #endregion
+        #region 进度条更新方法（增强版）
+
+        /// <summary>
+        /// 开始自动测试时初始化进度
+        /// </summary>
+        /// <param name="selectedDice">选中的Die列表</param>
+        public void InitializeAutoTestProgress(List<DieViewModel> selectedDice)
+        {
+            if (selectedDice == null || selectedDice.Count == 0)
+            {
+                ResetProgressBars();
+                return;
+            }
+
+            Application.Current?.Dispatcher?.Invoke(() =>
+            {
+                TotalTestCount = selectedDice.Count;
+                CompletedTestCount = 0;
+                CurrentDieIndex = 0;
+                
+                SingleDieTestProgress = 0;
+                TotalTestProgress = 0;
+
+                if (logger.IsInfoEnabled)
+                    logger.InfoFormat($"进度条初始化: 总共 {TotalTestCount} 个Die需要测试");
+            });
+        }
+
+        /// <summary>
+        /// 开始测试单个Die
+        /// </summary>
+        public void StartSingleDieTest(DieViewModel die)
+        {
+            Application.Current?.Dispatcher?.Invoke(() =>
+            {
+                CurrentDieIndex = CompletedTestCount + 1;
+                //CurrentDieInfo = $"{die.MapAxisToString()}";
+                CurrentDieInfo = $"{die.MapX}/{die.MapY}"; 
+                SingleDieTestProgress = 0; // 重置单个Die进度
+
+                if (logger.IsDebugEnabled)
+                    logger.DebugFormat($"开始测试第 {CurrentDieIndex}/{TotalTestCount} 个Die: {die.MapAxisToString()}");
+            });
+        }
+
+        /// <summary>
+        /// 更新单个Die测试进度
+        /// </summary>
+        /// <param name="progress">进度百分比（0-100）</param>
+        /// <param name="stage">当前测试阶段（用于日志）</param>
+        public void UpdateSingleDieProgress(double progress, string stage = "")
+        {
+            Application.Current?.Dispatcher?.Invoke(() =>
+            {
+                progress = Math.Max(0, Math.Min(100, progress));
+                SingleDieTestProgress = progress;
+
+                if (!string.IsNullOrEmpty(stage) && logger.IsDebugEnabled)
+                    logger.DebugFormat($"单个Die进度更新: {stage} - {progress:F1}%");
+            });
+        }
+
+        /// <summary>
+        /// 更新单个Die进度（根据阶段权重）
+        /// </summary>
+        /// <param name="stage">当前阶段</param>
+        /// <param name="stageProgress">阶段内进度（0-1）</param>
+        public void UpdateSingleDieProgressByStage(TestStage stage, double stageProgress)
+        {
+            double baseProgress = GetBaseProgressForStage(stage);
+            double stageWeight = GetWeightForStage(stage);
+            double progress = baseProgress + (stageProgress * stageWeight);
+
+            UpdateSingleDieProgress(progress, stage.ToString());
+        }
+
+        /// <summary>
+        /// 完成单个Die测试
+        /// </summary>
+        public void CompleteSingleDieTest()
+        {
+            Application.Current?.Dispatcher?.Invoke(() =>
+            {
+                SingleDieTestProgress = 100;
+                CompletedTestCount++;
+                UpdateTotalProgress();
+
+                if (logger.IsDebugEnabled)
+                    logger.DebugFormat($"完成Die测试: 累计完成 {CompletedTestCount}/{TotalTestCount}");
+            });
+        }
+
+        /// <summary>
+        /// 更新总进度
+        /// </summary>
+        private void UpdateTotalProgress()
+        {
+            if (TotalTestCount > 0)
+            {
+                // 已完成Die的基础进度
+                double baseProgress = (double)CompletedTestCount / TotalTestCount * 100;
+
+                // 当前Die的进度贡献（如果有）
+                double currentDieContribution = 0;
+                if (CompletedTestCount < TotalTestCount && SingleDieTestProgress > 0)
+                {
+                    currentDieContribution = (SingleDieTestProgress / 100) * (1.0 / TotalTestCount) * 100;
+                }
+
+                TotalTestProgress = baseProgress + currentDieContribution;
+
+                // 确保不超过100%
+                if (TotalTestProgress > 100)
+                    TotalTestProgress = 100;
+            }
+            else
+            {
+                TotalTestProgress = 0;
+            }
+        }
+
+        /// <summary>
+        /// 重置进度条
+        /// </summary>
+        public void ResetProgressBars()
+        {
+            Application.Current?.Dispatcher?.Invoke(() =>
+            {
+                SingleDieTestProgress = 0;
+                TotalTestProgress = 0;
+                TotalTestCount = 0;
+                CompletedTestCount = 0;
+                CurrentDieIndex = 0;
+                CurrentDieInfo = string.Empty;
+            });
+        }
+
+        #endregion
+
+        #region 测试阶段定义
+
+        /// <summary>
+        /// 测试阶段枚举
+        /// </summary>
+        public enum TestStage
+        {
+            Initialization,     // 初始化阶段 0-10%
+            MovingToPosition,   // 移动位置 10-30%
+            FlowExecution,      // 流程执行 30-80%
+            ResultProcessing,   // 结果处理 80-95%
+            Finalization        // 完成阶段 95-100%
+        }
+
+        /// <summary>
+        /// 获取阶段的基准进度
+        /// </summary>
+        private double GetBaseProgressForStage(TestStage stage)
+        {
+            return stage switch
+            {
+                TestStage.Initialization => 0,
+                TestStage.MovingToPosition => 10,
+                TestStage.FlowExecution => 30,
+                TestStage.ResultProcessing => 80,
+                TestStage.Finalization => 95,
+                _ => 0
+            };
+        }
+
+        /// <summary>
+        /// 获取阶段的权重
+        /// </summary>
+        private double GetWeightForStage(TestStage stage)
+        {
+            return stage switch
+            {
+                TestStage.Initialization => 10,
+                TestStage.MovingToPosition => 20,
+                TestStage.FlowExecution => 50,
+                TestStage.ResultProcessing => 15,
+                TestStage.Finalization => 5,
+                _ => 0
+            };
+        }
+
+        #endregion
+
     }
 }

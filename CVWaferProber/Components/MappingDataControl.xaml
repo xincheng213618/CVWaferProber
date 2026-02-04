@@ -13,7 +13,6 @@
     <UserControl.Resources>
         <cv:StatusToColorConverter x:Key="StatusColorConverter" />
         <ccv:NotBooleanConverter x:Key="NotBooleanConverter" />
-        <cv:ProgressBarClipConverter x:Key="ProgressBarClipConverter" />
         <!--  全局配色/圆角常量  -->
         <SolidColorBrush x:Key="PrimaryColor" Color="#FF0078D7" />
         <SolidColorBrush x:Key="PrimaryDarkColor" Color="#FF005FB8" />
@@ -234,9 +233,9 @@
         BorderThickness="0">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="7*" />
+                <RowDefinition Height="6.8*" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="4*" />
+                <RowDefinition Height="4.55*" />
             </Grid.RowDefinitions>
 
             <Grid Grid.Row="0">
@@ -263,7 +262,7 @@
                     BorderThickness="1">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="180" />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
                         <!--  操作区域  -->
@@ -356,7 +355,7 @@
                                 <!--  测量操作区域  -->
                                 <!--  测量操作区域（红框区域）- 两行布局，每行占满整行  -->
                                 <Border
-                                    Height="90"
+                                    Height="70"
                                     Margin="0,0,0,0"
                                     Background="#FFFFFFFF"
                                     CornerRadius="6">
@@ -366,10 +365,7 @@
                                         HorizontalAlignment="Stretch"
                                         Orientation="Vertical">
                                         <!--  ============= 第一行：下拉框 + PN/SN + 搜索 =============  -->
-                                        <Grid
-                                            Height="30"
-                                            Margin="0,0,0,5"
-                                            HorizontalAlignment="Stretch">
+                                        <Grid Height="30" HorizontalAlignment="Stretch">
                                             <!--  列宽按功能分配权重，*表示按比例瓜分整行宽度  -->
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="2*" />
@@ -478,6 +474,7 @@
                                             <!--  FlowLoad按钮 - 第1列  -->
                                             <Button
                                                 Grid.Column="0"
+                                                Width="100"
                                                 Height="25"
                                                 Margin="5,0,0,0"
                                                 Padding="5,1"
@@ -514,31 +511,10 @@
                                                 ToolTip="{DynamicResource BtnStopAutoTest}" />
                                             -->
 
-                                            <!--  刷新状态按钮 - 第2列  -->
-                                            <Button
-                                                Grid.Column="1"
-                                                Grid.ColumnSpan="2"
-                                                Height="25"
-                                                Margin="15,0,0,0"
-                                                Padding="5,1"
-                                                HorizontalAlignment="Stretch"
-                                                VerticalAlignment="Center"
-                                                BorderThickness="0"
-                                                Command="{Binding RefreshStatusCommand}"
-                                                Content="{DynamicResource BtnRefreshStatus}"
-                                                ToolTip="{DynamicResource BtnRefreshStatus}" />
-
-                                            <!--  颜色状态复选框 - 第3列（自适应宽度）  -->
-                                            <CheckBox
-                                                Grid.Column="3"
-                                                Margin="10,0,10,0"
-                                                VerticalAlignment="Center"
-                                                Content="{DynamicResource ChkColorStatus}"
-                                                IsChecked="{Binding IsColorEnabled}" />
-
                                             <!--  手动测试按钮 - 第4列  -->
                                             <Button
-                                                Grid.Column="4"
+                                                Grid.Column="1"
+                                                Width="100"
                                                 Height="25"
                                                 Margin="5,0,0,0"
                                                 Padding="5,1"
@@ -549,6 +525,25 @@
                                                 Content="{DynamicResource BtnStartManTest}"
                                                 IsEnabled="{Binding IsNotProcessing}"
                                                 ToolTip="{DynamicResource BtnStartManTest}" />
+                                            <!--  刷新状态按钮 - 第2列  -->
+                                            <Button
+                                                Grid.Column="4"
+                                                Height="25"
+                                                Margin="15,0,0,0"
+                                                Padding="5,1"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Center"
+                                                BorderThickness="0"
+                                                Command="{Binding RefreshStatusCommand}"
+                                                Content="{DynamicResource BtnRefreshStatus}"
+                                                ToolTip="{DynamicResource BtnRefreshStatus}" />
+                                            <!--  颜色状态复选框 - 第3列（自适应宽度）  -->
+                                            <CheckBox
+                                                Grid.Column="3"
+                                                Margin="10,0,10,0"
+                                                VerticalAlignment="Center"
+                                                Content="{DynamicResource ChkColorStatus}"
+                                                IsChecked="{Binding IsColorEnabled}" />
 
                                             <!--  保存测试结果按钮 - 第5列  -->
                                             <Button
@@ -710,123 +705,6 @@
 
                                 <!--  状态指示  -->
                                 <Border
-                                    Padding="10"
-                                    HorizontalAlignment="Stretch"
-                                    Background="#FFFFFFFF"
-                                    CornerRadius="6"
-                                    Visibility="{Binding IsTestProgressVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                    <!--  核心：用DockPanel替代StackPanel，LastChildFill=True（最后一个子元素占满剩余空间）  -->
-                                    <DockPanel HorizontalAlignment="Stretch" LastChildFill="True">
-                                        <!--  加载动画：固定在左侧，DockPanel.Dock="Left"  -->
-                                        <Ellipse
-                                            Width="12"
-                                            Height="12"
-                                            Margin="0,0,8,0"
-                                            DockPanel.Dock="Left"
-                                            Fill="#FF198754">
-                                            <Ellipse.RenderTransform>
-                                                <RotateTransform x:Name="SpinnerTransform" Angle="0" CenterX="6" CenterY="6" />
-                                            </Ellipse.RenderTransform>
-                                            <Ellipse.Triggers>
-                                                <EventTrigger RoutedEvent="Loaded">
-                                                    <BeginStoryboard>
-                                                        <Storyboard>
-                                                            <DoubleAnimation
-                                                                RepeatBehavior="Forever"
-                                                                Storyboard.TargetName="SpinnerTransform"
-                                                                Storyboard.TargetProperty="Angle"
-                                                                From="0"
-                                                                To="360"
-                                                                Duration="0:0:1" />
-                                                        </Storyboard>
-                                                    </BeginStoryboard>
-                                                </EventTrigger>
-                                            </Ellipse.Triggers>
-                                        </Ellipse>
-                                        <!--  测试状态文本：固定在动画右侧，DockPanel.Dock="Left"  -->
-                                        <TextBlock
-                                            Name="TestingStatus"
-                                            Margin="0,0,8,0"
-                                            VerticalAlignment="Center"
-                                            DockPanel.Dock="Left"
-                                            Foreground="#FF666666"
-                                            Text="{DynamicResource Maping.Measurementinprogress}" />
-                                        <!--  百分比文字：固定右侧，绑定进度值并格式化为XX%  -->
-                                        <TextBlock
-                                            Margin="8,0,0,0"
-                                            VerticalAlignment="Center"
-                                            DockPanel.Dock="Right"
-                                            FontSize="12"
-                                            Foreground="#FF0078D7"
-                                            Text="{Binding DataContext.TestProgressValue, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay, StringFormat={}{0:0}%, FallbackValue=0%}" />
-                                        <!--  进度条：作为DockPanel最后一个子元素，自动占满剩余整行（删除固定Width）  -->
-                                        <ProgressBar
-                                            Height="6"
-                                            Margin="0,3,0,0"
-                                            VerticalAlignment="Center"
-                                            Background="#FFE0E0E0"
-                                            BorderThickness="0"
-                                            Foreground="#FF0078D7"
-                                            Maximum="100"
-                                            Minimum="0"
-                                            Value="{Binding TestProgressValue, Mode=OneWay}">
-                                            <ProgressBar.Resources>
-                                                <Style TargetType="ProgressBar">
-                                                    <Setter Property="Template">
-                                                        <Setter.Value>
-                                                            <ControlTemplate TargetType="ProgressBar">
-                                                                <Grid x:Name="TemplateRoot">
-                                                                    <Border
-                                                                        x:Name="PART_Track"
-                                                                        Background="{TemplateBinding Background}"
-                                                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                                                        CornerRadius="3" />
-                                                                    <Border
-                                                                        x:Name="PART_Indicator"
-                                                                        HorizontalAlignment="Left"
-                                                                        Background="{TemplateBinding Foreground}"
-                                                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                                                        CornerRadius="3">
-                                                                        <Border.Clip>
-                                                                            <RectangleGeometry>
-                                                                                <RectangleGeometry.Rect>
-                                                                                    <MultiBinding Converter="{StaticResource ProgressBarClipConverter}">
-                                                                                        <Binding ElementName="PART_Indicator" Path="ActualWidth" />
-                                                                                        <Binding Path="Value" RelativeSource="{RelativeSource TemplatedParent}" />
-                                                                                        <Binding Path="Maximum" RelativeSource="{RelativeSource TemplatedParent}" />
-                                                                                    </MultiBinding>
-                                                                                </RectangleGeometry.Rect>
-                                                                            </RectangleGeometry>
-                                                                        </Border.Clip>
-                                                                    </Border>
-                                                                </Grid>
-                                                                <ControlTemplate.Triggers>
-                                                                    <!--  添加平滑动画  -->
-                                                                    <Trigger Property="IsIndeterminate" Value="False">
-                                                                        <Trigger.EnterActions>
-                                                                            <BeginStoryboard>
-                                                                                <Storyboard>
-                                                                                    <DoubleAnimation
-                                                                                        DecelerationRatio="0.5"
-                                                                                        Storyboard.TargetProperty="Value"
-                                                                                        Duration="0:0:0.3" />
-                                                                                </Storyboard>
-                                                                            </BeginStoryboard>
-                                                                        </Trigger.EnterActions>
-                                                                    </Trigger>
-                                                                </ControlTemplate.Triggers>
-                                                            </ControlTemplate>
-                                                        </Setter.Value>
-                                                    </Setter>
-                                                </Style>
-                                            </ProgressBar.Resources>
-                                        </ProgressBar>
-                                    </DockPanel>
-                                </Border>
-                                <!--<Border
-                                    Padding="10"
                                     Background="#FFFFFFFF"
                                     CornerRadius="6"
                                     Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -861,13 +739,55 @@
                                             Foreground="#FF666666"
                                             Text="{DynamicResource Maping.Measurementinprogress}" />
                                     </StackPanel>
-                                </Border>-->
+                                </Border>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <!--  总进度条：ProgressBarAll → 绑定TotalTestProgress  -->
+                                    <!--  总进度条  -->
+                                    <ProgressBar
+                                        x:Name="ProgressBarAll"
+                                        Height="10"
+                                        Grid.Row="0"
+                                        Foreground="#FF198754"
+                                        IsIndeterminate="False"
+                                        Maximum="100"
+                                        Minimum="0"
+                                        Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                        Value="{Binding TotalTestProgress}" />
+
+                                    <!--  单个Die进度条  -->
+                                    <ProgressBar
+                                        x:Name="ProgressBar"
+                                        Grid.Row="1"
+                                        Margin="0,5"
+                                        Foreground="#FF198754"
+                                        IsIndeterminate="False"
+                                        Maximum="100"
+                                        Minimum="0"
+                                        Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                        Value="{Binding SingleDieTestProgress}" />
+
+                                    <!--  进度文本  -->
+                                    <TextBlock
+                                        Grid.Row="2"
+                                        Margin="0,2,0,5"
+                                        HorizontalAlignment="Center"
+                                        FontSize="11"
+                                        Foreground="#666"
+                                        Text="{Binding ProgressText}"
+                                        TextTrimming="CharacterEllipsis"
+                                        Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                </Grid>
+
                             </StackPanel>
                         </Border>
 
                         <Border
                             Grid.Row="1"
-                            Margin="0,5"
+                            Margin="0,7"
                             BorderBrush="Gray"
                             BorderThickness="0">
                             <DataGrid
@@ -876,6 +796,7 @@
                                 HorizontalScrollBarVisibility="Auto"
                                 IsReadOnly="False"
                                 ItemsSource="{Binding FilteredTestResults}"
+                                MouseDoubleClick="DataGrid_MouseDoubleClick"
                                 SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
                                 SelectionMode="Single"
                                 SelectionUnit="FullRow"
