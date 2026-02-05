@@ -36,55 +36,55 @@ namespace CVWaferProber.ViewModels
     public class MappingDataViewModel : ViewModelBase
     {
         private static readonly ILog logger = LogManager.GetLogger(typeof(MappingDataViewModel));
-        #region 选中状态绑定
-        private string _selectedType;
-        public string SelectedType
-        {
-            get => _selectedType;
-            set
-            {
-                _selectedType = value;
-                OnPropertyChanged(nameof(SelectedType));
-                UpdateSelectionBasedOnType();
-            }
-        }
-        private void UpdateSelectionBasedOnType()
-        {
-            if (string.IsNullOrEmpty(SelectedType) || FilteredTestResults == null) return;
+        //#region 选中状态绑定
+        //private string _selectedType;
+        //public string SelectedType
+        //{
+        //    get => _selectedType;
+        //    set
+        //    {
+        //        _selectedType = value;
+        //        OnPropertyChanged(nameof(SelectedType));
+        //        UpdateSelectionBasedOnType();
+        //    }
+        //}
+        //private void UpdateSelectionBasedOnType()
+        //{
+        //    if (string.IsNullOrEmpty(SelectedType) || FilteredTestResults == null) return;
 
-            foreach (var item in FilteredTestResults)
-            {
-                switch (SelectedType)
-                {
-                    case "AOI":
-                        item.IsAOIEnabled = true;
-                        item.IsIVLEnabled = false;
-                        item.IsEQEEnabled = false;
-                        item.IsVAMEnabled = false;
-                        break;
-                    case "IVL":
-                        item.IsAOIEnabled = false;
-                        item.IsIVLEnabled = true;
-                        item.IsEQEEnabled = false;
-                        item.IsVAMEnabled = false;
-                        break;
-                    case "EQE":
-                        item.IsAOIEnabled = false;
-                        item.IsIVLEnabled = false;
-                        item.IsEQEEnabled = true;
-                        item.IsVAMEnabled = false;
-                        break;
-                    case "VAM":
-                        item.IsAOIEnabled = false;
-                        item.IsIVLEnabled = false;
-                        item.IsEQEEnabled = false;
-                        item.IsVAMEnabled = true;
-                        break;
-                }
-            }
-        }
+        //    foreach (var item in FilteredTestResults)
+        //    {
+        //        switch (SelectedType)
+        //        {
+        //            case "AOI":
+        //                item.IsAOIEnabled = true;
+        //                item.IsIVLEnabled = false;
+        //                item.IsEQEEnabled = false;
+        //                item.IsVAMEnabled = false;
+        //                break;
+        //            case "IVL":
+        //                item.IsAOIEnabled = false;
+        //                item.IsIVLEnabled = true;
+        //                item.IsEQEEnabled = false;
+        //                item.IsVAMEnabled = false;
+        //                break;
+        //            case "EQE":
+        //                item.IsAOIEnabled = false;
+        //                item.IsIVLEnabled = false;
+        //                item.IsEQEEnabled = true;
+        //                item.IsVAMEnabled = false;
+        //                break;
+        //            case "VAM":
+        //                item.IsAOIEnabled = false;
+        //                item.IsIVLEnabled = false;
+        //                item.IsEQEEnabled = false;
+        //                item.IsVAMEnabled = true;
+        //                break;
+        //        }
+        //    }
+        //}
 
-        #endregion
+        //#endregion
         #region 原有核心属性+命令（保留，无修改）
         public event EventHandler<WPFlowViewModel> ActivateCorrespondingPanel;
         public ChipMappingControlViewModel? CustomMappingVM { get; set; }
@@ -255,10 +255,12 @@ namespace CVWaferProber.ViewModels
                 {
                     UpdateTotalProgress(); // 完成数更新同步总进度
                     OnPropertyChanged(nameof(ProgressText));
+                    OnPropertyChanged(nameof(ProgressTextAll));
+
                 }
             }
         }
-
+       
         // 当前测试Die的行列信息（如：X1/Y2）
         private string _currentDieInfo = string.Empty;
         public string CurrentDieInfo
@@ -357,6 +359,7 @@ namespace CVWaferProber.ViewModels
                 CurrentDieInfo = string.Empty;
 
                 logger.InfoFormat("{0} Dies to test", TotalTestCount);
+                OnPropertyChanged(nameof(ProgressTextAll));
             });
         }
 
@@ -400,7 +403,7 @@ namespace CVWaferProber.ViewModels
                 CompletedTestCount++;
                 UpdateTotalProgress();
                 OnPropertyChanged(nameof(ProgressText));
-
+                SingleDieTestProgress = 0;
                 logger.DebugFormat("Single Die test completed; cumulative completion: {0}/{1}", CompletedTestCount, TotalTestCount);
             });
         }
@@ -441,6 +444,7 @@ namespace CVWaferProber.ViewModels
 
                 // 同步重置手动测试标记
                 IsManualTesting = false;
+                OnPropertyChanged(nameof(ProgressTextAll));
             });
         }
         #endregion
