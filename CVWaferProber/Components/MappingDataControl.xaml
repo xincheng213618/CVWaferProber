@@ -406,7 +406,9 @@
                                                 VerticalAlignment="Center"
                                                 IsEnabled="{Binding IsNotProcessing}"
                                                 ItemsSource="{Binding WPFlows}"
-                                                SelectedItem="{Binding SelectedWPFlow}">
+                                                SelectedItem="{Binding SelectedWPFlow}"
+                                                SelectedValuePath="FlowType"
+                                                SelectedValue="{Binding SelectedType}">
                                                 <ComboBox.ItemTemplate>
                                                     <DataTemplate>
                                                         <StackPanel Orientation="Horizontal">
