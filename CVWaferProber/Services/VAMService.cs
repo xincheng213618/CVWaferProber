@@ -72,13 +72,84 @@ namespace CVWaferProber.Services
 
         public override async Task StartTestingAsync(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool tranStatus = true)
         {
-            //
+            //发布开始事件
             EventAggregator?.Publish(new VAMFlowStartingEvent());
-
+            // 开始测试，状态更新会自动启动进度定时器
             dieViewModel.ChangeStatus(ChipStatus.VAM_TESTING);
-            await RunFlowAsync(_selectedWPFlow, dieViewModel, hasNext, tranStatus);
+
+            try
+            {
+                // 模拟测试过程 - 分阶段更新进度
+                await SimulateVAMTestWithProgress(dieViewModel, _selectedWPFlow, hasNext, tranStatus);
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"VAM测试失败: {ex.Message}", ex);
+                dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
+                throw;
+            }
         }
-      
+        private async Task SimulateVAMTestWithProgress(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool isAuto)
+        {
+            try
+            {
+                // 阶段1：准备阶段 (0-10%) - 模拟0.5秒
+                await Task.Delay(500);
+
+                // 阶段2：发送测试请求 (10-30%) - 模拟1秒
+                await Task.Delay(1000);
+
+                // 阶段3：执行实际测试 (30-80%)
+                var resp = rcService.RcRunFlowByName(_selectedWPFlow.Name, dieViewModel.SerialNumber);
+
+                if (resp)
+                {
+                    // 等待测试结果，有超时控制
+                    var flowResult = await PollFlowResultWithRxAsync(dieViewModel.SerialNumber,
+                        new CancellationTokenSource(TimeSpan.FromSeconds(_selectedWPFlow.Timeout)).Token);
+
+                    if (flowResult != null && flowResult.IsSuccess)
+                    {
+                        // 阶段4：处理结果 (80-100%)
+                        ChipStatus status = await FlowResultDisplay(dieViewModel);
+                        dieViewModel.ChangeStatus(status, true);
+                    }
+                    else
+                    {
+                        ChipStatus status = GetResultStatus(dieViewModel.SerialNumber);
+                        dieViewModel.ChangeStatus(status, true);
+                    }
+                }
+                else
+                {
+                    logger.Error($"VAM流程 {_selectedWPFlow.Name} 启动失败");
+                    dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
+                }
+            }
+            catch (TaskCanceledException ex)
+            {
+                logger.Warn($"VAM流程执行超时: {ex.Message}");
+                dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"VAM流程执行失败: {ex.Message}", ex);
+                dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
+                throw;
+            }
+            finally
+            {
+                if (logger.IsInfoEnabled)
+                    logger.InfoFormat("VAM测试结束: {0}/{1} => {2}",
+                        dieViewModel.MapAxisToString(), dieViewModel.Status.ToString(), dieViewModel.SerialNumber);
+
+                if (hasNext)
+                    DoAutoTestingNextCompleted(dieViewModel);
+                else
+                    DoEndTesting(dieViewModel, isAuto);
+            }
+        }
+
         public override void AutoExportData()
         {
             cVVAMAnalyzer.BtnExportClick();

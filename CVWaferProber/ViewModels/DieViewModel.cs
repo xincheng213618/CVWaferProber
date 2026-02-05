@@ -298,7 +298,7 @@ namespace CVWaferProber.ViewModels
             if (updateTime) EndTestTime = DateTime.Now;
 
             // 测试开始：记录开始时间
-            if (status == ChipStatus.TESTING || status == ChipStatus.IVL_TESTING)
+            if (status == ChipStatus.TESTING || status == ChipStatus.IVL_TESTING|| status == ChipStatus.EQE_TESTING|| status == ChipStatus.VAM_TESTING)
             {
                 StartTestTime = DateTime.Now;
                 CurrentTestStep = 3; // 标记为测试中

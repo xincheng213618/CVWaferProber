@@ -114,7 +114,7 @@ namespace CVWaferProber.Services
         /// 更新进度
         /// </summary>
        
-        private void DoAutoTestingNextCompleted(DieViewModel dieViewModel)
+        public void DoAutoTestingNextCompleted(DieViewModel dieViewModel)
         {
             AutoTestingNextCompleted?.Invoke(this, dieViewModel);
         }

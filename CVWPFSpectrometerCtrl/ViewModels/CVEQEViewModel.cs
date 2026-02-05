@@ -3033,91 +3033,203 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 return ""; // 空数组返回空字符串
             return string.Join(",", array); // 用逗号拼接元素
         }
+        //public void LoadEQEData(List<VScgdMeasureResultEqe> results)
+        //{
+        //    if (results == null || results.Count == 0) return;
+
+        //    //
+        //    int n = 1;
+        //    foreach (var result in results)
+        //    {
+        //        SpectrumMeasureParam? param = null;
+        //        if (!string.IsNullOrEmpty(result.Params)) param = JsonConvert.DeserializeObject<SpectrumMeasureParam>(result.Params);
+        //        float voltage = 0;
+        //        float current = 0;
+        //        if (result.VResult.HasValue) voltage = result.VResult.Value;
+        //        else if (param != null)
+        //        {
+        //            voltage = Convert.ToSingle(param.SMUData.V);
+        //        }
+        //        if (result.IResult.HasValue) current = result.IResult.Value;
+        //        else if (param != null)
+        //        {
+        //            current = Convert.ToSingle(param.SMUData.I);
+        //        }
+        //        var measurement = new SpectrumEQEMeasurement(n++)
+        //        {
+        //            Timestamp = result.CreateDate,
+        //            Meas_Id = result.BatchCode,
+        //            Voltage = voltage,
+        //            Current = current,
+        //            Luminance = (float)result.FPh / 1,
+
+        //            IP = Math.Round((decimal)(result.FIp / 65535 * 100), 2).ToString() + "%",
+
+        //            Blue = (float)result.FBR,
+        //            CIE_x = (float)result.Fx,
+        //            CIE_y = (float)result.Fy,
+        //            CIE_u = (float)result.Fu,
+        //            CIE_v = (float)result.Fv,
+        //            CCT = (float)result.FCCT,
+        //            PeakWavelength = (float)result.FLd,
+        //            fPur = (float)result.FPur,
+        //            //fPuPercent = $"{Math.Round((decimal)(result.FPur * 100), 2)}%",
+        //            PeakIntensity = (float)result.FLp,
+        //            FHW = (float)result.FHW,
+        //            //Intensities = JsonConvert.DeserializeObject<float[]>(result.FPL),
+        //            Intensities = GetIntensitiesFromFileOrOriginal(result),
+        //            Wavelengths = Wavelengths,
+        //            fPlambda = (float)result.FPlambda,
+        //            //
+        //            EQE = (double)result.Eqe,
+        //            LuminousFlux = (float)result.LuminousFlux,
+        //            RadiantFlux = (float)result.RadiantFlux,
+        //            LuminousEfficacy = (double)result.LuminousEfficacy,
+        //            //
+        //            RowLineColor = ConvertToOxyColor(SpectralLineColor)
+        //        };
+        //        double sum1 = 0, sum2 = 0;
+        //        for (int i = 35; i <= 75; i++)
+        //            sum1 += measurement.Intensities[i * 10];
+        //        for (int i = 20; i <= 120; i++)
+        //            sum2 += measurement.Intensities[i * 10];
+        //        measurement.Blue = (float)Math.Round(sum1 / sum2 * 100, 2);
+        //        Measurements.Add(measurement);
+
+
+        //    }
+
+        //    if (Measurements.Any())
+        //    {
+        //        SelectedMeasurement = Measurements.First();
+        //        //if (_spectralCtrl != null)
+        //        //{
+        //        //    _spectralCtrl.SpectralData.SetData(Wavelengths, SelectedMeasurement.Intensities);
+        //        //    _spectralCtrl.InvalidateVisual();
+        //        //}
+        //        // 新增：加载EQE数据
+        //        UpdateEQEChartFromSelectedMeasurement();
+        //    }
+        //    // 数据加载后，根据“显示所有”状态更新图表
+        //    UpdateChartByShowAllState();
+        //    // 新增：同步更新EQE图表
+        //    UpdateEQEChartByShowAllState();
+        //    // 子Tab数据加载完成后，重新初始化总览图Series
+        //    InitializeOverviewSeries();
+        //    // 触发自动导出
+        //    //AutoExportData();
+        //}
         public void LoadEQEData(List<VScgdMeasureResultEqe> results)
         {
             if (results == null || results.Count == 0) return;
 
-            //
-            int n = 1;
-            foreach (var result in results)
+            // 在 UI 线程中批量处理数据
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                SpectrumMeasureParam? param = null;
-                if (!string.IsNullOrEmpty(result.Params)) param = JsonConvert.DeserializeObject<SpectrumMeasureParam>(result.Params);
-                float voltage = 0;
-                float current = 0;
-                if (result.VResult.HasValue) voltage = result.VResult.Value;
-                else if (param != null)
+                int n = 1;
+                foreach (var result in results)
                 {
-                    voltage = Convert.ToSingle(param.SMUData.V);
+                    SpectrumMeasureParam? param = null;
+                    if (!string.IsNullOrEmpty(result.Params))
+                        param = JsonConvert.DeserializeObject<SpectrumMeasureParam>(result.Params);
+
+                    float voltage = 0;
+                    float current = 0;
+                    if (result.VResult.HasValue)
+                        voltage = result.VResult.Value;
+                    else if (param != null)
+                        voltage = Convert.ToSingle(param.SMUData.V);
+
+                    if (result.IResult.HasValue)
+                        current = result.IResult.Value;
+                    else if (param != null)
+                        current = Convert.ToSingle(param.SMUData.I);
+
+                    // 准备数据（可以在后台线程中执行的部分）
+                    var intensities = GetIntensitiesFromFileOrOriginal(result);
+
+                    // 计算 Blue 值（数据计算部分）
+                    double sum1 = 0, sum2 = 0;
+                    for (int i = 35; i <= 75; i++)
+                        sum1 += intensities[i * 10];
+                    for (int i = 20; i <= 120; i++)
+                        sum2 += intensities[i * 10];
+                    float blueValue = (float)Math.Round(sum1 / sum2 * 100, 2);
+
+                    // 在 UI 线程中创建 measurement 对象
+                    var measurement = new SpectrumEQEMeasurement(n++)
+                    {
+                        Timestamp = result.CreateDate,
+                        Meas_Id = result.BatchCode,
+                        Voltage = voltage,
+                        Current = current,
+                        Luminance = (float)result.FPh / 1,
+                        IP = Math.Round((decimal)(result.FIp / 65535 * 100), 2).ToString() + "%",
+                        Blue = blueValue,
+                        CIE_x = (float)result.Fx,
+                        CIE_y = (float)result.Fy,
+                        CIE_u = (float)result.Fu,
+                        CIE_v = (float)result.Fv,
+                        CCT = (float)result.FCCT,
+                        PeakWavelength = (float)result.FLd,
+                        fPur = (float)result.FPur,
+                        PeakIntensity = (float)result.FLp,
+                        FHW = (float)result.FHW,
+                        Intensities = intensities,
+                        Wavelengths = Wavelengths,
+                        fPlambda = (float)result.FPlambda,
+                        EQE = (double)result.Eqe,
+                        LuminousFlux = (float)result.LuminousFlux,
+                        RadiantFlux = (float)result.RadiantFlux,
+                        LuminousEfficacy = (double)result.LuminousEfficacy,
+                        RowLineColor = ConvertToOxyColor(SpectralLineColor) // 现在在 UI 线程中安全调用
+                    };
+
+                    Measurements.Add(measurement); // 在 UI 线程中添加
                 }
-                if (result.IResult.HasValue) current = result.IResult.Value;
-                else if (param != null)
+
+                if (Measurements.Any())
                 {
-                    current = Convert.ToSingle(param.SMUData.I);
+                    SelectedMeasurement = Measurements.First();
+                    UpdateEQEChartFromSelectedMeasurement();
                 }
-                var measurement = new SpectrumEQEMeasurement(n++)
-                {
-                    Timestamp = result.CreateDate,
-                    Meas_Id = result.BatchCode,
-                    Voltage = voltage,
-                    Current = current,
-                    Luminance = (float)result.FPh / 1,
 
-                    IP = Math.Round((decimal)(result.FIp / 65535 * 100), 2).ToString() + "%",
+                // 数据加载后，根据"显示所有"状态更新图表
+                UpdateChartByShowAllState();
+                UpdateEQEChartByShowAllState();
+                InitializeOverviewSeries();
+            });
+        }
 
-                    Blue = (float)result.FBR,
-                    CIE_x = (float)result.Fx,
-                    CIE_y = (float)result.Fy,
-                    CIE_u = (float)result.Fu,
-                    CIE_v = (float)result.Fv,
-                    CCT = (float)result.FCCT,
-                    PeakWavelength = (float)result.FLd,
-                    fPur = (float)result.FPur,
-                    //fPuPercent = $"{Math.Round((decimal)(result.FPur * 100), 2)}%",
-                    PeakIntensity = (float)result.FLp,
-                    FHW = (float)result.FHW,
-                    //Intensities = JsonConvert.DeserializeObject<float[]>(result.FPL),
-                    Intensities = GetIntensitiesFromFileOrOriginal(result),
-                    Wavelengths = Wavelengths,
-                    fPlambda = (float)result.FPlambda,
-                    //
-                    EQE = (double)result.Eqe,
-                    LuminousFlux = (float)result.LuminousFlux,
-                    RadiantFlux = (float)result.RadiantFlux,
-                    LuminousEfficacy = (double)result.LuminousEfficacy,
-                    //
-                    RowLineColor = ConvertToOxyColor(SpectralLineColor)
-                };
-                double sum1 = 0, sum2 = 0;
-                for (int i = 35; i <= 75; i++)
-                    sum1 += measurement.Intensities[i * 10];
-                for (int i = 20; i <= 120; i++)
-                    sum2 += measurement.Intensities[i * 10];
-                measurement.Blue = (float)Math.Round(sum1 / sum2 * 100, 2);
-                Measurements.Add(measurement);
+        // 辅助方法：提取电压/电流计算逻辑
+        private float GetVoltage(VScgdMeasureResultEqe result)
+        {
+            if (result.VResult.HasValue)
+                return result.VResult.Value;
 
-
+            if (!string.IsNullOrEmpty(result.Params))
+            {
+                var param = JsonConvert.DeserializeObject<SpectrumMeasureParam>(result.Params);
+                if (param != null)
+                    return Convert.ToSingle(param.SMUData.V);
             }
 
-            if (Measurements.Any())
+            return 0f;
+        }
+
+        private float GetCurrent(VScgdMeasureResultEqe result)
+        {
+            if (result.IResult.HasValue)
+                return result.IResult.Value;
+
+            if (!string.IsNullOrEmpty(result.Params))
             {
-                SelectedMeasurement = Measurements.First();
-                //if (_spectralCtrl != null)
-                //{
-                //    _spectralCtrl.SpectralData.SetData(Wavelengths, SelectedMeasurement.Intensities);
-                //    _spectralCtrl.InvalidateVisual();
-                //}
-                // 新增：加载EQE数据
-                UpdateEQEChartFromSelectedMeasurement();
+                var param = JsonConvert.DeserializeObject<SpectrumMeasureParam>(result.Params);
+                if (param != null)
+                    return Convert.ToSingle(param.SMUData.I);
             }
-            // 数据加载后，根据“显示所有”状态更新图表
-            UpdateChartByShowAllState();
-            // 新增：同步更新EQE图表
-            UpdateEQEChartByShowAllState();
-            // 子Tab数据加载完成后，重新初始化总览图Series
-            InitializeOverviewSeries();
-            // 触发自动导出
-            //AutoExportData();
+
+            return 0f;
         }
         public void LoadEQEData(string serialNumber)
         {
@@ -3388,6 +3500,13 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private OxyColor ConvertToOxyColor(SolidColorBrush brush)
         {
             if (brush == null) return OxyColors.Blue; // 默认蓝色
+                                                      // 如果当前不是UI线程，切换到UI线程执行
+            if (!brush.Dispatcher.CheckAccess())
+            {
+                return brush.Dispatcher.Invoke(() => ConvertToOxyColor(brush));
+            }
+
+            // 现在在UI线程中安全访问
             return OxyColor.FromArgb(
                 brush.Color.A,
                 brush.Color.R,

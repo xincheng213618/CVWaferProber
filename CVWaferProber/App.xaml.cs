@@ -218,12 +218,17 @@ namespace CVWaferProber
             //Application.Current.MainWindow = _mainWindow;
             //_mainWindow.Show();
             // 创建主窗口（确保在UI线程执行）
-            Application.Current.Dispatcher.Invoke(() =>
+            // 使用 Dispatcher.BeginInvoke 确保在 UI 线程执行
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (_mainWindow == null) _mainWindow = new DockMainWindow();
+                if (_mainWindow == null)
+                {
+                    _mainWindow = new DockMainWindow();
+                }
+
                 Application.Current.MainWindow = _mainWindow;
                 _mainWindow.Show();
-            });
+            }));
         }
 
         // 应用关闭时调用释放
