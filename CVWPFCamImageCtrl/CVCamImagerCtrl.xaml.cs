@@ -71,9 +71,39 @@ namespace CVWPFCamImageCtrl
                 model.SetImageCtrl(ImageDisplay);
                 // 初始化 DataGrid 数据源为 ProcessedImageResults
                 MainImageDataGrid.ItemsSource = _model.ProcessedImageResults;
+                // 关键1：绑定图像新增事件（核心）
+                _model.ImageItemAdded += Model_ImageItemAdded;
+                // 初始化视图类型同步
+                _model.CurrentViewType = _currentViewType;
             }
         }
+        // 新增：图像新增事件回调——自动选中最新项（核心逻辑）
+        private void Model_ImageItemAdded(ImageItem newImageItem)
+        {
+            // 必须在UI线程执行选中操作，避免跨线程异常
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                try
+                {
+                    // 1. 获取当前视图的最新项（兼容Analysis/Camera视图）
+                    var latestItem = _model.GetCurrentViewLatestImageItem();
+                    if (latestItem == null) return;
 
+                    // 2. 选中最新项（设置SelectedItem比SelectedIndex更稳定，避免索引错位）
+                    MainImageDataGrid.SelectedItem = latestItem;
+                    // 3. 滚动到最新项，确保用户能看到
+                    MainImageDataGrid.ScrollIntoView(latestItem);
+                    // 4. 更新当前索引，保证上一张/下一张按钮正常工作
+                    _currentImageIndex = MainImageDataGrid.SelectedIndex;
+
+                   // logger.Info($"AOI图像自动选中最新项：{latestItem.FileName}，索引：{_currentImageIndex}");
+                }
+                catch (Exception ex)
+                {
+                    logger.Error("The automatic selection of AOI images failed.", ex);
+                }
+            });
+        }
         private void InitializeData()
         {
             //_imageItems = new ObservableCollection<ImageItem>();
@@ -109,6 +139,8 @@ namespace CVWPFCamImageCtrl
             }
 
             _currentViewType = selectedItem.Tag.ToString() ?? "Analysis";
+            // 关键2：同步更新ViewModel的视图类型，确保GetLatest方法正确
+            _model.CurrentViewType = _currentViewType;
             logger.Info($"Current view type：{_currentViewType}");
 
             // 获取当前活动的集合（用于加载图像）
