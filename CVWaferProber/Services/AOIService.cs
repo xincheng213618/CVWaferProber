@@ -349,7 +349,7 @@ namespace CVWaferProber.Services
         {
             try
             {
-                logger.Info($"开始加载批次{batchCode}的Camera Measurement");
+                logger.Info($"Start loading Camera Measurement for batch {batchCode}");
 
                 // 从ImageResultService获取相机测量结果
                 var cameraResults = ImageResultService.LoadResultByBatchCode(batchCode);
@@ -405,7 +405,7 @@ namespace CVWaferProber.Services
                     });
 
                     addedCount++;
-                    logger.Debug($"已添加Camera Measurement: {Path.GetFileName(filePath)} (FileType: {result.FileType})");
+                    logger.Debug($"Added Camera Measurement: {Path.GetFileName(filePath)} (FileType: {result.FileType})");
                 }
 
 

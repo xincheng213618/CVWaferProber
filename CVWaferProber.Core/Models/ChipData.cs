@@ -48,8 +48,12 @@ namespace CVWaferProber.Core.Models
                 ChipStatus.WAITING => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0xFF)),
                 ChipStatus.TESTING => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0xFF, 0)),
                 ChipStatus.IVL_TESTING => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0xFF, 0)),
+                ChipStatus.EQE_TESTING => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0xFF, 0)),
+                ChipStatus.VAM_TESTING => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0xFF, 0)),
                 ChipStatus.OK => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x7C, 0xFC, 0)),
                 ChipStatus.IVL_COMPLETED => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x7C, 0xFC, 0)),
+                ChipStatus.EQE_COMPLETED => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x7C, 0xFC, 0)),
+                ChipStatus.VAM_COMPLETED => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x7C, 0xFC, 0)),
                 ChipStatus.AOI_NG => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0, 0)),
                 ChipStatus.FAILED => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0, 0)),
                 ChipStatus.DW_NG => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0xA5, 0)),
@@ -58,6 +62,7 @@ namespace CVWaferProber.Core.Models
                 ChipStatus.I2C_NG => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0xFF, 0xFF)),
                 ChipStatus.AOI_LINE_NG => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0xC0, 0xCB)),
                 ChipStatus.SKIP => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 127, 0)),
+
                 _ => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(33, 150, 243))
             };
         }

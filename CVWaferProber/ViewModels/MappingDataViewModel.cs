@@ -272,7 +272,7 @@ namespace CVWaferProber.ViewModels
         {
             get
             {
-                if (TotalTestCount == 0) return "未开始";
+                if (TotalTestCount == 0) return "Not started";
                 return $"{SingleDieTestProgress:F1}%";
             }
         }
@@ -356,7 +356,7 @@ namespace CVWaferProber.ViewModels
                 TotalTestProgress = 0;
                 CurrentDieInfo = string.Empty;
 
-                logger.InfoFormat("自动测试进度初始化：共{0}个Die待测试", TotalTestCount);
+                logger.InfoFormat("{0} Dies to test", TotalTestCount);
             });
         }
 
@@ -371,7 +371,7 @@ namespace CVWaferProber.ViewModels
                 CurrentDieInfo = $"{die.MapX}/{die.MapY}"; // 显示当前Die行列
                 SingleDieTestProgress = 0; // 重置单Die进度
 
-                logger.DebugFormat("开始测试Die[{0}/{1}]，单Die进度重置为0%", die.MapX, die.MapY);
+                logger.DebugFormat("Start testing Die [{0}/{1}], reset single Die progress to 0%", die.MapX, die.MapY);
             });
         }
 
@@ -386,7 +386,7 @@ namespace CVWaferProber.ViewModels
             {
                 SingleDieTestProgress = progress;
                 if (!string.IsNullOrEmpty(stageInfo) && logger.IsDebugEnabled)
-                    logger.DebugFormat("Die[{0}]进度更新：{1} - {2:F1}%", CurrentDieInfo, stageInfo, progress);
+                    logger.DebugFormat("Die[{0}]Progress Update：{1} - {2:F1}%", CurrentDieInfo, stageInfo, progress);
             });
         }
 
@@ -401,7 +401,7 @@ namespace CVWaferProber.ViewModels
                 UpdateTotalProgress();
                 OnPropertyChanged(nameof(ProgressText));
 
-                logger.DebugFormat("Die测试完成，累计完成{0}/{1}个", CompletedTestCount, TotalTestCount);
+                logger.DebugFormat("Single Die test completed; cumulative completion: {0}/{1}", CompletedTestCount, TotalTestCount);
             });
         }
 
@@ -476,7 +476,7 @@ namespace CVWaferProber.ViewModels
         {
             if (SelectedWPFlow == null)
             {
-                logger.Error("未选择测试流程（Flow）");
+                logger.Error("Test flow (Flow) not selected");
                 return;
             }
 
@@ -549,7 +549,7 @@ namespace CVWaferProber.ViewModels
                     }
                     catch (Exception ex)
                     {
-                        logger.Error("加载上次会话失败", ex);
+                        logger.Error("Failed to load last session", ex);
                     }
                 }), DispatcherPriority.Background);
             }
@@ -563,13 +563,13 @@ namespace CVWaferProber.ViewModels
                 var saveTask = Task.Run(async () =>
                 {
                     try { await SaveLastSessionAsync().ConfigureAwait(false); }
-                    catch (Exception ex) { logger.Warn("退出时保存会话失败", ex); }
+                    catch (Exception ex) { logger.Warn("Failed to save session on exit", ex); }
                     try { SaveTestResultsToDefaultFile(); }
-                    catch (Exception ex) { logger.Warn("退出时自动导出CSV失败", ex); }
+                    catch (Exception ex) { logger.Warn("Failed to auto-export CSV on exit", ex); }
                 });
-                if (!saveTask.Wait(TimeSpan.FromSeconds(5))) logger.Warn("退出时保存超时");
+                if (!saveTask.Wait(TimeSpan.FromSeconds(5))) logger.Warn("Save timed out on exit");
             }
-            catch (Exception ex) { logger.Error("退出时处理异常", ex); }
+            catch (Exception ex) { logger.Error("Exception occurred on exit", ex); }
         }
 
         private void OnSelectedChanged(object? value)
@@ -622,7 +622,7 @@ namespace CVWaferProber.ViewModels
             };
             if (openFileDialog.ShowDialog() == true)
             {
-                try { ResultService.LoadFromCSV(openFileDialog.FileName, TestResults); _dataGrid?.Items.Refresh(); MainService.Instance.Maintenance(); logger.InfoFormat("加载结果成功：{0}", openFileDialog.FileName); }
+                try { ResultService.LoadFromCSV(openFileDialog.FileName, TestResults); _dataGrid?.Items.Refresh(); MainService.Instance.Maintenance(); logger.InfoFormat("Result loaded successfully：{0}", openFileDialog.FileName); }
                 catch (Exception ex) { logger.Error(ex); }
             }
         }
@@ -915,7 +915,7 @@ namespace CVWaferProber.ViewModels
         private void LoadMappingFileFromCsv()
         {
             List<CVMappingData> mappingData = null;
-            if (!File.Exists(MappingCsvFilePath)) { logger.WarnFormat("文件不存在：{0}", MappingCsvFilePath); return; }
+            if (!File.Exists(MappingCsvFilePath)) { logger.WarnFormat("File does not exist：{0}", MappingCsvFilePath); return; }
             bool bR = CsvMappingDataTool.LoadMappingCsv(MappingCsvFilePath, ref mappingData);
             if (bR && mappingData != null && mappingData.Count > 0)
             {
@@ -1038,14 +1038,14 @@ namespace CVWaferProber.ViewModels
                 double yieldRate = (double)successCount / testedDices.Count * 100;
                 YieldInfo = $"{successCount}/{testedDices.Count} ({yieldRate:F2}%)";
             }
-            catch (Exception ex) { logger.Error("良率计算异常", ex); YieldInfo = (string)Application.Current.FindResource("CalculationException"); }
+            catch (Exception ex) { logger.Error("Yield calculation exception", ex); YieldInfo = (string)Application.Current.FindResource("CalculationException"); }
         }
 
         private void AutoExportSummaryResult()
         {
             try
             {
-                if (TestResults == null || !TestResults.Any()) { logger.Info("无测试结果，跳过Summary导出"); return; }
+                if (TestResults == null || !TestResults.Any()) { logger.Info("No test results, skip Summary export"); return; }
                 string exportRootPath = @"D:\Project";
                 if (!Directory.Exists(exportRootPath)) Directory.CreateDirectory(exportRootPath);
                 var savePath = Path.Combine(exportRootPath, $"Summary_Result_{DateTime.Now:yyyyMMddHHmmss}.csv");
@@ -1072,9 +1072,9 @@ namespace CVWaferProber.ViewModels
                         writer.WriteLine(string.Join(",", rowData.Select(d => d.Contains(",") ? $"\"{d}\"" : d)));
                     }
                 }
-                logger.InfoFormat("Summary结果已自动导出：{0}", savePath);
+                logger.InfoFormat("Summary results automatically exported：{0}", savePath);
             }
-            catch (Exception ex) { logger.Error("Summary结果导出失败", ex); }
+            catch (Exception ex) { logger.Error("Failed to export Summary results", ex); }
         }
 
         public void LoadFlow(List<RespDataFlowTempDTO>? flows)
@@ -1102,7 +1102,7 @@ namespace CVWaferProber.ViewModels
             };
             if (saveFileDialog.ShowDialog() == true)
             {
-                try { ResultService.SaveToCSV(saveFileDialog.FileName, TestResults); logger.InfoFormat("保存结果成功：{0}", saveFileDialog.FileName); }
+                try { ResultService.SaveToCSV(saveFileDialog.FileName, TestResults); logger.InfoFormat("Results saved successfully：{0}", saveFileDialog.FileName); }
                 catch (Exception ex) { logger.Error(ex); }
             }
         }
@@ -1111,7 +1111,7 @@ namespace CVWaferProber.ViewModels
         {
             if (obj is string path && !string.IsNullOrWhiteSpace(path))
             {
-                try { ResultService.LoadFromCSV(path, TestResults); _dataGrid?.Items.Refresh(); logger.InfoFormat("加载结果成功：{0}", path); }
+                try { ResultService.LoadFromCSV(path, TestResults); _dataGrid?.Items.Refresh(); logger.InfoFormat("Result loaded successfully：{0}", path); }
                 catch (Exception ex) { logger.Error(ex); }
                 return;
             }
@@ -1119,8 +1119,8 @@ namespace CVWaferProber.ViewModels
             {
                 Task.Run(async () =>
                 {
-                    try { await LoadFromPersistenceAsync(); Application.Current.Dispatcher.Invoke(() => { _dataGrid?.Items.Refresh(); logger.Info("从持久化加载上次会话结果成功"); }); }
-                    catch (Exception ex) { logger.Error("从持久化加载失败", ex); }
+                    try { await LoadFromPersistenceAsync(); Application.Current.Dispatcher.Invoke(() => { _dataGrid?.Items.Refresh(); logger.Info("Successfully loaded the results of last session from persistent storage"); }); }
+                    catch (Exception ex) { logger.Error("Failed to load from persistence", ex); }
                 });
                 return;
             }
@@ -1133,7 +1133,7 @@ namespace CVWaferProber.ViewModels
             };
             if (openFileDialog.ShowDialog() == true)
             {
-                try { ResultService.LoadFromCSV(openFileDialog.FileName, TestResults); _dataGrid?.Items.Refresh(); logger.InfoFormat("加载结果成功：{0}", openFileDialog.FileName); }
+                try { ResultService.LoadFromCSV(openFileDialog.FileName, TestResults); _dataGrid?.Items.Refresh(); logger.InfoFormat("Result loaded successfully：{0}", openFileDialog.FileName); }
                 catch (Exception ex) { logger.Error(ex); }
             }
         }
@@ -1156,12 +1156,17 @@ namespace CVWaferProber.ViewModels
                         var dtoWithSN = dtos.FirstOrDefault(d => !string.IsNullOrWhiteSpace(d.SerialNumber));
                         if (dtoWithSN != null) toSelect = TestResults.FirstOrDefault(t => !string.IsNullOrWhiteSpace(t.SerialNumber) && t.SerialNumber.Equals(dtoWithSN.SerialNumber, StringComparison.OrdinalIgnoreCase));
                         if (toSelect == null && TestResults.Count > 0) toSelect = TestResults[0];
-                        if (toSelect != null) { selfClick = false; SelectedItem = toSelect; ManScrollToItem(toSelect); logger.InfoFormat("加载后自动选中：Id={0}, SN={1}", toSelect.Id, toSelect.SerialNumber); }
+                        if (toSelect != null) 
+                        {
+                            selfClick = false; SelectedItem = toSelect;
+                            ManScrollToItem(toSelect); 
+                            logger.InfoFormat("Auto-selected after loading：Id={0}, SN={1}", toSelect.Id, toSelect.SerialNumber); 
+                        }
                     }
-                    catch (Exception ex) { logger.Warn("加载后自动选中失败", ex); }
+                    catch (Exception ex) { logger.Warn("Failed to auto-select after loading", ex); }
                 });
             }
-            catch (Exception ex) { logger.Error("从持久化加载失败", ex); }
+            catch (Exception ex) { logger.Error("Failed to load from persistence", ex); }
         }
 
         private void ApplyDtosToTestResults(List<TestResultDto> dtos)
@@ -1202,7 +1207,7 @@ namespace CVWaferProber.ViewModels
                     die.AOIGradeLevel = dto.AOIGradeLevel;
                     die.BlackPattern = dto.BlackPattern;
                 }
-                catch (Exception ex) { logger.Warn("应用DTO到TestResults失败", ex); }
+                catch (Exception ex) { logger.Warn("Failed to apply DTO to TestResults", ex); }
             }
         }
 
@@ -1210,15 +1215,15 @@ namespace CVWaferProber.ViewModels
         {
             try
             {
-                if (TestResults == null || !TestResults.Any()) { logger.Info("无测试结果，跳过自动保存"); return; }
+                if (TestResults == null || !TestResults.Any()) { logger.Info("No test results, skip auto-save"); return; }
                 string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "CVWaferProber", "AutoSaves");
                 Directory.CreateDirectory(folder);
                 string fileName = $"TestResults_Auto_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
                 string fullPath = Path.Combine(folder, fileName);
                 ResultService.SaveToCSV(fullPath, TestResults);
-                logger.InfoFormat("自动保存测试结果到：{0}", fullPath);
+                logger.InfoFormat("Auto-saving test results to：{0}", fullPath);
             }
-            catch (Exception ex) { logger.Error("自动保存测试结果失败", ex); }
+            catch (Exception ex) { logger.Error("Failed to auto-save test results", ex); }
         }
 
         public async Task SaveLastSessionAsync()
@@ -1227,9 +1232,9 @@ namespace CVWaferProber.ViewModels
             {
                 var dtos = TestResults.Select(r => TestResultDto.FromObject(r)).Where(x => x != null).ToList();
                 await TestResultPersistenceService.SaveAsync(dtos);
-                logger.Info("保存上次会话结果到持久化成功");
+                logger.Info("Successfully saved last session results to persistence");
             }
-            catch (Exception ex) { logger.Error("保存上次会话失败", ex); }
+            catch (Exception ex) { logger.Error("Failed to save the last session", ex); }
         }
 
         public void SelectItemById(uint id)
@@ -1270,7 +1275,7 @@ namespace CVWaferProber.ViewModels
 
         public void OnMoveTo(DieViewModel selectedItem)
         {
-            if (IsProcessing) { logger.Warn("测试中，禁止操作"); return; }
+            if (IsProcessing) { logger.Warn("Testing in progress, operation forbidden"); return; }
             var result = MessageDialog.Show($"{FindResource("Btn.MoveToMsg")} {selectedItem.MapAxisToString()}", FindResource("Prompt"), MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (result == MessageBoxResult.Yes) ProberClientService.Instance?.MoveToAsync(selectedItem);
         }

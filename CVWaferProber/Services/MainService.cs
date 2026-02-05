@@ -211,7 +211,7 @@ namespace CVWaferProber.Services
                         }
 
                         MainViewModel.Instance.DataMappingVM.SingleDieTestProgress = 100;
-                        MainViewModel.Instance.DataMappingVM.CurrentDieInfo = "测试完成";
+                        MainViewModel.Instance.DataMappingVM.CurrentDieInfo = "Test completed";
                     }
                 });
             }
@@ -394,7 +394,7 @@ namespace CVWaferProber.Services
 
                  
 
-                    if (logger.IsErrorEnabled) logger.Error("探针台移动失败");
+                    if (logger.IsErrorEnabled) logger.Error("Probe station movement failed");
 
                     if (autoTestingItem != null)
                     {
@@ -408,7 +408,7 @@ namespace CVWaferProber.Services
             }
             catch (Exception ex)
             {
-                logger.Error($"执行Die测试失败: {ex.Message}", ex);
+                logger.Error($"Die test execution failed: {ex.Message}", ex);
 
           
                 throw;
@@ -433,7 +433,7 @@ namespace CVWaferProber.Services
         {
             if (_selectedWPFlow == null)
             {
-                logger.Error("未选择测试流程");
+                logger.Error("No test procedure selected");
                 return;
             }
             // 新增：开始单Die进度跟踪
@@ -456,13 +456,13 @@ namespace CVWaferProber.Services
                     baseService = flowServices[CVWaferProberFlowType.VAM];
                     break;
                 default:
-                    logger.Error($"不支持的流程类型: {_selectedWPFlow?.FlowType}");
+                    logger.Error($"Unsupported procedure type: {_selectedWPFlow?.FlowType}");
                     return;
             }
 
             if (baseService == null)
             {
-                logger.Error("未找到对应的测试服务");
+                logger.Error("Corresponding test service not found");
                 return;
             }
 
@@ -474,7 +474,7 @@ namespace CVWaferProber.Services
             }
             catch (Exception ex)
             {
-                logger.Error($"测试流程执行失败: {ex.Message}", ex);
+                logger.Error($"Test procedure execution failed: {ex.Message}", ex);
 
                 throw;
             }

@@ -4,28 +4,52 @@ using CVWaferProber.Core.Events;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
 using Newtonsoft.Json;
+using System;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Threading; // WPF用这个，WinForm替换为 System.Windows.Forms
 
 namespace CVWaferProber.Services
 {
     public class VAMService : BaseSerivce
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(VAMService));
-        private CVVAMAnalyzer cVVAMAnalyzer;
-        public VAMService(RCRestService rcService, CVVAMAnalyzer _cVVAMAnalyzer) : base(rcService, CVWPEventAggregatorInstance.Instance)
+        private readonly CVVAMAnalyzer _cVVAMAnalyzer;
+        // 保存UI主线程的同步上下文，用于后台线程切回UI线程（核心）
+        private readonly SynchronizationContext _uiSyncContext;
+        // WPF专属：若用WinForm，注释这个，保留上面的SynchronizationContext即可
+        private readonly Dispatcher _uiDispatcher;
+
+        public VAMService(RCRestService rcService, CVVAMAnalyzer cVVAMAnalyzer)
+            : base(rcService, CVWPEventAggregatorInstance.Instance)
         {
-            cVVAMAnalyzer = _cVVAMAnalyzer;
+            _cVVAMAnalyzer = cVVAMAnalyzer ?? throw new ArgumentNullException(nameof(cVVAMAnalyzer));
+            // 初始化：在构造函数（主线程执行）中获取UI同步上下文
+            _uiSyncContext = SynchronizationContext.Current;
+            // WPF专属：获取UI主线程的Dispatcher
+            _uiDispatcher = Dispatcher.CurrentDispatcher;
         }
+
         protected override ChipStatus GetResultStatus(string serialNumber)
         {
             return ChipStatus.FAILED;
         }
+
+        // 核心修复：异步方法全程await，耗时操作后台执行，UI事件切回主线程
         protected override async Task<ChipStatus> FlowResultDisplay(DieViewModel dieViewModel)
         {
-            if (string.IsNullOrEmpty(dieViewModel.SerialNumber)) return ChipStatus.FAILED;
-            await Task.Run(() =>
+            if (string.IsNullOrEmpty(dieViewModel.SerialNumber))
             {
-                var results = ImageResultService.LoadCIEResultByBatchCode(dieViewModel.SerialNumber);
+                logger.Warn("VAM test Die serial number is empty, return failed directly");
+                return ChipStatus.FAILED;
+            }
+
+            try
+            {
+                // 1. 耗时IO操作：丢到后台线程，避免阻塞UI
+                var results = await Task.Run(() =>
+                    ImageResultService.LoadCIEResultByBatchCode(dieViewModel.SerialNumber));
+
                 if (results != null && results.Count == 1)
                 {
                     var result = results[0];
@@ -33,127 +57,117 @@ namespace CVWaferProber.Services
                     {
                         string cieFileName = result.FileUrl;
                         logger.InfoFormat("VAM result cie => {0}", cieFileName);
-                        EventAggregator?.Publish(new VAMFlowCompletedEvent(cieFileName));
 
-                        // 2.延迟1秒后发布自动导出事件（确保文件加载完成）
-                        Task.Delay(1000).ContinueWith(t =>
-                        {
+                        // 2. 发布UI事件：切回UI主线程执行（核心修复，解决跨线程）
+                        await RunOnUiThreadAsync(() =>
+                            EventAggregator?.Publish(new VAMFlowCompletedEvent(cieFileName)));
+
+                        // 3. 延迟1秒导出：异步延迟（不阻塞），导出事件仍切回UI线程
+                        await Task.Delay(1000); // 替换ContinueWith，用await更安全
+                        await RunOnUiThreadAsync(() =>
                             EventAggregator?.Publish(new VAMAutoExportCsvEvent
                             {
                                 CvcieFilePath = cieFileName
-                            });
-                        });
+                            }));
+
+                        return ChipStatus.VAM_COMPLETED;
                     }
                     else
                     {
-                        if (logger.IsErrorEnabled) logger.ErrorFormat("VAM result is failed => {0}", JsonConvert.SerializeObject(result));
+                        logger.ErrorFormat("VAM result is failed => {0}", JsonConvert.SerializeObject(result));
                     }
                 }
                 else
                 {
-                    if (logger.IsErrorEnabled) logger.ErrorFormat("VAM result is empty or count > 1 => {0}", results != null ? results.Count : 0);
+                    logger.ErrorFormat("VAM result is empty or count > 1 => {0}",
+                        results != null ? results.Count : 0);
                 }
-            });
-            
-            return ChipStatus.VAM_COMPLETED;
+            }
+            catch (Exception ex)
+            {
+                // 全局异常捕获：避免后台线程异常导致线程卡死，同时切回UI线程提示
+                logger.Error("VAM FlowResultDisplay execution exception", ex);
+                await RunOnUiThreadAsync(() =>
+                    EventAggregator?.Publish(new VAMResultFailedEvent(ex.Message))); // 可新增失败事件，UI层提示
+            }
+
+            return ChipStatus.FAILED;
         }
 
-        public override void ResultDisplay(DieViewModel dieViewModel)
+        // 修复：异步方法加await，避免“火并忘”，确保线程有序
+        public override async void ResultDisplay(DieViewModel dieViewModel)
         {
             if (!string.IsNullOrEmpty(dieViewModel.SerialNumber))
             {
-                FlowResultDisplay(dieViewModel);
+                // 等待异步方法完成，避免线程混乱
+                await FlowResultDisplay(dieViewModel);
             }
             else
             {
-                EventAggregator?.Publish(new VAMResultGUIClearEvent());
+                // 清空UI事件：直接切回UI线程
+                RunOnUiThread(() => EventAggregator?.Publish(new VAMResultGUIClearEvent()));
             }
         }
 
         public override async Task StartTestingAsync(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool tranStatus = true)
         {
-            //发布开始事件
-            EventAggregator?.Publish(new VAMFlowStartingEvent());
-            // 开始测试，状态更新会自动启动进度定时器
-            dieViewModel.ChangeStatus(ChipStatus.VAM_TESTING);
-
-            try
+            // 测试开始事件：UI操作，切回主线程
+            RunOnUiThread(() =>
             {
-                // 模拟测试过程 - 分阶段更新进度
-                await SimulateVAMTestWithProgress(dieViewModel, _selectedWPFlow, hasNext, tranStatus);
-            }
-            catch (Exception ex)
-            {
-                logger.Error($"VAM测试失败: {ex.Message}", ex);
-                dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
-                throw;
-            }
-        }
-        private async Task SimulateVAMTestWithProgress(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool isAuto)
-        {
-            try
-            {
-                // 阶段1：准备阶段 (0-10%) - 模拟0.5秒
-                await Task.Delay(500);
+                EventAggregator?.Publish(new VAMFlowStartingEvent());
+                dieViewModel.ChangeStatus(ChipStatus.VAM_TESTING); // 状态更新是UI操作，必须主线程
+            });
 
-                // 阶段2：发送测试请求 (10-30%) - 模拟1秒
-                await Task.Delay(1000);
-
-                // 阶段3：执行实际测试 (30-80%)
-                var resp = rcService.RcRunFlowByName(_selectedWPFlow.Name, dieViewModel.SerialNumber);
-
-                if (resp)
-                {
-                    // 等待测试结果，有超时控制
-                    var flowResult = await PollFlowResultWithRxAsync(dieViewModel.SerialNumber,
-                        new CancellationTokenSource(TimeSpan.FromSeconds(_selectedWPFlow.Timeout)).Token);
-
-                    if (flowResult != null && flowResult.IsSuccess)
-                    {
-                        // 阶段4：处理结果 (80-100%)
-                        ChipStatus status = await FlowResultDisplay(dieViewModel);
-                        dieViewModel.ChangeStatus(status, true);
-                    }
-                    else
-                    {
-                        ChipStatus status = GetResultStatus(dieViewModel.SerialNumber);
-                        dieViewModel.ChangeStatus(status, true);
-                    }
-                }
-                else
-                {
-                    logger.Error($"VAM流程 {_selectedWPFlow.Name} 启动失败");
-                    dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
-                }
-            }
-            catch (TaskCanceledException ex)
-            {
-                logger.Warn($"VAM流程执行超时: {ex.Message}");
-                dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
-            }
-            catch (Exception ex)
-            {
-                logger.Error($"VAM流程执行失败: {ex.Message}", ex);
-                dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
-                throw;
-            }
-            finally
-            {
-                if (logger.IsInfoEnabled)
-                    logger.InfoFormat("VAM测试结束: {0}/{1} => {2}",
-                        dieViewModel.MapAxisToString(), dieViewModel.Status.ToString(), dieViewModel.SerialNumber);
-
-                if (hasNext)
-                    DoAutoTestingNextCompleted(dieViewModel);
-                else
-                    DoEndTesting(dieViewModel, isAuto);
-            }
+            // 核心：若RunFlowAsync是同步耗时方法，包裹成Task.Run异步执行（关键！）
+            // 若基类RunFlowAsync已实现真正异步，直接await即可
+            await Task.Run(() => RunFlowAsync(_selectedWPFlow, dieViewModel, hasNext, tranStatus));
         }
 
         public override void AutoExportData()
         {
-            cVVAMAnalyzer.BtnExportClick();
+            // 导出操作可能涉及UI，切回主线程执行
+            RunOnUiThread(() => _cVVAMAnalyzer.BtnExportClick());
         }
-     
+
+        #region 核心工具方法：后台线程切回UI线程（WPF/WinForm通用）
+        /// <summary>
+        /// 同步执行：后台线程切回UI线程执行同步方法
+        /// </summary>
+        /// <param name="action">UI线程要执行的操作（发布事件、更新界面等）</param>
+        private void RunOnUiThread(Action action)
+        {
+            if (action == null) return;
+
+            // WPF优先用Dispatcher，WinForm用SynchronizationContext
+
+            if (_uiDispatcher.CheckAccess())
+            {
+                action.Invoke(); // 已经是UI线程，直接执行
+            }
+            else
+            {
+                _uiDispatcher.Invoke(action); // 切回UI线程执行
+            }
+        }
+
+        /// <summary>
+        /// 异步执行：后台线程切回UI线程执行异步方法（适配await）
+        /// </summary>
+        /// <param name="action">UI线程要执行的异步操作</param>
+        private async Task RunOnUiThreadAsync(Action action)
+        {
+            if (action == null) return;
+            if (_uiDispatcher.CheckAccess())
+            {
+                action.Invoke();
+            }
+            else
+            {
+                // WPF异步切回UI线程，不阻塞后台线程
+                await _uiDispatcher.InvokeAsync(action);
+            }
+
+        }
+        #endregion
     }
 }

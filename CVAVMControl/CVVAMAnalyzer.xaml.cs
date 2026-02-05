@@ -199,7 +199,7 @@ namespace CVAVMControl
             }
 
             // 关键：打印返回结果，定位问题
-            logger.Info($"DLL{(string)Application.Current.FindResource("Returncode")}：{res}");//，{(string)Application.Current.FindResource("Return")}JSON：{resultJson}"
+           // logger.Info($"DLL{(string)Application.Current.FindResource("Returncode")}：{res}");//，{(string)Application.Current.FindResource("Return")}JSON：{resultJson}"
             return res;
         }
 
@@ -500,7 +500,8 @@ namespace CVAVMControl
         {
             if (!string.IsNullOrEmpty(@event.ResultFileName) && System.IO.File.Exists(@event.ResultFileName))
             {
-                this.Dispatcher.Invoke(() => { 
+                this.Dispatcher.Invoke(() =>
+                {
                     ProcessCVCIEFile(@event.ResultFileName);
                 });
             }
@@ -665,7 +666,7 @@ namespace CVAVMControl
                 {
                     fileInfo.Cols = dstW;
                     fileInfo.Rows = dstH;
-                    logger.Info($"DLL裁切成功，裁切后尺寸：{fileInfo.Cols}x{fileInfo.Rows}");
+                    logger.Info($"DLL cropped successfully, cropped dimensions：{fileInfo.Cols}x{fileInfo.Rows}");
 
                     // 重要：更新dataXyz为裁切后的数据
                     // 假设DLL裁切函数会在原数组上进行修改
@@ -691,17 +692,17 @@ namespace CVAVMControl
                     }
                     else
                     {
-                        throw new InvalidOperationException("裁切后数据长度不足");
+                        throw new InvalidOperationException("Insufficient data length after cropping");
                     }
                 }
                 else
                 {
-                    logger.Warn("DLL裁切失败，使用原始数据");
+                    logger.Warn("DLL cropping failed, original data applied");
                     // 使用原始数据创建Mat
-                    // ... 原有创建Mat的代码 ...
+                    
                     Buffer.BlockCopy(originalData, 0, croppedX, 0, cropChannelSize);
                     Buffer.BlockCopy(originalData, cropChannelSize, croppedY, 0, cropChannelSize);
-                    Buffer.BlockCopy(originalData, cropChannelSize*2, croppedZ, 0, cropChannelSize);
+                    Buffer.BlockCopy(originalData, cropChannelSize * 2, croppedZ, 0, cropChannelSize);
                     XMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedX);
                     YMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedY);
                     ZMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedZ);
@@ -734,7 +735,7 @@ namespace CVAVMControl
             }
             catch (Exception ex)
             {
-                logger.Error("处理CVCIE文件失败", ex);
+                logger.Error("CVCIE file processing failed", ex);
                 _isDataValid = false;
                 //MessageBox.Show($"处理文件失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -1796,7 +1797,7 @@ namespace CVAVMControl
         {
             try
             {
-                
+
 
                 // 1. 基础校验
                 if (YMat == null || YMat.Empty())
@@ -1810,7 +1811,7 @@ namespace CVAVMControl
                     MessageBox.Show($"{FindResource("VAM.Choosetheangle")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
-                
+
                 // ========== 关键修改：从 cbDisplayChannel 获取当前选中通道 ==========
                 ExportChannel selectedExportChannel = ExportChannel.Y; // 兜底默认值
                 if (cbDisplayChannel.SelectedItem is ComboBoxItem channelItem && !string.IsNullOrEmpty(channelItem.Tag?.ToString()))
@@ -1870,7 +1871,7 @@ namespace CVAVMControl
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    
+
                     MessageBox.Show($"{FindResource("Exportfailed")}: {ex.Message}", $"{FindResource("Log.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
                     _progressManager.Fail();
                 });
@@ -2036,7 +2037,7 @@ namespace CVAVMControl
                     MessageBox.Show($"{FindResource("VAM.Choosetheradiusangle")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
-              
+
                 // 3. 校验R圆数据缓存是否有效（仅当前半径）
                 if (DllAllCircleData == null || !DllAllCircleData.Any(kv => kv.Key.polar == currentRadius))
                 {
@@ -2113,8 +2114,8 @@ namespace CVAVMControl
                     MessageBox.Show($"{FindResource("Exportsuccessful")}！", $"{FindResource("Log.Success")}", MessageBoxButton.OK, MessageBoxImage.Information);
                     _progressManager.Complete();
                 });
-               
-               
+
+
             }
             catch (Exception ex)
             {
@@ -2124,7 +2125,7 @@ namespace CVAVMControl
                     logger.Error($"{FindResource("Exportfailed")}：{ex.Message}", ex);
                     MessageBox.Show($"{FindResource("Exportfailed")}: {ex.Message}", $"{FindResource("Log.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
                 });
-              
+
             }
 
         }
@@ -2598,7 +2599,7 @@ namespace CVAVMControl
             }
         }
 
-        public async Task<bool> CallVamDllForAllAzimuthAsync( ExportChannel exportChannel,int pointNumLine = 360,double polarRHO = 60.0, double polarAngle = 60.0, Action<int> onProgressUpdate = null)
+        public async Task<bool> CallVamDllForAllAzimuthAsync(ExportChannel exportChannel, int pointNumLine = 360, double polarRHO = 60.0, double polarAngle = 60.0, Action<int> onProgressUpdate = null)
         {
             try
             {
@@ -3212,7 +3213,7 @@ namespace CVAVMControl
         //    //return isSuccess;
         //}
 
-        public async Task<bool> CallVamDllForAllCircleAsync( int polarStart,int polarEnd,int polarStep,int azimuthSampleCount, Action<int> onProgressUpdate = null)
+        public async Task<bool> CallVamDllForAllCircleAsync(int polarStart, int polarEnd, int polarStep, int azimuthSampleCount, Action<int> onProgressUpdate = null)
         {
             // 初始化返回状态
             bool isSuccess = false;
@@ -4335,7 +4336,7 @@ namespace CVAVMControl
             // 4. 同步更新全局变量
             _azimuthInterval = azimuthInterval;
         }
-      
+
         private async void BtnExportDiameter_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -5099,7 +5100,7 @@ namespace CVAVMControl
             //        $"{FindResource("State.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
             //}
         }
-        private async Task ExportCircleModeAsync(List<ExportDataType> selectedChannels,string basePath,int polarStart, int polarEnd,int polarStep,double azimuthInterval)
+        private async Task ExportCircleModeAsync(List<ExportDataType> selectedChannels, string basePath, int polarStart, int polarEnd, int polarStep, double azimuthInterval)
         {
             try
             {
@@ -5633,7 +5634,7 @@ namespace CVAVMControl
                 _progressManager = new ExportProgressManager(exportProgressBar, exportProgressText, progressBarContainer);
             }
         }
-        
+
     }
 
     internal class CropCenter

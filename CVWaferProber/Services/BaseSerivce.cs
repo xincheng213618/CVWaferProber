@@ -80,20 +80,20 @@ namespace CVWaferProber.Services
                 }
                 else
                 {
-                    logger.Error($"流程 {_selectedWPFlow.Name} 启动失败");
+                    logger.Error($"Procedure {_selectedWPFlow.Name} startup failed");
                     dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
                     //UpdateProgress(dieViewModel, 100, "流程启动失败");
                 }
             }
             catch (TaskCanceledException ex)
             {
-                logger.Warn($"流程执行超时: {ex.Message}");
+                logger.Warn($"Procedure execution timed out: {ex.Message}");
                 dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
                 //UpdateProgress(dieViewModel, 100, "测试超时");
             }
             catch (Exception ex)
             {
-                logger.Error($"流程执行失败: {ex.Message}", ex);
+                logger.Error($"Procedure execution failed: {ex.Message}", ex);
                 dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
                 //UpdateProgress(dieViewModel, 100, $"执行失败: {ex.Message}");
                 throw;
@@ -101,7 +101,7 @@ namespace CVWaferProber.Services
             finally
             {
                 if (logger.IsInfoEnabled)
-                    logger.InfoFormat("Die测试结束: {0}/{1} => {2}",
+                    logger.InfoFormat("Die test completed: {0}/{1} => {2}",
                         dieViewModel.MapAxisToString(), dieViewModel.Status.ToString(), dieViewModel.SerialNumber);
 
                 if (hasNext)
