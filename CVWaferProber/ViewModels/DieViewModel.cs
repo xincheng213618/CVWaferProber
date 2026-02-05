@@ -470,6 +470,15 @@ namespace CVWaferProber.ViewModels
             Dispose(false);
         }
         #endregion
+        private bool _isAOITestCompleted;
+        /// <summary>
+        /// 标记该Die的AOI测试是否完成（图片是否已全部加载过）
+        /// </summary>
+        public bool IsAOITestCompleted
+        {
+            get => _isAOITestCompleted;
+            set => SetProperty(ref _isAOITestCompleted, value);
+        }
     }
    
 }

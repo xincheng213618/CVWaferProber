@@ -577,6 +577,7 @@ namespace CVWaferProber.ViewModels
             if (IsNotProcessing && value is DieViewModel die && selfClick)
             {
                 CustomMappingVM?.SetSelectedChip((uint)die.Id);
+
                 DieResultDisplay(die);
             }
             else selfClick = true;
@@ -1283,6 +1284,6 @@ namespace CVWaferProber.ViewModels
         public MainService mainService { get; private set; }
         #endregion
 
-
+       
     }
 }

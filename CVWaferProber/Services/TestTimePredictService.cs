@@ -31,6 +31,7 @@ namespace CVWaferProber.Services
                 // 查询TScgdMeasureBatch表最后一条记录（按Id倒序）
                 var lastBatch = MysqlControler.GetInstance().Sql
                     .Select<TScgdMeasureBatch>()
+                    .Where(a => a.ResultCode == 0)
                     .OrderByDescending(a => a.Id)
                     .Limit(1)
                     .ToOne();

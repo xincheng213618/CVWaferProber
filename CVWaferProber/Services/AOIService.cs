@@ -75,11 +75,18 @@ namespace CVWaferProber.Services
                     }
                 }
             }
-
-            // 关键：AWAIT异步加载图片，确保逐张显示逻辑生效（原代码无await，会直接跳过）
+            // 关键：根据Die的AOI完成标记，判断是否一次性加载（已完成则true，未完成则false）
+            bool isLoadAllAtOnce = dieViewModel.IsAOITestCompleted;
             if (dieViewModel.chipViewModel?.ChipData != null)
             {
-                await LoadImageResultAsync(dieViewModel.chipViewModel.ChipData, dieViewModel.SerialNumber!);
+                // 传递一次性加载开关给图片加载方法
+                await LoadImageResultAsync(dieViewModel.chipViewModel.ChipData, dieViewModel.SerialNumber!, isLoadAllAtOnce);
+            }
+            // 首次测试完成后，标记该Die为AOI测试完成（后续切换则一次性加载）
+            if (!dieViewModel.IsAOITestCompleted)
+            {
+                dieViewModel.IsAOITestCompleted = true;
+                logger.InfoFormat("Die[{0}/{1}]AOI测试完成，标记为已完成，后续切换将一次性加载图片", dieViewModel.MapX, dieViewModel.MapY);
             }
 
             return ChipStatus.OK;
@@ -157,7 +164,7 @@ namespace CVWaferProber.Services
         /// <summary>
         /// 核心：异步逐张加载图像结果（改造后真正的异步方法，无批量Task.Run）
         /// </summary>
-        private async Task LoadImageResultAsync(ChipData? chipData, string serialNumber)
+        private async Task LoadImageResultAsync(ChipData? chipData, string serialNumber, bool isLoadAllAtOnce = false)
         {
             if (string.IsNullOrEmpty(serialNumber) || CustomImageVM == null)
             {
@@ -166,11 +173,9 @@ namespace CVWaferProber.Services
             }
             try
             {
-                // 步骤1：异步逐张加载Analysis Image（无外层Task.Run，内部逐张处理）
-                await LoadAnalysisImagesAsync(serialNumber);
-                // 步骤2：异步逐张加载Camera Measurement
-                await LoadCameraMeasurementsAsync(serialNumber);
-                // 步骤3：异步加载POI分析数据
+                // 传递一次性加载开关给子方法
+                await LoadAnalysisImagesAsync(serialNumber, isLoadAllAtOnce);
+                await LoadCameraMeasurementsAsync(serialNumber, isLoadAllAtOnce);
                 await Task.Run(() => LoadPoiAnalysisData(serialNumber, chipData));
 
                 logger.Info($"Serial number {serialNumber} image loading completed");
@@ -184,7 +189,7 @@ namespace CVWaferProber.Services
         /// <summary>
         /// 异步逐张加载Analysis Image（解决imageId报错，逐张更新UI）
         /// </summary>
-        private async Task LoadAnalysisImagesAsync(string batchCode)
+        private async Task LoadAnalysisImagesAsync(string batchCode, bool isLoadAllAtOnce)
         {
             try
             {
@@ -206,8 +211,8 @@ namespace CVWaferProber.Services
                     {
                         // 逐张处理：返回新的imageId，替代ref参数，解决语法报错
                         imageId = await ProcessSingleAnalysisImageAsync(imageId, masterResult.ImgResult);
-                        // 关键：让出线程，给UI渲染时间（核心逐张显示逻辑）
-                        await Task.Delay(10);
+                        //让出线程，给UI渲染时间（核心逐张显示逻辑）
+                        if (!isLoadAllAtOnce) await Task.Delay(500);
                         continue;
                     }
 
@@ -220,8 +225,8 @@ namespace CVWaferProber.Services
                         if (string.IsNullOrEmpty(poiDetail.FileUrl)) continue;
                         // 逐张处理，更新imageId
                         imageId = await ProcessSingleAnalysisImageAsync(imageId, poiDetail.FileUrl);
-                        // 逐张渲染后让出线程
-                        await Task.Delay(10);
+                        // 关键分支：仅未完成测试时，保留逐张延迟；已完成则跳过
+                        if (!isLoadAllAtOnce) await Task.Delay(500);
                     }
                 }
 
@@ -271,7 +276,7 @@ namespace CVWaferProber.Services
         /// <summary>
         /// 异步逐张加载Camera Measurement（解决imageId报错，逐张更新UI）
         /// </summary>
-        private async Task LoadCameraMeasurementsAsync(string batchCode)
+        private async Task LoadCameraMeasurementsAsync(string batchCode,bool isLoadAllAtOnce)
         {
             try
             {
@@ -300,8 +305,8 @@ namespace CVWaferProber.Services
                     imageId = newImageId; // 更新ID
                     if (isAdded) addedCount++;
 
-                    // 关键：让出线程，确保单张图片渲染完成
-                    await Task.Delay(10);
+                    // 关键分支：仅未完成测试时，保留逐张延迟；已完成则跳过
+                    if (!isLoadAllAtOnce) await Task.Delay(500);
                 }
 
                 logger.Info($"Batch {batchCode} Camera Measurement loaded successfully, {addedCount} files added one by one in total");
