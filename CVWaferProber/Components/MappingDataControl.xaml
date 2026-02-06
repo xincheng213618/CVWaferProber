@@ -807,7 +807,7 @@
                                     <TextBlock
                                         x:Name="ProgressTextAll"
                                         Grid.Row="0"
-                                        Grid.Column="0"
+                                        Grid.Column="1"
                                         HorizontalAlignment="Right"
                                         VerticalAlignment="Center"
                                         FontSize="11"

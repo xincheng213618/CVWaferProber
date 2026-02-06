@@ -132,16 +132,7 @@ namespace CVWaferProber.Services
         {
             // 更新进度：完成当前Die测试
             UpdateProgressForDieCompletion(dieVM);
-            // 关键：发送结果给机台之前，确保进度已更新
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                var mappingVM = MainViewModel.Instance?.DataMappingVM;
-                if (mappingVM != null)
-                {
-                    // 完成当前Die测试
-                    mappingVM.CompleteSingleDieTest();
-                }
-            });
+            
             //发送结果给机台
             proberClientService?.SendResultAsync(dieVM);
             //
@@ -160,6 +151,16 @@ namespace CVWaferProber.Services
                 }
                 else if (canExecute)
                 {
+                    // 关键：在开始下一个Die测试之前，先完成当前Die的进度
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                        if (mappingVM != null)
+                        {
+                            // 完成当前Die测试（增加CompletedTestCount）
+                            mappingVM.CompleteSingleDieTest();
+                        }
+                    });
                     DoNextDieFlowExec(autoTestingItem);
                 }
                 else
@@ -185,7 +186,14 @@ namespace CVWaferProber.Services
                     // 确保只在UI线程执行
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        MainViewModel.Instance.DataMappingVM.CompleteSingleDieTest();
+                        // 进度更新现在在OnAutoTestingNextCompleted中处理
+                        var mappingVM = MainViewModel.Instance.DataMappingVM;
+
+                        // 只更新单Die进度到100%，但不增加CompletedTestCount
+                        mappingVM.SingleDieTestProgress = 100;
+                        mappingVM.OnPropertyChanged(nameof(mappingVM.SingleDieTestProgress));
+                        mappingVM.OnPropertyChanged(nameof(mappingVM.ProgressText));
+                        mappingVM.UpdateTotalProgress();
                     });
 
                     if (logger.IsDebugEnabled)

@@ -489,7 +489,7 @@ namespace CVWaferProber.ViewModels
         /// <summary>
         /// 计算总进度 - 核心公式：总进度=已完成/总数量 + 当前Die进度/总数量
         /// </summary>
-        private void UpdateTotalProgress()
+        public void UpdateTotalProgress()
         {
             if (TotalTestCount <= 0)
             {
@@ -769,7 +769,7 @@ namespace CVWaferProber.ViewModels
 
         private void DoEndTesting(bool isAuto)
         {
-            CompletedTestCount = Math.Min(CompletedTestCount + 1, TotalTestCount);
+            //CompletedTestCount = Math.Min(CompletedTestCount + 1, TotalTestCount);
             EnableBtnGUI(true);
             CalculateYieldBySerialNumber();
             AutoExportSummaryResult();
