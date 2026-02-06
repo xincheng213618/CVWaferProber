@@ -8,7 +8,6 @@ using CVWaferProber.WinMsg;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
 using System.Text;
-using System.Windows;
 using Application = System.Windows.Application;
 
 namespace CVWaferProber.Services
