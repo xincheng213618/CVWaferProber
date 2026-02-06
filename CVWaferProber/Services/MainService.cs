@@ -336,7 +336,9 @@ namespace CVWaferProber.Services
                     //logger.InfoFormat("DoAutoDieFlowExecAsync={0}/{1}", dieNext.die.MapAxisToString(), dieNext.die.Status.ToString());
                     Task.Factory.StartNew(async () =>
                     {
-                        await ExecuteDieTestWithProgress(item.CurSelectedWPFlow, dieNext.die, item.HasNext, true);
+                        await DoAutoDieFlowExecAsync(item.CurSelectedWPFlow, dieNext.die, dieNext.diePre == null, item.HasNext, true);
+                        //TODO Testing
+                        //await ExecuteDieTestWithProgress(item.CurSelectedWPFlow, dieNext.die, item.HasNext, true);
                     });
                 }
                 else if (IsDieCompleted(dieNext.die))
@@ -368,34 +370,9 @@ namespace CVWaferProber.Services
         private async Task DoAutoDieFlowExecAsync(WPFlowViewModel _selectedWPFlow, DieViewModel die, bool isFirst, bool hasNext, bool isAuto)
         {
             if (logger.IsInfoEnabled) logger.InfoFormat("Process Current Die={0}[isFirst:{1}/HasNext:{2}/Auto:{3}] => {4}", die.ToMapAxis().ToString(), isFirst, hasNext, isAuto, die.SerialNumber);
-            //var isOK = await proberClientService.MoveToAsync(die, isFirst);
-            //if (isOK)
-            //{
-            //    await DoDieFlowExec(_selectedWPFlow, die, hasNext, isAuto);
-            //    if (!hasNext)
-            //    {
-            //        await proberClientService.StopTestAsync();
-            //    }
-            //}
-            //else
-            //{
-            //    die.ChangeStatus(Core.Models.Enums.ChipStatus.FAILED);
-            //    if (logger.IsErrorEnabled) logger.Error("Prober client Move Absolute failed");
-            //    if (autoTestingItem != null)
-            //    {
-            //        PauseAutoTesting();
-            //    }
-            //    else
-            //    {
-            //        DoAutoTestEnd(die, isAuto);
-            //    }
-            //}
             try
             {
-           
                 var isOK = await proberClientService.MoveToAsync(die, isFirst);
-
-             
 
                 if (isOK)
                 {
@@ -421,8 +398,6 @@ namespace CVWaferProber.Services
                 {
                     die.ChangeStatus(Core.Models.Enums.ChipStatus.FAILED);
 
-                 
-
                     if (logger.IsErrorEnabled) logger.Error("Probe station movement failed");
 
                     if (autoTestingItem != null)
@@ -438,9 +413,7 @@ namespace CVWaferProber.Services
             catch (Exception ex)
             {
                 logger.Error($"Die test execution failed: {ex.Message}", ex);
-
-          
-                throw;
+                PauseAutoTesting();
             }
         }
         private void StopAutoTestAndExitWafer()
