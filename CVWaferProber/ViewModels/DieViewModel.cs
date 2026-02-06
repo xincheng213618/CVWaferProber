@@ -473,6 +473,29 @@ namespace CVWaferProber.ViewModels
             get => _isAOITestCompleted;
             set => SetProperty(ref _isAOITestCompleted, value);
         }
+
+        /// <summary>
+        /// 恢复测试进度（暂停后继续测试时调用）
+        /// </summary>
+        public void ResumeTestProgress()
+        {
+            lock (_progressLock)
+            {
+                if (_disposed) return;
+
+                _isTesting = true;
+                // 如果定时器已销毁，重新初始化
+                if (_testProgressTimer == null)
+                {
+                    InitTestProgressTimer();
+                }
+                else if (!_testProgressTimer.Enabled)
+                {
+                    _testProgressTimer.Start();
+                    logger.DebugFormat($"Die[{MapX}/{MapY}] progress timer resumed");
+                }
+            }
+        }
     }
    
 }

@@ -598,14 +598,37 @@ namespace CVWaferProber.Services
             autoTestingItem = null;
             //_clientProber?.StopAsync();
             proberClientService?.StopTestAsync();
+            // 停止但不重置进度条，保留当前进度状态
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                if (mappingVM != null)
+                {
+                    mappingVM._progressUpdateTimer.Stop(); // 仅停止定时器
+                    mappingVM.IsProcessing = false;
+                }
+            });
         }
 
         public void PauseAutoTesting(bool isRollback = true)
         {
             if (autoTestingItem != null)
             {
+                // 暂停时保存当前测试上下文
+                _pauseContext = (
+                    autoTestingItem.TestingDieVMList,
+                    autoTestingItem.CurTestingIndex,
+                    MainViewModel.Instance.DataMappingVM.CompletedTestCount
+                );
                 autoTestingItem.IsPaused = true;
                 if (isRollback) autoTestingItem.RollbackToPrevious();
+                // 停止进度定时器，但不重置进度数据
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var mappingVM = MainViewModel.Instance.DataMappingVM;
+                    mappingVM._progressUpdateTimer.Stop(); // 仅停止定时器，不重置进度值
+                    mappingVM.IsProcessing = false; // 仅恢复按钮状态，不重置进度
+                });
             }
             proberClientService?.PausedAutoTest();
             //MainViewModel.Instance.IsProcessing=false;
@@ -616,11 +639,35 @@ namespace CVWaferProber.Services
 
         public void ContinuAutoTesting()
         {
-            if (autoTestingItem != null)
+            //if (autoTestingItem != null)
+            //{
+            //    autoTestingItem.IsPaused = false;
+            //    proberClientService?.ContinuAutoTest();
+            //    DoNextDieFlowExec(autoTestingItem);
+            //}
+            if (autoTestingItem != null && _pauseContext.HasValue)
             {
                 autoTestingItem.IsPaused = false;
                 proberClientService?.ContinuAutoTest();
+
+                // 恢复时重新初始化进度状态
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var mappingVM = MainViewModel.Instance.DataMappingVM;
+                    // 恢复进度上下文
+                    mappingVM.TotalTestCount = _pauseContext.Value.testQueue.Count;
+                    mappingVM.CompletedTestCount = _pauseContext.Value.completedCount;
+                    mappingVM.IsProcessing = true; // 标记为处理中，显示进度条
+                    mappingVM.IsManualTesting = false; // 确保自动测试进度条显示
+                                                       // 重启进度定时器
+                    mappingVM._progressUpdateTimer.Start();
+                    // 强制更新总进度
+                    mappingVM.UpdateTotalProgress();
+                });
+
                 DoNextDieFlowExec(autoTestingItem);
+                // 清空暂停上下文
+                _pauseContext = null;
             }
         }
 
@@ -633,5 +680,7 @@ namespace CVWaferProber.Services
         {
             proberClientService?.Maintenance();
         }
+        private (List<DieViewModel> testQueue, int currentIndex, int completedCount)? _pauseContext;
+
     }
 }

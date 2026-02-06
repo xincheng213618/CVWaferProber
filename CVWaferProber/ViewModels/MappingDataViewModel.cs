@@ -292,7 +292,7 @@ namespace CVWaferProber.ViewModels
         #region 构造函数（保留原有+初始化进度属性）
         private DateTime _currentDieStartTime;
         private int _currentDiePredictSeconds = 60; // 默认60秒
-        private System.Timers.Timer _progressUpdateTimer;
+        public System.Timers.Timer _progressUpdateTimer;
         public MappingDataViewModel()
         {
             _selectedItem = null;
@@ -528,8 +528,11 @@ namespace CVWaferProber.ViewModels
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                // 停止定时器
-                _progressUpdateTimer.Stop();
+                // 停止定时器但不销毁
+                if (_progressUpdateTimer != null)
+                {
+                    _progressUpdateTimer.Stop();
+                }
 
                 SingleDieTestProgress = 0;
                 TotalTestProgress = 0;
@@ -549,6 +552,29 @@ namespace CVWaferProber.ViewModels
                 OnPropertyChanged(nameof(ProgressTextAll));
                 OnPropertyChanged(nameof(CurrentDieInfo));
             });
+            //Application.Current.Dispatcher.Invoke(() =>
+            //{
+            //    // 停止定时器
+            //    _progressUpdateTimer.Stop();
+
+            //    SingleDieTestProgress = 0;
+            //    TotalTestProgress = 0;
+            //    TotalTestCount = 0;
+            //    CompletedTestCount = 0;
+            //    CurrentDieInfo = string.Empty;
+
+            //    // 同步重置手动测试标记
+            //    IsManualTesting = false;
+
+            //    // 触发所有进度相关属性变更
+            //    OnPropertyChanged(nameof(SingleDieTestProgress));
+            //    OnPropertyChanged(nameof(TotalTestProgress));
+            //    OnPropertyChanged(nameof(TotalTestCount));
+            //    OnPropertyChanged(nameof(CompletedTestCount));
+            //    OnPropertyChanged(nameof(ProgressText));
+            //    OnPropertyChanged(nameof(ProgressTextAll));
+            //    OnPropertyChanged(nameof(CurrentDieInfo));
+            //});
         }
         #endregion
 
@@ -1390,7 +1416,26 @@ namespace CVWaferProber.ViewModels
 
         public MainService mainService { get; private set; }
         #endregion
+        // 新增重启进度定时器方法
+        /// <summary>
+        /// 重启进度更新定时器（恢复测试时调用）
+        /// </summary>
+        public void RestartProgressTimer()
+        {
+            if (_progressUpdateTimer == null)
+            {
+                _progressUpdateTimer = new System.Timers.Timer(1000);
+                _progressUpdateTimer.Elapsed += OnProgressUpdateTimerElapsed;
+                _progressUpdateTimer.AutoReset = true;
+            }
+            // 仅当未运行时启动
+            if (!_progressUpdateTimer.Enabled)
+            {
+                _progressUpdateTimer.Start();
+                logger.Debug("Progress timer restarted");
+            }
+        }
 
-       
+
     }
 }
