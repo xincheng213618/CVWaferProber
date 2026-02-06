@@ -182,22 +182,22 @@ namespace CVWaferProber.ViewModels
         /// <summary>
         /// 定时器触发事件 - 计算并更新单Die进度
         /// </summary>
-        private void OnProgressTimerElapsed(object sender, ElapsedEventArgs e)
+        private void OnProgressTimerElapsed(object sender, ElapsedEventArgs e) 
         {
             lock (_progressLock)
             {
                 if (!_isTesting || _disposed) return;
 
                 _testElapsedSeconds++;
-                double currentProgress = CalculateTestProgress();
+                //double currentProgress = CalculateTestProgress();
 
                 // 跨线程更新UI：同步到WPF主线程
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgress(
-                        currentProgress,
-                        $"Running for {_testElapsedSeconds}s / Estimated {_predictTestSeconds}s"
-                    );
+                    //MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgress(
+                    //    currentProgress,
+                    //    $"Running for {_testElapsedSeconds}s / Estimated {_predictTestSeconds}s"
+                    //);
                 });
             }
         }
@@ -206,28 +206,28 @@ namespace CVWaferProber.ViewModels
         /// 核心：按时间预测计算进度（0~99%，仅完成时到100%）
         /// 规则：90%前匀速，90%后降速，避免提前满进度
         /// </summary>
-        private double CalculateTestProgress()
-        {
-            if (_predictTestSeconds <= 0 || !_isTesting) return 0;
+        //private double CalculateTestProgress()
+        //{
+        //    if (_predictTestSeconds <= 0 || !_isTesting) return 0;
 
-            double progress;
-            // 阶段1：0~90% 匀速推进（按预测时长计算）
-            double ninetyPercentSeconds = _predictTestSeconds * 0.9;
-            if (_testElapsedSeconds <= ninetyPercentSeconds)
-            {
-                progress = (_testElapsedSeconds / (double)_predictTestSeconds) * 90;
-            }
-            // 阶段2：90%后 降速推进（剩余10%分配到剩余时间的2倍）
-            else
-            {
-                double extraSeconds = _testElapsedSeconds - ninetyPercentSeconds;
-                double extraTotalSeconds = _predictTestSeconds * 0.1 * 2; // 剩余时间放大2倍，降速
-                progress = 90 + (extraSeconds / extraTotalSeconds) * 10;
-            }
+        //    double progress;
+        //    // 阶段1：0~90% 匀速推进（按预测时长计算）
+        //    double ninetyPercentSeconds = _predictTestSeconds * 0.9;
+        //    if (_testElapsedSeconds <= ninetyPercentSeconds)
+        //    {
+        //        progress = (_testElapsedSeconds / (double)_predictTestSeconds) * 90;
+        //    }
+        //    // 阶段2：90%后 降速推进（剩余10%分配到剩余时间的2倍）
+        //    else
+        //    {
+        //        double extraSeconds = _testElapsedSeconds - ninetyPercentSeconds;
+        //        double extraTotalSeconds = _predictTestSeconds * 0.1 * 2; // 剩余时间放大2倍，降速
+        //        progress = 90 + (extraSeconds / extraTotalSeconds) * 10;
+        //    }
 
-            // 强制限制在0~99%，仅测试完成时手动拉满100%
-            return Math.Max(0, Math.Min(99, progress));
-        }
+        //    // 强制限制在0~99%，仅测试完成时手动拉满100%
+        //    return Math.Max(0, Math.Min(99, progress));
+        //}
 
         /// <summary>
         /// 测试完成时调用 - 停止定时器并拉满进度到100%
@@ -238,16 +238,10 @@ namespace CVWaferProber.ViewModels
             {
                 _isTesting = false;
                 StopTestProgressTimer();
-
-                // 同步到主线程，拉满进度
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgress(100, "Testing completed");
-                });
             }
 
             if (logger.IsDebugEnabled)
-                logger.DebugFormat("Die[{0}/{1}] tested, progress 100%", MapX, MapY);
+                logger.DebugFormat("Die[{0}/{1}] tested, stopping progress timer", MapX, MapY);
         }
 
         /// <summary>
@@ -326,7 +320,7 @@ namespace CVWaferProber.ViewModels
                     }
                 }
                 CurrentTestStep = 4; // 标记为完成
-                CompleteTestProgress(); // 核心：拉满进度到100%
+                //CompleteTestProgress(); // 核心：拉满进度到100%
             }
 
             chipViewModel?.SetStatus(status);

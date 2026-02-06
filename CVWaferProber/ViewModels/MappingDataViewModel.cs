@@ -289,6 +289,9 @@ namespace CVWaferProber.ViewModels
         #endregion
 
         #region 构造函数（保留原有+初始化进度属性）
+        private DateTime _currentDieStartTime;
+        private int _currentDiePredictSeconds = 60; // 默认60秒
+        private System.Timers.Timer _progressUpdateTimer;
         public MappingDataViewModel()
         {
             _selectedItem = null;
@@ -303,7 +306,10 @@ namespace CVWaferProber.ViewModels
             TotalTestCount = 0;
             CompletedTestCount = 0;
             CurrentDieInfo = string.Empty;
-
+            // 初始化进度更新定时器
+            _progressUpdateTimer = new System.Timers.Timer(1000); // 1秒更新一次
+            _progressUpdateTimer.Elapsed += OnProgressUpdateTimerElapsed;
+            _progressUpdateTimer.AutoReset = true;
             // 初始化命令
             SearchCommand = new RelayCommand(ExecuteSearch);
             ClearMappingCommand = new RelayCommand(_ => ClearMapping());
@@ -374,6 +380,13 @@ namespace CVWaferProber.ViewModels
                 CurrentDieInfo = $"{die.MapX}/{die.MapY}";
                 SingleDieTestProgress = 0; // 强制重置为0
 
+                _currentDieStartTime = DateTime.Now;
+
+                // 获取预测时间
+                _currentDiePredictSeconds = TestTimePredictService.GetPredictTestSeconds();
+
+                // 启动进度更新定时器
+                _progressUpdateTimer.Start();
                 // 强制更新UI
                 OnPropertyChanged(nameof(CurrentDieInfo));
                 OnPropertyChanged(nameof(SingleDieTestProgress));
@@ -382,7 +395,46 @@ namespace CVWaferProber.ViewModels
                 logger.DebugFormat("Start testing Die [{0}/{1}], reset single Die progress to 0%", die.MapX, die.MapY);
             });
         }
+        /// <summary>
+        /// 进度更新定时器事件
+        /// </summary>
+        private void OnProgressUpdateTimerElapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                if (SingleDieTestProgress >= 100 || TotalTestCount == 0)
+                {
+                    _progressUpdateTimer.Stop();
+                    return;
+                }
 
+                // 计算已过时间
+                var elapsed = (DateTime.Now - _currentDieStartTime).TotalSeconds;
+
+                // 线性进度计算：已过时间/预测时间 * 100
+                // 但限制在99%以内，只有完成时才到100%
+                double progress = Math.Min(99, (elapsed / _currentDiePredictSeconds) * 100);
+
+                // 平滑更新：每次增加不超过10%
+                if (progress > SingleDieTestProgress + 10)
+                {
+                    progress = SingleDieTestProgress + 10;
+                }
+
+                // 确保最小增量为0.5%
+                if (progress < SingleDieTestProgress + 0.5 && SingleDieTestProgress < 99)
+                {
+                    progress = SingleDieTestProgress + 0.5;
+                }
+
+                SingleDieTestProgress = Math.Min(99, progress);
+
+                // 只在进度有明显变化时更新UI
+                OnPropertyChanged(nameof(SingleDieTestProgress));
+                OnPropertyChanged(nameof(ProgressText));
+                UpdateTotalProgress();
+            });
+        }
         /// <summary>
         /// 更新单个Die进度 - 由DieViewModel定时器触发
         /// </summary>
@@ -392,7 +444,12 @@ namespace CVWaferProber.ViewModels
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                SingleDieTestProgress = progress;
+                // 只接受从主定时器来的进度更新
+                SingleDieTestProgress = Math.Min(99, progress); // 限制在99%以内
+
+                OnPropertyChanged(nameof(SingleDieTestProgress));
+                OnPropertyChanged(nameof(ProgressText));
+
                 if (!string.IsNullOrEmpty(stageInfo) && logger.IsDebugEnabled)
                     logger.DebugFormat("Die[{0}]Progress Update：{1} - {2:F1}%", CurrentDieInfo, stageInfo, progress);
             });
@@ -405,20 +462,27 @@ namespace CVWaferProber.ViewModels
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
+                // 停止进度更新定时器
+                _progressUpdateTimer.Stop();
+
                 // 增加边界检查，防止计数溢出
                 if (CompletedTestCount < TotalTestCount)
                 {
                     CompletedTestCount++;
+
+                    // 拉满当前Die进度到100%
+                    SingleDieTestProgress = 100;
+
+                    // 触发属性变更通知
+                    OnPropertyChanged(nameof(CompletedTestCount));
+                    OnPropertyChanged(nameof(SingleDieTestProgress));
+                    OnPropertyChanged(nameof(ProgressText));
+                    OnPropertyChanged(nameof(ProgressTextAll));
+
+                    UpdateTotalProgress();
+
                     logger.DebugFormat("Single Die test completed; cumulative completion: {0}/{1}", CompletedTestCount, TotalTestCount);
                 }
-
-                UpdateTotalProgress();
-                SingleDieTestProgress = 0; // 重置当前Die进度
-
-                // 强制更新所有进度相关UI
-                OnPropertyChanged(nameof(CompletedTestCount));
-                OnPropertyChanged(nameof(ProgressText));
-                OnPropertyChanged(nameof(ProgressTextAll));
             });
         }
 
@@ -463,6 +527,9 @@ namespace CVWaferProber.ViewModels
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
+                // 停止定时器
+                _progressUpdateTimer.Stop();
+
                 SingleDieTestProgress = 0;
                 TotalTestProgress = 0;
                 TotalTestCount = 0;
@@ -471,7 +538,15 @@ namespace CVWaferProber.ViewModels
 
                 // 同步重置手动测试标记
                 IsManualTesting = false;
+
+                // 触发所有进度相关属性变更
+                OnPropertyChanged(nameof(SingleDieTestProgress));
+                OnPropertyChanged(nameof(TotalTestProgress));
+                OnPropertyChanged(nameof(TotalTestCount));
+                OnPropertyChanged(nameof(CompletedTestCount));
+                OnPropertyChanged(nameof(ProgressText));
                 OnPropertyChanged(nameof(ProgressTextAll));
+                OnPropertyChanged(nameof(CurrentDieInfo));
             });
         }
         #endregion

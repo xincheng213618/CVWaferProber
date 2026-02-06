@@ -132,6 +132,16 @@ namespace CVWaferProber.Services
         {
             // 更新进度：完成当前Die测试
             UpdateProgressForDieCompletion(dieVM);
+            // 关键：发送结果给机台之前，确保进度已更新
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                if (mappingVM != null)
+                {
+                    // 完成当前Die测试
+                    mappingVM.CompleteSingleDieTest();
+                }
+            });
             //发送结果给机台
             proberClientService?.SendResultAsync(dieVM);
             //
@@ -318,7 +328,7 @@ namespace CVWaferProber.Services
                     //logger.InfoFormat("DoAutoDieFlowExecAsync={0}/{1}", dieNext.die.MapAxisToString(), dieNext.die.Status.ToString());
                     Task.Factory.StartNew(async () =>
                     {
-                        await DoAutoDieFlowExecAsync(item.CurSelectedWPFlow, dieNext.die, dieNext.diePre == null, item.HasNext, true);
+                        await ExecuteDieTestWithProgress(item.CurSelectedWPFlow, dieNext.die, item.HasNext, true);
                     });
                 }
                 else if (IsDieCompleted(dieNext.die))
@@ -447,8 +457,11 @@ namespace CVWaferProber.Services
                 logger.Error("No test procedure selected");
                 return;
             }
-            // 新增：开始单Die进度跟踪
-            MainViewModel.Instance?.DataMappingVM?.StartSingleDieTest(die);
+            // 关键修复：确保每个Die测试开始时调用StartSingleDieTest
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                MainViewModel.Instance?.DataMappingVM?.StartSingleDieTest(die);
+            });
             BaseSerivce? baseService = null;
             switch (_selectedWPFlow?.FlowType)
             {
@@ -540,11 +553,26 @@ namespace CVWaferProber.Services
 
         public void StartAutoTesting(WPFlowViewModel? _selectedWPFlow, List<DieViewModel> dieVMList)
         {
+            if (dieVMList == null || dieVMList.Count == 0)
+            {
+                logger.Warn("No dice selected for testing");
+                return;
+            }
             // 保存测试队列用于进度计算
             _currentTestQueue = dieVMList;
             _currentQueueIndex = -1;
             // 初始化进度条
-            MainViewModel.Instance?.DataMappingVM?.InitializeAutoTestProgress(dieVMList);
+            // 初始化进度条 - 重要：必须在UI线程执行
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                if (mappingVM != null)
+                {
+                    mappingVM.InitializeAutoTestProgress(dieVMList);
+                    // 重置手动测试标记
+                    mappingVM.IsManualTesting = false;
+                }
+            });
             //OutputLog(dieVMList);
             proberClientService?.StartAutoTest();
             autoTestingItem = new AutoTestingItem(dieVMList, _selectedWPFlow);
