@@ -396,8 +396,10 @@
                                                 <ColumnDefinition Width="*" />
                                                 <!--  搜索按钮（占1份）  -->
                                             </Grid.ColumnDefinitions>
-                                            <!--SelectedValue="{Binding SelectedType}"
-                                                SelectedValuePath="FlowType"-->
+                                            <!--
+                                                SelectedValue="{Binding SelectedType}"
+                                                SelectedValuePath="FlowType"
+                                            -->
                                             <ComboBox
                                                 x:Name="cbLeftSelector"
                                                 Grid.Column="0"
@@ -406,8 +408,7 @@
                                                 VerticalAlignment="Center"
                                                 IsEnabled="{Binding IsNotProcessing}"
                                                 ItemsSource="{Binding WPFlows}"
-                                                SelectedItem="{Binding SelectedWPFlow}"
-                                                >
+                                                SelectedItem="{Binding SelectedWPFlow}">
                                                 <ComboBox.ItemTemplate>
                                                     <DataTemplate>
                                                         <StackPanel Orientation="Horizontal">

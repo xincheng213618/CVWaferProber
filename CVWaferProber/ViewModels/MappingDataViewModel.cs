@@ -138,40 +138,117 @@ namespace CVWaferProber.ViewModels
         }
 
         private string _MappingCsvFilePath;
-        public string MappingCsvFilePath { get => _MappingCsvFilePath; set => SetProperty(ref _MappingCsvFilePath, value); }
+        public string MappingCsvFilePath
+        {
+            get => _MappingCsvFilePath; 
+            set => SetProperty(ref _MappingCsvFilePath, value);
+        }
 
         private bool? _selectAllAOI = false;
-        public bool? SelectAllAOI { get => _selectAllAOI; set { if (!Equals(_selectAllAOI, value)) { _selectAllAOI = value; OnPropertyChanged(); UpdateSelectAllAOIState(); } } }
+        public bool? SelectAllAOI 
+        { 
+            get => _selectAllAOI; 
+            set 
+            { 
+                if (!Equals(_selectAllAOI, value))
+                { 
+                    _selectAllAOI = value;
+                    OnPropertyChanged();
+                    UpdateSelectAllAOIState(); 
+                }
+            }
+        }
         private bool _isUpdatingFromHeader_AOI;
 
         private bool? _selectAllIVL = false;
-        public bool? SelectAllIVL { get => _selectAllIVL; set { if (!Equals(_selectAllIVL, value)) { _selectAllIVL = value; OnPropertyChanged(); UpdateSelectAllIVLState(); } } }
+        public bool? SelectAllIVL
+        { 
+            get => _selectAllIVL;
+            set 
+            { if (!Equals(_selectAllIVL, value)) 
+                {
+                    _selectAllIVL = value; OnPropertyChanged(); UpdateSelectAllIVLState(); 
+                }
+            }
+        }
         private bool _isUpdatingFromHeader_IVL;
 
         private bool? _selectAllEQE = false;
-        public bool? SelectAllEQE { get => _selectAllEQE; set { if (!Equals(_selectAllEQE, value)) { _selectAllEQE = value; OnPropertyChanged(); UpdateSelectAllEQEState(); } } }
+        public bool? SelectAllEQE 
+        {
+            get => _selectAllEQE;
+            set 
+            { 
+                if (!Equals(_selectAllEQE, value)) 
+                { 
+                    _selectAllEQE = value;
+                    OnPropertyChanged();
+                    UpdateSelectAllEQEState(); 
+                } 
+            }
+        }
         private bool _isUpdatingFromHeader_EQE;
 
         private bool? _selectAllVAM = false;
-        public bool? SelectAllVAM { get => _selectAllVAM; set { if (!Equals(_selectAllVAM, value)) { _selectAllVAM = value; OnPropertyChanged(); UpdateSelectAllVAMState(); } } }
+        public bool? SelectAllVAM 
+        {
+            get => _selectAllVAM;
+            set 
+            { 
+                if (!Equals(_selectAllVAM, value))
+                { 
+                    _selectAllVAM = value;
+                    OnPropertyChanged(); 
+                    UpdateSelectAllVAMState(); 
+                } 
+            } 
+        }
         private bool _isUpdatingFromHeader_VAM;
 
         public bool IsColorEnabled { get; set; }
         public string ProberId { get; set; }
         private string _Timestamp;
-        public string Timestamp { get => _Timestamp; set => SetProperty(ref _Timestamp, value); }
+        public string Timestamp 
+        { 
+            get => _Timestamp;
+            set => SetProperty(ref _Timestamp, value);
+        }
         private bool _isAutoSN;
-        public bool IsAutoSN { get => _isAutoSN; set => SetProperty(ref _isAutoSN, value); }
+        public bool IsAutoSN 
+        { 
+            get => _isAutoSN;
+            set => SetProperty(ref _isAutoSN, value);
+        }
         private bool _isProcessing = false;
         public bool IsNotProcessing => !_isProcessing;
-        public bool IsProcessing { get => _isProcessing; set => SetProperty(ref _isProcessing, value); }
+        public bool IsProcessing 
+        { 
+            get => _isProcessing;
+            set => SetProperty(ref _isProcessing, value); 
+        }
         private bool _isIVLCameraEnabled;
-        public bool IsIVLCameraEnabled { get => _isIVLCameraEnabled; set => SetProperty(ref _isIVLCameraEnabled, value); }
+        public bool IsIVLCameraEnabled 
+        {
+            get => _isIVLCameraEnabled;
+            set => SetProperty(ref _isIVLCameraEnabled, value); 
+        }
         private bool selfClick = true;
         private DataGrid? _dataGrid;
 
         private string _yieldInfo = "0/0 (0.00%)";
-        public string YieldInfo { get => _yieldInfo; set { if (_yieldInfo != value) { _yieldInfo = value; OnPropertyChanged(); CustomMappingVM.YieldInfo = value; } } }
+        public string YieldInfo 
+        { 
+            get => _yieldInfo;
+            set 
+            { 
+                if (_yieldInfo != value) 
+                { 
+                    _yieldInfo = value;
+                    OnPropertyChanged(); 
+                    CustomMappingVM.YieldInfo = value;
+                } 
+            }
+        }
 
         private const int StaticColumnCount = 13;
         private readonly List<ColumnConfig> _staticColumnConfigs = new List<ColumnConfig>
