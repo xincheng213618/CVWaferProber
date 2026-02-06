@@ -131,7 +131,7 @@ namespace CVWaferProber.Services
         private void OnAutoTestingNextCompleted(object? sender, DieViewModel dieVM)
         {
             // 更新进度：完成当前Die测试
-            //UpdateProgressForDieCompletion(dieVM);
+            UpdateProgressForDieCompletion(dieVM);
             //发送结果给机台
             proberClientService?.SendResultAsync(dieVM);
             //
@@ -165,20 +165,28 @@ namespace CVWaferProber.Services
         /// <summary>
         /// 更新Die测试完成进度
         /// </summary>
-        //private void UpdateProgressForDieCompletion(DieViewModel dieVM)
-        //{
-        //    try
-        //    {
-        //        MainViewModel.Instance?.DataMappingVM?.CompleteSingleDieTest();
+        private void UpdateProgressForDieCompletion(DieViewModel dieVM)
+        {
+            try
+            {
+                // 增加空值检查
+                if (MainViewModel.Instance?.DataMappingVM != null)
+                {
+                    // 确保只在UI线程执行
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        MainViewModel.Instance.DataMappingVM.CompleteSingleDieTest();
+                    });
 
-        //        if (logger.IsDebugEnabled)
-        //            logger.DebugFormat($"进度更新: {dieVM.MapAxisToString()} 测试完成");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        logger.Error("更新进度失败 (Complete)", ex);
-        //    }
-        //}
+                    if (logger.IsDebugEnabled)
+                        logger.DebugFormat($"进度更新: {dieVM.MapAxisToString()} 测试完成, 当前完成数: {MainViewModel.Instance.DataMappingVM.CompletedTestCount}");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error("更新进度失败 (Complete)", ex);
+            }
+        }
         private bool IsTestBreak(DieViewModel dieVM, int errorCount)
         {
             return !IsDieCompleted(dieVM) &&
@@ -301,12 +309,15 @@ namespace CVWaferProber.Services
                 if (dieNext.die.Status == Core.Models.Enums.ChipStatus.WAITING)
                 {
                     if(logger.IsDebugEnabled) logger.DebugFormat("Starting Visual Inspection... => {0}", dieNext.die.MapAxisToString());
+                    // 修复：提前初始化下一个Die的进度
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        MainViewModel.Instance?.DataMappingVM?.StartSingleDieTest(dieNext.die);
+                    });
                     PreAutoTestingNextDie?.Invoke(this, (dieNext.diePre, dieNext.die));
                     //logger.InfoFormat("DoAutoDieFlowExecAsync={0}/{1}", dieNext.die.MapAxisToString(), dieNext.die.Status.ToString());
                     Task.Factory.StartNew(async () =>
                     {
-                        
-                       MainViewModel.Instance?.StartTestProgress(dieNext.die);
                         await DoAutoDieFlowExecAsync(item.CurSelectedWPFlow, dieNext.die, dieNext.diePre == null, item.HasNext, true);
                     });
                 }

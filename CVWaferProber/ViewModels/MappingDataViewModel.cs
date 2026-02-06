@@ -371,8 +371,13 @@ namespace CVWaferProber.ViewModels
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                CurrentDieInfo = $"{die.MapX}/{die.MapY}"; // 显示当前Die行列
-                SingleDieTestProgress = 0; // 重置单Die进度
+                CurrentDieInfo = $"{die.MapX}/{die.MapY}";
+                SingleDieTestProgress = 0; // 强制重置为0
+
+                // 强制更新UI
+                OnPropertyChanged(nameof(CurrentDieInfo));
+                OnPropertyChanged(nameof(SingleDieTestProgress));
+                OnPropertyChanged(nameof(ProgressText));
 
                 logger.DebugFormat("Start testing Die [{0}/{1}], reset single Die progress to 0%", die.MapX, die.MapY);
             });
@@ -400,11 +405,20 @@ namespace CVWaferProber.ViewModels
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                CompletedTestCount++;
+                // 增加边界检查，防止计数溢出
+                if (CompletedTestCount < TotalTestCount)
+                {
+                    CompletedTestCount++;
+                    logger.DebugFormat("Single Die test completed; cumulative completion: {0}/{1}", CompletedTestCount, TotalTestCount);
+                }
+
                 UpdateTotalProgress();
+                SingleDieTestProgress = 0; // 重置当前Die进度
+
+                // 强制更新所有进度相关UI
+                OnPropertyChanged(nameof(CompletedTestCount));
                 OnPropertyChanged(nameof(ProgressText));
-                SingleDieTestProgress = 0;
-                logger.DebugFormat("Single Die test completed; cumulative completion: {0}/{1}", CompletedTestCount, TotalTestCount);
+                OnPropertyChanged(nameof(ProgressTextAll));
             });
         }
 
@@ -418,6 +432,13 @@ namespace CVWaferProber.ViewModels
                 TotalTestProgress = 0;
                 return;
             }
+            // 修复核心：当前Die未完成时，已完成数不包含当前Die
+            int actualCompletedCount = CompletedTestCount;
+            // 如果还有未完成的Die，当前Die不计入已完成数
+            if (actualCompletedCount < TotalTestCount)
+            {
+                actualCompletedCount = CompletedTestCount; // 保持原有已完成数
+            }
 
             // 已完成Die的基础进度
             double completedProgress = (double)CompletedTestCount / TotalTestCount * 100;
@@ -427,6 +448,12 @@ namespace CVWaferProber.ViewModels
                 : 0;
 
             TotalTestProgress = Math.Min(100, completedProgress + currentDieContribution);
+            // 强制更新UI绑定
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                OnPropertyChanged(nameof(TotalTestProgress));
+                OnPropertyChanged(nameof(ProgressTextAll));
+            });
         }
 
         /// <summary>
