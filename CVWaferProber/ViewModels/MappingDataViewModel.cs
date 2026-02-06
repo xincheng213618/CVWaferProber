@@ -3,6 +3,7 @@ using ChipMapping.ViewModels;
 using ColorVision.Core.Entities;
 using CVDB.Services.Buz;
 using CVWaferProber.Components;
+using CVWaferProber.Config;
 using CVWaferProber.Core;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
@@ -1153,7 +1154,7 @@ namespace CVWaferProber.ViewModels
             try
             {
                 if (TestResults == null || !TestResults.Any()) { logger.Info("No test results, skip Summary export"); return; }
-                string exportRootPath = @"D:\Project";
+                string exportRootPath = ConfigManager.Config.ExportPathSettings?.SummaryExportPath ;//?? @"D:\Project\IVL"
                 if (!Directory.Exists(exportRootPath)) Directory.CreateDirectory(exportRootPath);
                 var savePath = Path.Combine(exportRootPath, $"Summary_Result_{DateTime.Now:yyyyMMddHHmmss}.csv");
                 var allSelectedColumns = new List<ColumnConfig>();

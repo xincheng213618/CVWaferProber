@@ -6,10 +6,10 @@
     xmlns:local="clr-namespace:CVWaferProber.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="{DynamicResource Menu.GlobalConfig}"
-    Width="600"
-    Height="300"
+    Width="700"
+    Height="450"
     WindowStartupLocation="CenterOwner"
-    mc:Ignorable="d">
+    mc:Ignorable="d"> 
     <Grid Margin="10">
         <!--  主布局：TabControl + 底部保存按钮  -->
         <Grid.RowDefinitions>
@@ -22,202 +22,253 @@
             <!--  Comm Tab页  -->
             <TabItem Header="Comm">
                 <StackPanel>
-                    <Label Content="ServerIP:"/>
-                    <TextBox
-                        Margin="10,0,10,0"
-                        Text="{Binding ConnectionSettings.ServerIP}"/>
-                    <Label Content="ServerPort:"/>
-                    <TextBox
-                        Margin="10,0,10,0"
-                        Text="{Binding ConnectionSettings.Port}"/>
+                    <Label Content="ServerIP:" />
+                    <TextBox Margin="10,0,10,0" Text="{Binding ConnectionSettings.ServerIP}" />
+                    <Label Content="ServerPort:" />
+                    <TextBox Margin="10,0,10,0" Text="{Binding ConnectionSettings.Port}" />
                 </StackPanel>
             </TabItem>
-            <TabItem Header="Logger" Height="19" VerticalAlignment="Top">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="0,5">
-                    <Label Content="Logger Level:"/>
+
+            <TabItem
+                Height="19"
+                VerticalAlignment="Top"
+                Header="Logger">
+                <StackPanel
+                    Margin="0,5"
+                    VerticalAlignment="Top"
+                    Orientation="Horizontal">
+                    <Label Content="Logger Level:" />
                     <ComboBox
-                        ItemsSource="{Binding LogLevels}"
+                        Width="120"
+                        Height="25"
+                        Margin="5,0"
                         DisplayMemberPath="Level"
+                        ItemsSource="{Binding LogLevels}"
                         SelectedValue="{Binding SelectedLogLevel, Mode=TwoWay}"
-                        SelectedValuePath="Level"                      
-                        Width="120" Height="25" Margin="5,0"/>
+                        SelectedValuePath="Level" />
                 </StackPanel>
             </TabItem>
+
             <!--  MotionSettings Tab页  -->
             <TabItem Header="MotionSettings">
                 <StackPanel>
-                    <Label Content="DefaultXYMotionTimeout(s):"/>
-                    <TextBox
-                        Margin="10,0,10,0"
-                        Text="{Binding MotionSettings.DefaultXYMotionTimeout}"/>
-                    <Label Content="DefaultZMotionTimeout(s):"/>
-                    <TextBox
-                        Margin="10,0,10,10"
-                        Text="{Binding MotionSettings.DefaultZMotionTimeout}"/>
-                    <!--<Label Content="IsBreakOnError:"/>-->
+                    <Label Content="DefaultXYMotionTimeout(s):" />
+                    <TextBox Margin="10,0,10,0" Text="{Binding MotionSettings.DefaultXYMotionTimeout}" />
+                    <Label Content="DefaultZMotionTimeout(s):" />
+                    <TextBox Margin="10,0,10,10" Text="{Binding MotionSettings.DefaultZMotionTimeout}" />
                     <StackPanel Margin="10,0,10,10" Orientation="Horizontal">
-                        <CheckBox Content="IsBreakOnError" IsChecked="{Binding IsBreakOnError}"/>
-                        <TextBox Margin="10,0,20,0" Width="80" Text="{Binding BreakOnErrorNum}"/>
-                        <CheckBox Content="IsAutoStop" IsChecked="{Binding IsAutoStop}"/>
+                        <CheckBox Content="IsBreakOnError" IsChecked="{Binding IsBreakOnError}" />
+                        <TextBox
+                            Width="80"
+                            Margin="10,0,20,0"
+                            Text="{Binding BreakOnErrorNum}" />
+                        <CheckBox Content="IsAutoStop" IsChecked="{Binding IsAutoStop}" />
                     </StackPanel>
                 </StackPanel>
             </TabItem>
-            <!--  MotionSettings Tab页  -->
+
+            <!--  MappingSettings Tab页  -->
             <TabItem Header="MappingSettings">
                 <StackPanel>
-                    <Label Content="OutsiderRing:"/>
-                    <TextBox
-                        Margin="10,0,10,0"
-                        Text="{Binding MapSettings.OutsiderRing}"/>
+                    <Label Content="OutsiderRing:" />
+                    <TextBox Margin="10,0,10,0" Text="{Binding MapSettings.OutsiderRing}" />
                 </StackPanel>
             </TabItem>
-            <!--  1. VAM Tab页  -->
-            <TabItem Header="VAM">
-                <Grid Margin="10">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
 
-                    <TextBlock
-                        Grid.Row="0"
-                        Grid.Column="0"
-                        Margin="0,0,10,0"
-                        VerticalAlignment="Center"
-                        Text="{DynamicResource GlobalConfig.ExportPath}" />
-                    <StackPanel
-                        Grid.Row="0"
-                        Grid.Column="1"
-                        Orientation="Horizontal">
-                        <TextBox
-                            x:Name="txtVamExportPath"
-                            Width="250"
-                            Margin="0,0,10,0"
-                            VerticalAlignment="Center"
-                            IsReadOnly="True"
-                            Text="{Binding VamExportPath}" />
-                        <Button
-                            x:Name="btnVamBrowse"
-                            Padding="20,0"
-                            Click="BtnVamBrowse_Click"
-                            Content="{DynamicResource GlobalConfig.Browse}" />
+            <!--  路径配置 Tab页 - 合并IVL/AOI/EQE/VAM/Summary  -->
+            <TabItem Header="{DynamicResource ExportPathSettings}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="10" Orientation="Vertical">
+
+                        <!--  IVL路径配置  -->
+                        <GroupBox Margin="0,0,0,10" Header="IVL">
+                            <Grid Margin="5">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Margin="0,0,10,0"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource GlobalConfig.ExportPath}" />
+                                <StackPanel
+                                    Grid.Row="0"
+                                    Grid.Column="1"
+                                    Orientation="Horizontal">
+                                    <TextBox
+                                        x:Name="txtIvlExportPath"
+                                        Width="300"
+                                        Margin="0,0,10,0"
+                                        VerticalAlignment="Center"
+                                        IsReadOnly="True"
+                                        Text="{Binding IvlExportPath}" />
+                                    <Button
+                                        x:Name="btnIvlBrowse"
+                                        Padding="20,0"
+                                        Click="BtnIvlBrowse_Click"
+                                        Content="{DynamicResource GlobalConfig.Browse}" />
+                                </StackPanel>
+                            </Grid>
+                        </GroupBox>
+
+                        <!--  AOI路径配置  -->
+                        <GroupBox Margin="0,0,0,10" Header="AOI">
+                            <Grid Margin="5">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Margin="0,0,10,0"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource GlobalConfig.ExportPath}" />
+                                <StackPanel
+                                    Grid.Row="0"
+                                    Grid.Column="1"
+                                    Orientation="Horizontal">
+                                    <TextBox
+                                        x:Name="txtAoiExportPath"
+                                        Width="300"
+                                        Margin="0,0,10,0"
+                                        VerticalAlignment="Center"
+                                        IsReadOnly="True"
+                                        Text="{Binding AoiExportPath}" />
+                                    <Button
+                                        x:Name="btnAoiBrowse"
+                                        Padding="20,0"
+                                        Click="BtnAoiBrowse_Click"
+                                        Content="{DynamicResource GlobalConfig.Browse}" />
+                                </StackPanel>
+                            </Grid>
+                        </GroupBox>
+
+                        <!--  EQE路径配置  -->
+                        <GroupBox Margin="0,0,0,10" Header="EQE">
+                            <Grid Margin="5">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Margin="0,0,10,0"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource GlobalConfig.ExportPath}" />
+                                <StackPanel
+                                    Grid.Row="0"
+                                    Grid.Column="1"
+                                    Orientation="Horizontal">
+                                    <TextBox
+                                        x:Name="txtEqeExportPath"
+                                        Width="300"
+                                        Margin="0,0,10,0"
+                                        VerticalAlignment="Center"
+                                        IsReadOnly="True"
+                                        Text="{Binding EqeExportPath}" />
+                                    <Button
+                                        x:Name="btnEqeBrowse"
+                                        Padding="20,0"
+                                        Click="BtnEqeBrowse_Click"
+                                        Content="{DynamicResource GlobalConfig.Browse}" />
+                                </StackPanel>
+                            </Grid>
+                        </GroupBox>
+
+                        <!--  VAM路径配置  -->
+                        <GroupBox Margin="0,0,0,10" Header="VAM">
+                            <Grid Margin="5">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Margin="0,0,10,0"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource GlobalConfig.ExportPath}" />
+                                <StackPanel
+                                    Grid.Row="0"
+                                    Grid.Column="1"
+                                    Orientation="Horizontal">
+                                    <TextBox
+                                        x:Name="txtVamExportPath"
+                                        Width="300"
+                                        Margin="0,0,10,0"
+                                        VerticalAlignment="Center"
+                                        IsReadOnly="True"
+                                        Text="{Binding VamExportPath}" />
+                                    <Button
+                                        x:Name="btnVamBrowse"
+                                        Padding="20,0"
+                                        Click="BtnVamBrowse_Click"
+                                        Content="{DynamicResource GlobalConfig.Browse}" />
+                                </StackPanel>
+                            </Grid>
+                        </GroupBox>
+
+                        <!--  Summary路径配置  -->
+                        <GroupBox Header="Summary">
+                            <Grid Margin="5">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Margin="0,0,10,0"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource GlobalConfig.ExportPath}" />
+                                <StackPanel
+                                    Grid.Row="0"
+                                    Grid.Column="1"
+                                    Orientation="Horizontal">
+                                    <TextBox
+                                        x:Name="txtSummaryExportPath"
+                                        Width="300"
+                                        Margin="0,0,10,0"
+                                        VerticalAlignment="Center"
+                                        IsReadOnly="True"
+                                        Text="{Binding SummaryExportPath}" />
+                                    <Button
+                                        x:Name="btnSummaryBrowse"
+                                        Padding="20,0"
+                                        Click="BtnSummaryBrowse_Click"
+                                        Content="{DynamicResource GlobalConfig.Browse}" />
+                                </StackPanel>
+                            </Grid>
+                        </GroupBox>
+
                     </StackPanel>
-                </Grid>
+                </ScrollViewer>
             </TabItem>
 
-            <!--  2. AOI Tab页  -->
-            <TabItem Header="AOI">
-                <Grid Margin="10">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
-                    <TextBlock
-                        Grid.Row="0"
-                        Grid.Column="0"
-                        Margin="0,0,10,0"
-                        VerticalAlignment="Center"
-                        Text="{DynamicResource GlobalConfig.ExportPath}" />
-                    <StackPanel
-                        Grid.Row="0"
-                        Grid.Column="1"
-                        Orientation="Horizontal">
-                        <TextBox
-                            x:Name="txtAoiExportPath"
-                            Width="250"
-                            Margin="0,0,10,0"
-                            VerticalAlignment="Center"
-                            IsReadOnly="True"
-                            Text="{Binding AoiExportPath}" />
-                        <Button
-                            x:Name="btnAoiBrowse"
-                            Padding="20,0"
-                            Click="BtnAoiBrowse_Click"
-                            Content="{DynamicResource GlobalConfig.Browse}" />
-                    </StackPanel>
-                </Grid>
-            </TabItem>
-
-            <!--  3. EQE Tab页  -->
-            <TabItem Header="EQE">
-                <Grid Margin="10">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
-                    <TextBlock
-                        Grid.Row="0"
-                        Grid.Column="0"
-                        Margin="0,0,10,0"
-                        VerticalAlignment="Center"
-                        Text="{DynamicResource GlobalConfig.ExportPath}" />
-                    <StackPanel
-                        Grid.Row="0"
-                        Grid.Column="1"
-                        Orientation="Horizontal">
-                        <TextBox
-                            x:Name="txtEqeExportPath"
-                            Width="250"
-                            Margin="0,0,10,0"
-                            VerticalAlignment="Center"
-                            IsReadOnly="True"
-                            Text="{Binding EqeExportPath}" />
-                        <Button
-                            x:Name="btnEqeBrowse"
-                            Padding="20,0"
-                            Click="BtnEqeBrowse_Click"
-                            Content="{DynamicResource GlobalConfig.Browse}" />
-                    </StackPanel>
-                </Grid>
-            </TabItem>
-
-            <!--  4. IVL Tab页  -->
-            <TabItem Header="IVL">
-                <Grid Margin="10">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
-                    <TextBlock
-                        Grid.Row="0"
-                        Grid.Column="0"
-                        Margin="0,0,10,0"
-                        VerticalAlignment="Center"
-                        Text="{DynamicResource GlobalConfig.ExportPath}" />
-                    <StackPanel
-                        Grid.Row="0"
-                        Grid.Column="1"
-                        Orientation="Horizontal">
-                        <TextBox
-                            x:Name="txtIvlExportPath"
-                            Width="250"
-                            Margin="0,0,10,0"
-                            VerticalAlignment="Center"
-                            IsReadOnly="True"
-                            Text="{Binding IvlExportPath}" />
-                        <Button
-                            x:Name="btnIvlBrowse"
-                            Padding="20,0"
-                            Click="BtnIvlBrowse_Click"
-                            Content="{DynamicResource GlobalConfig.Browse}" />
-                    </StackPanel>
-                </Grid>
-            </TabItem>
         </TabControl>
 
         <!--  底部保存按钮（所有Tab页共用）  -->
@@ -235,8 +286,8 @@
                 Grid.Row="1"
                 Margin="0,10,0,0"
                 Padding="10,0"
-                Click="BtnSave_Click"
-                Content="{DynamicResource GlobalConfig.Save}" />
+                Click="BtnCancel_Click"
+                Content="{DynamicResource Btn.Cancel}" />
         </StackPanel>
 
     </Grid>

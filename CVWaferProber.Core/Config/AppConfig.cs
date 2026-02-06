@@ -44,6 +44,7 @@ namespace CVWaferProber.Core.Config
         /// IVL导出路径
         /// </summary>
         public string IvlExportPath { get; set; } = @"D:\Project\IVL";
+        public string SummaryExportPath { get; set; } = @"D:\Project\Summary";
     }
     public class MappingSettings
     {
