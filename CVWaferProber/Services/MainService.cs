@@ -112,8 +112,6 @@ namespace CVWaferProber.Services
         private void InitializeClientProber()
         {
             proberClientService = ProberClientService.Instance;
-            //proberClientService.Initialize(MainViewModel.Instance.DataMappingVM);
-
             proberClientService.Subscribe<MotionAxisUpdatedEvent>(OnMotionAxisUpdated);
         }
 
