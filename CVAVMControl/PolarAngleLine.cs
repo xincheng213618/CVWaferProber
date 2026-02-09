@@ -1,11 +1,4 @@
-﻿using ConoscopeDemo;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CVAVMControl
+﻿namespace CVAVMControl
 {
     /// <summary>
     /// 极角线数据类，存储角度和RGB数据

@@ -1,7 +1,5 @@
-﻿using CVWaferProber.Config;
-using CVWaferProber.Core.ViewModels;
+﻿using CVWaferProber.Core.ViewModels;
 using CVWaferProber.Models;
-using Newtonsoft.Json;
 using System.Windows;
 using System.Windows.Input;
 using WaferComm.Client;

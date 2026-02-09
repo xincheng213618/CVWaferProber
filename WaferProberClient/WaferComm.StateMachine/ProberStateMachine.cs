@@ -557,10 +557,14 @@ namespace WaferComm.StateMachine
                 TransitionToAsync(ProberState.Paused).Wait();
                 return;
             }
-            if (command.StartsWith("rr") && command.Length > 5) // 晶圆加载完成
+            else if (command.StartsWith("rr") && command.Length > 5) // 晶圆加载完成
             {
                 TransitionToAsync(ProberState.WaferLoaded).Wait();
                 return;
+            }
+            else if (command.StartsWith("b") && command.Length > 1) // 收到晶圆ID
+            {
+                //TransitionToAsync(ProberState.WaferLoaded).Wait();
             }
             switch (CurrentState)
             {

@@ -1,7 +1,6 @@
-﻿using ColorVision.FileIO;
-using ConoscopeDemo;
-using CVAVMControl;
+﻿using CVAVMControl;
 using CVCommCore.CVImage;
+using CVVAMControl;
 using CVWaferProber.Core;
 using CVWaferProber.Core.Events;
 using CVWaferProber.Core.ViewModels;
@@ -601,7 +600,23 @@ namespace CVAVMControl
                 ProcessCVCIEFile(openFileDialog.FileName);
             }
         }
-
+        private CVCIEFile? LoadVAMFile(string filename)
+        {
+            CVCIEFileInfo cvfileInfo = new CVCIEFileInfo();
+            CVCIEFile fileInfo = new CVCIEFile();
+            bool bR = CVCommCore.Core.CVFileUtils.ReadImageFile(filename, ref cvfileInfo);
+            if (!bR)
+            {
+                if (logger.IsErrorEnabled) logger.ErrorFormat("Read ImageFile error => {0}", filename);
+                return null;
+            }
+            fileInfo.Bpp = cvfileInfo.FrameInfo.bppInt;
+            fileInfo.Channels = cvfileInfo.FrameInfo.channelsInt;
+            fileInfo.Cols = cvfileInfo.FrameInfo.widthInt;
+            fileInfo.Rows = cvfileInfo.FrameInfo.heightInt;
+            fileInfo.Data = cvfileInfo.data;
+            return fileInfo;
+        }
         private void ProcessCVCIEFile(string filename)
         {
             try
@@ -610,19 +625,8 @@ namespace CVAVMControl
                 YMat?.Dispose();
                 ZMat?.Dispose();
 
-                CVCIEFileInfo cvfileInfo = new CVCIEFileInfo();
-                CVCIEFile fileInfo = new CVCIEFile();
-                bool bR = CVCommCore.Core.CVFileUtils.ReadImageFile(filename, ref cvfileInfo);
-                if (!bR)
-                {
-                    if (logger.IsErrorEnabled) logger.ErrorFormat("Read ImageFile error => {0}", filename);
-                    return;
-                }
-                fileInfo.Bpp = cvfileInfo.FrameInfo.bppInt;
-                fileInfo.Channels = cvfileInfo.FrameInfo.channelsInt;
-                fileInfo.Cols = cvfileInfo.FrameInfo.widthInt;
-                fileInfo.Rows = cvfileInfo.FrameInfo.heightInt;
-                fileInfo.Data = cvfileInfo.data;
+                CVCIEFile? fileInfo = LoadVAMFile(filename);
+                if (fileInfo == null) return;
                 // 保存原始数据
                 byte[] originalData = fileInfo.Data; // 重要：保存原始数据引用
 
@@ -723,7 +727,7 @@ namespace CVAVMControl
                     }
                 }
 
-                UpdateDisplay();
+                //UpdateDisplay();
                 //fileInfo.Dispose();
                 _isDataValid = true;
                 // 主动触发一次选中0°的逻辑
@@ -733,6 +737,7 @@ namespace CVAVMControl
                 if (targetItem != null)
                 {
                     cbDisplayAngle.SelectedItem = targetItem;
+                    if (cbDisplayAngle.SelectedItem is ComboBoxItem item) SelectAngle(item);
                 }
             }
             catch (Exception ex)
@@ -1466,6 +1471,7 @@ namespace CVAVMControl
             _imgNaturalHeight = writeableBitmap.PixelHeight;
             ResetImageScale();
             PlotDiameterLineChart();
+            //PlotDiameterLineChartFromDLL();
             PlotRCircleChart();
             // 额外确保AutoScale
             ResetChartScales();
@@ -1529,7 +1535,7 @@ namespace CVAVMControl
             // Get values for the selected channel
             double[] positions = diameterLine.RgbData.Select(s => s.Position).ToArray();
             double[] values = diameterLine.RgbData.Select(s => GetChannelValue(s, displayChannel)).ToArray();
-
+            //SmoothData(ref positions,ref values);
             // 绘制线图
             var scatter = wpfPlotDiameterLine.Plot.Add.Scatter(positions, values);
             scatter.LineWidth = 2;
@@ -1539,6 +1545,66 @@ namespace CVAVMControl
             wpfPlotDiameterLine.Plot.Title(DC);
             wpfPlotDiameterLine.Refresh();
         }
+        private void SmoothData(ref double[] positions,ref double[] values)
+        {
+            var smoothRawData = BuildDataPoint(positions, values);
+            // 高级使用（带预处理）
+            var options = new GaussianOptions
+            {
+                KernelSize = new OpenCvSharp.Size(7, 7),
+                SigmaX = 1.5,
+                SortByX = true,
+                RemoveDuplicates = true,
+                Resample = true,
+                ResampleCount = 200
+            };
+            var smoothData = CurveSmoother.EnhancedOpenCVGaussianSmooth(smoothRawData, options);
+            smoothData = CurveSmoother.SortByX(smoothData);
+            positions = smoothData.Select(s => s.X).ToArray();
+            values = smoothData.Select(s => s.Y).ToArray();
+        }
+        private void PlotDiameterLineChartFromDLL()
+        {
+            Mat? selectedMat = GetSelectedChannelMat(displayChannel);
+            if (selectedMat == null || selectedMat.Empty())
+                return;
+
+            //var diameterLine = CreateDiameterLine(displayAngle, selectedMat);
+            var diameterLine = _dllAllAzimuthData[displayAngle];
+
+            wpfPlotDiameterLine.Plot.Clear();
+
+            if (diameterLine.Count == 0)
+            {
+                wpfPlotDiameterLine.Plot.Axes.SetLimits(-80, 80, 0, 600);
+                wpfPlotDiameterLine.Refresh();
+                return;
+            }
+
+            // Get values for the selected channel
+            double[] positions = diameterLine.Select(s => s.position).ToArray();
+            double[] values = diameterLine.Select(s => GetChannelValue(s, displayChannel)).ToArray();
+            //SmoothData(ref positions,ref values);
+            // 绘制线图
+            var scatter = wpfPlotDiameterLine.Plot.Add.Scatter(positions, values);
+            scatter.LineWidth = 2;
+            scatter.Color = ScottPlot.Color.FromHex("#1f77b4");
+
+            wpfPlotDiameterLine.Plot.Axes.AutoScale();
+            wpfPlotDiameterLine.Plot.Title(DC);
+            wpfPlotDiameterLine.Refresh();
+        }
+
+        private List<System.Windows.Point> BuildDataPoint(double[] positions, double[] values)
+        {
+            var result = new List<System.Windows.Point>();
+            for (int i = 0; i < positions.Length; i++)
+            {
+                result.Add(new System.Windows.Point(positions[i], values[i]));
+            }
+            return result;
+        }
+
         string DC = (string)Application.Current.FindResource("Plot.Title.DiameterLine");
         string RC = (string)Application.Current.FindResource("VAM.RCircle");
         string CDC = (string)Application.Current.FindResource("VAM.CircumferentialDistributionCurve");
@@ -1784,6 +1850,16 @@ namespace CVAVMControl
 
 
         private double GetChannelValue(RgbSample sample, ExportChannel channel)
+        {
+            return channel switch
+            {
+                ExportChannel.X => sample.X,
+                ExportChannel.Y => sample.Y,
+                ExportChannel.Z => sample.Z,
+                _ => 0
+            };
+        }
+        private double GetChannelValue(VamSamplePoint sample, ExportChannel channel)
         {
             return channel switch
             {
@@ -2215,35 +2291,8 @@ namespace CVAVMControl
             {
                 return;
             }
+            if (cbDisplayAngle.SelectedItem is ComboBoxItem item) SelectAngle(item);
 
-            // 2. 原有逻辑（去掉了_isFirstLoad的判断）
-            if (cbDisplayAngle.SelectedItem is ComboBoxItem item && item.Tag is string angleStr)
-            {
-                if (int.TryParse(angleStr, out int angle))
-                {
-                    displayAngle = angle;
-                    _selectedAngle = angle;
-                    _selectedRadius = -1;
-
-                    if (IsMatSafe(YMat))
-                    {
-                        bool dllCallSuccess = CallVamDllForDiameterLine(angle);
-                        if (dllCallSuccess)
-                        {
-                            UpdateDisplay();
-                        }
-                        else
-                        {
-                            MessageBox.Show($"{FindResource("Interfacecallfailed")}", $"{FindResource("Prompt")}");
-                            UpdateDisplay();
-                        }
-                    }
-                    else
-                    {
-                        MessageBox.Show($"{FindResource("Reopen")}", $"{FindResource("Prompt")}");
-                    }
-                }
-            }
             // 步骤1：首次加载（启动时）直接标记为非首次，不执行后续逻辑
             //if (_isDeletingAngle) return; // 删除过程中跳过
             ////if (_isFirstLoad)
@@ -2279,6 +2328,38 @@ namespace CVAVMControl
             //        }
             //    }
             //}
+        }
+
+        private void SelectAngle(ComboBoxItem item)
+        {
+            // 2. 原有逻辑（去掉了_isFirstLoad的判断）
+            if (item.Tag is string angleStr)
+            {
+                if (int.TryParse(angleStr, out int angle))
+                {
+                    displayAngle = angle;
+                    _selectedAngle = angle;
+                    _selectedRadius = -1;
+
+                    if (IsMatSafe(YMat))
+                    {
+                        bool dllCallSuccess = CallVamDllForDiameterLine(angle);
+                        if (dllCallSuccess)
+                        {
+                            UpdateDisplay();
+                        }
+                        else
+                        {
+                            MessageBox.Show($"{FindResource("Interfacecallfailed")}", $"{FindResource("Prompt")}");
+                            UpdateDisplay();
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show($"{FindResource("Reopen")}", $"{FindResource("Prompt")}");
+                    }
+                }
+            }
         }
 
 

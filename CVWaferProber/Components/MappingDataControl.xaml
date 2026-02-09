@@ -435,7 +435,7 @@
                                                 HorizontalAlignment="Stretch"
                                                 VerticalAlignment="Center"
                                                 IsEnabled="{Binding IsNotProcessing}"
-                                                Text="{Binding ProberId}" />
+                                                Text="{Binding WaferId}" />
 
                                             <!--  SN文本 - 第4列  -->
                                             <TextBlock
@@ -632,7 +632,7 @@
                                                     Width="100"
                                                     Margin="5,0,0,0"
                                                     IsEnabled="{Binding IsNotProcessing}"
-                                                    Text="{Binding ProberId}" />
+                                                    Text="{Binding WaferId}" />
                                                 <TextBlock VerticalAlignment="Center" Text="SN" />
                                                 <TextBox
                                                     Width="150"

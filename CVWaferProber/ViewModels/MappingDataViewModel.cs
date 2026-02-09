@@ -17,7 +17,6 @@ using log4net;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -37,55 +36,78 @@ namespace CVWaferProber.ViewModels
     public class MappingDataViewModel : ViewModelBase
     {
         private static readonly ILog logger = LogManager.GetLogger(typeof(MappingDataViewModel));
-        //#region 选中状态绑定
-        //private string _selectedType;
-        //public string SelectedType
-        //{
-        //    get => _selectedType;
-        //    set
-        //    {
-        //        _selectedType = value;
-        //        OnPropertyChanged(nameof(SelectedType));
-        //        UpdateSelectionBasedOnType();
-        //    }
-        //}
-        //private void UpdateSelectionBasedOnType()
-        //{
-        //    if (string.IsNullOrEmpty(SelectedType) || FilteredTestResults == null) return;
 
-        //    foreach (var item in FilteredTestResults)
-        //    {
-        //        switch (SelectedType)
-        //        {
-        //            case "AOI":
-        //                item.IsAOIEnabled = true;
-        //                item.IsIVLEnabled = false;
-        //                item.IsEQEEnabled = false;
-        //                item.IsVAMEnabled = false;
-        //                break;
-        //            case "IVL":
-        //                item.IsAOIEnabled = false;
-        //                item.IsIVLEnabled = true;
-        //                item.IsEQEEnabled = false;
-        //                item.IsVAMEnabled = false;
-        //                break;
-        //            case "EQE":
-        //                item.IsAOIEnabled = false;
-        //                item.IsIVLEnabled = false;
-        //                item.IsEQEEnabled = true;
-        //                item.IsVAMEnabled = false;
-        //                break;
-        //            case "VAM":
-        //                item.IsAOIEnabled = false;
-        //                item.IsIVLEnabled = false;
-        //                item.IsEQEEnabled = false;
-        //                item.IsVAMEnabled = true;
-        //                break;
-        //        }
-        //    }
-        //}
+        #region DataGrid 行选择
+        private bool? _selectAllAOI = false;
+        private bool _isUpdatingFromHeader_AOI;
+        public bool? SelectAllAOI
+        {
+            get => _selectAllAOI;
+            set
+            {
+                UpdateDataGridRowsEnabled(value, (item, val) => item.IsAOIEnabled = val, ref _isUpdatingFromHeader_AOI);
+                if (!Equals(_selectAllAOI, value))
+                {
+                    _selectAllAOI = value;
+                    OnPropertyChanged();
+                    UpdateSelectAllAOIState();
+                }
+            }
+        }
 
-        //#endregion
+
+        private bool? _selectAllIVL = false;
+        private bool _isUpdatingFromHeader_IVL;
+        public bool? SelectAllIVL
+        {
+            get => _selectAllIVL;
+            set
+            {
+                UpdateDataGridRowsEnabled(value, (item, val) => item.IsIVLEnabled = val, ref _isUpdatingFromHeader_IVL);
+                if (!Equals(_selectAllIVL, value))
+                {
+                    _selectAllIVL = value;
+                    OnPropertyChanged();
+                    UpdateSelectAllIVLState();
+                }
+            }
+        }
+
+        private bool? _selectAllEQE = false;
+        private bool _isUpdatingFromHeader_EQE;
+        public bool? SelectAllEQE
+        {
+            get => _selectAllEQE;
+            set
+            {
+                UpdateDataGridRowsEnabled(value, (item, val) => item.IsEQEEnabled = val, ref _isUpdatingFromHeader_EQE);
+                if (!Equals(_selectAllEQE, value))
+                {
+                    _selectAllEQE = value;
+                    OnPropertyChanged();
+                    UpdateSelectAllEQEState();
+                }
+            }
+        }
+
+        private bool? _selectAllVAM = false;
+        private bool _isUpdatingFromHeader_VAM;
+        public bool? SelectAllVAM
+        {
+            get => _selectAllVAM;
+            set
+            {
+                UpdateDataGridRowsEnabled(value, (item, val) => item.IsVAMEnabled = val, ref _isUpdatingFromHeader_VAM);
+                if (!Equals(_selectAllVAM, value))
+                {
+                    _selectAllVAM = value;
+                    OnPropertyChanged();
+                    UpdateSelectAllVAMState();
+                }
+            }
+        }
+        #endregion DataGrid 行选择
+
         #region 原有核心属性+命令（保留，无修改）
         public event EventHandler<WPFlowViewModel> ActivateCorrespondingPanel;
         public ChipMappingControlViewModel? CustomMappingVM { get; set; }
@@ -144,69 +166,14 @@ namespace CVWaferProber.ViewModels
             set => SetProperty(ref _MappingCsvFilePath, value);
         }
 
-        private bool? _selectAllAOI = false;
-        public bool? SelectAllAOI 
-        { 
-            get => _selectAllAOI; 
-            set 
-            { 
-                if (!Equals(_selectAllAOI, value))
-                { 
-                    _selectAllAOI = value;
-                    OnPropertyChanged();
-                    UpdateSelectAllAOIState(); 
-                }
-            }
-        }
-        private bool _isUpdatingFromHeader_AOI;
-
-        private bool? _selectAllIVL = false;
-        public bool? SelectAllIVL
-        { 
-            get => _selectAllIVL;
-            set 
-            { if (!Equals(_selectAllIVL, value)) 
-                {
-                    _selectAllIVL = value; OnPropertyChanged(); UpdateSelectAllIVLState(); 
-                }
-            }
-        }
-        private bool _isUpdatingFromHeader_IVL;
-
-        private bool? _selectAllEQE = false;
-        public bool? SelectAllEQE 
-        {
-            get => _selectAllEQE;
-            set 
-            { 
-                if (!Equals(_selectAllEQE, value)) 
-                { 
-                    _selectAllEQE = value;
-                    OnPropertyChanged();
-                    UpdateSelectAllEQEState(); 
-                } 
-            }
-        }
-        private bool _isUpdatingFromHeader_EQE;
-
-        private bool? _selectAllVAM = false;
-        public bool? SelectAllVAM 
-        {
-            get => _selectAllVAM;
-            set 
-            { 
-                if (!Equals(_selectAllVAM, value))
-                { 
-                    _selectAllVAM = value;
-                    OnPropertyChanged(); 
-                    UpdateSelectAllVAMState(); 
-                } 
-            } 
-        }
-        private bool _isUpdatingFromHeader_VAM;
-
         public bool IsColorEnabled { get; set; }
-        public string ProberId { get; set; }
+
+        private string _WaferId;
+        public string WaferId
+        {
+            get => _WaferId;
+            set => SetProperty(ref _WaferId, value);
+        }
         private string _Timestamp;
         public string Timestamp 
         { 
@@ -414,7 +381,7 @@ namespace CVWaferProber.ViewModels
             SubscribeItems_EQE(TestResults);
             SubscribeItems_VAM(TestResults);
 
-            ProberId = "CVProber01";
+            WaferId = "CVProber01";
             ProberClientService.Instance.InitializeMapVM(this);
             InitColumnConfigs();
             InitAutoSave();
@@ -709,7 +676,7 @@ namespace CVWaferProber.ViewModels
         private void ManTestingReady(DieViewModel die)
         {
             string timestamp = DateTime.Now.ToString("yyyyMMdd'T'HHmmss.fff");
-            die.TestingReady(ProberId, timestamp);
+            die.TestingReady(WaferId, timestamp);
             if (_isAutoSN) Timestamp = timestamp;
         }
 
@@ -720,7 +687,7 @@ namespace CVWaferProber.ViewModels
             if (_isAutoSN) Timestamp = timestamp;
             foreach (var itemT in testItems)
             {
-                itemT.Die.TestingReady(ProberId, timestamp);
+                itemT.Die.TestingReady(WaferId, timestamp);
             }
         }
 
@@ -1052,34 +1019,75 @@ namespace CVWaferProber.ViewModels
             if (e.PropertyName == nameof(DieViewModel.IsVAMEnabled) && !_isUpdatingFromHeader_VAM) UpdateSelectAllVAMState();
         }
 
-        private void UpdateSelectAllAOIState()
+        private void UpdateDataGridRowsEnabled(bool? value, Action<DieViewModel, bool> propertySetter, ref bool isUpdatingFlag)
         {
-            if (TestResults.Count == 0) { SelectAllAOI = false; return; }
-            int selectedCount = TestResults.Count(item => item.IsAOIEnabled);
-            SelectAllAOI = selectedCount switch { 0 => false, var c when c == TestResults.Count => true, _ => null };
+            if (value.HasValue && TestResults.Count > 0)
+            {
+                isUpdatingFlag = true;
+                try
+                {
+                    foreach (var item in TestResults)
+                    {
+                        propertySetter(item, value.Value);
+                    }
+                }
+                finally
+                {
+                    isUpdatingFlag = false;
+                }
+            }
         }
 
-        private void UpdateSelectAllIVLState()
-        {
-            if (TestResults.Count == 0) { SelectAllIVL = false; return; }
-            int selectedCount = TestResults.Count(item => item.IsIVLEnabled);
-            SelectAllIVL = selectedCount switch { 0 => false, var c when c == TestResults.Count => true, _ => null };
-        }
+        private void UpdateSelectAllAOIState() => UpdateSelectAllState(item => item.IsAOIEnabled, value => SelectAllAOI = value);
+        //{
+        //    if (TestResults.Count == 0) { SelectAllAOI = false; return; }
+        //    int selectedCount = TestResults.Count(item => item.IsAOIEnabled);
+        //    SelectAllAOI = selectedCount switch { 0 => false, var c when c == TestResults.Count => true, _ => null };
+        //}
 
-        private void UpdateSelectAllEQEState()
-        {
-            if (TestResults.Count == 0) { SelectAllEQE = false; return; }
-            int selectedCount = TestResults.Count(item => item.IsEQEEnabled);
-            SelectAllEQE = selectedCount switch { 0 => false, var c when c == TestResults.Count => true, _ => null };
-        }
+        private void UpdateSelectAllIVLState() => UpdateSelectAllState(item => item.IsIVLEnabled, value => SelectAllIVL = value);
+        //{
+        //    if (TestResults.Count == 0) { SelectAllIVL = false; return; }
+        //    int selectedCount = TestResults.Count(item => item.IsIVLEnabled);
+        //    SelectAllIVL = selectedCount switch { 0 => false, var c when c == TestResults.Count => true, _ => null };
+        //}
 
-        private void UpdateSelectAllVAMState()
-        {
-            if (TestResults.Count == 0) { SelectAllVAM = false; return; }
-            int selectedCount = TestResults.Count(item => item.IsVAMEnabled);
-            SelectAllVAM = selectedCount switch { 0 => false, var c when c == TestResults.Count => true, _ => null };
-        }
+        private void UpdateSelectAllEQEState() => UpdateSelectAllState(item => item.IsEQEEnabled, value => SelectAllEQE = value);
+        //{
+        //    if (TestResults.Count == 0) { SelectAllEQE = false; return; }
+        //    int selectedCount = TestResults.Count(item => item.IsEQEEnabled);
+        //    SelectAllEQE = selectedCount switch { 0 => false, var c when c == TestResults.Count => true, _ => null };
+        //}
 
+        private void UpdateSelectAllVAMState() => UpdateSelectAllState(item => item.IsVAMEnabled, value => SelectAllVAM = value);
+        //{
+        //    if (TestResults.Count == 0) { SelectAllVAM = false; return; }
+        //    int selectedCount = TestResults.Count(item => item.IsVAMEnabled);
+        //    SelectAllVAM = selectedCount switch { 0 => false, var c when c == TestResults.Count => true, _ => null };
+        //}
+        private void UpdateSelectAllState(
+            Func<DieViewModel, bool> propertySelector,
+            Action<bool?> stateSetter)
+        {
+            if (TestResults.Count == 0)
+            {
+                stateSetter(false);
+                return;
+            }
+
+            int selectedCount = TestResults.Count(propertySelector);
+
+            // 更清晰的逻辑表达
+            bool? newState;
+            if (selectedCount == 0)
+                newState = false;
+            else if (selectedCount == TestResults.Count)
+                newState = true;
+            else
+                newState = null; // 表示不确定状态
+
+            stateSetter(newState);
+        }
         private void ExecuteInvertSelectAOI(object obj)
         {
             foreach (var item in TestResults) item.IsAOIEnabled = !item.IsAOIEnabled;
@@ -1308,7 +1316,7 @@ namespace CVWaferProber.ViewModels
             {
                 Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*",
                 DefaultExt = ".csv",
-                FileName = string.Format("{0}_{1}_result.csv", ProberId, _Timestamp),
+                FileName = string.Format("{0}_{1}_result.csv", WaferId, _Timestamp),
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
             };
             if (saveFileDialog.ShowDialog() == true)
@@ -1400,7 +1408,7 @@ namespace CVWaferProber.ViewModels
                     if (!string.IsNullOrWhiteSpace(dto.DisplayStatus))
                     {
                         string raw = dto.DisplayStatus.Trim().Trim('"').Trim();
-                        if (Enum.TryParse<ChipStatus>(raw, true, out var enumStatus)) die.ChangeStatusOnly(enumStatus);
+                        if (System.Enum.TryParse<ChipStatus>(raw, true, out var enumStatus)) die.ChangeStatusOnly(enumStatus);
                         else
                         {
                             try { die.ChangeStatusOnly(ChipStatusTool.GetStatusFromDisplay(raw, die.IsChinese)); }
@@ -1493,7 +1501,7 @@ namespace CVWaferProber.ViewModels
 
         public MainService mainService { get; private set; }
         #endregion
-        // 新增重启进度定时器方法
+
         /// <summary>
         /// 重启进度更新定时器（恢复测试时调用）
         /// </summary>
@@ -1512,7 +1520,5 @@ namespace CVWaferProber.ViewModels
                 logger.Debug("Progress timer restarted");
             }
         }
-
-
     }
 }

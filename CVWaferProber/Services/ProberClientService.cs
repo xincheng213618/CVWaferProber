@@ -94,17 +94,15 @@ namespace CVWaferProber.Services
         {
             if (@event.ToState == ProberState.Ready)
             {
+                _clientProber?.GetWaferIdAsync();
                 _clientProber?.GetMappingAsync();
             }
             else if (@event.ToState == ProberState.WaferLoaded)
             {
                 _mappingDataViewModel?.LoadMappingFile(_proberState.GetStatus().CurrentMappingFile);
-                //Task.Delay(2000).ContinueWith(_ =>
-                //{
-                //});
+                _mappingDataViewModel.WaferId = _proberState.GetStatus().CurrentWaferId;
             }
             if (logger.IsInfoEnabled) logger.InfoFormat("StateTransition {0} => {1}", @event.FromState.ToString(), @event.ToState.ToString());
-            //if (logger.IsInfoEnabled) logger.InfoFormat("CurrentState = {0}", _proberState.CurrentState.ToString());
             _connectionInfo.DevCurrentState = _proberState.CurrentState;
         }
 
