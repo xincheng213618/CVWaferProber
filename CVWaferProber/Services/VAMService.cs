@@ -79,8 +79,9 @@ namespace CVWaferProber.Services
                 }
                 else
                 {
-                    logger.ErrorFormat("VAM result is empty or count > 1 => {0}",
-                        results != null ? results.Count : 0);
+                    return ChipStatus.FAILED; // 结果为空或多于1条，直接失败
+                    //logger.ErrorFormat("VAM result is empty or count > 1 => {0}",
+                    //    results != null ? results.Count : 0);
                 }
             }
             catch (Exception ex)

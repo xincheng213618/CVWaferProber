@@ -105,34 +105,8 @@ namespace CVWaferProber.Services
                     DoEndTesting(dieViewModel, isAuto);
             }
         }
-        // 辅助方法：分阶段更新进度
-        private void UpdateProgressInStages(DieViewModel dieViewModel)
-        {
-            // 模拟测试阶段的进度更新
-            var stages = new Dictionary<string, double>
-    {
-        { "初始化设备", 10 },
-        { "开始测试", 25 },
-        { "数据采集", 50 },
-        { "数据处理", 75 },
-        { "结果分析", 90 }
-    };
+     
 
-            foreach (var stage in stages)
-            {
-                // 模拟阶段间隔
-                Task.Delay(500).Wait();
-
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    var mappingVM = MainViewModel.Instance?.DataMappingVM;
-                    if (mappingVM != null)
-                    {
-                        mappingVM.UpdateSingleDieProgress(stage.Value, stage.Key);
-                    }
-                });
-            }
-        }
         /// <summary>
         /// 更新进度
         /// </summary>

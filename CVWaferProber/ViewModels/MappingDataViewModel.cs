@@ -455,6 +455,10 @@ namespace CVWaferProber.ViewModels
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
+                // 如果当前Die就是正在测试的Die，且进度不是0，不重复初始化
+                if (CurrentDieInfo == $"{die.MapX}/{die.MapY}" && SingleDieTestProgress > 0)
+                    return;
+    
                 CurrentDieInfo = $"{die.MapX}/{die.MapY}";
                 SingleDieTestProgress = 0; // 强制重置为0
 

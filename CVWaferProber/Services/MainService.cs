@@ -196,13 +196,13 @@ namespace CVWaferProber.Services
                         mappingVM.UpdateTotalProgress();
                     });
 
-                    if (logger.IsDebugEnabled)
-                        logger.DebugFormat($"进度更新: {dieVM.MapAxisToString()} 测试完成, 当前完成数: {MainViewModel.Instance.DataMappingVM.CompletedTestCount}");
+                    //if (logger.IsDebugEnabled)
+                    //    logger.DebugFormat($"进度更新: {dieVM.MapAxisToString()} 测试完成, 当前完成数: {MainViewModel.Instance.DataMappingVM.CompletedTestCount+1 }");
                 }
             }
             catch (Exception ex)
             {
-                logger.Error("更新进度失败 (Complete)", ex);
+                logger.Error("Update progress failed (Complete)", ex);
             }
         }
         private bool IsTestBreak(DieViewModel dieVM, int errorCount)

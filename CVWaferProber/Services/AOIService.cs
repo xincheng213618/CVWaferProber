@@ -86,7 +86,7 @@ namespace CVWaferProber.Services
             if (!dieViewModel.IsAOITestCompleted)
             {
                 dieViewModel.IsAOITestCompleted = true;
-                logger.InfoFormat("Die[{0}/{1}]AOI测试完成，标记为已完成，后续切换将一次性加载图片", dieViewModel.MapX, dieViewModel.MapY);
+                logger.InfoFormat("Die[{0}/{1}]AOI testing completed", dieViewModel.MapX, dieViewModel.MapY);//标记为已完成，后续切换将一次性加载图片
             }
 
             return ChipStatus.OK;
