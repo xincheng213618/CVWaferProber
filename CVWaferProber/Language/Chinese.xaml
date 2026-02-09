@@ -148,6 +148,7 @@
     <sys:String x:Key="AnalysisImage">分析图像</sys:String>
     <sys:String x:Key="CameraMeasurement">相机测量</sys:String>
     <sys:String x:Key="Image.GridHeader.Type">类型</sys:String>
+    <sys:String x:Key="Image.real-timepreview">实时预览</sys:String>
 
     <sys:String x:Key="DisplayMode">Display Mode:</sys:String>
     <sys:String x:Key="AnalysisImageMode">Anlysis Image</sys:String>

@@ -43,7 +43,7 @@
     <sys:String x:Key="Maping.GridHeader.TestStatus">Status</sys:String>
     <sys:String x:Key="Maping.GridHeader.Uniformity">Uniformity</sys:String>
     <sys:String x:Key="Maping.GridHeader.TotalTime">TotalTime</sys:String>
-
+    <sys:String x:Key="Image.real-timepreview">Real-Time Preview</sys:String>
 
     <sys:String x:Key="Maping.NoMeasurement">Untested</sys:String>
     <sys:String x:Key="Maping.Measurementinprogress">Measurement in progress...</sys:String>
