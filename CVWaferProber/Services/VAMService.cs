@@ -64,11 +64,20 @@ namespace CVWaferProber.Services
 
                         // 3. 延迟1秒导出：异步延迟（不阻塞），导出事件仍切回UI线程
                         await Task.Delay(1000); // 替换ContinueWith，用await更安全
-                        await RunOnUiThreadAsync(() =>
-                            EventAggregator?.Publish(new VAMAutoExportCsvEvent
-                            {
-                                CvcieFilePath = cieFileName
-                            }));
+                        await Task.Run(() =>
+                        {
+                            // 导出操作后台执行，避免阻塞UI
+                            RunOnUiThread(() =>
+                                EventAggregator?.Publish(new VAMAutoExportCsvEvent
+                                {
+                                    CvcieFilePath = cieFileName
+                                }));
+                        });
+                        //await RunOnUiThreadAsync(() =>
+                        //    EventAggregator?.Publish(new VAMAutoExportCsvEvent
+                        //    {
+                        //        CvcieFilePath = cieFileName
+                        //    }));
 
                         return ChipStatus.VAM_COMPLETED;
                     }
