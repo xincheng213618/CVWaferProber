@@ -54,7 +54,7 @@ namespace CVWaferProber.Views
             // 1. 临时变量存属性值
             string tempPath = ConfigModel.VamExportPath;
             // 2. 传递临时变量的ref
-            BrowseFolder("选择VAM自动导出文件夹", ref tempPath, txtVamExportPath);
+            BrowseFolder("Select VAM Auto Export Folder", ref tempPath, txtVamExportPath);
             // 3. 处理后赋值回属性
             ConfigModel.VamExportPath = tempPath;
         }
@@ -63,7 +63,7 @@ namespace CVWaferProber.Views
         private void BtnAoiBrowse_Click(object sender, RoutedEventArgs e)
         {
             string tempPath = ConfigModel.AoiExportPath;
-            BrowseFolder("选择AOI自动导出文件夹", ref tempPath, txtAoiExportPath);
+            BrowseFolder("Select AOI Auto Export Folder", ref tempPath, txtAoiExportPath);
             ConfigModel.AoiExportPath = tempPath;
         
         }
@@ -72,7 +72,7 @@ namespace CVWaferProber.Views
         private void BtnEqeBrowse_Click(object sender, RoutedEventArgs e)
         {
             string tempPath = ConfigModel.EqeExportPath;
-            BrowseFolder("选择EQE自动导出文件夹", ref tempPath, txtEqeExportPath);
+            BrowseFolder("Select EQE Auto Export Folder", ref tempPath, txtEqeExportPath);
             ConfigModel.EqeExportPath = tempPath;
         }
 
@@ -80,8 +80,14 @@ namespace CVWaferProber.Views
         private void BtnIvlBrowse_Click(object sender, RoutedEventArgs e)
         {
             string tempPath = ConfigModel.IvlExportPath;
-            BrowseFolder("选择IVL自动导出文件夹", ref tempPath, txtIvlExportPath);
+            BrowseFolder("Select IVL Auto Export Folder", ref tempPath, txtIvlExportPath);
             ConfigModel.IvlExportPath = tempPath;
+        }
+        private void BtnSummaryBrowse_Click(object sender, RoutedEventArgs e)
+        {
+            string tempPath = ConfigModel.SummaryExportPath;
+            BrowseFolder("Select Summary Auto Export Folder", ref tempPath, txtSummaryExportPath);
+            ConfigModel.SummaryExportPath = tempPath;
         }
         /// <summary>
         /// 通用文件夹浏览方法（避免重复代码）
@@ -128,7 +134,11 @@ namespace CVWaferProber.Views
             this.DialogResult = true;
             this.Close();
         }
-
+        public void BtnCancel_Click(object sender, RoutedEventArgs e)
+        {
+            this.DialogResult = false;
+            this.Close();
+        }
         /// <summary>
         /// 确保文件夹存在，不存在则自动创建
         /// </summary>
@@ -158,6 +168,7 @@ namespace CVWaferProber.Views
                         ConfigModel.AoiExportPath = savedConfig.AoiExportPath;
                         ConfigModel.EqeExportPath = savedConfig.EqeExportPath;
                         ConfigModel.IvlExportPath = savedConfig.IvlExportPath;
+                        ConfigModel.SummaryExportPath = savedConfig.SummaryExportPath;
 
                         ConfigModel.IsAutoStop = ConfigManager.Config.IsAutoStop;
                         ConfigModel.IsBreakOnError = ConfigManager.Config.IsBreakOnError;
@@ -175,7 +186,7 @@ namespace CVWaferProber.Views
             }
             catch (Exception ex)
             {
-                log4net.LogManager.GetLogger(typeof(GlobalConfigWindow)).Error("加载全局配置失败", ex);
+                log4net.LogManager.GetLogger(typeof(GlobalConfigWindow)).Error("Load Global Configuration Failed", ex);
             }
         }
 
@@ -209,6 +220,7 @@ namespace CVWaferProber.Views
                 ConfigManager.Config.ExportPathSettings.VamExportPath = ConfigModel.VamExportPath;
                 ConfigManager.Config.ExportPathSettings.EqeExportPath = ConfigModel.EqeExportPath;
                 ConfigManager.Config.ExportPathSettings.IvlExportPath = ConfigModel.IvlExportPath;
+                ConfigManager.Config.ExportPathSettings.SummaryExportPath = ConfigModel.SummaryExportPath;
                 //
                 ConfigManager.SaveConfig();
                 //
@@ -221,8 +233,8 @@ namespace CVWaferProber.Views
             }
             catch (Exception ex)
             {
-                log4net.LogManager.GetLogger(typeof(GlobalConfigWindow)).Error("保存全局配置失败", ex);
-                MessageBox.Show("保存配置失败：" + ex.Message, "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                log4net.LogManager.GetLogger(typeof(GlobalConfigWindow)).Error("Failed to Save Global Configuration", ex);
+                MessageBox.Show($"{FindResource("Failed to Save Configuration")}"+":" + ex.Message, $"{FindResource("State.Error")}", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

@@ -172,6 +172,9 @@
     <sys:String x:Key="Image.Loadallimagesinfolder">加载文件夹中的所有图像</sys:String>
     <sys:String x:Key="Image.Reloadcurrentimage">重新加载当前图像 (F5)</sys:String>
     <sys:String x:Key="Image.Clearallimages">清除所有图像</sys:String>
+    <sys:String x:Key="FailedSave">保存配置失败</sys:String>
+    <sys:String x:Key="ExportPathSettings">导出路径配置</sys:String>
+
 
     <!--  菜单相关  -->
     <sys:String x:Key="Menu.System">系统(S)</sys:String>
@@ -698,7 +701,7 @@
     <!--  品牌信息  -->
     <sys:String x:Key="BrandName">COLORVISION PROBER</sys:String>
     <sys:String x:Key="BrandTagline">视彩晶圆检测系统</sys:String>
-    <!-- 启动界面 -->
+    <!--  启动界面  -->
     <sys:String x:Key="AppTitle">视彩晶圆检测系统</sys:String>
     <sys:String x:Key="StartupTitle">系统初始化</sys:String>
     <sys:String x:Key="StartupProgress">启动进度</sys:String>

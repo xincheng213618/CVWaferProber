@@ -18,6 +18,8 @@
     <sys:String x:Key="BtnLoadTestResult">LoadTestResult</sys:String>
     <sys:String x:Key="BtnOpenVEyeWindow">OpenVEye</sys:String>
     <sys:String x:Key="CalculationException">Calculation Exception</sys:String>
+    <sys:String x:Key="FailedSave">Failed to Save Configuration</sys:String>
+    <sys:String x:Key="ExportPathSettings">Export Path Settings</sys:String>
 
     <sys:String x:Key="ChkColorStatus">Enable Color Status</sys:String>
     <sys:String x:Key="IsIVLCamera">Enable IVL Camera</sys:String>
@@ -377,7 +379,7 @@
     <sys:String x:Key="MotionControl.LZAllUp">ZAll Up[gu]</sys:String>
     <sys:String x:Key="MotionControl.ZPosMainCamera">To AOI Camera[gm]</sys:String>
     <sys:String x:Key="MotionControl.ZPosAUXCamera">To VAM Camera[ga]</sys:String>
-    <sys:String x:Key="MotionControl.ZPosINT"> To IS[gi]</sys:String>
+    <sys:String x:Key="MotionControl.ZPosINT">To IS[gi]</sys:String>
     <sys:String x:Key="MotionControl.ZPosQ">Query Pos[gc]</sys:String>
 
     <!--  自定义指令  -->
@@ -682,7 +684,7 @@
     <!--  Brand Information  -->
     <sys:String x:Key="BrandName">COLORVISION PROBER</sys:String>
     <sys:String x:Key="BrandTagline">CV Wafer Probing System</sys:String>
-    <!-- Startup Window -->
+    <!--  Startup Window  -->
     <sys:String x:Key="AppTitle">CV Wafer Probing System</sys:String>
     <sys:String x:Key="StartupTitle">System Initialization</sys:String>
     <sys:String x:Key="StartupProgress">Startup Progress</sys:String>
