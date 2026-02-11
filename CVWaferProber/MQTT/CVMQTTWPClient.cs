@@ -12,17 +12,19 @@ namespace CVWaferProber.MQTT
         private string RCName;
         private string RCRegTopic;
         private MQTTServiceNode? nodeThis;
+        private Dictionary<string, MQTTNodeService> nodeServers = new Dictionary<string, MQTTNodeService>();
+        private Dictionary<string, MQTTNodeService> svrTopics = new Dictionary<string, MQTTNodeService>();
 
         private CVMQTTWPClient() : base()
         {
 
         }
-        public CVMQTTWPClient Init(string rcName)
+        public CVMQTTWPClient Init(string rcName, string nodeAppId = "app1", string nodeKey = "123456")
         {
             this.RCName = rcName;
             this.RCRegTopic = MQTTRCServiceTypeConst.BuildRegTopic(RCName);
-            string NodeName = "client." + Guid.NewGuid().ToString();
-            this.nodeThis = new MQTTServiceNode() { NodeAppId = "app1", NodeName = NodeName, NodeKey = "123456", ServiceType = CVServiceType.Client, NodeTopic = MQTTRCServiceTypeConst.BuildNodeTopic(NodeName, RCName) };
+            string nodeName = "client." + Guid.NewGuid().ToString();
+            this.nodeThis = new MQTTServiceNode() { NodeAppId = nodeAppId, NodeName = nodeName, NodeKey = nodeKey, ServiceType = CVServiceType.Client, NodeTopic = MQTTRCServiceTypeConst.BuildNodeTopic(nodeName, RCName) };
 
             InitFlow();
 
@@ -93,13 +95,13 @@ namespace CVWaferProber.MQTT
                 MQTTResponse<Dictionary<string, List<MQTTNodeService>>>? resp_q = JsonConvert.DeserializeObject<MQTTResponse<Dictionary<string, List<MQTTNodeService>>>>(args.Data);
                 if (resp_q?.Data != null)
                 {
-                    Dictionary<string, MQTTNodeService> svrs = new Dictionary<string, MQTTNodeService>();
                     foreach (var item in resp_q.Data)
                     {
                         foreach (var svr in item.Value)
                         {
-                            svrs.Add(svr.ServiceCode, svr);
+                            nodeServers.Add(svr.ServiceCode, svr);
                             CVMQTT_Flow?.Subscribe(svr.DownChannel);
+                            svrTopics.Add(svr.DownChannel, svr);
                             if (logger.IsDebugEnabled) logger.DebugFormat("MQTT Subscribe => {0}", svr.DownChannel);
                         }
                     }
@@ -124,15 +126,28 @@ namespace CVWaferProber.MQTT
                 {
                     DoRecvThisNode(args);
                 }
-                else if (args.Topic == "RC_local/Flow/SVR.Flow.Default/STATUS")
-                {
-                    //if (logger.IsDebugEnabled) logger.DebugFormat("Recv Flow => {0}", args.Data);
-                }
                 else
                 {
-                    //if (logger.IsDebugEnabled) logger.DebugFormat("Recv mqtt topic {0} => {1}", args.Topic, args.Data);
+                    if (svrTopics.ContainsKey(args.Topic) && !string.IsNullOrEmpty(args.Data))
+                    {
+                        var svr = svrTopics[args.Topic];
+                        MQTTBaseResponse resp = JsonConvert.DeserializeObject<MQTTBaseResponse>(args.Data);
+                        if (logger.IsDebugEnabled) logger.DebugFormat("Recv {0} => {1}", svr.ServiceCode, JsonConvert.SerializeObject(resp));
+                    }
                 }
             }
+        }
+
+        public MQTTNodeServiceFlow? GetFlowService()
+        {
+            string svrCode = "SVR.Flow.Default";
+            if (nodeServers.ContainsKey(svrCode))
+            {
+                var node = nodeServers[svrCode];
+                return new MQTTNodeServiceFlow(RCName, -1,node.ServiceType, node.ServiceCode, node.ServiceName, node.ServiceToken, node.Devices.FirstOrDefault().Value.Code);
+            }
+
+            return null;
         }
 
         public void Regist()
@@ -142,6 +157,20 @@ namespace CVWaferProber.MQTT
                 string data = JsonConvert.SerializeObject(new MQTTNodeServiceRegist(nodeThis));
                 CVMQTT_Flow?.Publish(RCRegTopic, data);
             }
+        }
+        public void Publish(string topic, string data)
+        {
+            CVMQTT_Flow?.Publish(topic, data);
+        }
+
+        public List<MQTTServiceMO> GetAllServices()
+        {
+            List<MQTTServiceMO> services = new List<MQTTServiceMO>();
+            foreach (var service in nodeServers.Values)
+            {
+                services.Add(new MQTTServiceMO(service.ServiceType, service.ServiceCode, service.DownChannel, service.UpChannel, service.ServiceToken));
+            }
+            return services;
         }
     }
 }

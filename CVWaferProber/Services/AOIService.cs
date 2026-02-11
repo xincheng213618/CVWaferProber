@@ -1,22 +1,14 @@
-﻿using ColorVision.Core.Entities;
-using CVCommCore;
-using CVCommCore.CVImage;
+﻿using CVCommCore;
 using CVDB.Services.Algorithm;
 using CVDB.Services.Image;
 using CVWaferProber.Config;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
-using CVWaferProber.Core.ViewModels;
 using CVWaferProber.ViewModels;
 using CVWPFCamImageCtrl;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows;
 using log4net;
+using Newtonsoft.Json;
+using System.IO;
 using Application = System.Windows.Application;
 
 namespace CVWaferProber.Services
@@ -27,12 +19,12 @@ namespace CVWaferProber.Services
 
         public CVCamImagerViewModel CustomImageVM { get; private set; }
 
-        public AOIService(CVCamImagerViewModel customImageVM, RCRestService rcService) : base(rcService)
+        public AOIService(CVCamImagerViewModel customImageVM, RCRestService rcService, MQTTService mqttService) : base(rcService, mqttService)
         {
             this.CustomImageVM = customImageVM;
         }
 
-        public AOIService(RCRestService rcService) : this(new CVCamImagerViewModel(), rcService)
+        public AOIService(RCRestService rcService, MQTTService mqttService) : this(new CVCamImagerViewModel(), rcService, mqttService)
         {
         }
 

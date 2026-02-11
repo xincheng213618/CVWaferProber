@@ -29,6 +29,7 @@ namespace CVWaferProber.Services
         public event EventHandler<ChipViewModel> ChipSelected;
         public event EventHandler<(DieViewModel?, DieViewModel)> PreAutoTestingNextDie;
         #endregion
+        private MQTTService mqttService;
         private MappingService mappingService;
         private GSWMProcessor? _wmProcessor;
         private ProberClientService proberClientService;
@@ -38,6 +39,7 @@ namespace CVWaferProber.Services
 
         private MainService()
         {
+            mqttService = new MQTTService();
             mappingService = new MappingService();
             mappingService.ChipSelected += MappingService_ChipSelected;
             InitializeClientProber();
@@ -84,30 +86,26 @@ namespace CVWaferProber.Services
         }
         public void InitializeService(RCRestService rcService, CVVAMAnalyzer _cVVAMAnalyzer, CVWPFSpectrometerCtrl.CVSpectrumAnalyzer ivlAnalyzer)
         {
-            //this.ProberId = proberId;
             //
-            BaseSerivce ivlService = new IVLService(string.Empty,rcService, ivlAnalyzer);
+            BaseSerivce ivlService = new IVLService(string.Empty,rcService, mqttService, ivlAnalyzer);
             flowServices[CVWaferProberFlowType.IVL] = ivlService;
             ivlService.TestingCompleted += OnTestingCompleted;
             ivlService.AutoTestingNextCompleted += OnAutoTestingNextCompleted;
-            // ===== 新增：订阅单个Die进度事件 =====
-           
-            BaseSerivce aoiService = new AOIService(rcService);
+
+            BaseSerivce aoiService = new AOIService(rcService, mqttService);
             flowServices[CVWaferProberFlowType.AOI] = aoiService;
             aoiService.TestingCompleted += OnTestingCompleted;
             aoiService.AutoTestingNextCompleted += OnAutoTestingNextCompleted;
          
-            BaseSerivce eqeService = new EQEService(rcService);
+            BaseSerivce eqeService = new EQEService(rcService, mqttService);
             flowServices[CVWaferProberFlowType.EQE] = eqeService;
             eqeService.TestingCompleted += OnTestingCompleted;
             eqeService.AutoTestingNextCompleted += OnAutoTestingNextCompleted;
-
           
-            BaseSerivce vamService = new VAMService(rcService, _cVVAMAnalyzer);
+            BaseSerivce vamService = new VAMService(rcService, mqttService, _cVVAMAnalyzer);
             flowServices[CVWaferProberFlowType.VAM] = vamService;
             vamService.TestingCompleted += OnTestingCompleted;
-            vamService.AutoTestingNextCompleted += OnAutoTestingNextCompleted;
-          
+            vamService.AutoTestingNextCompleted += OnAutoTestingNextCompleted;          
         }
         private void InitializeClientProber()
         {

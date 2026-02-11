@@ -127,11 +127,11 @@ namespace CVWaferProber.ViewModels
         public ICommand SearchCommand { get; }
 
         public ObservableCollection<DieViewModel> TestResults { get; } = new ObservableCollection<DieViewModel>();
-        public RangeEnabledObservableCollection<FlowViewModel> FlowItems { get; } = new RangeEnabledObservableCollection<FlowViewModel>();
+        //public RangeEnabledObservableCollection<FlowViewModel> FlowItems { get; } = new RangeEnabledObservableCollection<FlowViewModel>();
         public ObservableCollection<WPFlowViewModel> WPFlows { get; } = new ObservableCollection<WPFlowViewModel>();
 
-        private FlowViewModel? _selectedFlow;
-        public FlowViewModel? SelectedFlow { get => _selectedFlow; set { if (_selectedFlow != value) SetProperty(ref _selectedFlow, value); } }
+        //private FlowViewModel? _selectedFlow;
+        //public FlowViewModel? SelectedFlow { get => _selectedFlow; set { if (_selectedFlow != value) SetProperty(ref _selectedFlow, value); } }
 
         private WPFlowViewModel? _selectedWPFlow;
         public WPFlowViewModel? SelectedWPFlow
@@ -340,7 +340,7 @@ namespace CVWaferProber.ViewModels
         public MappingDataViewModel()
         {
             _selectedItem = null;
-            _selectedFlow = null;
+            //_selectedFlow = null;
             _dataGrid = null;
             _isIVLCameraEnabled = false;
             _isAutoSN = true;
@@ -1298,9 +1298,9 @@ namespace CVWaferProber.ViewModels
 
         public void LoadFlow(List<RespDataFlowTempDTO>? flows)
         {
-            FlowItems.Clear();
-            SelectedFlow = null;
-            if (flows != null) { foreach (var flow in flows) FlowItems.Add(new FlowViewModel(flow)); if (FlowItems.Count > 0) SelectedFlow = FlowItems[FlowItems.Count - 1]; }
+            //FlowItems.Clear();
+            //SelectedFlow = null;
+            //if (flows != null) { foreach (var flow in flows) FlowItems.Add(new FlowViewModel(flow)); if (FlowItems.Count > 0) SelectedFlow = FlowItems[FlowItems.Count - 1]; }
         }
 
         private void ResetStatus(object? obj)

@@ -1,11 +1,9 @@
 ﻿using CVDB.Services.Spectrum;
 using CVWaferProber.Config;
 using CVWaferProber.Core.Models.Enums;
-using CVWaferProber.Core.ViewModels;
 using CVWaferProber.ViewModels;
 using CVWPFSpectrometerCtrl.ViewModels;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace CVWaferProber.Services
 {
@@ -26,11 +24,11 @@ namespace CVWaferProber.Services
         //private readonly GlobalConfigModel _globalConfig;
 
         // 构造函数：完全复刻IVL，仅替换VM名称
-        public EQEService(CVEQEViewModel customEQEVM, RCRestService rcService) : base(rcService)
+        public EQEService(CVEQEViewModel customEQEVM, RCRestService rcService, MQTTService mqttService) : base(rcService, mqttService)
         {
             this.CustomEQEVM = customEQEVM;
         }
-        public EQEService(RCRestService rcService) : this(new CVEQEViewModel(),rcService)
+        public EQEService(RCRestService rcService, MQTTService mqttService) : this(new CVEQEViewModel(),rcService, mqttService)
         {
         }
 

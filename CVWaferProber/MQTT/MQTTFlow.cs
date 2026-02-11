@@ -15,10 +15,13 @@ namespace CVWaferProber.MQTT
         public string SerialNumber { get; set; }
         public dynamic Data { get; set; }
     }
-    public class RCNodeServiceFlowMQTT : RCNodeService
+    public class MQTTNodeServiceFlow : RCNodeService
     {
-        public RCNodeServiceFlowMQTT(string RCNodeName, int serviceId, string serviceType, string serviceCode, string serviceName) : base(RCNodeName, serviceId, serviceType, serviceCode, serviceName)
+        public string DeviceCode { get; set; }
+        public MQTTNodeServiceFlow(string RCNodeName, int serviceId, string serviceType, string serviceCode, string serviceName, string serviceToken, string deviceCode) : base(RCNodeName, serviceId, serviceType, serviceCode, serviceName)
         {
+            this.ServiceToken = serviceToken;
+            this.DeviceCode = deviceCode;
         }
 
         public string BuildRequest(GatewayEventRequest request, List<MQTTServiceMO> services)
@@ -98,6 +101,21 @@ namespace CVWaferProber.MQTT
                 TemplateParam = new CVTemplateParam() { ID = request.Data.Id, Name = request.Data.Name }
             };
             MQTTFlowRun<MQTTServiceMO> req = new MQTTFlowRun<MQTTServiceMO>(this.ServiceCode, request.DeviceCode, request.SerialNumber, this.ServiceToken, data);
+            return JsonConvert.SerializeObject(req);
+        }
+        public string BuildRequest_Run(string serialNumber, int flowId, string flowName, List<MQTTServiceMO> services)
+        {
+            return BuildRequest_Run(serialNumber, serialNumber, flowId, flowName, services);
+        } 
+        public string BuildRequest_Run(string serialNumber, string name, int flowId, string flowName, List<MQTTServiceMO> services)
+        {
+            DeviceFlowRunParam<MQTTServiceMO> data = new DeviceFlowRunParam<MQTTServiceMO>()
+            {
+                Name = name,
+                Services = services,
+                TemplateParam = new CVTemplateParam() { ID = flowId, Name = flowName }
+            };
+            MQTTFlowRun<MQTTServiceMO> req = new MQTTFlowRun<MQTTServiceMO>(this.ServiceCode, this.DeviceCode, serialNumber, this.ServiceToken, data);
             return JsonConvert.SerializeObject(req);
         }
     }
@@ -205,6 +223,15 @@ namespace CVWaferProber.MQTT
         public MQTTServiceMO()
         {
             this.Devices = new Dictionary<string, MQTTDeviceMO>();
+        }
+
+        public MQTTServiceMO(string serviceType, string serviceCode, string subscribeTopic, string publishTopic, string token) : this()
+        {
+            ServiceType = serviceType;
+            ServiceCode = serviceCode;
+            SubscribeTopic = subscribeTopic;
+            PublishTopic = publishTopic;
+            Token = token;
         }
     }
     public class MQTTNodeService

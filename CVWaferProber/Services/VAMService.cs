@@ -20,8 +20,8 @@ namespace CVWaferProber.Services
         // WPF专属：若用WinForm，注释这个，保留上面的SynchronizationContext即可
         private readonly Dispatcher _uiDispatcher;
 
-        public VAMService(RCRestService rcService, CVVAMAnalyzer cVVAMAnalyzer)
-            : base(rcService, CVWPEventAggregatorInstance.Instance)
+        public VAMService(RCRestService rcService, MQTTService mqttService, CVVAMAnalyzer cVVAMAnalyzer)
+            : base(rcService, mqttService, CVWPEventAggregatorInstance.Instance)
         {
             _cVVAMAnalyzer = cVVAMAnalyzer ?? throw new ArgumentNullException(nameof(cVVAMAnalyzer));
             // 初始化：在构造函数（主线程执行）中获取UI同步上下文

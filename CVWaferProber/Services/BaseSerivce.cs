@@ -17,6 +17,7 @@ namespace CVWaferProber.Services
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(BaseSerivce));
 
         protected RCRestService rcService;
+        protected MQTTService mqttService;
         protected readonly IEventAggregator? EventAggregator;
 
         public string ProberId { get; set; }
@@ -27,8 +28,9 @@ namespace CVWaferProber.Services
      
         // 保留原方法为私有，避免子类直接调用
       
-        public BaseSerivce(RCRestService rcService, IEventAggregator? eventAggregator = null)
+        public BaseSerivce(RCRestService rcService, MQTTService mqttService, IEventAggregator? eventAggregator = null)
         {
+            this.mqttService = mqttService;
             this.rcService = rcService;
             this.ProberId = string.Empty;
             this.EventAggregator = eventAggregator;
@@ -45,7 +47,8 @@ namespace CVWaferProber.Services
         {
             try
             {
-                var resp = rcService.RcRunFlowByName(_selectedWPFlow.Name, dieViewModel.SerialNumber);
+                //var resp = rcService.RcRunFlowByName(_selectedWPFlow.Name, dieViewModel.SerialNumber);
+                var resp = mqttService.FowRun(-1, _selectedWPFlow.Name, dieViewModel.SerialNumber);
 
                 if (resp)
                 {

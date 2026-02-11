@@ -1,12 +1,9 @@
-﻿using ChipMapping.ViewModels;
-using CVWaferProber.Config;
+﻿using CVWaferProber.Config;
 using CVWaferProber.Core.Models.Enums;
-using CVWaferProber.Core.ViewModels;
 using CVWaferProber.ViewModels;
 using CVWPFSpectrometerCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
 using System.IO;
-using System.Threading.Tasks;
 using Application = System.Windows.Application;
 
 namespace CVWaferProber.Services
@@ -26,7 +23,7 @@ namespace CVWaferProber.Services
         public CVSpectrumViewModel CustomIVLVM { get; private set; }
 
         //private readonly GlobalConfigModel _globalConfig;
-        public IVLService(CVSpectrumViewModel customIVLVM, RCRestService rcService, CVSpectrumAnalyzer ivlAnalyzer) : base(rcService)
+        public IVLService(CVSpectrumViewModel customIVLVM, RCRestService rcService, MQTTService mqttService, CVSpectrumAnalyzer ivlAnalyzer) : base(rcService, mqttService)
         {
             this.CustomIVLVM = customIVLVM;
             //this._chipMappingControlViewModel = chipMappingControlViewModel;
@@ -34,8 +31,8 @@ namespace CVWaferProber.Services
             // 初始化导出文件夹（确保目录存在）
             //AutoExportHelper.InitFolders();
         }
-        public IVLService(string proberId, RCRestService rcService, CVSpectrumAnalyzer ivlAnalyzer) :
-            this(new CVSpectrumViewModel(), rcService, ivlAnalyzer)
+        public IVLService(string proberId, RCRestService rcService, MQTTService mqttService, CVSpectrumAnalyzer ivlAnalyzer) :
+            this(new CVSpectrumViewModel(), rcService, mqttService, ivlAnalyzer)
         {
             this.ProberId = proberId;
         }

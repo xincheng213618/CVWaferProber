@@ -31,17 +31,6 @@ namespace CVWaferProber.MQTT
         public string LiveTime { get; private set; }
         public int OverTime { get; set; }
         public Dictionary<string, RCServiceDevice> Devices { get; set; }
-        //public void Update(RCNodeService service)
-        //{
-        //    this.LiveTime = service.LiveTime;
-        //    this.OverTime = service.OverTime;
-        //    this.ServiceToken = service.ServiceToken;
-
-        //    foreach (var item in service.Devices)
-        //    {
-        //        Devices[item.Key] = item.Value;
-        //    }
-        //}
 
         public void AddDevice(RCServiceDevice device)
         {
@@ -50,27 +39,6 @@ namespace CVWaferProber.MQTT
                 this.Devices.Add(device.Code, device);
             }
         }
-
-        //public void ReloadDevice(string deviceCode)
-        //{
-        //    var devInfo = SysResourceService.GetDeviceByCode(deviceCode);
-        //    if (devInfo != null)
-        //    {
-        //        if (!this.Devices.ContainsKey(deviceCode))
-        //        {
-        //            this.AddDevice(new RCServiceDevice() { Code = devInfo.Code, Name = devInfo.Name, JsonCfg = JsonConvert.DeserializeObject(devInfo.TxtValue), Status = DeviceStatusType.Unknown.ToString(), });
-        //            logger.DebugFormat("ReloadDevice Add Device => {0}/{1}", devInfo.Code, devInfo.Name);
-        //        }
-        //        else
-        //        {
-        //            var dev = Devices[deviceCode];
-        //            dev.Status = DeviceStatusType.Unknown.ToString();
-        //            dev.JsonCfg = JsonConvert.DeserializeObject(devInfo.TxtValue);
-        //            dev.Name = devInfo.Name;
-        //        }
-        //    }
-        //}
-
         public bool Update(RCServiceHeartbeat shb)
         {
             if (IsThisNode(shb))

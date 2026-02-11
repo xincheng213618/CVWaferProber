@@ -174,7 +174,6 @@ namespace CVWaferProber.ViewModels
 
         private RCRestService rcService;
 
-        private CVMQTTWPClient mqtt;
         /// <summary>
         /// 打开Summary导出配置窗口命令
         /// </summary>
@@ -252,9 +251,6 @@ namespace CVWaferProber.ViewModels
             //InitializeSimAutoTestTimer();
 
             InitializeEvents();
-
-            //LoadMappingFileFromCsv();
-            InitMQTT();
 
             InitRc();
 
@@ -476,10 +472,6 @@ namespace CVWaferProber.ViewModels
         {
             ExternalWindow newWindow = new ExternalWindow();
             newWindow.Show();
-        }
-        private void InitMQTT()
-        {
-            mqtt = CVMQTTWPClient.Instance.Init("RC_local");
         }
         private void RCReg()
         {

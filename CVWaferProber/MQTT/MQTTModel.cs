@@ -189,10 +189,12 @@ namespace CVWaferProber.MQTT
 
     public class MQTTBaseResponse
     {
-        public string Version { get; set; }
+        public string DeviceCode { get; set; }
         public int Code { get; set; }
         public string Message { get; set; }
         public string EventName { get; set; }
+        public string SerialNumber { get; set; }
+        public int ZIndex { get; set; }
     }
     public class MQTTResponse<T> : MQTTBaseResponse
     {
