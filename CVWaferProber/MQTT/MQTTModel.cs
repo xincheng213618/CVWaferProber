@@ -195,6 +195,7 @@ namespace CVWaferProber.MQTT
         public string EventName { get; set; }
         public string SerialNumber { get; set; }
         public int ZIndex { get; set; }
+        public bool IsOK => Code == 0;
     }
     public class MQTTResponse<T> : MQTTBaseResponse
     {

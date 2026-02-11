@@ -133,6 +133,7 @@ namespace CVWaferProber.MQTT
                         var svr = svrTopics[args.Topic];
                         MQTTBaseResponse resp = JsonConvert.DeserializeObject<MQTTBaseResponse>(args.Data);
                         if (logger.IsDebugEnabled) logger.DebugFormat("Recv {0} => {1}", svr.ServiceCode, JsonConvert.SerializeObject(resp));
+                        svr.SetResponse(resp);
                     }
                 }
             }
@@ -144,7 +145,7 @@ namespace CVWaferProber.MQTT
             if (nodeServers.ContainsKey(svrCode))
             {
                 var node = nodeServers[svrCode];
-                return new MQTTNodeServiceFlow(RCName, -1,node.ServiceType, node.ServiceCode, node.ServiceName, node.ServiceToken, node.Devices.FirstOrDefault().Value.Code);
+                return new MQTTNodeServiceFlow(RCName, -1,node.ServiceType, node.ServiceCode, node.ServiceName, node.ServiceToken, node.Devices.FirstOrDefault().Value.Code, node.RequestManager);
             }
 
             return null;
@@ -161,6 +162,11 @@ namespace CVWaferProber.MQTT
         public void Publish(string topic, string data)
         {
             CVMQTT_Flow?.Publish(topic, data);
+        } 
+        
+        public void Publish(string topic, MQTTCVRequestHeader request)
+        {
+            CVMQTT_Flow?.Publish(topic, JsonConvert.SerializeObject(request));
         }
 
         public List<MQTTServiceMO> GetAllServices()
@@ -172,5 +178,11 @@ namespace CVWaferProber.MQTT
             }
             return services;
         }
+    }
+
+    public class TransRequest
+    {
+        public MQTTCVRequestHeader request { get; set; }
+        public MQTTBaseResponse response { get; set; }
     }
 }

@@ -48,17 +48,19 @@ namespace CVWaferProber.Services
             try
             {
                 //var resp = rcService.RcRunFlowByName(_selectedWPFlow.Name, dieViewModel.SerialNumber);
-                var resp = mqttService.FowRun(-1, _selectedWPFlow.Name, dieViewModel.SerialNumber);
+                //var resp = mqttService.FowRun(-1, _selectedWPFlow.Name, dieViewModel.SerialNumber);
+                var response = await mqttService.FowRunAndWaitResponseAsync(-1, _selectedWPFlow.Name, dieViewModel.SerialNumber);
 
-                if (resp)
+                if (response != null)
                 {
                     // 移除手动进度更新，让定时器控制进度
                     // UpdateProgressInStages(dieViewModel); // 注释掉这一行
 
-                    var flowResult = await PollFlowResultWithRxAsync(dieViewModel.SerialNumber,
-                        new CancellationTokenSource(TimeSpan.FromSeconds(_selectedWPFlow.Timeout)).Token);
+                    //var flowResult = await PollFlowResultWithRxAsync(dieViewModel.SerialNumber,
+                    //    new CancellationTokenSource(TimeSpan.FromSeconds(_selectedWPFlow.Timeout)).Token);
 
-                    if (flowResult != null && flowResult.IsSuccess)
+                    //if (flowResult != null && flowResult.IsSuccess)
+                    if (response.IsOK)
                     {
                         ChipStatus status = await FlowResultDisplay(dieViewModel);
                         dieViewModel.ChangeStatus(status, true);
@@ -113,13 +115,13 @@ namespace CVWaferProber.Services
         {
             // 模拟测试阶段的进度更新
             var stages = new Dictionary<string, double>
-    {
-        { "初始化设备", 10 },
-        { "开始测试", 25 },
-        { "数据采集", 50 },
-        { "数据处理", 75 },
-        { "结果分析", 90 }
-    };
+            {
+                { "初始化设备", 10 },
+                { "开始测试", 25 },
+                { "数据采集", 50 },
+                { "数据处理", 75 },
+                { "结果分析", 90 }
+            };
 
             foreach (var stage in stages)
             {

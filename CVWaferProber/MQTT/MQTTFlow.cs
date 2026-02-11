@@ -18,10 +18,12 @@ namespace CVWaferProber.MQTT
     public class MQTTNodeServiceFlow : RCNodeService
     {
         public string DeviceCode { get; set; }
-        public MQTTNodeServiceFlow(string RCNodeName, int serviceId, string serviceType, string serviceCode, string serviceName, string serviceToken, string deviceCode) : base(RCNodeName, serviceId, serviceType, serviceCode, serviceName)
+        public MqttRequestManager RequestManager { get; private set; }
+        public MQTTNodeServiceFlow(string RCNodeName, int serviceId, string serviceType, string serviceCode, string serviceName, string serviceToken, string deviceCode, MqttRequestManager requestManager) : base(RCNodeName, serviceId, serviceType, serviceCode, serviceName)
         {
             this.ServiceToken = serviceToken;
             this.DeviceCode = deviceCode;
+            this.RequestManager = requestManager;
         }
 
         public string BuildRequest(GatewayEventRequest request, List<MQTTServiceMO> services)
@@ -117,6 +119,16 @@ namespace CVWaferProber.MQTT
             };
             MQTTFlowRun<MQTTServiceMO> req = new MQTTFlowRun<MQTTServiceMO>(this.ServiceCode, this.DeviceCode, serialNumber, this.ServiceToken, data);
             return JsonConvert.SerializeObject(req);
+        }
+
+        public async Task<MQTTBaseResponse?> WaitForResponseAsync(string serialNumber)
+        {
+            return await RequestManager.WaitForResponseAsync(serialNumber);
+        }
+
+        public bool SetException(string serialNumber, OperationCanceledException exception)
+        {
+            return RequestManager.SetException(serialNumber, exception);
         }
     }
     public class MQTTCVBaseRequest<T> : MQTTCVRequestTokenHeader
@@ -244,10 +256,21 @@ namespace CVWaferProber.MQTT
         public string DownChannel { get; set; }
         public Dictionary<string, MQTTDevice> Devices { get; set; }
 
+        public MqttRequestManager RequestManager { get; private set; }
+
+        public MQTTNodeService()
+        {
+            RequestManager = new MqttRequestManager();
+        }
         public class MQTTDevice
         {
             public string Code { get; set; }
             public string Name { get; set; }
+        }
+
+        public void SetResponse(MQTTBaseResponse? resp)
+        {
+            RequestManager.SetResponse(resp);
         }
     }
     public class MQTTFlowEventEnum
