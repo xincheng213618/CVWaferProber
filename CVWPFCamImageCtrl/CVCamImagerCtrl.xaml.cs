@@ -1000,7 +1000,7 @@ namespace CVWPFCamImageCtrl
                 ZoomPercentageText.Foreground = System.Windows.Media.Brushes.Green;
         }
 
-        private async void MainImageDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void MainImageDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // 避免空选中触发事件
             if (e.AddedItems.Count == 0 || MainImageDataGrid.SelectedItem == null)
