@@ -128,12 +128,16 @@ namespace CVWaferProber.MQTT
                 }
                 else
                 {
-                    if (svrTopics.ContainsKey(args.Topic) && !string.IsNullOrEmpty(args.Data))
+                    if (svrTopics.ContainsKey(args.Topic))
                     {
                         var svr = svrTopics[args.Topic];
                         MQTTBaseResponse resp = JsonConvert.DeserializeObject<MQTTBaseResponse>(args.Data);
                         if (logger.IsDebugEnabled) logger.DebugFormat("Recv {0} => {1}", svr.ServiceCode, JsonConvert.SerializeObject(resp));
                         svr.SetResponse(resp);
+                    }
+                    else
+                    {
+                        if (logger.IsWarnEnabled) logger.WarnFormat("Unprocessed Topic Recv {0} => {1}", args.Topic, args.Data);
                     }
                 }
             }

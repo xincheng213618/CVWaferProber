@@ -34,6 +34,7 @@ namespace CVWaferProber.Views
             // 添加窗口加载完成后的启动
             this.Loaded += MainWindow_Loaded;
         }
+
         // 在初始化方法中
         private void InitializeCopyrightInfo()
         {

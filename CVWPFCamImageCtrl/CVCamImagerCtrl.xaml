@@ -258,7 +258,6 @@
                     x:Name="MainImageDataGrid"
                     AutoGenerateColumns="False"
                     IsReadOnly="True"
-                    ItemsSource="{Binding CurrentDisplayCollection}"
                     SelectionChanged="MainImageDataGrid_SelectionChanged"
                     SelectionMode="Single">
                     <DataGrid.Columns>
