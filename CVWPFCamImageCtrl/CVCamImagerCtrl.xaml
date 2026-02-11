@@ -122,11 +122,11 @@
                         Foreground="#FFCCCCCC"
                         Text="|" />
 
-                    <TextBlock FontWeight="Bold" Text="{DynamicResource Resolution}" />
+                    <!--<TextBlock FontWeight="Bold" Text="{DynamicResource Resolution}" />
                     <TextBlock
                         x:Name="ResolutionText"
                         MinWidth="60"
-                        Text="0 DPI" />
+                        Text="0 DPI" />-->
                 </StackPanel>
 
                 <Separator />
@@ -151,11 +151,11 @@
                         MinWidth="60"
                         Text="0 MB" />
 
-                    <TextBlock FontWeight="Bold" Text="{DynamicResource Progress}" />
+                    <!--<TextBlock FontWeight="Bold" Text="{DynamicResource Progress}" />
                     <TextBlock
                         x:Name="LoadingProgressText"
                         MinWidth="40"
-                        Text="0/0" />
+                        Text="0/0" />-->
 
                 </StackPanel>
             </StackPanel>

@@ -900,7 +900,7 @@ namespace CVWPFCamImageCtrl
         }
         private void UpdateProgressText(int loaded, int total)
         {
-            LoadingProgressText.Text = $"{loaded}/{total}";
+            //LoadingProgressText.Text = $"{loaded}/{total}";
         }
         private void AddImageFolder(string folderPath)
         {
@@ -1216,7 +1216,7 @@ namespace CVWPFCamImageCtrl
         {
             ImageDimensionsText.Text = "0 × 0 ";
             DisplayDimensionsText.Text = "0 × 0 ";
-            ResolutionText.Text = "0 DPI";
+            //ResolutionText.Text = "0 DPI";
             ZoomPercentageText.Text = "100%";
             ZoomSlider.Value = 100;
         }
@@ -1235,7 +1235,7 @@ namespace CVWPFCamImageCtrl
             DisplayDimensionsText.Text = $"{displayInfo.DisplaySize.Width:F0} × {displayInfo.DisplaySize.Height:F0} ";
 
             // 显示分辨率
-            ResolutionText.Text = $"{bitmapSource.DpiX:F0} DPI";
+            //ResolutionText.Text = $"{bitmapSource.DpiX:F0} DPI";
 
             // 显示缩放信息和可见区域
             ZoomPercentageText.Text = $"{displayInfo.Scale * 100:F0}%";
@@ -1251,7 +1251,7 @@ namespace CVWPFCamImageCtrl
                     4 => "RGBA",
                     _ => IsChineseMode ? $"{info.channels}通道" : $"{info.channels}Channel"
                 };
-                ResolutionText.ToolTip = IsChineseMode ? $"色彩模式: {channelInfo}\n分辨率: {bitmapSource.DpiX:F0} DPI" : $"Color mode: {channelInfo}\nResolution: {bitmapSource.DpiX:F0} DPI";
+                //ResolutionText.ToolTip = IsChineseMode ? $"色彩模式: {channelInfo}\n分辨率: {bitmapSource.DpiX:F0} DPI" : $"Color mode: {channelInfo}\nResolution: {bitmapSource.DpiX:F0} DPI";
             }
         }
 
