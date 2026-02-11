@@ -33,7 +33,7 @@ namespace CVWaferProber.Services
             return GetDieResultStatus(serialNumber);
         }
 
-        protected override async Task<ChipStatus> FlowResultDisplay(DieViewModel dieViewModel)
+        protected override async Task<ChipStatus> FlowResultDisplayAsync(DieViewModel dieViewModel)
         {
             // 移除外层批量Task.Run，避免所有逻辑阻塞后一次性更新
             var results = AlgResultService.LoadAlgResultByBatchCode(dieViewModel.SerialNumber!);
@@ -150,7 +150,7 @@ namespace CVWaferProber.Services
 
             CustomImageVM?.ClearImageResult();
             // 异步执行，不阻塞UI线程
-            _ = FlowResultDisplay(dieViewModel);
+            _ = FlowResultDisplayAsync(dieViewModel);
         }
 
         /// <summary>

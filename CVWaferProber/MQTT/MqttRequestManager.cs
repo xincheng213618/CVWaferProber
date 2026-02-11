@@ -7,65 +7,74 @@ namespace CVWaferProber.MQTT
 {
     public class MqttRequestManager
     {
-        // 存储等待中的请求，key为SerialNumber
-        private readonly ConcurrentDictionary<string, TaskCompletionSource<MQTTBaseResponse>> _pendingRequests
-            = new ConcurrentDictionary<string, TaskCompletionSource<MQTTBaseResponse>>();
+        private readonly ConcurrentDictionary<string, RequestWaiter> _pendingRequests
+            = new ConcurrentDictionary<string, RequestWaiter>();
 
-        // 超时时间（默认10秒）
-        private readonly TimeSpan _defaultTimeout = TimeSpan.FromSeconds(10);
+        private readonly TimeSpan _defaultTimeout = TimeSpan.FromSeconds(60);
 
-        /// <summary>
-        /// 创建等待任务
-        /// </summary>
+        private class RequestWaiter
+        {
+            public TaskCompletionSource<MQTTBaseResponse> Tcs { get; } = new TaskCompletionSource<MQTTBaseResponse>();
+            public CancellationTokenSource CancellationTokenSource { get; }
+            public DateTime CreateTime { get; } = DateTime.Now;
+
+            public RequestWaiter(TimeSpan timeout)
+            {
+                CancellationTokenSource = new CancellationTokenSource(timeout);
+                CancellationTokenSource.Token.Register(() =>
+                {
+                    Tcs.TrySetException(new TimeoutException($"请求超时 ({timeout.TotalSeconds}秒)"));
+                });
+            }
+        }
+
         public Task<MQTTBaseResponse> WaitForResponseAsync(string serialNumber, TimeSpan? timeout = null)
         {
-            var tcs = new TaskCompletionSource<MQTTBaseResponse>();
+            var waiter = new RequestWaiter(timeout ?? _defaultTimeout);
 
-            if (!_pendingRequests.TryAdd(serialNumber, tcs))
+            if (!_pendingRequests.TryAdd(serialNumber, waiter))
             {
                 return Task.FromException<MQTTBaseResponse>(
                     new InvalidOperationException($"已存在相同的请求序列号: {serialNumber}"));
             }
 
-            // 设置超时
-            var cancellationToken = new CancellationTokenSource(timeout ?? _defaultTimeout);
-            cancellationToken.Token.Register(() =>
-            {
-                if (_pendingRequests.TryRemove(serialNumber, out var tcs))
-                {
-                    tcs.TrySetException(new TimeoutException($"请求超时: {serialNumber}"));
-                }
-            });
-
-            return tcs.Task;
+            return waiter.Tcs.Task;
         }
 
-        /// <summary>
-        /// 设置响应
-        /// </summary>
         public bool SetResponse(MQTTBaseResponse response)
         {
             if (string.IsNullOrEmpty(response?.SerialNumber))
                 return false;
 
-            if (_pendingRequests.TryRemove(response.SerialNumber, out var tcs))
+            if (_pendingRequests.TryRemove(response.SerialNumber, out var waiter))
             {
-                return tcs.TrySetResult(response);
+                waiter.CancellationTokenSource?.Dispose();
+                return waiter.Tcs.TrySetResult(response);
             }
 
             return false;
         }
 
-        /// <summary>
-        /// 设置异常
-        /// </summary>
         public bool SetException(string serialNumber, Exception exception)
         {
-            if (_pendingRequests.TryRemove(serialNumber, out var tcs))
+            if (_pendingRequests.TryRemove(serialNumber, out var waiter))
             {
-                return tcs.TrySetException(exception);
+                waiter.CancellationTokenSource?.Dispose();
+                return waiter.Tcs.TrySetException(exception);
             }
             return false;
+        }
+
+        public void Clear()
+        {
+            foreach (var item in _pendingRequests)
+            {
+                if (_pendingRequests.TryRemove(item.Key, out var waiter))
+                {
+                    waiter.CancellationTokenSource?.Dispose();
+                    waiter.Tcs.TrySetException(new OperationCanceledException("请求管理器已清空"));
+                }
+            }
         }
     }
 }

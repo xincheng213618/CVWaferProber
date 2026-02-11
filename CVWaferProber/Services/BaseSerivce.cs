@@ -49,8 +49,10 @@ namespace CVWaferProber.Services
             {
                 //var resp = rcService.RcRunFlowByName(_selectedWPFlow.Name, dieViewModel.SerialNumber);
                 //var resp = mqttService.FowRun(-1, _selectedWPFlow.Name, dieViewModel.SerialNumber);
-                var response = await mqttService.FowRunAndWaitResponseAsync(-1, _selectedWPFlow.Name, dieViewModel.SerialNumber);
+                var response = await mqttService.FowRunAndWaitResponseAsync(-1, _selectedWPFlow.Name,
+                    dieViewModel.SerialNumber, TimeSpan.FromSeconds(_selectedWPFlow.Timeout));
 
+                //if (resp)
                 if (response != null)
                 {
                     // 移除手动进度更新，让定时器控制进度
@@ -62,7 +64,7 @@ namespace CVWaferProber.Services
                     //if (flowResult != null && flowResult.IsSuccess)
                     if (response.IsOK)
                     {
-                        ChipStatus status = await FlowResultDisplay(dieViewModel);
+                        ChipStatus status = await FlowResultDisplayAsync(dieViewModel);
                         dieViewModel.ChangeStatus(status, true);
 
                         // 移除手动设置100%进度，由CompleteSingleDieTest控制
@@ -149,8 +151,8 @@ namespace CVWaferProber.Services
 
         protected abstract ChipStatus GetResultStatus(string serialNumber);
         //protected abstract ChipStatus FlowResultDisplay(DieViewModel dieViewModel);
-        protected abstract Task<ChipStatus> FlowResultDisplay(DieViewModel dieViewModel);
-        protected async Task<RespDataBaseFlowResultDTO?> AsyncRunFlow(string fname, string sn, int timeout)
+        protected abstract Task<ChipStatus> FlowResultDisplayAsync(DieViewModel dieViewModel);
+        protected async Task<RespDataBaseFlowResultDTO?> RunFlowAsync(string fname, string sn, int timeout)
         {
             // 优化3：使用using包裹CancellationTokenSource，确保资源释放
             using var cancellationTokenSource = timeout > 0

@@ -25,14 +25,14 @@ namespace CVWaferProber.Services
             mqtt.Publish(flowSvr.UpChannel, data);
             return true;
         }
-        public async Task<MQTTBaseResponse?> FowRunAndWaitResponseAsync(int flowId, string flowName, string serialNumber)
+        public async Task<MQTTBaseResponse?> FowRunAndWaitResponseAsync(int flowId, string flowName, string serialNumber, TimeSpan? timeout = null)
         {
             MQTTNodeServiceFlow? flowSvr = mqtt.GetFlowService();
             if (flowSvr == null) { return null; }
             var allSvrs = mqtt.GetAllServices();
             string? data = flowSvr.BuildRequest_Run(serialNumber, flowId, flowName, allSvrs);
             if (string.IsNullOrEmpty(data)) { return null; }
-            var waitTask = flowSvr.WaitForResponseAsync(serialNumber);
+            var waitTask = flowSvr.WaitForResponseAsync(serialNumber, timeout);
             try
             {
                 mqtt.Publish(flowSvr.UpChannel, data);

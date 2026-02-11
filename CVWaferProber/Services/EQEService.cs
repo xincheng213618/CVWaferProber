@@ -63,7 +63,7 @@ namespace CVWaferProber.Services
             }
             else
             {
-                FlowResultDisplay(dieViewModel);
+                FlowResultDisplayAsync(dieViewModel);
             }
             //CustomEQEVM.ClearResult();
             //// EQE仅需SerialNumber加载数据
@@ -77,7 +77,7 @@ namespace CVWaferProber.Services
         }
 
         // 核心流程结果展示：移除Camera相关参数，替换为EQE逻辑
-        protected override async Task<ChipStatus> FlowResultDisplay(DieViewModel dieViewModel)
+        protected override async Task<ChipStatus> FlowResultDisplayAsync(DieViewModel dieViewModel)
         {
             await Task.Run(() =>
             {

@@ -128,7 +128,7 @@ namespace CVWaferProber.Services
             }
             else
             {
-                FlowResultDisplay(dieViewModel);
+                FlowResultDisplayAsync(dieViewModel);
             }
             //CustomIVLVM.ClearResult();
             //CustomIVLVM.LoadData(dieViewModel.SerialNumber, dieViewModel.IsIVLCameraEnabled);
@@ -139,7 +139,7 @@ namespace CVWaferProber.Services
             return ChipStatus.FAILED;
         }
 
-        protected override async Task<ChipStatus> FlowResultDisplay(DieViewModel dieViewModel)
+        protected override async Task<ChipStatus> FlowResultDisplayAsync(DieViewModel dieViewModel)
         {
             //IVLResultDisplay(dieViewModel);
             await Task.Run(() => 

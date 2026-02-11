@@ -121,9 +121,9 @@ namespace CVWaferProber.MQTT
             return JsonConvert.SerializeObject(req);
         }
 
-        public async Task<MQTTBaseResponse?> WaitForResponseAsync(string serialNumber)
+        public async Task<MQTTBaseResponse?> WaitForResponseAsync(string serialNumber, TimeSpan? timeout = null)
         {
-            return await RequestManager.WaitForResponseAsync(serialNumber);
+            return await RequestManager.WaitForResponseAsync(serialNumber, timeout);
         }
 
         public bool SetException(string serialNumber, OperationCanceledException exception)
