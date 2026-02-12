@@ -1,4 +1,6 @@
 ﻿using CVCommCore;
+using Newtonsoft.Json;
+using System.Xml.Linq;
 
 namespace CVWaferProber.MQTT
 {
@@ -8,6 +10,9 @@ namespace CVWaferProber.MQTT
         {
             this.Version = "1.0";
             this.MsgId = Guid.NewGuid().ToString();
+            this.NodeName = string.Empty;
+            this.ServiceType = string.Empty;
+            this.EventName = string.Empty;
         }
         public MQTTNodeServiceHeader(string nodeName, string serviceType, string eventName) : this("1.0", nodeName, serviceType, eventName)
         {
@@ -34,7 +39,10 @@ namespace CVWaferProber.MQTT
         {
             this.Token = token;
         }
-        public MQTTNodeServiceTokenHeader() : base() { }
+        public MQTTNodeServiceTokenHeader() : base()
+        {
+            this.Token = string.Empty;
+        }
 
         public string Token { get; set; }
 
@@ -91,9 +99,6 @@ namespace CVWaferProber.MQTT
             this.NodeAppId = nodeAppId;
             this.NodeKey = nodeKey;
             this.NodeTopic = nodeTopic;
-
-            //this.EventName = MQTTNodeServiceEventEnum.Event_Regist;
-            //this.MsgId = Guid.NewGuid().ToString();
             this.SendTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         }
 
@@ -112,6 +117,22 @@ namespace CVWaferProber.MQTT
         public string NodeKey { get; set; }
         public string NodeTopic { get; set; }
         public string SendTime { get; set; }
+    }
+
+    public class MQTTServiceHeartbeat : MQTTNodeServiceTokenHeader
+    {
+        //public string SendTime { get; set; }
+        //public int OverTime { get; set; }
+        public MQTTServiceHeartbeat(string NodeName, string serviceType, string token, int overTime = 10000) 
+        {
+            this.Token = token;
+            this.NodeName = NodeName;
+            this.ServiceType = serviceType;
+            this.EventName = MQTTNodeServiceEventEnum.Event_ServiceHeartbeat;
+            this.MsgId = Guid.NewGuid().ToString();
+            //this.SendTime = DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss");
+            //this.OverTime = overTime;
+        }
     }
     public class NodeToken
     {
@@ -153,19 +174,45 @@ namespace CVWaferProber.MQTT
 
     public class MQTTServiceNode
     {
-        public string NodeName { get; set; }
+        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(MQTTServiceNode));
+        public string RCName
+        {
+            get => _RCName;
+            set
+            {
+                this._RCName = value;
+                this.RCRegTopic = MQTTRCServiceTypeConst.BuildRegTopic(RCName);
+                this.RCHBTopic = MQTTRCServiceTypeConst.BuildHeartbeatTopic(RCName);
+                this.NodeName = "client." + Guid.NewGuid().ToString();
+                this.NodeTopic = MQTTRCServiceTypeConst.BuildNodeTopic(NodeName, RCName);
+            }
+        }
+        public string RCRegTopic { get; private set; }
+        public string RCHBTopic { get; private set; }
+        public string NodeName { get; private set; }
         public string NodeKey { get; set; }
         public string NodeAppId { get; set; }
-        public string NodeTopic { get; set; }
+        public string NodeTopic { get; private set; }
         public CVServiceType ServiceType { get; set; }
         /// <summary>
         /// 节点访问Token
         /// </summary>
         public NodeToken? Token { get; set; }
+        public MQTTServiceHeartbeat? Heartbeat { get; private set; }
         public bool IsNotStartup => this.Token!=null && !_isStartup;
 
+        public int HeartbeatTime { get; private set; } = 5000;
+        private System.DateTime lastHeartbeatTime;
+        private System.TimeSpan overTS;
+        private string _RCName;
+
+        public MQTTServiceNode(string rcName)
+        {
+            this.RCName = rcName;
+        }
         public bool RefreshToken(NodeToken token)
         {
+            RecvHeartbeat();
             if (Token == null)
             {
                 this.Token = token;
@@ -184,11 +231,33 @@ namespace CVWaferProber.MQTT
         public void Startup()
         {
             _isStartup = true;
-        } 
+            this.overTS = System.TimeSpan.FromMilliseconds(this.HeartbeatTime * 2);
+
+        }
         public void Reset()
         {
             _isStartup = false;
             Token = null;
+            Heartbeat = null;
+        }
+
+        public string BuildHeartbeat()
+        {
+            if (Token == null) return string.Empty;
+            if (Heartbeat == null) Heartbeat = new MQTTServiceHeartbeat(this.NodeName, this.ServiceType.ToString(), this.Token.AccessToken, HeartbeatTime);
+            return JsonConvert.SerializeObject(Heartbeat);
+        }
+
+        public void RecvHeartbeat()
+        {
+            lastHeartbeatTime = System.DateTime.Now;
+        }
+        public bool IsLive()
+        {
+            System.TimeSpan ts = System.DateTime.Now - lastHeartbeatTime;
+            logger.DebugFormat("IsLive => {0}",ts.ToString());
+            if (ts > overTS) return false;
+            return true;
         }
     }
 

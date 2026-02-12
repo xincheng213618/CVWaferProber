@@ -9,32 +9,47 @@ namespace CVWaferProber.MQTT
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(CVMQTTWPClient));
 
         private CVMQTTControl? CVMQTT_Flow;
-        private string RCName;
-        private string RCRegTopic;
         private MQTTServiceNode? nodeThis;
         private Dictionary<string, MQTTNodeService> nodeServers = new Dictionary<string, MQTTNodeService>();
         private Dictionary<string, MQTTNodeService> svrTopics = new Dictionary<string, MQTTNodeService>();
+        private CancellationTokenSource? closeToken;
+        private Task HBTask;
+
+        public MqttNodeClientStatus Status { get; private set; }
 
         public event MQTTConnectedEventHandler MQTTConnectedEvent;
 
         public event MQTTConnectedEventHandler MQTTDisconnectedEvent;
 
         public event EventHandler MQTTRegistedEvent;
+        public event EventHandler MQTTUnRegistedEvent;
 
         private CVMQTTWPClient() : base()
         {
-
+            Status = MqttNodeClientStatus.Disconnected;
         }
         public CVMQTTWPClient Init(string rcName, string nodeAppId = "app1", string nodeKey = "123456")
         {
-            this.RCName = rcName;
-            this.RCRegTopic = MQTTRCServiceTypeConst.BuildRegTopic(RCName);
-            string nodeName = "client." + Guid.NewGuid().ToString();
-            this.nodeThis = new MQTTServiceNode() { NodeAppId = nodeAppId, NodeName = nodeName, NodeKey = nodeKey, ServiceType = CVServiceType.Client, NodeTopic = MQTTRCServiceTypeConst.BuildNodeTopic(nodeName, RCName) };
-
+            return Init(new MQTTServiceNode(rcName) { NodeAppId = nodeAppId, NodeKey = nodeKey, ServiceType = CVServiceType.Client });
+        }
+        public CVMQTTWPClient Init(MQTTServiceNode node)
+        {
+            this.nodeThis = node;
+            this.closeToken = new CancellationTokenSource();
             InitFlow();
 
             return this;
+        }
+
+        public void Close()
+        {
+            closeToken?.Cancel();
+            for (int i = 0; i < 10; i++)
+            {
+                if (HBTask.Status == TaskStatus.RanToCompletion) break;
+                else Task.Delay(100).Wait();
+            }
+            if (logger.IsDebugEnabled) logger.DebugFormat("MQTTService closed => {0}", nodeThis.NodeName);
         }
         private void StartFlow()
         {
@@ -43,13 +58,65 @@ namespace CVWaferProber.MQTT
             CVMQTTConfig mqtt_cfg = new CVMQTTConfig() { Host = config.Host, Port = config.Port, IsServer = false, IsDebugOut = false };
             CVMQTT_Flow?.Start(mqtt_cfg);
 
-            Task.Factory.StartNew(()=> DoQueryServiceStatus());
+            this.HBTask = Task.Factory.StartNew(()=> DoKeepLive());
         }
 
-        private void DoQueryServiceStatus()
+        private async void DoKeepLive()
         {
+            if (nodeThis == null) return;
+            if (logger.IsInfoEnabled) logger.InfoFormat("DoKeepLive started. {0}", nodeThis.NodeName);
+            while (!closeToken.IsCancellationRequested)
+            {
+                try
+                {
+                    await Task.Delay(nodeThis.HeartbeatTime, closeToken.Token);
+                }
+                catch (Exception ex)
+                {
+                    if (logger.IsDebugEnabled) logger.DebugFormat("{0} DoKeepLive break. Reason:{1}", nodeThis.NodeName, ex.Message);
+                    break;
+                }
+                doRCHeartbeat();
+            }
+
+            closeToken.Dispose();
+            closeToken = null;
+            if (logger.IsInfoEnabled) logger.InfoFormat("DoKeepLive existed. {0}", nodeThis.NodeName);
         }
 
+        private void doRCHeartbeat()
+        {
+            logger.DebugFormat("Status = >{0}", Status.ToString());
+            if (Status != MqttNodeClientStatus.Disconnected)
+            {
+                if (!nodeThis.IsLive())
+                {
+                    if (Status != MqttNodeClientStatus.UnRegisted)
+                    {
+                        MQTTUnRegistedEvent?.Invoke(nodeThis, EventArgs.Empty);
+                        Status = MqttNodeClientStatus.UnRegisted;
+                        nodeThis.Reset();
+                    }
+                }
+                else
+                {
+                    if (Status != MqttNodeClientStatus.Registed)
+                    {
+                        MQTTRegistedEvent?.Invoke(nodeThis, EventArgs.Empty);
+                        Status = MqttNodeClientStatus.Registed;
+                    }
+                }
+
+                if (Status == MqttNodeClientStatus.UnRegisted)
+                {
+                    ReRegist();
+                }else if (Status == MqttNodeClientStatus.Registed)
+                {
+                    string serviceHeartbeat = nodeThis?.BuildHeartbeat();
+                    if (!string.IsNullOrEmpty(serviceHeartbeat)) CVMQTT_Flow?.Publish(nodeThis.RCHBTopic, serviceHeartbeat);
+                }
+            }
+        }
         private void InitFlow()
         {
             CVMQTT_Flow = new CVMQTTControl();
@@ -62,20 +129,21 @@ namespace CVWaferProber.MQTT
 
         private void CVMQTT_Flow_MQTTDisconnectedEvent(object sender, MQTTConnectedEventArgs args)
         {
+            Status = MqttNodeClientStatus.Disconnected;
             if (nodeThis != null) 
             {
                 MQTTDisconnectedEvent?.Invoke(nodeThis, args);
-                nodeThis.Token = null;
+                nodeThis.Reset();
             } 
         }
 
         private void CVMQTT_Flow_MQTTConnectedEvent(object sender, MQTTConnectedEventArgs args)
         {
+            Status = MqttNodeClientStatus.Connected;
             if (nodeThis != null)
             {
                 MQTTConnectedEvent?.Invoke(nodeThis, args);
                 CVMQTT_Flow?.Subscribe(nodeThis?.NodeTopic);
-                //CVMQTT_Flow?.Subscribe(string.Format("{0}/Flow/SVR.Flow.Default/STATUS", RCName));
                 Regist();
             }
         }
@@ -95,6 +163,8 @@ namespace CVWaferProber.MQTT
                 }
                 else
                 {
+                    Status = MqttNodeClientStatus.UnRegisted;
+                    MQTTUnRegistedEvent?.Invoke(nodeThis, EventArgs.Empty);
                     if (logger.IsDebugEnabled) logger.DebugFormat("Regist falied => {0}", args.Data);
                 }
             }
@@ -104,7 +174,7 @@ namespace CVWaferProber.MQTT
                 {
                     nodeThis.Startup();
                     MQTTRCServicesQueryRequest request = new MQTTRCServicesQueryRequest(nodeThis.Token.AccessToken);
-                    CVMQTT_Flow?.Publish(MQTTRCServiceTypeConst.BuildPublicTopic(this.RCName), JsonConvert.SerializeObject(request));
+                    CVMQTT_Flow?.Publish(MQTTRCServiceTypeConst.BuildPublicTopic(nodeThis.RCName), JsonConvert.SerializeObject(request));
                     //if (logger.IsInfoEnabled) logger.Info("Recv RC Startup ok");
                 }
             }
@@ -121,17 +191,22 @@ namespace CVWaferProber.MQTT
                             {
                                 CVMQTT_Flow?.Subscribe(svr.DownChannel);
                                 svrTopics.TryAdd(svr.DownChannel, svr);
-                                if (logger.IsDebugEnabled) logger.DebugFormat("MQTT Subscribe => {0}", svr.DownChannel);
+                                //if (logger.IsDebugEnabled) logger.DebugFormat("MQTT Subscribe => {0}", svr.DownChannel);
                             }
                         }
                     }
                     if (logger.IsInfoEnabled) logger.Info("MQTT Registed ok");
                     MQTTRegistedEvent?.Invoke(nodeThis, EventArgs.Empty);
+                    Status = MqttNodeClientStatus.Registed;
                 }
                 else
                 {
                     if (logger.IsDebugEnabled) logger.DebugFormat("Node Recv mqtt => {0}", args.Data);
                 }
+            }
+            else if (resp?.EventName == MQTTNodeServiceEventEnum.Event_ServiceHeartbeat)
+            {
+                nodeThis?.RecvHeartbeat();
             }
             else
             {
@@ -170,7 +245,7 @@ namespace CVWaferProber.MQTT
             if (nodeServers.ContainsKey(svrCode))
             {
                 var node = nodeServers[svrCode];
-                return new MQTTFlowDeviceNode(RCName, -1,node.ServiceType, node.ServiceCode, node.ServiceName, node.ServiceToken, node.Devices.FirstOrDefault().Value.Code, node.RequestManager);
+                return new MQTTFlowDeviceNode(nodeThis.RCName, -1,node.ServiceType, node.ServiceCode, node.ServiceName, node.ServiceToken, node.Devices.FirstOrDefault().Value.Code, node.RequestManager);
             }
 
             return null;
@@ -182,7 +257,7 @@ namespace CVWaferProber.MQTT
             {
                 if (isReset) Reset();
                 string data = JsonConvert.SerializeObject(new MQTTNodeServiceRegist(nodeThis));
-                CVMQTT_Flow?.Publish(RCRegTopic, data);
+                CVMQTT_Flow?.Publish(nodeThis.RCRegTopic, data);
             }
         }
         private void Reset()
@@ -219,5 +294,13 @@ namespace CVWaferProber.MQTT
             }
             return services;
         }
+    }
+
+    public enum MqttNodeClientStatus
+    {
+        Connected,
+        Disconnected,
+        Registed,
+        UnRegisted,
     }
 }

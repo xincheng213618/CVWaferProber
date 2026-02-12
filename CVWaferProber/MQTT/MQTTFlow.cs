@@ -219,7 +219,7 @@ namespace CVWaferProber.MQTT
 
     public class MQTTDeviceMO
     {
-        public string ID { get; set; }
+        //public string ID { get; set; }
         public string DeviceCode { get; set; }
     }
     public class MQTTServiceMO

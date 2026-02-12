@@ -43,12 +43,9 @@ namespace CVWaferProber.Services
         {
             try
             {
-                //var resp = rcService.RcRunFlowByName(_selectedWPFlow.Name, dieViewModel.SerialNumber);
-                //var resp = mqttService.FowRun(-1, _selectedWPFlow.Name, dieViewModel.SerialNumber);
                 var response = await _flowService.FowRunAndWaitResponseAsync(-1, _selectedWPFlow.Name,
                     dieViewModel.SerialNumber, TimeSpan.FromSeconds(_selectedWPFlow.Timeout));
 
-                //if (resp)
                 if (response != null)
                 {
                     // 移除手动进度更新，让定时器控制进度

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Collections.Concurrent;
 
 namespace CVWaferProber.MQTT
 {
@@ -23,7 +20,7 @@ namespace CVWaferProber.MQTT
                 CancellationTokenSource = new CancellationTokenSource(timeout);
                 CancellationTokenSource.Token.Register(() =>
                 {
-                    Tcs.TrySetException(new TimeoutException($"请求超时 ({timeout.TotalSeconds}秒)"));
+                    Tcs.TrySetException(new TimeoutException($"Request timeout ({timeout.TotalSeconds} sec)"));
                 });
             }
         }
@@ -35,7 +32,7 @@ namespace CVWaferProber.MQTT
             if (!_pendingRequests.TryAdd(serialNumber, waiter))
             {
                 return Task.FromException<MQTTBaseResponse>(
-                    new InvalidOperationException($"已存在相同的请求序列号: {serialNumber}"));
+                    new InvalidOperationException($"Duplicate request serial number: {serialNumber}"));
             }
 
             return waiter.Tcs.Task;
@@ -75,7 +72,7 @@ namespace CVWaferProber.MQTT
                 if (_pendingRequests.TryRemove(item.Key, out var waiter))
                 {
                     waiter.CancellationTokenSource?.Dispose();
-                    waiter.Tcs.TrySetException(new OperationCanceledException("请求管理器已清空"));
+                    waiter.Tcs.TrySetException(new OperationCanceledException("Request manager cleared."));
                 }
             }
         }
