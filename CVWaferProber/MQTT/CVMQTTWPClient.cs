@@ -86,7 +86,7 @@ namespace CVWaferProber.MQTT
 
         private void doRCHeartbeat()
         {
-            logger.DebugFormat("Status = >{0}", Status.ToString());
+            //if (logger.IsDebugEnabled) logger.DebugFormat("Status = >{0}", Status.ToString());
             if (Status != MqttNodeClientStatus.Disconnected)
             {
                 if (!nodeThis.IsLive())
@@ -112,7 +112,7 @@ namespace CVWaferProber.MQTT
                     ReRegist();
                 }else if (Status == MqttNodeClientStatus.Registed)
                 {
-                    string serviceHeartbeat = nodeThis?.BuildHeartbeat();
+                    string serviceHeartbeat = nodeThis?.HeartbeatData;
                     if (!string.IsNullOrEmpty(serviceHeartbeat)) CVMQTT_Flow?.Publish(nodeThis.RCHBTopic, serviceHeartbeat);
                 }
             }
