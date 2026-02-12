@@ -246,7 +246,7 @@
                         <ComboBox
                             x:Name="ViewSwitchComboBox"
                             VerticalAlignment="Center"
-                            SelectedIndex="0"
+                            SelectedIndex="1"
                             SelectionChanged="ViewSwitchComboBox_SelectionChanged">
                             <ComboBoxItem Tag="Analysis">Analysis image</ComboBoxItem>
                             <ComboBoxItem Tag="Camera">Camera Measurement</ComboBoxItem>

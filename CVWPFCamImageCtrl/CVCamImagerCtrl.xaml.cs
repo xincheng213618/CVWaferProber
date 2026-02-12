@@ -58,7 +58,8 @@ namespace CVWPFCamImageCtrl
             InitializeData();
             SetupKeyboardShortcuts();
             //StartMemoryMonitoring();
-
+            // 绑定下拉框选择事件
+            ViewSwitchComboBox.SelectionChanged += ViewSwitchComboBox_SelectionChanged;
             ImageDisplay.ZoomChanged += ImageDisplay_ZoomChanged;
             this.Loaded += CVCamImagerCtrl_Loaded;
         }
@@ -70,7 +71,7 @@ namespace CVWPFCamImageCtrl
                 _model = model;
                 model.SetImageCtrl(ImageDisplay);
                 // 初始化 DataGrid 数据源为 ProcessedImageResults
-                MainImageDataGrid.ItemsSource = _model.ProcessedImageResults;
+                MainImageDataGrid.ItemsSource = _model.OriginalImageResults;
                 // 关键1：绑定图像新增事件（核心）
                 _model.ImageItemAdded += Model_ImageItemAdded;
                 // 初始化视图类型同步

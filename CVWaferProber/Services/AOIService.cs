@@ -174,8 +174,9 @@ namespace CVWaferProber.Services
             try
             {
                 // 传递一次性加载开关给子方法
-                await LoadAnalysisImagesAsync(serialNumber, isLoadAllAtOnce);
                 await LoadCameraMeasurementsAsync(serialNumber, isLoadAllAtOnce);
+                await LoadAnalysisImagesAsync(serialNumber, isLoadAllAtOnce);
+                
                 await Task.Run(() => LoadPoiAnalysisData(serialNumber, chipData));
 
                 logger.Info($"Serial number {serialNumber} image loading completed");

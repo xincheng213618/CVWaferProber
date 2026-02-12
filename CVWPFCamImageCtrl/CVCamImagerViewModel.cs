@@ -24,7 +24,7 @@ namespace CVWPFCamImageCtrl
         // 新增：图像新增事件（通知UI层选中最新项）
         public event Action<ImageItem> ImageItemAdded;
         // 新增：当前视图类型（与CVCamImagerCtrl保持一致，用于判断选中哪个集合的最新项）
-        public string CurrentViewType { get; set; } = "Analysis";
+        public string CurrentViewType { get; set; } = "Camera";
         // 新增：获取当前视图的最新图像项（核心方法）
         public ImageItem? GetCurrentViewLatestImageItem()
         {
