@@ -12,12 +12,12 @@ using CVWPFCamImageCtrl;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Application = System.Windows.Application;
 
 namespace CVWaferProber.Services
 {
-
     public class AOIService : BaseSerivce
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(AOIService));
@@ -42,14 +42,12 @@ namespace CVWaferProber.Services
         {
             await Task.Run(() =>
             {
-
                 var results = AlgResultService.LoadAlgResultByBatchCode(dieViewModel.SerialNumber!);
                 if (results != null && results.Count > 0)
                 {
                     foreach (var result in results)
                     {
                         AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
-                        //if (resultType != AlgorithmResultType.OLED_AOI_ALL) continue;
                         var aoiDetails = AlgResultService.GetCommDetailResult(result.Id);
                         if (aoiDetails != null && aoiDetails.Count == 1)
                         {
@@ -75,32 +73,18 @@ namespace CVWaferProber.Services
                 }
             });
 
-            // 加载图像结果
-            LoadImageResultAsync(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
+            // 加载图像结果（改为await，确保异步执行）
+            await LoadImageResultAsync(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
 
             return ChipStatus.OK;
         }
 
-        //        // 导出单个Die的结果
-        //        _csvExportService.ExportDieResult(dieViewModel, exportDirectory);
-
-        //        logger.Info($"AOI测试完成，结果已自动导出");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        logger.Error($"自动导出CSV结果失败: {ex.Message}");
-        //    }
-        //}
         /// <summary>
         /// 获取导出目录
         /// </summary>
         private string GetExportDirectory()
         {
-            // 这里可以根据你的需求配置导出路径
-            // 例如：从配置文件读取、使用固定路径、按日期创建目录等
-
-            // 示例：按日期创建目录
-            string baseDirectory = ConfigManager.Config.ExportPathSettings.AoiExportPath;// 可以改为从配置读取
+            string baseDirectory = ConfigManager.Config.ExportPathSettings.AoiExportPath;
             string dateDirectory = DateTime.Now.ToString("yyyyMMdd");
             string fullPath = Path.Combine(baseDirectory, dateDirectory);
 
@@ -110,63 +94,16 @@ namespace CVWaferProber.Services
             return fullPath;
         }
 
-        /// <summary>
-        /// 批量导出所有Die的完整CSV文件
-        /// </summary>
-        //public void ExportAllResultsCSV(List<DieViewModel> allDieViewModels, string outputPath = null)
-        //{
-        //    try
-        //    {
-        //        if (allDieViewModels == null || allDieViewModels.Count == 0)
-        //            return;
-
-        //        // 如果没有指定输出路径，使用默认路径
-        //        if (string.IsNullOrEmpty(outputPath))
-        //        {
-        //            string exportDirectory = GetExportDirectory();
-        //            outputPath = Path.Combine(exportDirectory, $"AOI-2_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
-        //        }
-
-        //        // 导出完整CSV文件
-        //        _csvExportService.ExportFullCSV(allDieViewModels, outputPath);
-
-        //        logger.Info($"所有AOI结果已导出到: {outputPath}");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        logger.Error($"导出所有AOI结果失败: {ex.Message}");
-        //        throw;
-        //    }
-        //}
-
-        //public class DetailResult_CommFile_V2
-        //{
-        //    public string ResultFileName { get; set; }
-
-        //}
-
-        //用于解析 Darkresult.json 的 DTO
-        //public class DarkResultDto
-        //{
-        //    public string GradeLevel { get; set; }
-
-        //}
         public override async Task StartTestingAsync(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool tranStatus = true)
         {
-
             dieViewModel.ChangeStatus(ChipStatus.TESTING);
-
             ClearResult();
-
             await RunFlowAsync(_selectedWPFlow, dieViewModel, hasNext, tranStatus);
-
-
-
         }
 
         private void ClearResult()
         {
-            System.Windows.Application.Current?.Dispatcher?.Invoke(() =>
+            Application.Current?.Dispatcher?.Invoke(() =>
             {
                 CustomImageVM?.ClearImageResult();
             });
@@ -198,23 +135,22 @@ namespace CVWaferProber.Services
 
         public override void ResultDisplay(DieViewModel dieViewModel)
         {
-
             if (string.IsNullOrEmpty(dieViewModel.SerialNumber))
             {
                 CustomImageVM?.ClearImageResult();
-
                 return;
             }
             else
             {
                 CustomImageVM?.ClearImageResult();
-                FlowResultDisplay(dieViewModel);
+                // 改为异步执行
+                _ = FlowResultDisplay(dieViewModel);
             }
         }
 
         /// <summary>
         /// 核心：加载AOI测试结果图片
-        /// 从两个数据库表分别获取Analysis Image和Camera Measurement
+        /// 实时预览模式：逐张加载+500ms间隔；非实时模式：批量加载
         /// </summary>
         private async Task LoadImageResultAsync(ChipData? chipData, string serialNumber)
         {
@@ -223,47 +159,76 @@ namespace CVWaferProber.Services
                 logger.Warn("LoadImageResult：Serial number is empty or CustomImageVM is not initialized");
                 return;
             }
+
             try
             {
-                // 步骤1：加载Analysis Image（40→50）
+                // 判断是否开启实时预览
+                if (CustomImageVM.IsRealTimePreviewEnabled)
+                {
+                    logger.Info($"Real-time preview enabled, loading images one by one during test for {serialNumber}");
+                    // 实时模式：逐张加载Analysis Image（带500ms间隔）
+                    await LoadAnalysisImagesRealTimeAsync(serialNumber);
+                    // 实时模式：逐张加载Camera Measurement（带500ms间隔）
+                    await LoadCameraMeasurementsRealTimeAsync(serialNumber);
+                }
+                else
+                {
+                    // 非实时模式：原有批量加载逻辑
+                    await LoadAnalysisImagesAsync(serialNumber);
+                    await LoadCameraMeasurementsAsync(serialNumber);
+                }
 
-                await Task.Run(() => LoadAnalysisImages(serialNumber));
-
-
-
-                // 步骤2：加载Camera Measurement（50→70）
-                await Task.Run(() => LoadCameraMeasurements(serialNumber));
-
-
-                // 步骤3：加载POI分析数据（70→90）
+                // 加载POI分析数据（通用逻辑）
                 await Task.Run(() => LoadPoiAnalysisData(serialNumber, chipData));
-
-
 
                 logger.Info($"Serial number {serialNumber} image loading completed");
             }
             catch (Exception ex)
             {
                 logger.Error($"Failed to load the image with serial number {serialNumber}", ex);
-
             }
-
-
-
-
         }
 
         /// <summary>
-        /// 加载Analysis Image（分析后图像）- 从TScgdAlgorithmResultDetailPoiCieFile获取
-        /// 过滤po.dat类型的图片
+        /// 测试过程中实时加载单张Analysis Image
         /// </summary>
-        private void LoadAnalysisImages(string batchCode)
+        /// <param name="filePath">图片路径</param>
+        public async Task LoadSingleAnalysisImageAsync(string filePath)
+        {
+            if (CustomImageVM == null || string.IsNullOrEmpty(filePath))
+            {
+                logger.Warn("CustomImageVM is null or filePath is empty");
+                return;
+            }
+
+            await CustomImageVM.AddSingleAnalysisImageAsync(filePath, 500);
+        }
+
+        /// <summary>
+        /// 测试过程中实时加载单张Camera Measurement
+        /// </summary>
+        /// <param name="filePath">图片路径</param>
+        public async Task LoadSingleCameraImageAsync(string filePath)
+        {
+            if (CustomImageVM == null || string.IsNullOrEmpty(filePath))
+            {
+                logger.Warn("CustomImageVM is null or filePath is empty");
+                return;
+            }
+
+            await CustomImageVM.AddSingleCameraImageAsync(filePath, 500);
+        }
+
+        #region 批量加载逻辑（非实时模式）
+        /// <summary>
+        /// 批量加载Analysis Image（非实时模式）
+        /// </summary>
+        private async Task LoadAnalysisImagesAsync(string batchCode)
         {
             try
             {
                 logger.Info($"Start loading Analysis Image for batch {batchCode}");
 
-                // 首先获取算法主结果
                 var algResults = AlgResultService.LoadAlgResultByBatchCode(batchCode);
                 if (algResults == null || algResults.Count == 0)
                 {
@@ -280,8 +245,6 @@ namespace CVWaferProber.Services
                     if (masterResult.ImgFileType == 46)
                     {
                         string filePath = masterResult.ImgResult;
-
-                        // 检查文件是否存在
                         if (!File.Exists(filePath))
                         {
                             logger.Warn($"Analysis Image File does not exist: {filePath}");
@@ -293,7 +256,7 @@ namespace CVWaferProber.Services
                         });
                         continue;
                     }
-                    // 通过主结果ID获取POI CIE文件详情
+
                     var poiDetails = AlgResultService.GetPOIDetailResultFileByPid(masterResult.Id);
                     if (poiDetails == null || poiDetails.Count == 0) continue;
 
@@ -302,15 +265,12 @@ namespace CVWaferProber.Services
                         if (string.IsNullOrEmpty(poiDetail.FileUrl)) continue;
 
                         string filePath = poiDetail.FileUrl;
-
-                        // 检查文件是否存在
                         if (!File.Exists(filePath))
                         {
                             logger.Warn($"Analysis Image File does not exist: {filePath}");
                             continue;
                         }
 
-                        // 添加到ViewModel
                         Application.Current.Dispatcher.Invoke(() =>
                         {
                             AddImageToDataGrid(imageId++, filePath);
@@ -328,30 +288,15 @@ namespace CVWaferProber.Services
             }
         }
 
-        private void AddImageToDataGrid(int id, string filePath)
-        {
-            var imageItem = new ImageItem(id)
-            {
-                FileName = Path.GetFileName(filePath),
-                ImagePath = filePath,
-                FileSizeMB = new FileInfo(filePath).Length / (1024.0 * 1024.0),
-                Status = "Ready"
-            };
-
-            // Analysis Image添加到ProcessedImageResults集合
-            CustomImageVM?.AddImage(imageItem);
-        }
-
         /// <summary>
-        /// 加载Camera Measurement（原始图像）- 从VScgdMeasureResultImg获取
+        /// 批量加载Camera Measurement（非实时模式）
         /// </summary>
-        private void LoadCameraMeasurements(string batchCode)
+        private async Task LoadCameraMeasurementsAsync(string batchCode)
         {
             try
             {
                 logger.Info($"Start loading Camera Measurement for batch {batchCode}");
 
-                // 从ImageResultService获取相机测量结果
                 var cameraResults = ImageResultService.LoadResultByBatchCode(batchCode);
 
                 if (cameraResults == null || cameraResults.Count == 0)
@@ -360,7 +305,7 @@ namespace CVWaferProber.Services
                     return;
                 }
 
-                int imageId = 1000; // 使用不同的ID范围区分
+                int imageId = 1000;
                 int addedCount = 0;
 
                 foreach (var result in cameraResults)
@@ -381,7 +326,6 @@ namespace CVWaferProber.Services
                         continue;
                     }
 
-                    // 检查文件扩展名，确保是图像文件
                     string fileExt = Path.GetExtension(filePath).ToLower();
                     if (!IsSupportedImageExtension(fileExt))
                     {
@@ -389,7 +333,6 @@ namespace CVWaferProber.Services
                         continue;
                     }
 
-                    // 添加到ViewModel
                     Application.Current.Dispatcher.Invoke(() =>
                     {
                         var imageItem = new ImageItem(imageId++)
@@ -399,8 +342,6 @@ namespace CVWaferProber.Services
                             FileSizeMB = new FileInfo(filePath).Length / (1024.0 * 1024.0),
                             Status = "Ready"
                         };
-
-                        // Camera Measurement添加到OriginalImageResults集合
                         CustomImageVM?.AddOriginalImageOnly(imageItem);
                     });
 
@@ -408,14 +349,152 @@ namespace CVWaferProber.Services
                     logger.Debug($"Added Camera Measurement: {Path.GetFileName(filePath)} (FileType: {result.FileType})");
                 }
 
-
-
                 logger.Info($"Batch {batchCode} Camera Measurement loaded successfully, {addedCount} files added in total");
             }
             catch (Exception ex)
             {
                 logger.Error($"Loading batch {batchCode} Camera Measurement failed", ex);
             }
+        }
+        #endregion
+
+        #region 实时加载逻辑（逐张+500ms间隔）
+        /// <summary>
+        /// 实时加载Analysis Image（逐张+500ms间隔）
+        /// </summary>
+        private async Task LoadAnalysisImagesRealTimeAsync(string batchCode)
+        {
+            try
+            {
+                logger.Info($"Start real-time loading Analysis Image for batch {batchCode}");
+
+                var algResults = AlgResultService.LoadAlgResultByBatchCode(batchCode);
+                if (algResults == null || algResults.Count == 0)
+                {
+                    logger.Warn($"Batch {batchCode} algorithm main result not found");
+                    return;
+                }
+
+                foreach (var masterResult in algResults)
+                {
+                    if (masterResult == null) continue;
+
+                    // 处理ImgFileType=46的情况
+                    if (masterResult.ImgFileType == 46)
+                    {
+                        string filePath = masterResult.ImgResult;
+                        if (File.Exists(filePath))
+                        {
+                            // 实时加载单张图片，间隔500ms
+                            await LoadSingleAnalysisImageAsync(filePath);
+                        }
+                        else
+                        {
+                            logger.Warn($"Analysis Image File does not exist: {filePath}");
+                        }
+                        continue;
+                    }
+
+                    // 处理POI详情
+                    var poiDetails = AlgResultService.GetPOIDetailResultFileByPid(masterResult.Id);
+                    if (poiDetails == null || poiDetails.Count == 0) continue;
+
+                    foreach (var poiDetail in poiDetails)
+                    {
+                        if (string.IsNullOrEmpty(poiDetail.FileUrl)) continue;
+
+                        string filePath = poiDetail.FileUrl;
+                        if (File.Exists(filePath))
+                        {
+                            // 实时加载单张图片，间隔500ms
+                            await LoadSingleAnalysisImageAsync(filePath);
+                            logger.Debug($"Real-time added Analysis Image: {Path.GetFileName(filePath)}");
+                        }
+                        else
+                        {
+                            logger.Warn($"Analysis Image File does not exist: {filePath}");
+                        }
+                    }
+                }
+
+                logger.Info($"Batch {batchCode} real-time analysis image loading completed");
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Real-time loading batch {batchCode} Analysis Image failed", ex);
+            }
+        }
+
+        /// <summary>
+        /// 实时加载Camera Measurement（逐张+500ms间隔）
+        /// </summary>
+        private async Task LoadCameraMeasurementsRealTimeAsync(string batchCode)
+        {
+            try
+            {
+                logger.Info($"Start real-time loading Camera Measurement for batch {batchCode}");
+
+                var cameraResults = ImageResultService.LoadResultByBatchCode(batchCode);
+
+                if (cameraResults == null || cameraResults.Count == 0)
+                {
+                    logger.Warn($"No Camera Measurement found for batch {batchCode}");
+                    return;
+                }
+
+                int addedCount = 0;
+
+                foreach (var result in cameraResults)
+                {
+                    if (result == null) continue;
+
+                    string filePath = result.FileUrl;
+
+                    if (string.IsNullOrEmpty(filePath))
+                    {
+                        logger.Warn($"Camera Measurement file path is empty，FileType={result.FileType}");
+                        continue;
+                    }
+
+                    if (!File.Exists(filePath))
+                    {
+                        logger.Warn($"Camera Measurement File does not exist: {filePath}");
+                        continue;
+                    }
+
+                    string fileExt = Path.GetExtension(filePath).ToLower();
+                    if (!IsSupportedImageExtension(fileExt))
+                    {
+                        logger.Debug($"Skip non-image files: {filePath}");
+                        continue;
+                    }
+
+                    // 实时加载单张图片，间隔500ms
+                    await LoadSingleCameraImageAsync(filePath);
+                    addedCount++;
+                    logger.Debug($"Real-time added Camera Measurement: {Path.GetFileName(filePath)} (FileType: {result.FileType})");
+                }
+
+                logger.Info($"Batch {batchCode} real-time Camera Measurement loaded successfully, {addedCount} files added in total");
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Real-time loading batch {batchCode} Camera Measurement failed", ex);
+            }
+        }
+        #endregion
+
+        private void AddImageToDataGrid(int id, string filePath)
+        {
+            var imageItem = new ImageItem(id)
+            {
+                FileName = Path.GetFileName(filePath),
+                ImagePath = filePath,
+                FileSizeMB = new FileInfo(filePath).Length / (1024.0 * 1024.0),
+                Status = "Ready"
+            };
+
+            CustomImageVM?.AddImage(imageItem);
         }
 
         /// <summary>
@@ -425,7 +504,6 @@ namespace CVWaferProber.Services
         {
             try
             {
-
                 var algResults = AlgResultService.LoadAlgResultByBatchCode(batchCode);
                 if (algResults == null || algResults.Count == 0) return;
 
@@ -459,13 +537,10 @@ namespace CVWaferProber.Services
                         chipData.DataValue = poiAnalysis.result.Value;
                         brightnessText = $"[{chipData.Row},{chipData.Column}]={chipData.DataValue:F4}";
 
-                        // 如果有POI标记，也需要加载
                         LoadPoiMarkers(masterResult.Id);
                     }
                 }
 
-
-                // 如果需要显示亮度均匀性文本，可以在这里处理
                 if (!string.IsNullOrEmpty(brightnessText))
                 {
                     logger.Info($"POI data analysis: {brightnessText}");
@@ -494,7 +569,7 @@ namespace CVWaferProber.Services
                     if (poi.PoiX == null || poi.PoiY == null ||
                         poi.PoiWidth == null || poi.PoiHeight == null) continue;
 
-                    if (poi.PoiType == 0) // 圆形标记
+                    if (poi.PoiType == 0)
                     {
                         poiMarkers.Add(new CircleMarker
                         {
@@ -506,7 +581,7 @@ namespace CVWaferProber.Services
                             Fill = null
                         });
                     }
-                    else if (poi.PoiType == 1) // 矩形标记
+                    else if (poi.PoiType == 1)
                     {
                         poiMarkers.Add(new RectangleMarker
                         {
@@ -520,7 +595,6 @@ namespace CVWaferProber.Services
                     }
                 }
 
-                // 如果有POI标记，可以在这里更新UI
                 if (poiMarkers.Count > 0)
                 {
                     logger.Debug($"Loaded {poiMarkers.Count} POI markers");
@@ -550,7 +624,7 @@ namespace CVWaferProber.Services
             // 实现自动导出数据逻辑
         }
 
-        // DTO类保持不变
+        // DTO类
         public class DetailResult_CommFile_V2
         {
             public string ResultFileName { get; set; }

@@ -6,7 +6,9 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace CVWPFCamImageCtrl
 {
@@ -19,7 +21,13 @@ namespace CVWPFCamImageCtrl
         private ObservableCollection<POIMarker> _poiMarkers;
         private CVImager? _imageDisplay;
         private uint id = 1;
-
+        // 新增：实时预览开关（绑定到CheckBox）
+        private bool _isRealTimePreviewEnabled = true; // 默认勾选
+        public bool IsRealTimePreviewEnabled
+        {
+            get => _isRealTimePreviewEnabled;
+            set => SetProperty(ref _isRealTimePreviewEnabled, value);
+        }
         public CVCamImagerViewModel()
         {
             _imageSource = null;
@@ -194,7 +202,155 @@ namespace CVWPFCamImageCtrl
                 }
             });
         }
+      
+        /// <summary>
+        /// 实时添加单张Analysis Image（测试过程中调用）
+        /// </summary>
+        /// <param name="filePath">图片路径</param>
+        /// <param name="delayMs">延迟毫秒数（仅实时预览开启时生效）</param>
+        public async Task AddSingleAnalysisImageAsync(string filePath, int delayMs = 500)
+        {
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            {
+                logger.Warn($"Analysis image file not exist: {filePath}");
+                return;
+            }
 
+            // 过滤po.dat文件
+            string fileName = Path.GetFileName(filePath)?.ToLower() ?? string.Empty;
+            if (fileName.Equals("po.dat") || fileName.Equals("po"))
+            {
+                logger.Debug($"Filter po.dat file: {filePath}");
+                return;
+            }
+
+            // 去重检查
+            if (_processedImageResults.Any(item => item.ImagePath.Equals(filePath, StringComparison.OrdinalIgnoreCase)))
+            {
+                return;
+            }
+
+            // 构造ImageItem
+            var imageItem = new ImageItem(Interlocked.Increment(ref id))
+            {
+                FileName = Path.GetFileName(filePath),
+                ImagePath = filePath,
+                FileSizeMB = new FileInfo(filePath).Length / (1024.0 * 1024.0),
+                Status = "Loading"
+            };
+
+            // UI线程添加到集合
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                _processedImageResults.Add(imageItem);
+                _imageResults.Add(imageItem);
+                logger.Debug($"Real-time add Analysis image: {imageItem.FileName}");
+
+                SelectLatestImageItem(imageItem);
+
+            }, DispatcherPriority.Normal); // 强制正常优先级，确保集合先刷新
+
+            // 实时预览开启时，延迟500ms
+            if (IsRealTimePreviewEnabled)
+            {
+                await Task.Delay(delayMs);
+            }
+
+            // 更新状态为已加载
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                imageItem.Status = "Loaded";
+            });
+        }
+        /// <summary>
+        /// 实时添加单张Camera Measurement（测试过程中调用）
+        /// 新增：添加后自动选中最新图片
+        /// </summary>
+        /// <param name="filePath">图片路径</param>
+        /// <param name="delayMs">延迟毫秒数（仅实时预览开启时生效）</param>
+        public async Task AddSingleCameraImageAsync(string filePath, int delayMs = 500)
+        {
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            {
+                logger.Warn($"Camera image file not exist: {filePath}");
+                return;
+            }
+
+            // 去重检查
+            if (_originalImageResults.Any(item => item.ImagePath.Equals(filePath, StringComparison.OrdinalIgnoreCase)))
+            {
+                return;
+            }
+
+            // 构造ImageItem
+            var imageItem = new ImageItem(Interlocked.Increment(ref id))
+            {
+                FileName = Path.GetFileName(filePath),
+                ImagePath = filePath,
+                FileSizeMB = new FileInfo(filePath).Length / (1024.0 * 1024.0),
+                Status = "Loading"
+            };
+
+            // UI线程添加到集合 + 自动选中
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                _originalImageResults.Add(imageItem);
+                _imageResults.Add(imageItem);
+                logger.Debug($"Real-time add Camera image: {imageItem.FileName}");
+
+                // 核心：自动选中最新添加的图片
+                SelectLatestImageItem(imageItem);
+            }, DispatcherPriority.Normal);
+
+            // 实时预览开启时，延迟500ms
+            if (IsRealTimePreviewEnabled)
+            {
+                await Task.Delay(delayMs);
+            }
+
+            // 更新状态为已加载
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                imageItem.Status = "Loaded";
+            });
+        }
+        /// <summary>
+        /// 核心方法：自动选中最新添加的图片项
+        /// </summary>
+        /// <param name="latestItem">最新添加的图片项</param>
+        private void SelectLatestImageItem(ImageItem latestItem)
+        {
+            try
+            {
+                // 只做这一件事：绑定自动生效
+                SelectedImageItem = latestItem;
+
+                logger.Debug($"Auto selected latest image: {latestItem?.FileName}");
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Failed to auto select latest image: {ex.Message}", ex);
+            }
+        }
+        // ========== 推荐添加：ViewModel中添加选中项绑定属性 ==========
+        private ImageItem _selectedImageItem;
+        /// <summary>
+        /// 当前选中的图片项（绑定到DataGrid的SelectedItem）
+        /// </summary>
+        public ImageItem SelectedImageItem
+        {
+            get => _selectedImageItem;
+            set
+            {
+                if (_selectedImageItem != value)
+                {
+                    _selectedImageItem = value;
+                    OnPropertyChanged(nameof(SelectedImageItem));
+                    logger.Debug($"SelectedImageItem changed to: {value?.FileName}");
+                }
+            }
+        }
+        public DataGrid MainImageDataGrid { get; set; }
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(CVCamImagerViewModel));
     }
 }

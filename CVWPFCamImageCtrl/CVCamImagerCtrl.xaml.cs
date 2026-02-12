@@ -58,7 +58,13 @@ namespace CVWPFCamImageCtrl
             InitializeData();
             SetupKeyboardShortcuts();
             //StartMemoryMonitoring();
-
+            // 获取ViewModel实例
+            _model = DataContext as CVCamImagerViewModel;
+            if (_model != null)
+            {
+                // 将DataGrid引用传递给ViewModel
+                _model.MainImageDataGrid = this.MainImageDataGrid;
+            }
             ImageDisplay.ZoomChanged += ImageDisplay_ZoomChanged;
             this.Loaded += CVCamImagerCtrl_Loaded;
         }
