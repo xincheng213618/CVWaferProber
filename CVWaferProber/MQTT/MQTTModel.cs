@@ -193,12 +193,13 @@ namespace CVWaferProber.MQTT
         public string NodeKey { get; set; }
         public string NodeAppId { get; set; }
         public string NodeTopic { get; private set; }
+        public string HeartbeatData { get; private set; }
         public CVServiceType ServiceType { get; set; }
         /// <summary>
         /// 节点访问Token
         /// </summary>
         public NodeToken? Token { get; set; }
-        public MQTTServiceHeartbeat? Heartbeat { get; private set; }
+        //public MQTTServiceHeartbeat? Heartbeat { get; private set; }
         public bool IsNotStartup => this.Token!=null && !_isStartup;
 
         public int HeartbeatTime { get; private set; } = 5000;
@@ -216,14 +217,16 @@ namespace CVWaferProber.MQTT
             if (Token == null)
             {
                 this.Token = token;
+                this.HeartbeatData = BuildHeartbeat();
                 return true;
             }
             else if (token.Timestamp - this.Token.Timestamp > 500)
             {
                 this.Token = token;
+                this.HeartbeatData = BuildHeartbeat();
                 return true;
             }
-
+            this.HeartbeatData = string.Empty;
             return false;
         }
 
@@ -238,13 +241,13 @@ namespace CVWaferProber.MQTT
         {
             _isStartup = false;
             Token = null;
-            Heartbeat = null;
+            HeartbeatData = string.Empty;
         }
 
-        public string BuildHeartbeat()
+        private string BuildHeartbeat()
         {
             if (Token == null) return string.Empty;
-            if (Heartbeat == null) Heartbeat = new MQTTServiceHeartbeat(this.NodeName, this.ServiceType.ToString(), this.Token.AccessToken, HeartbeatTime);
+            MQTTServiceHeartbeat Heartbeat = new MQTTServiceHeartbeat(this.NodeName, this.ServiceType.ToString(), this.Token.AccessToken, HeartbeatTime);
             return JsonConvert.SerializeObject(Heartbeat);
         }
 
@@ -255,7 +258,7 @@ namespace CVWaferProber.MQTT
         public bool IsLive()
         {
             System.TimeSpan ts = System.DateTime.Now - lastHeartbeatTime;
-            logger.DebugFormat("IsLive => {0}",ts.ToString());
+            if(logger.IsDebugEnabled) logger.DebugFormat("IsLive => {0}", ts.ToString());
             if (ts > overTS) return false;
             return true;
         }

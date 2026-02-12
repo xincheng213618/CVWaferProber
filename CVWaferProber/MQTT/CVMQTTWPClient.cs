@@ -112,7 +112,7 @@ namespace CVWaferProber.MQTT
                     ReRegist();
                 }else if (Status == MqttNodeClientStatus.Registed)
                 {
-                    string serviceHeartbeat = nodeThis?.BuildHeartbeat();
+                    string serviceHeartbeat = nodeThis?.HeartbeatData;
                     if (!string.IsNullOrEmpty(serviceHeartbeat)) CVMQTT_Flow?.Publish(nodeThis.RCHBTopic, serviceHeartbeat);
                 }
             }
