@@ -250,9 +250,13 @@
                             SelectionChanged="ViewSwitchComboBox_SelectionChanged">
                             <ComboBoxItem Tag="Analysis">Analysis image</ComboBoxItem>
                             <ComboBoxItem Tag="Camera">Camera Measurement</ComboBoxItem>
+
                         </ComboBox>
                     </StackPanel>
-                    <CheckBox Margin="10,0" VerticalAlignment="Center" Content="{DynamicResource Image.real-timepreview}"/>
+                    <CheckBox
+                        Margin="10,0"
+                        VerticalAlignment="Center"
+                        Content="{DynamicResource Image.real-timepreview}" />
                 </StackPanel>
                 <!--  ItemsSource="{Binding ImageResults}"  -->
                 <DataGrid
