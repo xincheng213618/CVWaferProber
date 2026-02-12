@@ -190,15 +190,17 @@ namespace CVWaferProber.ViewModels
 
                 _testElapsedSeconds++;
                 //double currentProgress = CalculateTestProgress();
-
-                // 跨线程更新UI：同步到WPF主线程
-                Application.Current.Dispatcher.Invoke(() =>
+                if (Application.Current != null)
                 {
-                    //MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgress(
-                    //    currentProgress,
-                    //    $"Running for {_testElapsedSeconds}s / Estimated {_predictTestSeconds}s"
-                    //);
-                });
+                    // 跨线程更新UI：同步到WPF主线程
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        //MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgress(
+                        //    currentProgress,
+                        //    $"Running for {_testElapsedSeconds}s / Estimated {_predictTestSeconds}s"
+                        //);
+                    });
+                }
             }
         }
 

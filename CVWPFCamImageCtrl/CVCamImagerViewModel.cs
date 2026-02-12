@@ -22,7 +22,7 @@ namespace CVWPFCamImageCtrl
         private CVImager? _imageDisplay;
         private uint id = 1;
         // 新增：实时预览开关（绑定到CheckBox）
-        private bool _isRealTimePreviewEnabled = true; // 默认勾选
+        private bool _isRealTimePreviewEnabled = false; // 默认勾选
         public bool IsRealTimePreviewEnabled
         {
             get => _isRealTimePreviewEnabled;

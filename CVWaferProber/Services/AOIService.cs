@@ -21,7 +21,8 @@ namespace CVWaferProber.Services
     public class AOIService : BaseSerivce
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(AOIService));
-
+        // 标记当前是否已经完成测试（完成后切换Die一律批量加载）
+        private bool _testCompletedForCurrentDie;
         public CVCamImagerViewModel CustomImageVM { get; private set; }
 
         public AOIService(CVCamImagerViewModel customImageVM, RCRestService rcService) : base(rcService)
@@ -75,7 +76,8 @@ namespace CVWaferProber.Services
 
             // 加载图像结果（改为await，确保异步执行）
             await LoadImageResultAsync(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
-
+            // 新增：标记当前Die测试完成
+            _testCompletedForCurrentDie = true;
             return ChipStatus.OK;
         }
 
@@ -96,6 +98,9 @@ namespace CVWaferProber.Services
 
         public override async Task StartTestingAsync(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool tranStatus = true)
         {
+            // 新增：开始测试时标记未完成
+            _testCompletedForCurrentDie = false;
+
             dieViewModel.ChangeStatus(ChipStatus.TESTING);
             ClearResult();
             await RunFlowAsync(_selectedWPFlow, dieViewModel, hasNext, tranStatus);
@@ -163,7 +168,7 @@ namespace CVWaferProber.Services
             try
             {
                 // 判断是否开启实时预览
-                if (CustomImageVM.IsRealTimePreviewEnabled)
+                if (CustomImageVM.IsRealTimePreviewEnabled && !_testCompletedForCurrentDie)
                 {
                     logger.Info($"Real-time preview enabled, loading images one by one during test for {serialNumber}");
                     // 实时模式：逐张加载Analysis Image（带500ms间隔）
