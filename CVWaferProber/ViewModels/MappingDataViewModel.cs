@@ -1322,20 +1322,39 @@ namespace CVWaferProber.ViewModels
             }
         }
 
-        private void LoadTestResult(object? obj)
+        private void  LoadTestResult(object? obj) 
         {
             if (obj is string path && !string.IsNullOrWhiteSpace(path))
             {
-                try { ResultService.LoadFromCSV(path, TestResults); _dataGrid?.Items.Refresh(); logger.InfoFormat("Result loaded successfully：{0}", path); }
-                catch (Exception ex) { logger.Error(ex); }
+                try 
+                { 
+                    ResultService.LoadFromCSV(path, TestResults); 
+                    _dataGrid?.Items.Refresh(); 
+                    logger.InfoFormat("Result loaded successfully：{0}", path); 
+                }
+                catch (Exception ex) 
+                {
+                    logger.Error(ex); 
+                }
                 return;
             }
             if (obj == null)
             {
                 Task.Run(async () =>
                 {
-                    try { await LoadFromPersistenceAsync(); Application.Current.Dispatcher.Invoke(() => { _dataGrid?.Items.Refresh(); logger.Info("Successfully loaded the results of last session from persistent storage"); }); }
-                    catch (Exception ex) { logger.Error("Failed to load from persistence", ex); }
+                    try 
+                    { 
+                        await LoadFromPersistenceAsync();
+                        Application.Current.Dispatcher.Invoke(() => 
+                        {
+                            _dataGrid?.Items.Refresh(); 
+                            logger.Info("Successfully loaded the results of last session from persistent storage"); 
+                        });
+                    }
+                    catch (Exception ex) 
+                    { 
+                        logger.Error("Failed to load from persistence", ex); 
+                    }
                 });
                 return;
             }
@@ -1348,8 +1367,16 @@ namespace CVWaferProber.ViewModels
             };
             if (openFileDialog.ShowDialog() == true)
             {
-                try { ResultService.LoadFromCSV(openFileDialog.FileName, TestResults); _dataGrid?.Items.Refresh(); logger.InfoFormat("Result loaded successfully：{0}", openFileDialog.FileName); }
-                catch (Exception ex) { logger.Error(ex); }
+                try 
+                { 
+                    ResultService.LoadFromCSV(openFileDialog.FileName, TestResults);
+                    _dataGrid?.Items.Refresh(); 
+                    logger.InfoFormat("Result loaded successfully：{0}", openFileDialog.FileName); 
+                }
+                catch (Exception ex)
+                { 
+                    logger.Error(ex); 
+                }
             }
         }
 
