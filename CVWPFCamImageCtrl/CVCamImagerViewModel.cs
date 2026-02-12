@@ -20,21 +20,6 @@ namespace CVWPFCamImageCtrl
         private CVImager? _imageDisplay;
         private uint id = 1;
 
-
-        // 新增：图像新增事件（通知UI层选中最新项）
-        public event Action<ImageItem> ImageItemAdded;
-        // 新增：当前视图类型（与CVCamImagerCtrl保持一致，用于判断选中哪个集合的最新项）
-        public string CurrentViewType { get; set; } = "Camera";
-        // 新增：获取当前视图的最新图像项（核心方法）
-        public ImageItem? GetCurrentViewLatestImageItem()
-        {
-            return CurrentViewType switch
-            {
-                "Analysis" => ProcessedImageResults.LastOrDefault(),
-                "Camera" => OriginalImageResults.LastOrDefault(),
-                _ => ProcessedImageResults.LastOrDefault()
-            };
-        }
         public CVCamImagerViewModel()
         {
             _imageSource = null;
@@ -181,8 +166,6 @@ namespace CVWPFCamImageCtrl
                 if (!_processedImageResults.Any(item => item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
                 {
                     _processedImageResults.Add(imageItem);
-                    // 触发事件：通知UI选中最新项
-                    ImageItemAdded?.Invoke(imageItem);
                 }
 
                 // 也添加到总集合
@@ -202,8 +185,6 @@ namespace CVWPFCamImageCtrl
                 if (!_originalImageResults.Any(item => item.ImagePath.Equals(imageItem.ImagePath, StringComparison.OrdinalIgnoreCase)))
                 {
                     _originalImageResults.Add(imageItem);
-                    // 触发事件：通知UI选中最新项
-                    ImageItemAdded?.Invoke(imageItem);
                 }
 
                 // 也添加到总集合
