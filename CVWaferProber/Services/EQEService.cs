@@ -24,11 +24,11 @@ namespace CVWaferProber.Services
         //private readonly GlobalConfigModel _globalConfig;
 
         // 构造函数：完全复刻IVL，仅替换VM名称
-        public EQEService(CVEQEViewModel customEQEVM, RCRestService rcService, MQTTService mqttService) : base(rcService, mqttService)
+        public EQEService(CVEQEViewModel customEQEVM, IFlowService flowService) : base(flowService)
         {
             this.CustomEQEVM = customEQEVM;
         }
-        public EQEService(RCRestService rcService, MQTTService mqttService) : this(new CVEQEViewModel(),rcService, mqttService)
+        public EQEService(IFlowService flowService) : this(new CVEQEViewModel(),flowService)
         {
         }
 

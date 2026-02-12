@@ -15,11 +15,11 @@ namespace CVWaferProber.MQTT
         public string SerialNumber { get; set; }
         public dynamic Data { get; set; }
     }
-    public class MQTTNodeServiceFlow : RCNodeService
+    public class MQTTFlowDeviceNode : BaseServiceNode
     {
         public string DeviceCode { get; set; }
         public MqttRequestManager RequestManager { get; private set; }
-        public MQTTNodeServiceFlow(string RCNodeName, int serviceId, string serviceType, string serviceCode, string serviceName, string serviceToken, string deviceCode, MqttRequestManager requestManager) : base(RCNodeName, serviceId, serviceType, serviceCode, serviceName)
+        public MQTTFlowDeviceNode(string RCNodeName, int serviceId, string serviceType, string serviceCode, string serviceName, string serviceToken, string deviceCode, MqttRequestManager requestManager) : base(RCNodeName, serviceId, serviceType, serviceCode, serviceName)
         {
             this.ServiceToken = serviceToken;
             this.DeviceCode = deviceCode;

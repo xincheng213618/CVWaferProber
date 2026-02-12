@@ -6,14 +6,6 @@ using System.Threading.Tasks;
 
 namespace CVWaferProber.MQTT
 {
-    public class RCServiceDevice
-    {
-        public string Code { get; set; }
-        public string Name { get; set; }
-        public dynamic JsonCfg { get; set; }
-        public string Status { get; set; }
-    }
-
     public class RCServiceHeartbeat
     {
         public string NodeName { get; set; }

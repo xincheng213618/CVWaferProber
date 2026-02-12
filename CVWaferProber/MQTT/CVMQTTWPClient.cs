@@ -15,6 +15,12 @@ namespace CVWaferProber.MQTT
         private Dictionary<string, MQTTNodeService> nodeServers = new Dictionary<string, MQTTNodeService>();
         private Dictionary<string, MQTTNodeService> svrTopics = new Dictionary<string, MQTTNodeService>();
 
+        public event MQTTConnectedEventHandler MQTTConnectedEvent;
+
+        public event MQTTConnectedEventHandler MQTTDisconnectedEvent;
+
+        public event EventHandler MQTTRegistedEvent;
+
         private CVMQTTWPClient() : base()
         {
 
@@ -36,7 +42,14 @@ namespace CVWaferProber.MQTT
             MQTTConfig config = new MQTTConfig(System.IO.Path.Combine(currentPath, "cfg", "MQTT.config"));
             CVMQTTConfig mqtt_cfg = new CVMQTTConfig() { Host = config.Host, Port = config.Port, IsServer = false, IsDebugOut = false };
             CVMQTT_Flow?.Start(mqtt_cfg);
+
+            Task.Factory.StartNew(()=> DoQueryServiceStatus());
         }
+
+        private void DoQueryServiceStatus()
+        {
+        }
+
         private void InitFlow()
         {
             CVMQTT_Flow = new CVMQTTControl();
@@ -49,13 +62,18 @@ namespace CVWaferProber.MQTT
 
         private void CVMQTT_Flow_MQTTDisconnectedEvent(object sender, MQTTConnectedEventArgs args)
         {
-            if (nodeThis != null) nodeThis.Token = null;
+            if (nodeThis != null) 
+            {
+                MQTTDisconnectedEvent?.Invoke(nodeThis, args);
+                nodeThis.Token = null;
+            } 
         }
 
         private void CVMQTT_Flow_MQTTConnectedEvent(object sender, MQTTConnectedEventArgs args)
         {
             if (nodeThis != null)
             {
+                MQTTConnectedEvent?.Invoke(nodeThis, args);
                 CVMQTT_Flow?.Subscribe(nodeThis?.NodeTopic);
                 //CVMQTT_Flow?.Subscribe(string.Format("{0}/Flow/SVR.Flow.Default/STATUS", RCName));
                 Regist();
@@ -72,7 +90,7 @@ namespace CVWaferProber.MQTT
                 {
                     if (nodeThis != null)
                     {
-                        if (nodeThis.RefreshToken(resp_reg.Token) && logger.IsInfoEnabled) logger.Info("Regist ok");
+                        if (nodeThis.RefreshToken(resp_reg.Token) && logger.IsDebugEnabled) logger.Debug("Refresh Token ok");
                     }
                 }
                 else
@@ -87,7 +105,7 @@ namespace CVWaferProber.MQTT
                     nodeThis.Startup();
                     MQTTRCServicesQueryRequest request = new MQTTRCServicesQueryRequest(nodeThis.Token.AccessToken);
                     CVMQTT_Flow?.Publish(MQTTRCServiceTypeConst.BuildPublicTopic(this.RCName), JsonConvert.SerializeObject(request));
-                    if (logger.IsInfoEnabled) logger.Info("Recv RC Startup ok");
+                    //if (logger.IsInfoEnabled) logger.Info("Recv RC Startup ok");
                 }
             }
             else if (resp?.EventName == MQTTNodeServiceEventEnum.Event_QueryServices)
@@ -99,13 +117,16 @@ namespace CVWaferProber.MQTT
                     {
                         foreach (var svr in item.Value)
                         {
-                            nodeServers.Add(svr.ServiceCode, svr);
-                            CVMQTT_Flow?.Subscribe(svr.DownChannel);
-                            svrTopics.Add(svr.DownChannel, svr);
-                            if (logger.IsDebugEnabled) logger.DebugFormat("MQTT Subscribe => {0}", svr.DownChannel);
+                            if(nodeServers.TryAdd(svr.ServiceCode, svr))
+                            {
+                                CVMQTT_Flow?.Subscribe(svr.DownChannel);
+                                svrTopics.TryAdd(svr.DownChannel, svr);
+                                if (logger.IsDebugEnabled) logger.DebugFormat("MQTT Subscribe => {0}", svr.DownChannel);
+                            }
                         }
                     }
-                    if (logger.IsInfoEnabled) logger.Info("MQTT QueryServices ok");
+                    if (logger.IsInfoEnabled) logger.Info("MQTT Registed ok");
+                    MQTTRegistedEvent?.Invoke(nodeThis, EventArgs.Empty);
                 }
                 else
                 {
@@ -114,7 +135,7 @@ namespace CVWaferProber.MQTT
             }
             else
             {
-                //if (logger.IsDebugEnabled) logger.DebugFormat("This Node Recv mqtt => {0}", args.Data);
+                if (logger.IsDebugEnabled) logger.DebugFormat("This Node Recv mqtt => {0}", args.Data);
             }
         }
 
@@ -143,25 +164,36 @@ namespace CVWaferProber.MQTT
             }
         }
 
-        public MQTTNodeServiceFlow? GetFlowService()
+        public MQTTFlowDeviceNode? GetFlowService()
         {
             string svrCode = "SVR.Flow.Default";
             if (nodeServers.ContainsKey(svrCode))
             {
                 var node = nodeServers[svrCode];
-                return new MQTTNodeServiceFlow(RCName, -1,node.ServiceType, node.ServiceCode, node.ServiceName, node.ServiceToken, node.Devices.FirstOrDefault().Value.Code, node.RequestManager);
+                return new MQTTFlowDeviceNode(RCName, -1,node.ServiceType, node.ServiceCode, node.ServiceName, node.ServiceToken, node.Devices.FirstOrDefault().Value.Code, node.RequestManager);
             }
 
             return null;
         }
 
-        public void Regist()
+        public void Regist(bool isReset = false)
         {
             if(nodeThis != null)
             {
+                if (isReset) Reset();
                 string data = JsonConvert.SerializeObject(new MQTTNodeServiceRegist(nodeThis));
                 CVMQTT_Flow?.Publish(RCRegTopic, data);
             }
+        }
+        private void Reset()
+        {
+            nodeThis?.Reset();
+            nodeServers.Clear();
+            svrTopics.Clear();
+        }
+        public void ReRegist()
+        {
+            Regist(true);
         }
         public void Publish(string topic, string data)
         {
@@ -178,15 +210,14 @@ namespace CVWaferProber.MQTT
             List<MQTTServiceMO> services = new List<MQTTServiceMO>();
             foreach (var service in nodeServers.Values)
             {
-                services.Add(new MQTTServiceMO(service.ServiceType, service.ServiceCode, service.DownChannel, service.UpChannel, service.ServiceToken));
+                MQTTServiceMO svrMO = new MQTTServiceMO(service.ServiceType, service.ServiceCode, service.DownChannel, service.UpChannel, service.ServiceToken);
+                foreach (var dev in service.Devices)
+                {
+                    svrMO.Devices.TryAdd(dev.Key, new MQTTDeviceMO() { DeviceCode = dev.Value.Code });
+                }
+                services.Add(svrMO);
             }
             return services;
         }
-    }
-
-    public class TransRequest
-    {
-        public MQTTCVRequestHeader request { get; set; }
-        public MQTTBaseResponse response { get; set; }
     }
 }

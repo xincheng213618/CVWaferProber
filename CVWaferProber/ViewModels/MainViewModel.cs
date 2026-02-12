@@ -5,7 +5,6 @@ using CVAVMControl;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
 using CVWaferProber.Models;
-using CVWaferProber.MQTT;
 using CVWaferProber.Services;
 using CVWaferProber.Utils;
 using CVWaferProber.Views;
@@ -172,7 +171,7 @@ namespace CVWaferProber.ViewModels
 
         //private readonly Random _random = new Random();
 
-        private RCRestService rcService;
+        //private RCRestService rcService;
 
         /// <summary>
         /// 打开Summary导出配置窗口命令
@@ -205,8 +204,8 @@ namespace CVWaferProber.ViewModels
             Version version = Assembly.GetEntryAssembly()?.GetName().Version;
 
             _AppVersion = string.Format("V{0}", version.ToString());
-            rcService = new RCRestService();
-            _rcConnectionInfo = rcService.ConnectionInfo;
+            //rcService = new RCRestService();
+            //_rcConnectionInfo = rcService.ConnectionInfo;
             //
             DataMappingVM = new MappingDataViewModel();
             DataMappingVM.ActivateCorrespondingPanel += DataMappingVM_ActivateCorrespondingPanel;
@@ -219,7 +218,7 @@ namespace CVWaferProber.ViewModels
             //    _ => CanStartAuto);
             //StopAutoTestCommand = new RelayCommand(StopAutoTest);
 
-            RCRegCommand = new RelayCommand(_ => RCReg());
+            //RCRegCommand = new RelayCommand(_ => RCReg());
             ReconnectDevCommand = new RelayCommand(_ => ReconnectDev());
             ReconnectRcCommand = new RelayCommand(_ => ReconnectRc());
             OpenHelpCommand = new RelayCommand(ExecuteOpenHelp);
@@ -272,8 +271,9 @@ namespace CVWaferProber.ViewModels
 
         private void ReconnectRc()
         {
-            rcService.RcUnRegist();
-            rcService.RcRegist();
+            //rcService.RcUnRegist();
+            //rcService.RcRegist();
+            mainService.ReRegist();
         }
 
         private void ReconnectDev()
@@ -282,23 +282,23 @@ namespace CVWaferProber.ViewModels
         }
         private void InitRc()
         {
-            Task.Factory.StartNew(() => {
-                rcService.RcRegist();
-            });
+            //Task.Factory.StartNew(() => {
+            //    rcService.RcRegist();
+            //});
         }
 
         private void ShowRcConnectionSettings(object obj)
         {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                var window = new ConnectionSettingsWindow
-                {
-                    DataContext = new RcConnectionSettingsViewModel(rcService),
-                    Owner = Application.Current.MainWindow
-                };
+            //Application.Current.Dispatcher.Invoke(() =>
+            //{
+            //    var window = new ConnectionSettingsWindow
+            //    {
+            //        DataContext = new RcConnectionSettingsViewModel(rcService),
+            //        Owner = Application.Current.MainWindow
+            //    };
 
-                window.ShowDialog();
-            });
+            //    window.ShowDialog();
+            //});
         }
         private void ShowConnectionSettings(object obj)
         {
@@ -315,7 +315,7 @@ namespace CVWaferProber.ViewModels
         }
         public void InitializeServiveVM(CVVAMAnalyzer vam, CVSpectrumAnalyzer ivl)
         {
-            mainService.InitializeService(rcService, vam, ivl);
+            mainService.InitializeService(vam, ivl);
 
             CustomMappingVM = mainService.GetMappingVM();
             CustomImageVM = mainService.GetAOIVM();
@@ -331,6 +331,7 @@ namespace CVWaferProber.ViewModels
         {
             mainService = MainService.Instance;
             _connectionInfo = ProberClientService.Instance.ConnectionInfo;
+            _rcConnectionInfo = mainService.ConnectionInfo;
             //
             DataMappingVM?.InitializeServive(mainService);
             //
@@ -473,16 +474,16 @@ namespace CVWaferProber.ViewModels
             ExternalWindow newWindow = new ExternalWindow();
             newWindow.Show();
         }
-        private void RCReg()
-        {
-            bool bR = rcService.RcRegist();
-            if (bR)
-            {
-                var flows = rcService.RcLoadFlows();
+        //private void RCReg()
+        //{
+        //    bool bR = rcService.RcRegist();
+        //    if (bR)
+        //    {
+        //        var flows = rcService.RcLoadFlows();
 
-               DataMappingVM.LoadFlow(flows);
-            }
-        }
+        //       DataMappingVM.LoadFlow(flows);
+        //    }
+        //}
 
         private string testingStatus = $"{(string)Application.Current.FindResource("Maping.NoMeasurement")}";
         public string TestingStatus

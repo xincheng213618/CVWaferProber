@@ -23,7 +23,7 @@ namespace CVWaferProber.Services
         public CVSpectrumViewModel CustomIVLVM { get; private set; }
 
         //private readonly GlobalConfigModel _globalConfig;
-        public IVLService(CVSpectrumViewModel customIVLVM, RCRestService rcService, MQTTService mqttService, CVSpectrumAnalyzer ivlAnalyzer) : base(rcService, mqttService)
+        public IVLService(CVSpectrumViewModel customIVLVM, IFlowService flowService, CVSpectrumAnalyzer ivlAnalyzer) : base(flowService)
         {
             this.CustomIVLVM = customIVLVM;
             //this._chipMappingControlViewModel = chipMappingControlViewModel;
@@ -31,8 +31,8 @@ namespace CVWaferProber.Services
             // 初始化导出文件夹（确保目录存在）
             //AutoExportHelper.InitFolders();
         }
-        public IVLService(string proberId, RCRestService rcService, MQTTService mqttService, CVSpectrumAnalyzer ivlAnalyzer) :
-            this(new CVSpectrumViewModel(), rcService, mqttService, ivlAnalyzer)
+        public IVLService(string proberId, IFlowService flowService, CVSpectrumAnalyzer ivlAnalyzer) :
+            this(new CVSpectrumViewModel(), flowService, ivlAnalyzer)
         {
             this.ProberId = proberId;
         }

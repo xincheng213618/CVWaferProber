@@ -1,13 +1,8 @@
-﻿using ChipMapping.ViewModels;
-using CVWaferProber.Core.Models.Enums;
-using CVWaferProber.Core.Restful.DTO;
+﻿using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Models;
 using CVWaferProber.Utils;
 using CVWaferProber.ViewModels;
-using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
 using WaferComm.Core;
-using System.Windows;
 using Application = System.Windows.Application;
 
 namespace CVWaferProber.Services
@@ -16,24 +11,25 @@ namespace CVWaferProber.Services
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(BaseSerivce));
 
-        protected RCRestService rcService;
-        protected MQTTService mqttService;
+        //protected IFlowService rcService;
+        protected IFlowService _flowService;
         protected readonly IEventAggregator? EventAggregator;
 
         public string ProberId { get; set; }
 
-        public event EventHandler<TestCompletedEventArgs> TestingCompleted;
-        public event EventHandler<DieViewModel> AutoTestingNextCompleted;
+        public event EventHandler<TestCompletedEventArgs>? TestingCompleted;
+        public event EventHandler<DieViewModel>? AutoTestingNextCompleted;
         //public event EventHandler<DieViewModel> AutoTestingPaused;
      
         // 保留原方法为私有，避免子类直接调用
       
-        public BaseSerivce(RCRestService rcService, MQTTService mqttService, IEventAggregator? eventAggregator = null)
+        public BaseSerivce(IFlowService flowService, IEventAggregator? eventAggregator = null)
         {
-            this.mqttService = mqttService;
-            this.rcService = rcService;
+            this._flowService = flowService;
             this.ProberId = string.Empty;
             this.EventAggregator = eventAggregator;
+            this.TestingCompleted = null;
+            this.AutoTestingNextCompleted = null;
         }
 
         public async Task StartTestingAsync(string timestamp, DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool isAuto)
@@ -49,7 +45,7 @@ namespace CVWaferProber.Services
             {
                 //var resp = rcService.RcRunFlowByName(_selectedWPFlow.Name, dieViewModel.SerialNumber);
                 //var resp = mqttService.FowRun(-1, _selectedWPFlow.Name, dieViewModel.SerialNumber);
-                var response = await mqttService.FowRunAndWaitResponseAsync(-1, _selectedWPFlow.Name,
+                var response = await _flowService.FowRunAndWaitResponseAsync(-1, _selectedWPFlow.Name,
                     dieViewModel.SerialNumber, TimeSpan.FromSeconds(_selectedWPFlow.Timeout));
 
                 //if (resp)
@@ -62,7 +58,7 @@ namespace CVWaferProber.Services
                     //    new CancellationTokenSource(TimeSpan.FromSeconds(_selectedWPFlow.Timeout)).Token);
 
                     //if (flowResult != null && flowResult.IsSuccess)
-                    if (response.IsOK)
+                    if (response.IsOK())
                     {
                         ChipStatus status = await FlowResultDisplayAsync(dieViewModel);
                         dieViewModel.ChangeStatus(status, true);
@@ -152,55 +148,6 @@ namespace CVWaferProber.Services
         protected abstract ChipStatus GetResultStatus(string serialNumber);
         //protected abstract ChipStatus FlowResultDisplay(DieViewModel dieViewModel);
         protected abstract Task<ChipStatus> FlowResultDisplayAsync(DieViewModel dieViewModel);
-        protected async Task<RespDataBaseFlowResultDTO?> RunFlowAsync(string fname, string sn, int timeout)
-        {
-            // 优化3：使用using包裹CancellationTokenSource，确保资源释放
-            using var cancellationTokenSource = timeout > 0
-                ? new CancellationTokenSource(TimeSpan.FromSeconds(timeout))
-                : new CancellationTokenSource();
-
-            var cancellationToken = cancellationTokenSource.Token;
-
-            // 启动流程
-            var resp = rcService.RcRunFlowByName(fname, sn);
-            if (resp)
-            {
-                // 异步轮询结果，避免阻塞UI线程
-                return await PollFlowResultWithRxAsync(sn, cancellationToken);
-            }
-            else
-            {
-                return await Task.FromResult<RespDataBaseFlowResultDTO?>(null);
-            }
-        }
-
-        protected async Task<RespDataBaseFlowResultDTO> PollFlowResultWithRxAsync(string sn, CancellationToken cancellationToken)
-        {
-            // 优化4：添加TakeWhile+超时兜底，避免无限轮询；同时优化异常提示
-            return await Observable.Interval(TimeSpan.FromSeconds(1))
-                 // 取消时立即终止轮询
-                 .TakeUntil(_ => cancellationToken.IsCancellationRequested)
-                 .Select(_ =>
-                 {
-                     // 轮询中检测取消信号，提前终止
-                     cancellationToken.ThrowIfCancellationRequested();
-                     return rcService.RcGetFlowResult_AOI(sn);
-                 })
-                 // 过滤null结果，只处理有效响应
-                 .Where(resp => resp != null)
-                 // 终止条件：流程完成 或 接口调用失败
-                 .FirstAsync(resp => (resp.IsSuccess && resp.Data.IsFinished) || !resp.IsSuccess)
-                 .Select(resp =>
-                 {
-                     // 接口返回失败时抛出业务异常
-                     if (!resp.IsSuccess)
-                         throw new InvalidOperationException($"Flow execution failed: {resp.Message} (SN: {sn})");
-                     return resp.Data;
-                 })
-                 // 绑定取消令牌，超时/取消时抛出TaskCanceledException
-                 .ToTask(cancellationToken);
-        }
-
         protected string BuildFlowSN(DieViewModel dieViewModel, string timestamp)
         {
             return SNBuilder.Build(ProberId, timestamp, dieViewModel);

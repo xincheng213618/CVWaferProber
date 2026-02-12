@@ -9,6 +9,7 @@ using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
 using System.Text;
 using Application = System.Windows.Application;
+using ConnectionInfo = CVWaferProber.Models.ConnectionInfo;
 
 namespace CVWaferProber.Services
 {
@@ -23,7 +24,7 @@ namespace CVWaferProber.Services
         private int _currentQueueIndex = -1;
 
         #endregion
-        public string ProberId { get; set; }
+        //public string ProberId { get; set; }
         #region Events
         public event EventHandler<TestCompletedEventArgs> TestingCompleted;
         public event EventHandler<ChipViewModel> ChipSelected;
@@ -36,6 +37,7 @@ namespace CVWaferProber.Services
         private readonly Dictionary<CVWaferProberFlowType, BaseSerivce> flowServices =
             new Dictionary<CVWaferProberFlowType, BaseSerivce>();
         public AutoTestingItem? autoTestingItem { get; private set; }
+        public ConnectionInfo ConnectionInfo { get => mqttService.ConnectionInfo; }
 
         private MainService()
         {
@@ -84,25 +86,25 @@ namespace CVWaferProber.Services
             task.Wait();
             return task.Result;
         }
-        public void InitializeService(RCRestService rcService, CVVAMAnalyzer _cVVAMAnalyzer, CVWPFSpectrometerCtrl.CVSpectrumAnalyzer ivlAnalyzer)
+        public void InitializeService(CVVAMAnalyzer _cVVAMAnalyzer, CVWPFSpectrometerCtrl.CVSpectrumAnalyzer ivlAnalyzer)
         {
             //
-            BaseSerivce ivlService = new IVLService(string.Empty,rcService, mqttService, ivlAnalyzer);
+            BaseSerivce ivlService = new IVLService(string.Empty,mqttService, ivlAnalyzer);
             flowServices[CVWaferProberFlowType.IVL] = ivlService;
             ivlService.TestingCompleted += OnTestingCompleted;
             ivlService.AutoTestingNextCompleted += OnAutoTestingNextCompleted;
 
-            BaseSerivce aoiService = new AOIService(rcService, mqttService);
+            BaseSerivce aoiService = new AOIService(mqttService);
             flowServices[CVWaferProberFlowType.AOI] = aoiService;
             aoiService.TestingCompleted += OnTestingCompleted;
             aoiService.AutoTestingNextCompleted += OnAutoTestingNextCompleted;
          
-            BaseSerivce eqeService = new EQEService(rcService, mqttService);
+            BaseSerivce eqeService = new EQEService(mqttService);
             flowServices[CVWaferProberFlowType.EQE] = eqeService;
             eqeService.TestingCompleted += OnTestingCompleted;
             eqeService.AutoTestingNextCompleted += OnAutoTestingNextCompleted;
           
-            BaseSerivce vamService = new VAMService(rcService, mqttService, _cVVAMAnalyzer);
+            BaseSerivce vamService = new VAMService(mqttService, _cVVAMAnalyzer);
             flowServices[CVWaferProberFlowType.VAM] = vamService;
             vamService.TestingCompleted += OnTestingCompleted;
             vamService.AutoTestingNextCompleted += OnAutoTestingNextCompleted;          
@@ -648,6 +650,12 @@ namespace CVWaferProber.Services
         {
             proberClientService?.Maintenance();
         }
+
+        public void ReRegist()
+        {
+            mqttService.Reconnect();
+        }
+
         private (List<DieViewModel> testQueue, int currentIndex, int completedCount)? _pauseContext;
 
     }

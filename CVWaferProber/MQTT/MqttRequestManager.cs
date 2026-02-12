@@ -46,6 +46,9 @@ namespace CVWaferProber.MQTT
             if (string.IsNullOrEmpty(response?.SerialNumber))
                 return false;
 
+            if (response.IsPending())
+                return false;
+
             if (_pendingRequests.TryRemove(response.SerialNumber, out var waiter))
             {
                 waiter.CancellationTokenSource?.Dispose();

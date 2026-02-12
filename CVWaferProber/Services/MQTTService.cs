@@ -1,23 +1,38 @@
-﻿using CVWaferProber.Core.Restful.DTO;
+﻿using CVWaferProber.Models;
 using CVWaferProber.MQTT;
+using WaferComm.Core;
 
 namespace CVWaferProber.Services
 {
-    public class MQTTService
+    public class MQTTService : IFlowService
     {
+        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(MQTTService));
         private readonly CVMQTTWPClient mqtt;
+        private readonly EventAggregator eventAggregator;
+
+        public ConnectionInfo ConnectionInfo { get; private set; }
+
         public MQTTService()
         {
+            this.ConnectionInfo = new ConnectionInfo("Registed", "UnRegisted") { ServerIP = "127.0.0.1", Port = 8080 };
+            this.eventAggregator = new EventAggregator();
             this.mqtt = CVMQTTWPClient.Instance.Init("RC_local");
+
+            mqtt.MQTTRegistedEvent += Mqtt_MQTTRegistedEvent;
         }
 
-        public void Start()
+        private void Mqtt_MQTTRegistedEvent(object? sender, EventArgs e)
         {
+            PublishStatus(ConnectionStatus.Connected);
         }
-
+        private void PublishStatus(ConnectionStatus status)
+        {
+            ConnectionInfo.SetConnected(status == ConnectionStatus.Connected);
+            eventAggregator.Publish(new ConnectionStateChangedEvent(ConnectionInfo.IsConnected, ConnectionInfo.ServerIP, ConnectionInfo.Port));
+        }
         public bool FowRun(int flowId, string flowName, string sn)
         {
-            MQTTNodeServiceFlow? flowSvr = mqtt.GetFlowService();
+            MQTTFlowDeviceNode? flowSvr = mqtt.GetFlowService();
             if (flowSvr == null) { return false; }
             var allSvrs = mqtt.GetAllServices();
             string? data = flowSvr.BuildRequest_Run(sn, flowId, flowName, allSvrs);
@@ -27,8 +42,11 @@ namespace CVWaferProber.Services
         }
         public async Task<MQTTBaseResponse?> FowRunAndWaitResponseAsync(int flowId, string flowName, string serialNumber, TimeSpan? timeout = null)
         {
-            MQTTNodeServiceFlow? flowSvr = mqtt.GetFlowService();
-            if (flowSvr == null) { return null; }
+            MQTTFlowDeviceNode? flowSvr = mqtt.GetFlowService();
+            if (flowSvr == null) {
+                if (logger.IsErrorEnabled) logger.Error("Please reconnect to MQTT.");
+                return null;
+            }
             var allSvrs = mqtt.GetAllServices();
             string? data = flowSvr.BuildRequest_Run(serialNumber, flowId, flowName, allSvrs);
             if (string.IsNullOrEmpty(data)) { return null; }
@@ -47,6 +65,11 @@ namespace CVWaferProber.Services
                     new OperationCanceledException("请求被取消"));
                 throw;
             }
+        }
+
+        public void Reconnect()
+        {
+            mqtt.ReRegist();
         }
     }
 }

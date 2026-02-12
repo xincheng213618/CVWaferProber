@@ -19,12 +19,12 @@ namespace CVWaferProber.Services
 
         public CVCamImagerViewModel CustomImageVM { get; private set; }
 
-        public AOIService(CVCamImagerViewModel customImageVM, RCRestService rcService, MQTTService mqttService) : base(rcService, mqttService)
+        public AOIService(CVCamImagerViewModel customImageVM, IFlowService flowService) : base(flowService)
         {
             this.CustomImageVM = customImageVM;
         }
 
-        public AOIService(RCRestService rcService, MQTTService mqttService) : this(new CVCamImagerViewModel(), rcService, mqttService)
+        public AOIService(IFlowService flowService) : this(new CVCamImagerViewModel(), flowService)
         {
         }
 

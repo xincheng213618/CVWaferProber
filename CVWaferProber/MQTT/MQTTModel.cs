@@ -184,6 +184,11 @@ namespace CVWaferProber.MQTT
         public void Startup()
         {
             _isStartup = true;
+        } 
+        public void Reset()
+        {
+            _isStartup = false;
+            Token = null;
         }
     }
 
@@ -195,7 +200,24 @@ namespace CVWaferProber.MQTT
         public string EventName { get; set; }
         public string SerialNumber { get; set; }
         public int ZIndex { get; set; }
-        public bool IsOK => Code == 0;
+        public bool IsOK() => Code == 0;
+        public bool IsPending() => Code == 102;
+
+        public static MQTTBaseResponse? Failed()
+        {
+            return new MQTTBaseResponse() { Code = -1, Message = "Failed" };
+        }
+
+        public static MQTTBaseResponse? OK()
+        {
+            return new MQTTBaseResponse() { Code = 200, Message = "OK" };
+        }
+
+        public MQTTBaseResponse()
+        {
+            Code = -1;
+            Message = "Failed";
+        }
     }
     public class MQTTResponse<T> : MQTTBaseResponse
     {
