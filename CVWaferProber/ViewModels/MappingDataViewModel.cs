@@ -367,8 +367,8 @@ namespace CVWaferProber.ViewModels
         #endregion
 
         #region 构造函数（保留原有+初始化进度属性）
-        private DateTime _currentDieStartTime;
-        private int _currentDiePredictSeconds = 60; // 默认60秒
+        public DateTime _currentDieStartTime;
+        public int _currentDiePredictSeconds = 60; // 默认60秒
         public System.Timers.Timer _progressUpdateTimer;
         public MappingDataViewModel()
         {

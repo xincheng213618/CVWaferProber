@@ -2,6 +2,7 @@
 using CVWaferProber.Language;
 using CVWaferProber.Models;
 using CVWaferProber.Services;
+using CVWaferProber.ViewModels;
 using CVWaferProber.Views;
 using log4net;
 using System.Diagnostics;
@@ -9,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
 using Color = System.Windows.Media.Color;
@@ -89,7 +91,9 @@ namespace CVWaferProber
             log.Info("Application starting...");
 
             base.OnStartup(e);
-
+            // 设置未处理异常捕获
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            DispatcherUnhandledException += App_DispatcherUnhandledException;
             // 初始化语言（读取Settings中的默认语言）
             AppSettingsManager.InitializeLanguage();
 
@@ -292,6 +296,63 @@ namespace CVWaferProber
                 ShowWindow(hWnd, SW_RESTORE);
             }
             SetForegroundWindow(hWnd);
+        }
+        private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            // 程序崩溃前尝试保存断点
+            try
+            {
+                var mainService = MainService.Instance;
+                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+
+                if (mappingVM != null && (mainService.autoTestingItem != null || mappingVM.IsManualTesting))
+                {
+                    // 同步保存断点（不能异步，因为程序即将退出）
+                    Task.Run(async () =>
+                    {
+                        await BreakpointMemoryService.SaveBreakpointAsync(
+                            mappingVM,
+                            mainService,
+                            mainService.autoTestingItem?.CurSelectedWPFlow);
+                    }).Wait(TimeSpan.FromSeconds(2)); // 最多等待2秒
+                }
+            }
+            catch
+            {
+                // 忽略保存失败，程序即将崩溃
+            }
+        }
+
+        private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        {
+            log.Error("Unhandled exception", e.Exception);
+
+            // 尝试保存断点
+            try
+            {
+                var mainService = MainService.Instance;
+                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+
+                if (mappingVM != null && (mainService.autoTestingItem != null || mappingVM.IsManualTesting))
+                {
+                    Task.Run(async () =>
+                    {
+                        await BreakpointMemoryService.SaveBreakpointAsync(
+                            mappingVM,
+                            mainService,
+                            mainService.autoTestingItem?.CurSelectedWPFlow);
+                    });
+                }
+            }
+            catch
+            {
+                // 忽略
+            }
+
+            MessageBox.Show($"程序发生未处理异常：{e.Exception.Message}\n\n程序将尝试保存当前状态后退出。",
+                "程序异常", MessageBoxButton.OK, MessageBoxImage.Error);
+
+            e.Handled = true;
         }
     }
 
