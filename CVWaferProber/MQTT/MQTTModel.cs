@@ -120,8 +120,6 @@ namespace CVWaferProber.MQTT
 
     public class MQTTServiceHeartbeat : MQTTNodeServiceTokenHeader
     {
-        //public string SendTime { get; set; }
-        //public int OverTime { get; set; }
         public MQTTServiceHeartbeat(string NodeName, string serviceType, string token, int overTime = 10000) 
         {
             this.Token = token;
@@ -129,8 +127,6 @@ namespace CVWaferProber.MQTT
             this.ServiceType = serviceType;
             this.EventName = MQTTNodeServiceEventEnum.Event_ServiceHeartbeat;
             this.MsgId = Guid.NewGuid().ToString();
-            //this.SendTime = DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss");
-            //this.OverTime = overTime;
         }
     }
     public class NodeToken

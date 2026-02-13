@@ -443,7 +443,7 @@ namespace CVWaferProber.ViewModels
         /// <summary>
         /// 进度更新定时器事件
         /// </summary>
-        private void OnProgressUpdateTimerElapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void OnProgressUpdateTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e)
         {
             Application.Current.Dispatcher.Invoke(() =>
             {

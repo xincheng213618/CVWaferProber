@@ -257,9 +257,4 @@ namespace CVWaferProber.MQTT
         public string FlowData { get; set; }
         public string SNSuffixes { get; set; }
     }
-
-    public struct CombinedFlowTempConfig
-    {
-        //public string SNSuffixes { get; set; }
-    }
 }

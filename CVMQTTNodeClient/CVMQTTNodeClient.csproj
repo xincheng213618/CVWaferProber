@@ -10,6 +10,16 @@
   <ItemGroup>
     <PackageReference Include="log4net" Version="2.0.17" />
     <PackageReference Include="MQTTnet" Version="4.3.5.1141" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="CVCommCore">
+      <HintPath>..\DLL\CVCommCore.dll</HintPath>
+    </Reference>
+    <Reference Include="CVMQTTLib">
+      <HintPath>..\DLL\CVMQTTLib.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

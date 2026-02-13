@@ -1,6 +1,6 @@
 ﻿namespace CVMQTTNodeClient
 {
-    public class MQTTCVServiceBuilder
+    public class MQTTCVServiceTopicBuilder
     {
         public const string RCServiceType = "MQTTRCService";
         public const string RCRegTopic = RCServiceType + "/Regist";
@@ -52,13 +52,15 @@
         }
         public static string BuildServiceUpTopic(string serviceType, string serviceName, string rcName)
         {
-            return string.Format("{2}/{0}/{1}/CMD", serviceType, serviceName, rcName); //serviceType + "/CMD/" + serviceName + "/" + serviceId;
+            return string.Format("{2}/{0}/{1}/CMD", serviceType, serviceName, rcName); 
+            //serviceType + "/CMD/" + serviceName + "/" + serviceId;
             //return serviceType + "/Up/" + serviceName + "/" + serviceId;
         }
 
         public static string BuildServiceDownTopic(string serviceType, string serviceName, string rcName)
         {
-            return string.Format("{2}/{0}/{1}/STATUS", serviceType, serviceName, rcName);// serviceType + "/STATUS/" + serviceName + "/" + serviceId;
+            return string.Format("{2}/{0}/{1}/STATUS", serviceType, serviceName, rcName);
+            //serviceType + "/STATUS/" + serviceName + "/" + serviceId;
             //return serviceType + "/Down/" + serviceName + "/" + serviceId;
         }
 

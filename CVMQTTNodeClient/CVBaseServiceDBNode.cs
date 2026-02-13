@@ -22,8 +22,8 @@
         }
         public CVBaseServiceDBNode(string RCNodeName, string serviceType, string serviceCode, string serviceName) : base(serviceCode, serviceName,serviceType)
         {
-            this.UpChannel = MQTTCVServiceBuilder.BuildServiceUpTopic(serviceType, serviceCode, RCNodeName);
-            this.DownChannel = MQTTCVServiceBuilder.BuildServiceDownTopic(serviceType, serviceCode, RCNodeName);
+            this.UpChannel = MQTTCVServiceTopicBuilder.BuildServiceUpTopic(serviceType, serviceCode, RCNodeName);
+            this.DownChannel = MQTTCVServiceTopicBuilder.BuildServiceDownTopic(serviceType, serviceCode, RCNodeName);
             this.Devices = new Dictionary<string, CVBaseServiceDBNodeDevice>();
             this.OverTime = -1;
             this.LiveTime = string.Empty;
