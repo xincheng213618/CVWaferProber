@@ -1,6 +1,5 @@
 ﻿using CVCommCore;
 using Newtonsoft.Json;
-using System.Xml.Linq;
 
 namespace CVWaferProber.MQTT
 {
@@ -258,21 +257,78 @@ namespace CVWaferProber.MQTT
         public bool IsLive()
         {
             System.TimeSpan ts = System.DateTime.Now - lastHeartbeatTime;
-            //if(logger.IsDebugEnabled) logger.DebugFormat("IsLive => {0}", ts.ToString());
+            //if (logger.IsDebugEnabled) logger.DebugFormat("IsLive => {0}", ts.ToString());
             if (ts > overTS) return false;
             return true;
         }
     }
 
+    public class MQTTDeviceMO
+    {
+        //public string ID { get; set; }
+        public string DeviceCode { get; set; }
+    }
+    public class MQTTServiceMO
+    {
+        public string ServiceType { get; set; }
+        public string ServiceCode { get; set; }
+        public string SubscribeTopic { get; set; }
+        public string PublishTopic { get; set; }
+        public string Token { get; set; }
+
+        public Dictionary<string, MQTTDeviceMO> Devices { get; }
+
+        public MQTTServiceMO()
+        {
+            this.Devices = new Dictionary<string, MQTTDeviceMO>();
+        }
+
+        public MQTTServiceMO(string serviceType, string serviceCode, string subscribeTopic, string publishTopic, string token) : this()
+        {
+            ServiceType = serviceType;
+            ServiceCode = serviceCode;
+            SubscribeTopic = subscribeTopic;
+            PublishTopic = publishTopic;
+            Token = token;
+        }
+    }
+    public class MQTTNodeService
+    {
+        public string ServiceToken { get; set; }
+        public string ServiceCode { get; set; }
+        public string ServiceName { get; set; }
+        public string ServiceType { get; set; }
+        public string UpChannel { get; set; }
+        public string DownChannel { get; set; }
+        public Dictionary<string, MQTTDevice> Devices { get; set; }
+
+        public MqttRequestManager RequestManager { get; private set; }
+
+        public MQTTNodeService()
+        {
+            RequestManager = new MqttRequestManager();
+        }
+        public class MQTTDevice
+        {
+            public string Code { get; set; }
+            public string Name { get; set; }
+        }
+
+        public void SetResponse(MQTTBaseResponse? resp)
+        {
+            RequestManager.SetResponse(resp);
+        }
+    }
     public class MQTTBaseResponse
     {
+        public string MsgId { get; set; }
         public string DeviceCode { get; set; }
         public int Code { get; set; }
         public string Message { get; set; }
         public string EventName { get; set; }
         public string SerialNumber { get; set; }
         public int ZIndex { get; set; }
-        public bool IsOK() => Code == 0;
+        public bool IsOK() => Code == 200;
         public bool IsPending() => Code == 102;
 
         public static MQTTBaseResponse? Failed()
@@ -295,5 +351,93 @@ namespace CVWaferProber.MQTT
     {
 
         public T Data { get; set; }
+    }
+
+    public class MQTTNodeServiceEventEnum
+    {
+        public const string Event_SetToken = "SetToken";
+        public const string Event_Regist = "Regist";
+        public const string Event_NotRegist = "NotRegist";
+        public const string Event_Startup = "Startup";
+        public const string Event_AddService = "AddService";
+        public const string Event_StopService = "StopService";
+        public const string Event_StopAllServices = "StopAllServices";
+        public const string Event_LoadAllServices = "LoadAllServices";
+        public const string Event_ReloadService = "ReloadService";
+        public const string Event_QueryServices = "QueryServices";
+        public const string Event_QueryServiceStatus = "QueryServiceStatus";
+        public const string Event_ServiceHeartbeat = "ServiceHeartbeat";
+    }
+    public class MQTTRCServiceTypeConst
+    {
+        public const string RCServiceType = "MQTTRCService";
+        public const string RCRegTopic = RCServiceType + "/Regist";
+        public const string RCHeartbeatTopic = RCServiceType + "/Heartbeat";
+        public const string RCPublicTopic = RCServiceType + "/Public";
+        public const string RCAdminTopic = RCServiceType + "/Admin";
+        public const string RCNodeTopic = RCServiceType + "/Node";
+
+        public static string BuildNodeName(string serviceType, string nodeName)
+        {
+            if (string.IsNullOrWhiteSpace(nodeName)) { nodeName = Guid.NewGuid().ToString(); }
+            return serviceType + "." + nodeName;
+        }
+
+        public static string BuildNodeTopic(string nodeName, string rcName)
+        {
+            return string.Format("{0}/{1}/{2}", RCNodeTopic, nodeName, rcName);// RCNodeTopic + "/" + nodeName + "/" + Guid.NewGuid().ToString("N");
+        }
+
+        public static string BuildNodeTopic(string nodeName)
+        {
+            return string.Format("{0}/{1}", RCNodeTopic, nodeName);// RCNodeTopic + "/" + nodeName + "/" + Guid.NewGuid().ToString("N");
+        }
+
+        public static string BuildRegTopic(string nodeName)
+        {
+            return RCRegTopic + "/" + nodeName;
+        }
+        public static string BuildHeartbeatTopic(string nodeName)
+        {
+            return RCHeartbeatTopic + "/" + nodeName;
+        }
+        public static string BuildPublicTopic(string nodeName)
+        {
+            return RCPublicTopic + "/" + nodeName;
+        }
+        public static string BuildAdminTopic(string nodeName)
+        {
+            return RCAdminTopic + "/" + nodeName;
+        }
+        public static string BuildFlowTopic(string nodeName)
+        {
+            return "MQTTRCService/Flow/" + nodeName;
+        }
+
+        public static string BuildArchivedTopic(string nodeName)
+        {
+            return "MQTTRCService/Archived/" + nodeName;
+        }
+        public static string BuildServiceUpTopic(string serviceType, string serviceName, string rcName)
+        {
+            return string.Format("{2}/{0}/{1}/CMD", serviceType, serviceName, rcName); //serviceType + "/CMD/" + serviceName + "/" + serviceId;
+            //return serviceType + "/Up/" + serviceName + "/" + serviceId;
+        }
+
+        public static string BuildServiceDownTopic(string serviceType, string serviceName, string rcName)
+        {
+            return string.Format("{2}/{0}/{1}/STATUS", serviceType, serviceName, rcName);// serviceType + "/STATUS/" + serviceName + "/" + serviceId;
+            //return serviceType + "/Down/" + serviceName + "/" + serviceId;
+        }
+
+        public static string BuildSysConfigTopic(string nodeName)
+        {
+            return "SysRes/config/" + nodeName;
+        }
+
+        public static string BuildSysConfigRespTopic(string nodeName)
+        {
+            return "SysRes/config/Resp/" + nodeName;
+        }
     }
 }

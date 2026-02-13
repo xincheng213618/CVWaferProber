@@ -18,7 +18,7 @@ namespace CVWaferProber.ViewModels
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(AOIService));
         #region 新增：单Die进度核心属性+定时器（独立实例，避免全局冲突）
         // 进度更新定时器（1秒执行一次）
-        private Timer _testProgressTimer;
+        private Timer? _testProgressTimer;
         // 预测测试时长（秒）- 从TestTimePredictService获取
         private int _predictTestSeconds;
         // 测试已运行时长（秒）- 用于计算进度

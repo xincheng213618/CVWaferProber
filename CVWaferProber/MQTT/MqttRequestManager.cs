@@ -25,14 +25,14 @@ namespace CVWaferProber.MQTT
             }
         }
 
-        public Task<MQTTBaseResponse> WaitForResponseAsync(string serialNumber, TimeSpan? timeout = null)
+        public Task<MQTTBaseResponse> WaitForResponseAsync(string msgId, TimeSpan? timeout = null)
         {
             var waiter = new RequestWaiter(timeout ?? _defaultTimeout);
 
-            if (!_pendingRequests.TryAdd(serialNumber, waiter))
+            if (!_pendingRequests.TryAdd(msgId, waiter))
             {
                 return Task.FromException<MQTTBaseResponse>(
-                    new InvalidOperationException($"Duplicate request serial number: {serialNumber}"));
+                    new InvalidOperationException($"Duplicate request serial number: {msgId}"));
             }
 
             return waiter.Tcs.Task;
@@ -40,13 +40,13 @@ namespace CVWaferProber.MQTT
 
         public bool SetResponse(MQTTBaseResponse response)
         {
-            if (string.IsNullOrEmpty(response?.SerialNumber))
+            if (string.IsNullOrEmpty(response?.MsgId))
                 return false;
 
             if (response.IsPending())
                 return false;
 
-            if (_pendingRequests.TryRemove(response.SerialNumber, out var waiter))
+            if (_pendingRequests.TryRemove(response.MsgId, out var waiter))
             {
                 waiter.CancellationTokenSource?.Dispose();
                 return waiter.Tcs.TrySetResult(response);
@@ -55,9 +55,9 @@ namespace CVWaferProber.MQTT
             return false;
         }
 
-        public bool SetException(string serialNumber, Exception exception)
+        public bool SetException(string msgId, Exception exception)
         {
-            if (_pendingRequests.TryRemove(serialNumber, out var waiter))
+            if (_pendingRequests.TryRemove(msgId, out var waiter))
             {
                 waiter.CancellationTokenSource?.Dispose();
                 return waiter.Tcs.TrySetException(exception);

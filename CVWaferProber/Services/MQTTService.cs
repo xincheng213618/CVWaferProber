@@ -1,6 +1,7 @@
 ﻿using CVCommCore;
 using CVWaferProber.Models;
 using CVWaferProber.MQTT;
+using Newtonsoft.Json;
 using WaferComm.Core;
 
 namespace CVWaferProber.Services
@@ -42,17 +43,23 @@ namespace CVWaferProber.Services
         public async Task<MQTTBaseResponse?> FowRunAndWaitResponseAsync(int flowId, string flowName, string serialNumber, TimeSpan? timeout = null)
         {
             MQTTFlowDeviceNode? flowSvr = mqttClient.GetFlowService();
-            if (flowSvr == null) {
+            if (flowSvr == null)
+            {
                 if (logger.IsErrorEnabled) logger.Error("Please reconnect to MQTT.");
                 return null;
             }
             var allSvrs = mqttClient.GetAllServices();
-            string? data = flowSvr.BuildRequest_Run(serialNumber, flowId, flowName, allSvrs);
-            if (string.IsNullOrEmpty(data)) { return null; }
-            var waitTask = flowSvr.WaitForResponseAsync(serialNumber, timeout);
+            MQTTCVRequestHeader? req = flowSvr.BuildRequest(serialNumber, flowId, flowName, allSvrs);
+            if (req == null)
+            {
+                if (logger.IsErrorEnabled) logger.Error("Build MQTT Request is null.");
+                return null; 
+            }
+            string msgId = req.MsgID;
+            var waitTask = flowSvr.WaitForResponseAsync(msgId, timeout);
             try
             {
-                mqttClient.Publish(flowSvr.UpChannel, data);
+                mqttClient.Publish(flowSvr.UpChannel, JsonConvert.SerializeObject(req));
                 // 等待响应
                 var response = await waitTask;
                 return response;
@@ -60,7 +67,7 @@ namespace CVWaferProber.Services
             catch (Exception)
             {
                 // 确保移除等待任务
-                flowSvr.SetException(serialNumber,
+                flowSvr.SetException(msgId,
                     new OperationCanceledException("请求被取消"));
                 throw;
             }

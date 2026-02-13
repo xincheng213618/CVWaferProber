@@ -31,10 +31,9 @@ namespace CVWaferProber.Services
             // 初始化导出文件夹（确保目录存在）
             //AutoExportHelper.InitFolders();
         }
-        public IVLService(string proberId, IFlowService flowService, CVSpectrumAnalyzer ivlAnalyzer) :
+        public IVLService(IFlowService flowService, CVSpectrumAnalyzer ivlAnalyzer) :
             this(new CVSpectrumViewModel(), flowService, ivlAnalyzer)
         {
-            this.ProberId = proberId;
         }
         //引用SP面板的视图控件（从外部传递）
         private CVSpectrumAnalyzer? _spPanelView;

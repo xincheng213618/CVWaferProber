@@ -1,297 +1,568 @@
 ﻿using CVCommCore;
 using CVMQTTLib;
 using Newtonsoft.Json;
+using System.Collections.Concurrent;
+using System.Reflection;
 
 namespace CVWaferProber.MQTT
 {
-    public class CVMQTTWPClient : ReflectionSingleton<CVMQTTWPClient>
+    public class CVMQTTWPClient : ReflectionSingleton<CVMQTTWPClient>, IDisposable
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(CVMQTTWPClient));
 
-        private CVMQTTControl? CVMQTT_Flow;
-        private MQTTServiceNode? nodeThis;
-        private Dictionary<string, MQTTNodeService> nodeServers = new Dictionary<string, MQTTNodeService>();
-        private Dictionary<string, MQTTNodeService> svrTopics = new Dictionary<string, MQTTNodeService>();
-        private CancellationTokenSource? closeToken;
-        private Task HBTask;
+        private CVMQTTControl? _mqttControl;
+        private MQTTServiceNode? _nodeThis;
 
-        public MqttNodeClientStatus Status { get; private set; }
+        // 使用ConcurrentDictionary替代Dictionary，线程安全
+        private readonly ConcurrentDictionary<string, MQTTNodeService> _nodeServers = new();
+        private readonly ConcurrentDictionary<string, MQTTNodeService> _svrTopics = new();
 
-        public event MQTTConnectedEventHandler MQTTConnectedEvent;
+        private CancellationTokenSource? _closeTokenSource;
+        private Task? _hbTask;
 
-        public event MQTTConnectedEventHandler MQTTDisconnectedEvent;
+        private readonly object _statusLock = new();
+        private MqttNodeClientStatus _status;
 
-        public event EventHandler MQTTRegistedEvent;
-        public event EventHandler MQTTUnRegistedEvent;
+        public MqttNodeClientStatus Status
+        {
+            get => _status;
+            private set
+            {
+                if (_status != value)
+                {
+                    lock (_statusLock)
+                    {
+                        _status = value;
+                    }
+                }
+            }
+        }
+
+        // 使用显式接口或委托定义事件，避免内存泄漏
+        private event MQTTConnectedEventHandler? _mqttConnectedEvent;
+        private event MQTTConnectedEventHandler? _mqttDisconnectedEvent;
+        private event EventHandler? _mqttRegistedEvent;
+        private event EventHandler? _mqttUnRegistedEvent;
+
+        public event MQTTConnectedEventHandler MQTTConnectedEvent
+        {
+            add => _mqttConnectedEvent += value;
+            remove => _mqttConnectedEvent -= value;
+        }
+
+        public event MQTTConnectedEventHandler MQTTDisconnectedEvent
+        {
+            add => _mqttDisconnectedEvent += value;
+            remove => _mqttDisconnectedEvent -= value;
+        }
+
+        public event EventHandler MQTTRegistedEvent
+        {
+            add => _mqttRegistedEvent += value;
+            remove => _mqttRegistedEvent -= value;
+        }
+
+        public event EventHandler MQTTUnRegistedEvent
+        {
+            add => _mqttUnRegistedEvent += value;
+            remove => _mqttUnRegistedEvent -= value;
+        }
 
         private CVMQTTWPClient() : base()
         {
             Status = MqttNodeClientStatus.Disconnected;
         }
+
+        /// <summary>
+        /// 初始化MQTT客户端
+        /// </summary>
         public CVMQTTWPClient Init(string rcName, string nodeAppId = "app1", string nodeKey = "123456")
         {
-            return Init(new MQTTServiceNode(rcName) { NodeAppId = nodeAppId, NodeKey = nodeKey, ServiceType = CVServiceType.Client });
+            return Init(new MQTTServiceNode(rcName)
+            {
+                NodeAppId = nodeAppId,
+                NodeKey = nodeKey,
+                ServiceType = CVServiceType.Client
+            });
         }
+
+        /// <summary>
+        /// 初始化MQTT客户端
+        /// </summary>
         public CVMQTTWPClient Init(MQTTServiceNode node)
         {
-            this.nodeThis = node;
-            this.closeToken = new CancellationTokenSource();
-            InitFlow();
+            if (node == null) throw new ArgumentNullException(nameof(node));
 
+            _nodeThis = node;
+            _closeTokenSource?.Cancel();
+            _closeTokenSource?.Dispose();
+            _closeTokenSource = new CancellationTokenSource();
+
+            InitMqttControl();
             return this;
         }
 
+        /// <summary>
+        /// 关闭客户端
+        /// </summary>
         public void Close()
         {
-            closeToken?.Cancel();
-            for (int i = 0; i < 10; i++)
+            try
             {
-                if (HBTask.Status == TaskStatus.RanToCompletion) break;
-                else Task.Delay(100).Wait();
-            }
-            if (logger.IsDebugEnabled) logger.DebugFormat("MQTTService closed => {0}", nodeThis.NodeName);
-        }
-        private void StartFlow()
-        {
-            string? currentPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-            MQTTConfig config = new MQTTConfig(System.IO.Path.Combine(currentPath, "cfg", "MQTT.config"));
-            CVMQTTConfig mqtt_cfg = new CVMQTTConfig() { Host = config.Host, Port = config.Port, IsServer = false, IsDebugOut = false };
-            CVMQTT_Flow?.Start(mqtt_cfg);
+                _closeTokenSource?.Cancel();
 
-            this.HBTask = Task.Factory.StartNew(()=> DoKeepLive());
-        }
-
-        private async void DoKeepLive()
-        {
-            if (nodeThis == null) return;
-            if (logger.IsInfoEnabled) logger.InfoFormat("DoKeepLive started. {0}", nodeThis.NodeName);
-            while (!closeToken.IsCancellationRequested)
-            {
-                try
+                // 等待心跳任务完成，使用异步等待避免死锁
+                if (_hbTask != null)
                 {
-                    await Task.Delay(nodeThis.HeartbeatTime, closeToken.Token);
-                }
-                catch (Exception ex)
-                {
-                    if (logger.IsDebugEnabled) logger.DebugFormat("{0} DoKeepLive break. Reason:{1}", nodeThis.NodeName, ex.Message);
-                    break;
-                }
-                doRCHeartbeat();
-            }
-
-            closeToken.Dispose();
-            closeToken = null;
-            if (logger.IsInfoEnabled) logger.InfoFormat("DoKeepLive existed. {0}", nodeThis.NodeName);
-        }
-
-        private void doRCHeartbeat()
-        {
-            //if (logger.IsDebugEnabled) logger.DebugFormat("Status = >{0}", Status.ToString());
-            if (Status != MqttNodeClientStatus.Disconnected)
-            {
-                if (!nodeThis.IsLive())
-                {
-                    if (Status != MqttNodeClientStatus.UnRegisted)
+                    try
                     {
-                        MQTTUnRegistedEvent?.Invoke(nodeThis, EventArgs.Empty);
-                        Status = MqttNodeClientStatus.UnRegisted;
-                        nodeThis.Reset();
+                        _hbTask.Wait(TimeSpan.FromSeconds(3));
                     }
-                }
-                else
-                {
-                    if (Status != MqttNodeClientStatus.Registed)
+                    catch (AggregateException)
                     {
-                        MQTTRegistedEvent?.Invoke(nodeThis, EventArgs.Empty);
-                        Status = MqttNodeClientStatus.Registed;
+                        // 忽略任务取消异常
                     }
                 }
 
-                if (Status == MqttNodeClientStatus.UnRegisted)
-                {
-                    ReRegist();
-                }else if (Status == MqttNodeClientStatus.Registed)
-                {
-                    string serviceHeartbeat = nodeThis?.HeartbeatData;
-                    if (!string.IsNullOrEmpty(serviceHeartbeat)) CVMQTT_Flow?.Publish(nodeThis.RCHBTopic, serviceHeartbeat);
-                }
+                _mqttControl?.Close();
+                _mqttControl = null;
+
+                if (logger.IsDebugEnabled && _nodeThis != null)
+                    logger.DebugFormat("MQTTService closed => {0}", _nodeThis.NodeName);
+            }
+            catch (Exception ex)
+            {
+                if (logger.IsErrorEnabled)
+                    logger.Error("Close MQTT client failed", ex);
             }
         }
-        private void InitFlow()
+
+        public void Dispose()
         {
-            CVMQTT_Flow = new CVMQTTControl();
-            CVMQTT_Flow.MQTTMsgEvent += CVMQTT_Flow_MQTTMsgEvent;
-            CVMQTT_Flow.MQTTConnectedEvent += CVMQTT_Flow_MQTTConnectedEvent;
-            CVMQTT_Flow.MQTTDisconnectedEvent += CVMQTT_Flow_MQTTDisconnectedEvent;
-            //
+            Close();
+            _closeTokenSource?.Dispose();
+            GC.SuppressFinalize(this);
+        }
+
+        private void InitMqttControl()
+        {
+            _mqttControl = new CVMQTTControl();
+            _mqttControl.MQTTMsgEvent += OnMqttMsgEvent;
+            _mqttControl.MQTTConnectedEvent += OnMqttConnectedEvent;
+            _mqttControl.MQTTDisconnectedEvent += OnMqttDisconnectedEvent;
+
             StartFlow();
         }
 
-        private void CVMQTT_Flow_MQTTDisconnectedEvent(object sender, MQTTConnectedEventArgs args)
+        private void StartFlow()
         {
-            Status = MqttNodeClientStatus.Disconnected;
-            if (nodeThis != null) 
+            try
             {
-                MQTTDisconnectedEvent?.Invoke(nodeThis, args);
-                nodeThis.Reset();
-            } 
-        }
+                string? currentPath = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                if (string.IsNullOrEmpty(currentPath))
+                {
+                    if (logger.IsErrorEnabled) logger.Error("Failed to get assembly path");
+                    return;
+                }
 
-        private void CVMQTT_Flow_MQTTConnectedEvent(object sender, MQTTConnectedEventArgs args)
-        {
-            Status = MqttNodeClientStatus.Connected;
-            if (nodeThis != null)
+                var configPath = System.IO.Path.Combine(currentPath, "cfg", "MQTT.config");
+                if (!System.IO.File.Exists(configPath))
+                {
+                    if (logger.IsErrorEnabled) logger.ErrorFormat("MQTT config file not found: {0}", configPath);
+                    return;
+                }
+
+                MQTTConfig config = new MQTTConfig(configPath);
+                CVMQTTConfig mqtt_cfg = new CVMQTTConfig()
+                {
+                    Host = config.Host,
+                    Port = config.Port,
+                    IsServer = false,
+                    IsDebugOut = false
+                };
+
+                _mqttControl?.Start(mqtt_cfg);
+
+                // 使用Task.Run替代StartNew
+                _hbTask = Task.Run(DoKeepLive);
+            }
+            catch (Exception ex)
             {
-                MQTTConnectedEvent?.Invoke(nodeThis, args);
-                CVMQTT_Flow?.Subscribe(nodeThis?.NodeTopic);
-                Regist();
+                if (logger.IsErrorEnabled) logger.Error("StartFlow failed", ex);
             }
         }
 
-        private void DoRecvThisNode(MQTTMsgEventArgs args)
+        private async Task DoKeepLive()
         {
-            MQTTNodeServiceHeader? resp = JsonConvert.DeserializeObject<MQTTNodeServiceHeader>(args.Data);
-            if (resp?.EventName == MQTTNodeServiceEventEnum.Event_Regist)
+            if (_nodeThis == null) return;
+
+            var nodeName = _nodeThis.NodeName;
+            var token = _closeTokenSource?.Token ?? CancellationToken.None;
+
+            if (logger.IsInfoEnabled)
+                logger.InfoFormat("DoKeepLive started. {0}", nodeName);
+
+            try
             {
-                MQTTNodeServiceRegistResponse? resp_reg = JsonConvert.DeserializeObject<MQTTNodeServiceRegistResponse>(args.Data);
-                if (resp_reg?.Code == 0)
+                while (!token.IsCancellationRequested)
                 {
-                    if (nodeThis != null)
+                    // 使用Try-catch包装Delay，避免TaskCanceledException频繁抛出
+                    try
                     {
-                        if (nodeThis.RefreshToken(resp_reg.Token) && logger.IsDebugEnabled) logger.Debug("Refresh Token ok");
+                        await Task.Delay(_nodeThis.HeartbeatTime, token).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        break;
+                    }
+
+                    DoHeartbeat();
+                }
+            }
+            catch (Exception ex)
+            {
+                if (logger.IsErrorEnabled)
+                    logger.ErrorFormat("DoKeepLive error. {0}, Reason:{1}", nodeName, ex.Message);
+            }
+            finally
+            {
+                if (logger.IsInfoEnabled)
+                    logger.InfoFormat("DoKeepLive exited. {0}", nodeName);
+            }
+        }
+
+        private void DoHeartbeat()
+        {
+            //if (logger.IsDebugEnabled) logger.DebugFormat("currentStatus => {0}", Status.ToString());
+            if (_nodeThis == null) return;
+
+            var currentStatus = Status;
+            if (currentStatus == MqttNodeClientStatus.Disconnected)
+                return;
+
+            try
+            {
+                if (!_nodeThis.IsLive())
+                {
+                    if (currentStatus != MqttNodeClientStatus.UnRegisted)
+                    {
+                        _mqttUnRegistedEvent?.Invoke(_nodeThis, EventArgs.Empty);
+                        Status = MqttNodeClientStatus.UnRegisted;
+                        _nodeThis.Reset();
+                    }
+
+                    if (Status == MqttNodeClientStatus.UnRegisted)
+                    {
+                        ReRegist();
                     }
                 }
                 else
                 {
-                    Status = MqttNodeClientStatus.UnRegisted;
-                    MQTTUnRegistedEvent?.Invoke(nodeThis, EventArgs.Empty);
-                    if (logger.IsDebugEnabled) logger.DebugFormat("Regist falied => {0}", args.Data);
-                }
-            }
-            else if (resp?.EventName == MQTTNodeServiceEventEnum.Event_Startup)
-            {
-                if (nodeThis != null && nodeThis.IsNotStartup)
-                {
-                    nodeThis.Startup();
-                    MQTTRCServicesQueryRequest request = new MQTTRCServicesQueryRequest(nodeThis.Token.AccessToken);
-                    CVMQTT_Flow?.Publish(MQTTRCServiceTypeConst.BuildPublicTopic(nodeThis.RCName), JsonConvert.SerializeObject(request));
-                    //if (logger.IsInfoEnabled) logger.Info("Recv RC Startup ok");
-                }
-            }
-            else if (resp?.EventName == MQTTNodeServiceEventEnum.Event_QueryServices)
-            {
-                MQTTResponse<Dictionary<string, List<MQTTNodeService>>>? resp_q = JsonConvert.DeserializeObject<MQTTResponse<Dictionary<string, List<MQTTNodeService>>>>(args.Data);
-                if (resp_q?.Data != null)
-                {
-                    foreach (var item in resp_q.Data)
+                    //if (currentStatus != MqttNodeClientStatus.Registed)
+                    //{
+                    //    _mqttRegistedEvent?.Invoke(_nodeThis, EventArgs.Empty);
+                    //    Status = MqttNodeClientStatus.Registed;
+                    //}
+
+                    if (Status == MqttNodeClientStatus.Registed)
                     {
-                        foreach (var svr in item.Value)
+                        string serviceHeartbeat = _nodeThis.HeartbeatData;
+                        if (!string.IsNullOrEmpty(serviceHeartbeat))
                         {
-                            if(nodeServers.TryAdd(svr.ServiceCode, svr))
-                            {
-                                CVMQTT_Flow?.Subscribe(svr.DownChannel);
-                                svrTopics.TryAdd(svr.DownChannel, svr);
-                                //if (logger.IsDebugEnabled) logger.DebugFormat("MQTT Subscribe => {0}", svr.DownChannel);
-                            }
+                            _mqttControl?.Publish(_nodeThis.RCHBTopic, serviceHeartbeat);
                         }
                     }
-                    if (logger.IsInfoEnabled) logger.Info("MQTT Registed ok");
-                    MQTTRegistedEvent?.Invoke(nodeThis, EventArgs.Empty);
-                    Status = MqttNodeClientStatus.Registed;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (logger.IsErrorEnabled)
+                    logger.ErrorFormat("DoHeartbeat failed: {0}", ex.Message);
+            }
+        }
+
+        private void OnMqttConnectedEvent(object sender, MQTTConnectedEventArgs args)
+        {
+            // 只有当状态为Disconnected时才更新为Connected
+            if (Status == MqttNodeClientStatus.Disconnected)
+                Status = MqttNodeClientStatus.Connected;
+
+            // 如果节点未初始化或状态不是已连接，直接返回
+            if (_nodeThis == null || Status != MqttNodeClientStatus.Connected)
+                return;
+
+            // 触发连接事件
+            _mqttConnectedEvent?.Invoke(_nodeThis, args);
+
+            // 订阅和注册
+            _mqttControl?.Subscribe(_nodeThis.NodeTopic);
+            Regist();
+        }
+
+        private void OnMqttDisconnectedEvent(object sender, MQTTConnectedEventArgs args)
+        {
+            Status = MqttNodeClientStatus.Disconnected;
+
+            if (_nodeThis != null)
+            {
+                _mqttDisconnectedEvent?.Invoke(_nodeThis, args);
+                _nodeThis.Reset();
+
+                // 清空服务缓存
+                _nodeServers.Clear();
+                _svrTopics.Clear();
+            }
+        }
+
+        private void OnMqttMsgEvent(object sender, MQTTMsgEventArgs args)
+        {
+            if (args == null || string.IsNullOrEmpty(args.Topic) || string.IsNullOrEmpty(args.Data))
+                return;
+
+            try
+            {
+                if (args.Topic == _nodeThis?.NodeTopic)
+                {
+                    ProcessNodeMessage(args.Data);
+                }
+                else if (_svrTopics.TryGetValue(args.Topic, out var svr))
+                {
+                    ProcessServiceMessage(svr, args.Data);
                 }
                 else
                 {
-                    if (logger.IsDebugEnabled) logger.DebugFormat("Node Recv mqtt => {0}", args.Data);
+                    if (logger.IsWarnEnabled)
+                        logger.WarnFormat("Unprocessed Topic Recv {0} => {1}", args.Topic, args.Data);
                 }
             }
-            else if (resp?.EventName == MQTTNodeServiceEventEnum.Event_ServiceHeartbeat)
+            catch (Exception ex)
             {
-                nodeThis?.RecvHeartbeat();
+                if (logger.IsErrorEnabled)
+                    logger.ErrorFormat("Process MQTT message failed. Topic:{0}, Error:{1}",
+                        args.Topic, ex.Message);
+            }
+        }
+
+        private void ProcessNodeMessage(string data)
+        {
+            if (_nodeThis == null) return;
+
+            var resp = JsonConvert.DeserializeObject<MQTTNodeServiceHeader>(data);
+            if (resp == null) return;
+
+            switch (resp.EventName)
+            {
+                case MQTTNodeServiceEventEnum.Event_Regist:
+                    ProcessRegistResponse(data);
+                    break;
+
+                case MQTTNodeServiceEventEnum.Event_Startup:
+                    ProcessStartupResponse();
+                    break;
+
+                case MQTTNodeServiceEventEnum.Event_QueryServices:
+                    ProcessQueryServicesResponse(data);
+                    break;
+
+                case MQTTNodeServiceEventEnum.Event_ServiceHeartbeat:
+                    _nodeThis.RecvHeartbeat();
+                    break;
+
+                default:
+                    if (logger.IsDebugEnabled)
+                        logger.DebugFormat("This Node Recv mqtt => {0}", data);
+                    break;
+            }
+        }
+
+        private void ProcessRegistResponse(string data)
+        {
+            var resp_reg = JsonConvert.DeserializeObject<MQTTNodeServiceRegistResponse>(data);
+            if (resp_reg?.Code == 0)
+            {
+                if (_nodeThis != null && _nodeThis.RefreshToken(resp_reg.Token) && logger.IsDebugEnabled)
+                    logger.Debug("Refresh Token ok");
             }
             else
             {
-                if (logger.IsDebugEnabled) logger.DebugFormat("This Node Recv mqtt => {0}", args.Data);
+                Status = MqttNodeClientStatus.UnRegisted;
+                _mqttUnRegistedEvent?.Invoke(_nodeThis, EventArgs.Empty);
+
+                if (logger.IsDebugEnabled)
+                    logger.DebugFormat("Regist failed => {0}", data);
             }
         }
 
-        private void CVMQTT_Flow_MQTTMsgEvent(object sender, MQTTMsgEventArgs args)
+        private void ProcessStartupResponse()
         {
-            if (args != null && !string.IsNullOrEmpty(args.Topic) && !string.IsNullOrEmpty(args.Data))
+            if (_nodeThis != null && _nodeThis.IsNotStartup)
             {
-                if (args.Topic == nodeThis?.NodeTopic)
-                {
-                    DoRecvThisNode(args);
-                }
-                else
-                {
-                    if (svrTopics.ContainsKey(args.Topic))
-                    {
-                        var svr = svrTopics[args.Topic];
-                        MQTTBaseResponse resp = JsonConvert.DeserializeObject<MQTTBaseResponse>(args.Data);
-                        if (logger.IsDebugEnabled) logger.DebugFormat("Recv {0} => {1}", svr.ServiceCode, JsonConvert.SerializeObject(resp));
-                        svr.SetResponse(resp);
-                    }
-                    else
-                    {
-                        if (logger.IsWarnEnabled) logger.WarnFormat("Unprocessed Topic Recv {0} => {1}", args.Topic, args.Data);
-                    }
-                }
+                _nodeThis.Startup();
+                var request = new MQTTRCServicesQueryRequest(_nodeThis.Token.AccessToken);
+                var topic = MQTTRCServiceTypeConst.BuildPublicTopic(_nodeThis.RCName);
+                _mqttControl?.Publish(topic, JsonConvert.SerializeObject(request));
             }
         }
 
+        private void ProcessQueryServicesResponse(string data)
+        {
+            var resp_q = JsonConvert.DeserializeObject<MQTTResponse<Dictionary<string, List<MQTTNodeService>>>>(data);
+            if (resp_q?.Data == null)
+            {
+                if (logger.IsDebugEnabled) logger.DebugFormat("Node Recv mqtt => {0}", data);
+                return;
+            }
+
+            bool hasNewService = false;
+
+            foreach (var item in resp_q.Data)
+            {
+                foreach (var svr in item.Value)
+                {
+                    if (_nodeServers.TryAdd(svr.ServiceCode, svr))
+                    {
+                        _mqttControl?.Subscribe(svr.DownChannel);
+                        _svrTopics.TryAdd(svr.DownChannel, svr);
+                        hasNewService = true;
+                    }
+                }
+            }
+
+            if (hasNewService)
+            {
+                if (logger.IsInfoEnabled) logger.Info("MQTT Registed ok");
+                _mqttRegistedEvent?.Invoke(_nodeThis, EventArgs.Empty);
+                Status = MqttNodeClientStatus.Registed;
+            }
+        }
+
+        private void ProcessServiceMessage(MQTTNodeService svr, string data)
+        {
+            try
+            {
+                var resp = JsonConvert.DeserializeObject<MQTTBaseResponse>(data);
+                if (logger.IsDebugEnabled)
+                    logger.DebugFormat("Recv {0} => {1}", svr.ServiceName, JsonConvert.SerializeObject(resp));
+
+                svr.SetResponse(resp);
+            }
+            catch (Exception ex)
+            {
+                if (logger.IsErrorEnabled)
+                    logger.ErrorFormat("Process service message failed. Service:{0}, Error:{1}",
+                        svr.ServiceName, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// 获取Flow服务节点
+        /// </summary>
         public MQTTFlowDeviceNode? GetFlowService()
         {
-            string svrCode = "SVR.Flow.Default";
-            if (nodeServers.ContainsKey(svrCode))
+            const string svrCode = "SVR.Flow.Default";
+
+            if (_nodeServers.TryGetValue(svrCode, out var node) && _nodeThis != null)
             {
-                var node = nodeServers[svrCode];
-                return new MQTTFlowDeviceNode(nodeThis.RCName, -1,node.ServiceType, node.ServiceCode, node.ServiceName, node.ServiceToken, node.Devices.FirstOrDefault().Value.Code, node.RequestManager);
+                var device = node.Devices?.FirstOrDefault().Value;
+                if (device != null)
+                {
+                    return new MQTTFlowDeviceNode(
+                        _nodeThis.RCName,
+                        -1,
+                        node.ServiceType,
+                        node.ServiceCode,
+                        node.ServiceName,
+                        node.ServiceToken,
+                        device.Code,
+                        node.RequestManager);
+                }
             }
 
             return null;
         }
 
+        /// <summary>
+        /// 注册到MQTT服务器
+        /// </summary>
         public void Regist(bool isReset = false)
         {
-            if(nodeThis != null)
+            if (_nodeThis == null) return;
+
+            try
             {
-                if (isReset) Reset();
-                string data = JsonConvert.SerializeObject(new MQTTNodeServiceRegist(nodeThis));
-                CVMQTT_Flow?.Publish(nodeThis.RCRegTopic, data);
+                if (isReset) ClearCache();
+
+                var data = JsonConvert.SerializeObject(new MQTTNodeServiceRegist(_nodeThis));
+                _mqttControl?.Publish(_nodeThis.RCRegTopic, data);
             }
-        }
-        private void Reset()
-        {
-            nodeThis?.Reset();
-            nodeServers.Clear();
-            svrTopics.Clear();
-        }
-        public void ReRegist()
-        {
-            Regist(true);
-        }
-        public void Publish(string topic, string data)
-        {
-            CVMQTT_Flow?.Publish(topic, data);
-        } 
-        
-        public void Publish(string topic, MQTTCVRequestHeader request)
-        {
-            CVMQTT_Flow?.Publish(topic, JsonConvert.SerializeObject(request));
+            catch (Exception ex)
+            {
+                if (logger.IsErrorEnabled) logger.Error("Regist failed", ex);
+            }
         }
 
+        private void ClearCache()
+        {
+            _nodeThis?.Reset();
+            _nodeServers.Clear();
+            _svrTopics.Clear();
+        }
+
+        /// <summary>
+        /// 重新注册
+        /// </summary>
+        public void ReRegist() => Regist(true);
+
+        /// <summary>
+        /// 发布消息
+        /// </summary>
+        public void Publish(string topic, string data)
+        {
+            if (string.IsNullOrEmpty(topic)) throw new ArgumentNullException(nameof(topic));
+            if (data == null) throw new ArgumentNullException(nameof(data));
+
+            _mqttControl?.Publish(topic, data);
+        }
+
+        /// <summary>
+        /// 发布消息
+        /// </summary>
+        public void Publish(string topic, MQTTCVRequestHeader request)
+        {
+            if (request == null) throw new ArgumentNullException(nameof(request));
+            Publish(topic, JsonConvert.SerializeObject(request));
+        }
+
+        /// <summary>
+        /// 获取所有服务
+        /// </summary>
         public List<MQTTServiceMO> GetAllServices()
         {
-            List<MQTTServiceMO> services = new List<MQTTServiceMO>();
-            foreach (var service in nodeServers.Values)
+            var services = new List<MQTTServiceMO>(_nodeServers.Count);
+
+            foreach (var service in _nodeServers.Values)
             {
-                MQTTServiceMO svrMO = new MQTTServiceMO(service.ServiceType, service.ServiceCode, service.DownChannel, service.UpChannel, service.ServiceToken);
-                foreach (var dev in service.Devices)
+                var svrMO = new MQTTServiceMO(
+                    service.ServiceType,
+                    service.ServiceCode,
+                    service.DownChannel,
+                    service.UpChannel,
+                    service.ServiceToken);
+
+                if (service.Devices != null)
                 {
-                    svrMO.Devices.TryAdd(dev.Key, new MQTTDeviceMO() { DeviceCode = dev.Value.Code });
+                    foreach (var dev in service.Devices)
+                    {
+                        svrMO.Devices.TryAdd(dev.Key, new MQTTDeviceMO()
+                        {
+                            DeviceCode = dev.Value.Code
+                        });
+                    }
                 }
+
                 services.Add(svrMO);
             }
+
             return services;
         }
     }

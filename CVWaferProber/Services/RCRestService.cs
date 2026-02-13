@@ -5,7 +5,6 @@ using CVWaferProber.MQTT;
 using Newtonsoft.Json;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
-using WaferComm.Client;
 using WaferComm.Core;
 
 namespace CVWaferProber.Services

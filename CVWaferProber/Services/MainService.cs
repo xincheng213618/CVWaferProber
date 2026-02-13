@@ -89,7 +89,7 @@ namespace CVWaferProber.Services
         public void InitializeService(CVVAMAnalyzer _cVVAMAnalyzer, CVWPFSpectrometerCtrl.CVSpectrumAnalyzer ivlAnalyzer)
         {
             //
-            BaseSerivce ivlService = new IVLService(string.Empty,mqttService, ivlAnalyzer);
+            BaseSerivce ivlService = new IVLService(mqttService, ivlAnalyzer);
             flowServices[CVWaferProberFlowType.IVL] = ivlService;
             ivlService.TestingCompleted += OnTestingCompleted;
             ivlService.AutoTestingNextCompleted += OnAutoTestingNextCompleted;
@@ -503,6 +503,8 @@ namespace CVWaferProber.Services
                     }
                 });
             }
+            //
+            dieVM?.CompleteTestProgress();
             if (logger.IsInfoEnabled) logger.Info("Auto Testing End");
         }
 
