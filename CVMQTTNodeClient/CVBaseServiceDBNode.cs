@@ -1,4 +1,4 @@
-﻿namespace CVMQTTClient
+﻿namespace CVMQTTNodeClient
 {
     public class CVBaseServiceDBNode : CVAbstractBaseServiceNode
     {

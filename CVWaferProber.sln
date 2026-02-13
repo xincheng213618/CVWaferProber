@@ -29,7 +29,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WaferComm.Processors", "Waf
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WaferComm.StateMachine", "WaferProberClient\WaferComm.StateMachine\WaferComm.StateMachine.csproj", "{897A2792-F73D-2AD5-DEB5-4193E12A4AB0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CVMQTTClient", "CVMQTTClient\CVMQTTClient.csproj", "{86E1B826-D9BF-4661-B092-953556439466}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CVMQTTNodeClient", "CVMQTTNodeClient\CVMQTTNodeClient.csproj", "{1BFBF81A-155C-460A-896C-A3371A153D78}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -127,14 +127,14 @@ Global
 		{897A2792-F73D-2AD5-DEB5-4193E12A4AB0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{897A2792-F73D-2AD5-DEB5-4193E12A4AB0}.Release|x64.ActiveCfg = Release|Any CPU
 		{897A2792-F73D-2AD5-DEB5-4193E12A4AB0}.Release|x64.Build.0 = Release|Any CPU
-		{86E1B826-D9BF-4661-B092-953556439466}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{86E1B826-D9BF-4661-B092-953556439466}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{86E1B826-D9BF-4661-B092-953556439466}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{86E1B826-D9BF-4661-B092-953556439466}.Debug|x64.Build.0 = Debug|Any CPU
-		{86E1B826-D9BF-4661-B092-953556439466}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{86E1B826-D9BF-4661-B092-953556439466}.Release|Any CPU.Build.0 = Release|Any CPU
-		{86E1B826-D9BF-4661-B092-953556439466}.Release|x64.ActiveCfg = Release|Any CPU
-		{86E1B826-D9BF-4661-B092-953556439466}.Release|x64.Build.0 = Release|Any CPU
+		{1BFBF81A-155C-460A-896C-A3371A153D78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1BFBF81A-155C-460A-896C-A3371A153D78}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1BFBF81A-155C-460A-896C-A3371A153D78}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1BFBF81A-155C-460A-896C-A3371A153D78}.Debug|x64.Build.0 = Debug|Any CPU
+		{1BFBF81A-155C-460A-896C-A3371A153D78}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1BFBF81A-155C-460A-896C-A3371A153D78}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1BFBF81A-155C-460A-896C-A3371A153D78}.Release|x64.ActiveCfg = Release|Any CPU
+		{1BFBF81A-155C-460A-896C-A3371A153D78}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
