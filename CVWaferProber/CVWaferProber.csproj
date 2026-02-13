@@ -35,6 +35,7 @@
     <ProjectReference Include="..\ChipMapping\ChipMapping.csproj" />
     <ProjectReference Include="..\CVAVMControl\CVVAMControl.csproj" />
     <ProjectReference Include="..\CVDB\CVDB.csproj" />
+    <ProjectReference Include="..\CVMQTTNodeClient\CVMQTTNodeClient.csproj" />
     <ProjectReference Include="..\CVWaferProber.Core\CVWaferProber.Core.csproj" />
     <ProjectReference Include="..\CVWPFCamImageCtrl\CVWPFCamImageCtrl.csproj" />
     <ProjectReference Include="..\CVWPFSpectrometerCtrl\CVWPFSpectrometerCtrl.csproj" />

@@ -1,48 +1,48 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using CVMQTTNodeClient;
+using Newtonsoft.Json;
 
 namespace CVWaferProber.MQTT
 {
-    public class MQTTFlowDeviceNode : BaseServiceNode
+    public class MQTTFlowDeviceNode : CVBaseDeviceNode
     {
-        public string DeviceCode { get; set; }
-        public MqttRequestManager RequestManager { get; private set; }
-        public MQTTFlowDeviceNode(string RCNodeName, int serviceId, string serviceType, string serviceCode, string serviceName, string serviceToken, string deviceCode, MqttRequestManager requestManager) : base(RCNodeName, serviceId, serviceType, serviceCode, serviceName)
+        public MQTTFlowDeviceNode(string serviceType, string serviceCode, string serviceName, string serviceToken, string upChannel, string downChannel, string deviceCode, MqttRequestManager requestManager)
+            : base(deviceCode, deviceCode, serviceType, serviceCode, serviceName, serviceToken, upChannel, downChannel)
         {
-            this.ServiceToken = serviceToken;
             this.DeviceCode = deviceCode;
             this.RequestManager = requestManager;
         }
-        public string BuildRequestString(string serialNumber, int flowId, string flowName, List<MQTTServiceMO> services)
+
+        public MQTTFlowDeviceNode(CVBaseDeviceNode dev) :
+            this(dev.Service.ServiceType, dev.Service.ServiceCode, dev.Service.ServiceName, dev.Service.ServiceToken, dev.Service.UpChannel, dev.Service.DownChannel, dev.DeviceCode, dev.RequestManager)
+        {
+        }
+
+        public string BuildRequestString(string serialNumber, int flowId, string flowName, List<FlowServiceMO> services)
         {
             return BuildRequestString(serialNumber, serialNumber, flowId, flowName, services);
         } 
-        public string BuildRequestString(string serialNumber, string name, int flowId, string flowName, List<MQTTServiceMO> services)
+        public string BuildRequestString(string serialNumber, string name, int flowId, string flowName, List<FlowServiceMO> services)
         {
-            MQTTCVRequestHeader req = BuildRequest(serialNumber, name, flowId, flowName, services);
+            MQTTCVRequestBaseHeader req = BuildRequest(serialNumber, name, flowId, flowName, services);
             return JsonConvert.SerializeObject(req);
         }
-        public MQTTCVRequestHeader BuildRequest(string serialNumber, int flowId, string flowName, List<MQTTServiceMO> services)
+        public MQTTCVRequestBaseHeader BuildRequest(string serialNumber, int flowId, string flowName, List<FlowServiceMO> services)
         {
             return BuildRequest(serialNumber, serialNumber, flowId, flowName, services);
         } 
-        public MQTTCVRequestHeader BuildRequest(string serialNumber, string name, int flowId, string flowName, List<MQTTServiceMO> services)
+        public MQTTCVRequestBaseHeader BuildRequest(string serialNumber, string name, int flowId, string flowName, List<FlowServiceMO> services)
         {
-            DeviceFlowRunParam<MQTTServiceMO> data = new DeviceFlowRunParam<MQTTServiceMO>()
+            DeviceFlowRunParam<FlowServiceMO> data = new DeviceFlowRunParam<FlowServiceMO>()
             {
                 Name = name,
                 Services = services,
                 TemplateParam = new CVTemplateParam() { ID = flowId, Name = flowName }
             };
-            MQTTFlowRun<MQTTServiceMO> req = new MQTTFlowRun<MQTTServiceMO>(this.ServiceCode, this.DeviceCode, serialNumber, this.ServiceToken, data);
+            MQTTFlowRun<FlowServiceMO> req = new MQTTFlowRun<FlowServiceMO>(this.Service.ServiceCode, this.DeviceCode, serialNumber, this.Service.ServiceToken, data);
             return req;
         }
 
-        public async Task<MQTTBaseResponse?> WaitForResponseAsync(string msgId, TimeSpan? timeout = null)
+        public async Task<CVMQTTBaseResponse?> WaitForResponseAsync(string msgId, TimeSpan? timeout = null)
         {
             return await RequestManager.WaitForResponseAsync(msgId, timeout);
         }

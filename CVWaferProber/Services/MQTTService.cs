@@ -1,7 +1,10 @@
 ﻿using CVCommCore;
+using CVMQTTLib;
+using CVMQTTNodeClient;
 using CVWaferProber.Models;
 using CVWaferProber.MQTT;
 using Newtonsoft.Json;
+using System.Reflection;
 using WaferComm.Core;
 
 namespace CVWaferProber.Services
@@ -9,9 +12,9 @@ namespace CVWaferProber.Services
     public class MQTTService : IFlowService
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(MQTTService));
-        private readonly CVMQTTWPClient mqttClient;
+        private CVMQTTClientNode mqttClientNode;
         private readonly EventAggregator eventAggregator;
-        private MQTTServiceNode? nodeThis;
+        private MQTTServiceClientNode? nodeThis;
 
         public ConnectionInfo ConnectionInfo { get; private set; }
 
@@ -19,13 +22,40 @@ namespace CVWaferProber.Services
         {
             this.ConnectionInfo = new ConnectionInfo("Registed", "UnRegisted") { ServerIP = "127.0.0.1", Port = 8080 };
             this.eventAggregator = new EventAggregator();
-            this.nodeThis = new MQTTServiceNode("RC_local") { NodeAppId = "app1", NodeKey = "123456", ServiceType = CVServiceType.Client };
-            this.mqttClient = CVMQTTWPClient.Instance.Init(nodeThis);
-
-            mqttClient.MQTTRegistedEvent += Mqtt_MQTTRegistedEvent;
-            mqttClient.MQTTUnRegistedEvent += Mqtt_MQTTUnRegistedEvent;
+            Startup();
         }
 
+        public bool Startup()
+        {
+            string? currentPath = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            if (string.IsNullOrEmpty(currentPath))
+            {
+                if (logger.IsErrorEnabled) logger.Error("Failed to get assembly path");
+                return false;
+            }
+
+            var configPath = System.IO.Path.Combine(currentPath, "cfg", "MQTT.config");
+            if (!System.IO.File.Exists(configPath))
+            {
+                if (logger.IsErrorEnabled) logger.ErrorFormat("MQTT config file not found: {0}", configPath);
+                return false;
+            }
+
+            MQTTConfig config = new MQTTConfig(configPath);
+            CVMQTTConfig mqtt_cfg = new CVMQTTConfig()
+            {
+                Host = config.Host,
+                Port = config.Port,
+                IsServer = false,
+                IsDebugOut = false
+            };
+            this.nodeThis = new MQTTServiceClientNode("RC_local");
+            this.mqttClientNode = CVMQTTClientNode.Instance.Init(nodeThis,mqtt_cfg);
+
+            mqttClientNode.MQTTRegistedEvent += Mqtt_MQTTRegistedEvent;
+            mqttClientNode.MQTTUnRegistedEvent += Mqtt_MQTTUnRegistedEvent;
+            return true;
+        }
         private void Mqtt_MQTTUnRegistedEvent(object? sender, EventArgs e)
         {
             PublishStatus(ConnectionStatus.Disconnected);
@@ -40,26 +70,28 @@ namespace CVWaferProber.Services
             ConnectionInfo.SetConnected(status == ConnectionStatus.Connected);
             eventAggregator.Publish(new ConnectionStateChangedEvent(ConnectionInfo.IsConnected, ConnectionInfo.ServerIP, ConnectionInfo.Port));
         }
-        public async Task<MQTTBaseResponse?> FowRunAndWaitResponseAsync(int flowId, string flowName, string serialNumber, TimeSpan? timeout = null)
+        public async Task<CVMQTTBaseResponse?> FlowRunAndWaitResponseAsync(int flowId, string flowName, string serialNumber, TimeSpan? timeout = null)
         {
-            MQTTFlowDeviceNode? flowSvr = mqttClient.GetFlowService();
-            if (flowSvr == null)
+            //MQTTFlowDeviceNode? flowSvr = mqttClient.GetFlowService();
+            var dev = mqttClientNode.GetDevice("DEV.Flow.Default");
+            if (dev == null)
             {
                 if (logger.IsErrorEnabled) logger.Error("Please reconnect to MQTT.");
                 return null;
             }
-            var allSvrs = mqttClient.GetAllServices();
-            MQTTCVRequestHeader? req = flowSvr.BuildRequest(serialNumber, flowId, flowName, allSvrs);
+            MQTTFlowDeviceNode flowSvr = new MQTTFlowDeviceNode(dev);
+            var allSvrs = mqttClientNode.GetAllServices();
+            MQTTCVRequestBaseHeader? req = flowSvr.BuildRequest(serialNumber, flowId, flowName, allSvrs);
             if (req == null)
             {
                 if (logger.IsErrorEnabled) logger.Error("Build MQTT Request is null.");
-                return null; 
+                return null;
             }
             string msgId = req.MsgID;
             var waitTask = flowSvr.WaitForResponseAsync(msgId, timeout);
             try
             {
-                mqttClient.Publish(flowSvr.UpChannel, JsonConvert.SerializeObject(req));
+                mqttClientNode.Publish(flowSvr.Service.UpChannel, JsonConvert.SerializeObject(req));
                 // 等待响应
                 var response = await waitTask;
                 return response;
@@ -75,7 +107,7 @@ namespace CVWaferProber.Services
 
         public void Reconnect()
         {
-            mqttClient.ReRegist();
+            mqttClientNode.ReRegist();
         }
     }
 }

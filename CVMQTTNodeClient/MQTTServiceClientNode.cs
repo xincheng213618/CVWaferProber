@@ -38,8 +38,10 @@ namespace CVMQTTNodeClient
         private string _RCName;
         private bool _isStartup = false;
 
-        public MQTTServiceClientNode(string rcName)
+        public MQTTServiceClientNode(string rcName, string nodeAppId = "app1", string nodeKey = "123456")
         {
+            this.NodeKey = nodeKey;
+            this.NodeAppId = nodeAppId;
             this.ServiceType = CVServiceType.Client;
             this._isStartup = false;
             this.Token = null;
@@ -47,8 +49,6 @@ namespace CVMQTTNodeClient
             this.RCHBTopic = string.Empty;
             this._RCName = string.Empty;
             this.NodeName = string.Empty;
-            this.NodeKey = string.Empty;
-            this.NodeAppId = string.Empty;
             this.NodeTopic = string.Empty;
             this.HeartbeatData = string.Empty;
             this.RCName = rcName;

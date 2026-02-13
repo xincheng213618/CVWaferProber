@@ -25,7 +25,7 @@
             Data = data;
         }
     }
-    public class MQTTCVRequestHeader
+    public class MQTTCVRequestBaseHeader
     {
         public string Version { get; set; } = string.Empty;
         public string ServiceName { get; set; } = string.Empty;
@@ -35,7 +35,7 @@
         public string MsgID { get; set; } = string.Empty;
         public int ZIndex { get; set; }
 
-        public MQTTCVRequestHeader(string version, string serviceName, string deviceCode, string eventName, string serialNumber, string msgID, int zIndex)
+        public MQTTCVRequestBaseHeader(string version, string serviceName, string deviceCode, string eventName, string serialNumber, string msgID, int zIndex)
         {
             Version = version;
             ServiceName = serviceName;
@@ -45,12 +45,12 @@
             MsgID = msgID;
             ZIndex = zIndex;
         }
-        public MQTTCVRequestHeader()
+        public MQTTCVRequestBaseHeader()
         {
 
         }
     }
-    public class MQTTCVRequestTokenHeader : MQTTCVRequestHeader
+    public class MQTTCVRequestTokenHeader : MQTTCVRequestBaseHeader
     {
         public string Token { get; set; } = string.Empty;
 

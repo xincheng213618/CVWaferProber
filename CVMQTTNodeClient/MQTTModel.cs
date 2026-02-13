@@ -167,17 +167,17 @@ namespace CVMQTTNodeClient
             public string Name { get; set; } = string.Empty;
         }
 
-        public void SetResponse(MQTTBaseResponse? resp)
+        public void SetResponse(CVMQTTBaseResponse? resp)
         {
             RequestManager.SetResponse(resp);
         }
     }
 
-    public class MQTTDeviceMO
+    public class FlowDeviceMO
     {
         public string DeviceCode { get; set; } = string.Empty;
     }
-    public class MQTTServiceMO
+    public class FlowServiceMO
     {
         public string ServiceType { get; set; } = string.Empty;
         public string ServiceCode { get; set; } = string.Empty;
@@ -185,20 +185,36 @@ namespace CVMQTTNodeClient
         public string PublishTopic { get; set; } = string.Empty;
         public string Token { get; set; } = string.Empty;
 
-        public Dictionary<string, MQTTDeviceMO> Devices { get; }
+        public Dictionary<string, FlowDeviceMO> Devices { get; }
 
-        public MQTTServiceMO()
+        public FlowServiceMO()
         {
-            this.Devices = new Dictionary<string, MQTTDeviceMO>();
+            this.Devices = new Dictionary<string, FlowDeviceMO>();
         }
 
-        public MQTTServiceMO(string serviceType, string serviceCode, string subscribeTopic, string publishTopic, string token) : this()
+        public FlowServiceMO(string serviceType, string serviceCode, string subscribeTopic, string publishTopic, string token) : this()
         {
             ServiceType = serviceType;
             ServiceCode = serviceCode;
             SubscribeTopic = subscribeTopic;
             PublishTopic = publishTopic;
             Token = token;
+        }
+
+        public FlowServiceMO(MQTTNodeServiceTO service) : 
+            this(service.ServiceType, service.ServiceCode, service.DownChannel, service.UpChannel, service.ServiceToken)
+        {
+            this.Devices = new Dictionary<string, FlowDeviceMO>();
+            if (service.Devices != null)
+            {
+                foreach (var dev in service.Devices)
+                {
+                    this.Devices.TryAdd(dev.Key, new FlowDeviceMO()
+                    {
+                        DeviceCode = dev.Value.Code
+                    });
+                }
+            }
         }
     }
 }

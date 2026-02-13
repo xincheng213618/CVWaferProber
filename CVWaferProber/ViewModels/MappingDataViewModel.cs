@@ -629,7 +629,7 @@ namespace CVWaferProber.ViewModels
         }
         private void StartManFlow()
         {
-            if (SelectedWPFlow != null && SelectedItem is DieViewModel die)
+            if (_selectedWPFlow != null && SelectedItem is DieViewModel die)
             {
                 // 1. 手动测试初始化：标记IsManualTesting=true（隐藏总进度条）
                 IsManualTesting = true;
@@ -644,7 +644,7 @@ namespace CVWaferProber.ViewModels
                 ManTestingReady(die);
                 // 2. 启动单Die进度跟踪
                 StartSingleDieTest(die);
-                MainService.Instance.DoDieFlowExec(_selectedWPFlow, die, false, false);
+                Task task = MainService.Instance.StartDieTestingAsync(_selectedWPFlow, die);
                 ActivateCorrespondingPanel?.Invoke(this, _selectedWPFlow);
             }
         }
@@ -864,7 +864,7 @@ namespace CVWaferProber.ViewModels
             // 清理时释放所有Die的定时器资源
             foreach (var die in TestResults) die.Dispose();
             CustomMappingVM?.Cleanup();
-            CustomMappingVM.Chips.Clear();
+            CustomMappingVM?.Chips.Clear();
             TestResults.Clear();
             ResetProgressBars();
         }
@@ -1133,12 +1133,12 @@ namespace CVWaferProber.ViewModels
 
         private void LoadMappingFileFromCsv()
         {
-            List<CVMappingData> mappingData = null;
+            List<CVMappingData>? mappingData = null;
             if (!File.Exists(MappingCsvFilePath)) { logger.WarnFormat("File does not exist：{0}", MappingCsvFilePath); return; }
             bool bR = CsvMappingDataTool.LoadMappingCsv(MappingCsvFilePath, ref mappingData);
             if (bR && mappingData != null && mappingData.Count > 0)
             {
-                CustomMappingVM.RefreshFromMap(mappingData);
+                CustomMappingVM?.RefreshFromMap(mappingData);
                 ObservableCollection<DieViewModel> _TestResults = new ObservableCollection<DieViewModel>();
                 foreach (var map in CustomMappingVM.Chips)
                 {
@@ -1486,7 +1486,7 @@ namespace CVWaferProber.ViewModels
 
         public void OnMoveTo(ChipViewModel? dieVM)
         {
-            DieViewModel? toSelect = TestResults.First(t => t.MapX == dieVM.Column && t.MapY == dieVM.Row);
+            DieViewModel? toSelect = TestResults.First(t => t.MapX == dieVM?.Column && t.MapY == dieVM?.Row);
             if (toSelect != null) OnMoveTo(toSelect);
         }
 

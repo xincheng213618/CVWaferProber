@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CVMQTTNodeClient
 {
-    public class MQTTBaseResponse
+    public class CVMQTTBaseResponse
     {
         public string MsgId { get; set; }
         public string DeviceCode { get; set; }
@@ -18,17 +18,17 @@ namespace CVMQTTNodeClient
         public bool IsOK() => Code == 200;
         public bool IsPending() => Code == 102;
 
-        public static MQTTBaseResponse? Failed()
+        public static CVMQTTBaseResponse? Failed()
         {
-            return new MQTTBaseResponse() { Code = -1, Message = "Failed" };
+            return new CVMQTTBaseResponse() { Code = -1, Message = "Failed" };
         }
 
-        public static MQTTBaseResponse? OK()
+        public static CVMQTTBaseResponse? OK()
         {
-            return new MQTTBaseResponse() { Code = 200, Message = "OK" };
+            return new CVMQTTBaseResponse() { Code = 200, Message = "OK" };
         }
 
-        public MQTTBaseResponse()
+        public CVMQTTBaseResponse()
         {
             this.Code = -1;
             this.Message = "Failed";
@@ -40,7 +40,7 @@ namespace CVMQTTNodeClient
         }
     }
 
-    public class MQTTResponse<T> : MQTTBaseResponse
+    public class CVMQTTResponse<T> : CVMQTTBaseResponse
     {
         public T? Data { get; set; }
     }

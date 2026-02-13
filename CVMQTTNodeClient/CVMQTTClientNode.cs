@@ -16,6 +16,8 @@ namespace CVMQTTNodeClient
         // 使用ConcurrentDictionary替代Dictionary，线程安全
         private readonly ConcurrentDictionary<string, MQTTNodeServiceTO> _nodeServers = new();
         private readonly ConcurrentDictionary<string, MQTTNodeServiceTO> _svrTopics = new();
+        private readonly ConcurrentDictionary<string, CVBaseDeviceNode> _devices = new();
+        private readonly List<FlowServiceMO> _flowSvrs = new();
 
         private CancellationTokenSource? _closeTokenSource;
         private Task? _hbTask;
@@ -78,7 +80,7 @@ namespace CVMQTTNodeClient
         /// </summary>
         public CVMQTTClientNode Init(CVMQTTConfig mqtt_cfg, string rcName, string nodeAppId = "app1", string nodeKey = "123456")
         {
-            return Init(new MQTTServiceClientNode(rcName)
+            return Init(new MQTTServiceClientNode(rcName, nodeAppId, nodeKey)
             {
                 NodeAppId = nodeAppId,
                 NodeKey = nodeKey,
@@ -239,7 +241,7 @@ namespace CVMQTTNodeClient
                     {
                         _mqttUnRegistedEvent?.Invoke(_nodeThis, EventArgs.Empty);
                         Status = MqttNodeClientStatus.UnRegisted;
-                        _nodeThis.Reset();
+                        ClearCache();
                     }
 
                     if (Status == MqttNodeClientStatus.UnRegisted)
@@ -247,21 +249,12 @@ namespace CVMQTTNodeClient
                         ReRegist();
                     }
                 }
-                else
+                else if (Status == MqttNodeClientStatus.Registed)
                 {
-                    //if (currentStatus != MqttNodeClientStatus.Registed)
-                    //{
-                    //    _mqttRegistedEvent?.Invoke(_nodeThis, EventArgs.Empty);
-                    //    Status = MqttNodeClientStatus.Registed;
-                    //}
-
-                    if (Status == MqttNodeClientStatus.Registed)
+                    string serviceHeartbeat = _nodeThis.HeartbeatData;
+                    if (!string.IsNullOrEmpty(serviceHeartbeat))
                     {
-                        string serviceHeartbeat = _nodeThis.HeartbeatData;
-                        if (!string.IsNullOrEmpty(serviceHeartbeat))
-                        {
-                            _mqttControl?.Publish(_nodeThis.RCHBTopic, serviceHeartbeat);
-                        }
+                        _mqttControl?.Publish(_nodeThis.RCHBTopic, serviceHeartbeat);
                     }
                 }
             }
@@ -297,11 +290,7 @@ namespace CVMQTTNodeClient
             if (_nodeThis != null)
             {
                 _mqttDisconnectedEvent?.Invoke(_nodeThis, args);
-                _nodeThis.Reset();
-
-                // 清空服务缓存
-                _nodeServers.Clear();
-                _svrTopics.Clear();
+                ClearCache();
             }
         }
 
@@ -360,8 +349,8 @@ namespace CVMQTTNodeClient
                     break;
 
                 default:
-                    if (logger.IsDebugEnabled)
-                        logger.DebugFormat("This Node Recv mqtt => {0}", data);
+                    if (logger.IsWarnEnabled)
+                        logger.WarnFormat("Unprocessed msg. This Node Recv mqtt => {0}", data);
                     break;
             }
         }
@@ -400,7 +389,7 @@ namespace CVMQTTNodeClient
 
         private void ProcessQueryServicesResponse(string data)
         {
-            var resp_q = JsonConvert.DeserializeObject<MQTTResponse<Dictionary<string, List<MQTTNodeServiceTO>>>>(data);
+            var resp_q = JsonConvert.DeserializeObject<CVMQTTResponse<Dictionary<string, List<MQTTNodeServiceTO>>>>(data);
             if (resp_q?.Data == null)
             {
                 if (logger.IsDebugEnabled) logger.DebugFormat("Node Recv mqtt => {0}", data);
@@ -417,6 +406,12 @@ namespace CVMQTTNodeClient
                     {
                         _mqttControl?.Subscribe(svr.DownChannel);
                         _svrTopics.TryAdd(svr.DownChannel, svr);
+                        _flowSvrs.Add(new FlowServiceMO(svr));
+                        foreach (var dev in svr.Devices.Values)
+                        {
+                            CVBaseDeviceNode device = new CVBaseDeviceNode(dev,svr);
+                            _devices.TryAdd(device.DeviceCode, device);
+                        }
                         hasNewService = true;
                     }
                 }
@@ -434,7 +429,7 @@ namespace CVMQTTNodeClient
         {
             try
             {
-                var resp = JsonConvert.DeserializeObject<MQTTBaseResponse>(data);
+                var resp = JsonConvert.DeserializeObject<CVMQTTBaseResponse>(data);
                 if (logger.IsDebugEnabled)
                     logger.DebugFormat("Recv {0} => {1}", svr.ServiceName, JsonConvert.SerializeObject(resp));
 
@@ -451,29 +446,15 @@ namespace CVMQTTNodeClient
         /// <summary>
         /// 获取Flow服务节点
         /// </summary>
-        //public MQTTFlowDeviceNode? GetFlowService()
-        //{
-        //    const string svrCode = "SVR.Flow.Default";
+        public CVBaseDeviceNode? GetDevice(string devCode)
+        {
+            if (_devices.TryGetValue(devCode, out var device) && _nodeThis != null)
+            {
+               return device;
+            }
 
-        //    if (_nodeServers.TryGetValue(svrCode, out var node) && _nodeThis != null)
-        //    {
-        //        var device = node.Devices?.FirstOrDefault().Value;
-        //        if (device != null)
-        //        {
-        //            return new MQTTFlowDeviceNode(
-        //                _nodeThis.RCName,
-        //                -1,
-        //                node.ServiceType,
-        //                node.ServiceCode,
-        //                node.ServiceName,
-        //                node.ServiceToken,
-        //                device.Code,
-        //                node.RequestManager);
-        //        }
-        //    }
-
-        //    return null;
-        //}
+            return null;
+        }
 
         /// <summary>
         /// 注册到MQTT服务器
@@ -500,6 +481,7 @@ namespace CVMQTTNodeClient
             _nodeThis?.Reset();
             _nodeServers.Clear();
             _svrTopics.Clear();
+            _flowSvrs.Clear();
         }
 
         /// <summary>
@@ -521,7 +503,7 @@ namespace CVMQTTNodeClient
         /// <summary>
         /// 发布消息
         /// </summary>
-        public void Publish(string topic, MQTTCVRequestHeader request)
+        public void Publish(string topic, MQTTCVRequestBaseHeader request)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
             Publish(topic, JsonConvert.SerializeObject(request));
@@ -530,31 +512,13 @@ namespace CVMQTTNodeClient
         /// <summary>
         /// 获取所有服务
         /// </summary>
-        public List<MQTTServiceMO> GetAllServices()
+        public List<FlowServiceMO> GetAllServices()
         {
-            var services = new List<MQTTServiceMO>(_nodeServers.Count);
+            var services = new List<FlowServiceMO>(_flowSvrs.Count);
 
-            foreach (var service in _nodeServers.Values)
+            foreach (var service in _flowSvrs)
             {
-                var svrMO = new MQTTServiceMO(
-                    service.ServiceType,
-                    service.ServiceCode,
-                    service.DownChannel,
-                    service.UpChannel,
-                    service.ServiceToken);
-
-                if (service.Devices != null)
-                {
-                    foreach (var dev in service.Devices)
-                    {
-                        svrMO.Devices.TryAdd(dev.Key, new MQTTDeviceMO()
-                        {
-                            DeviceCode = dev.Value.Code
-                        });
-                    }
-                }
-
-                services.Add(svrMO);
+                services.Add(service);
             }
 
             return services;

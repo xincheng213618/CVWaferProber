@@ -11,7 +11,7 @@ namespace CVMQTTNodeClient
 
         private class RequestWaiter
         {
-            public TaskCompletionSource<MQTTBaseResponse> Tcs { get; } = new TaskCompletionSource<MQTTBaseResponse>();
+            public TaskCompletionSource<CVMQTTBaseResponse> Tcs { get; } = new TaskCompletionSource<CVMQTTBaseResponse>();
             public CancellationTokenSource CancellationTokenSource { get; }
             public DateTime CreateTime { get; } = DateTime.Now;
 
@@ -25,20 +25,20 @@ namespace CVMQTTNodeClient
             }
         }
 
-        public Task<MQTTBaseResponse> WaitForResponseAsync(string msgId, TimeSpan? timeout = null)
+        public Task<CVMQTTBaseResponse> WaitForResponseAsync(string msgId, TimeSpan? timeout = null)
         {
             var waiter = new RequestWaiter(timeout ?? _defaultTimeout);
 
             if (!_pendingRequests.TryAdd(msgId, waiter))
             {
-                return Task.FromException<MQTTBaseResponse>(
+                return Task.FromException<CVMQTTBaseResponse>(
                     new InvalidOperationException($"Duplicate request serial number: {msgId}"));
             }
 
             return waiter.Tcs.Task;
         }
 
-        public bool SetResponse(MQTTBaseResponse? response)
+        public bool SetResponse(CVMQTTBaseResponse? response)
         {
             if (string.IsNullOrEmpty(response?.MsgId))
                 return false;

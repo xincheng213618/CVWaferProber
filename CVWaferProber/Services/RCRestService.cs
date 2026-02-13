@@ -1,4 +1,5 @@
-﻿using CVWaferProber.Core.Restful;
+﻿using CVMQTTNodeClient;
+using CVWaferProber.Core.Restful;
 using CVWaferProber.Core.Restful.DTO;
 using CVWaferProber.Models;
 using CVWaferProber.MQTT;
@@ -469,7 +470,7 @@ namespace CVWaferProber.Services
             return Array.Exists(expiredKeywords, kw => message.Contains(kw, StringComparison.OrdinalIgnoreCase));
         }
 
-        public async Task<MQTTBaseResponse?> FowRunAndWaitResponseAsync(int flowId, string flowName, string serialNumber, TimeSpan? timeout = null)
+        public async Task<CVMQTTBaseResponse?> FlowRunAndWaitResponseAsync(int flowId, string flowName, string serialNumber, TimeSpan? timeout = null)
         {
             TimeSpan _timeout = timeout ?? _defaultTimeout;
             var resp = RcRunFlowByName(flowName, serialNumber);
@@ -479,11 +480,11 @@ namespace CVWaferProber.Services
                     new CancellationTokenSource(_timeout).Token);
                 if (flowResult != null && flowResult.IsSuccess)
                 {
-                    return MQTTBaseResponse.OK();
+                    return CVMQTTBaseResponse.OK();
                 }
             }
 
-            return MQTTBaseResponse.Failed();
+            return CVMQTTBaseResponse.Failed();
         }
 
         protected async Task<RespDataBaseFlowResultDTO> PollFlowResultWithRxAsync(string sn, CancellationToken cancellationToken)

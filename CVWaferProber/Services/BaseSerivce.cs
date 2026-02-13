@@ -32,19 +32,19 @@ namespace CVWaferProber.Services
             this.AutoTestingNextCompleted = null;
         }
 
-        public async Task StartTestingAsync(string timestamp, DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool isAuto)
+        public async Task StartTestingAsync(string timestamp, DieViewModel dieViewModel, WPFlowViewModel selectedWPFlow, bool hasNext, bool isAuto)
         {
             string sn = BuildFlowSN(dieViewModel, timestamp);
             dieViewModel.SerialNumber = sn;
-            await StartTestingAsync(dieViewModel, _selectedWPFlow, hasNext, isAuto);
+            await StartTestingAsync(dieViewModel, selectedWPFlow, hasNext, isAuto);
         }
-        public abstract Task StartTestingAsync(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool isAuto);
-        protected async Task RunFlowAsync(WPFlowViewModel _selectedWPFlow, DieViewModel dieViewModel, bool hasNext, bool isAuto)
+        public abstract Task StartTestingAsync(DieViewModel dieViewModel, WPFlowViewModel selectedWPFlow, bool hasNext, bool isAuto);
+        protected async Task RunFlowAsync(WPFlowViewModel selectedWPFlow, DieViewModel dieViewModel, bool hasNext, bool isAuto)
         {
             try
             {
-                var response = await _flowService.FowRunAndWaitResponseAsync(-1, _selectedWPFlow.Name,
-                    dieViewModel.SerialNumber, TimeSpan.FromSeconds(_selectedWPFlow.Timeout));
+                var response = await _flowService.FlowRunAndWaitResponseAsync(-1, selectedWPFlow.Name,
+                    dieViewModel.SerialNumber, TimeSpan.FromSeconds(selectedWPFlow.Timeout));
 
                 if (response != null)
                 {
@@ -78,7 +78,7 @@ namespace CVWaferProber.Services
                 }
                 else
                 {
-                    logger.Error($"Procedure {_selectedWPFlow.Name} startup failed");
+                    logger.Error($"Procedure {selectedWPFlow.Name} startup failed");
                     dieViewModel.ChangeStatus(ChipStatus.FAILED, true);
                 }
             }

@@ -17,14 +17,6 @@ namespace CVWaferProber.Services
     {
         public static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(MainService));
 
-        #region 进度管理相关
-
-        // 存储当前测试队列用于进度计算
-        private List<DieViewModel>? _currentTestQueue;
-        private int _currentQueueIndex = -1;
-
-        #endregion
-        //public string ProberId { get; set; }
         #region Events
         public event EventHandler<TestCompletedEventArgs> TestingCompleted;
         public event EventHandler<ChipViewModel> ChipSelected;
@@ -219,9 +211,6 @@ namespace CVWaferProber.Services
             // 如果测试队列完成，重置进度状态
             if (e.IsAuto)
             {
-                _currentTestQueue = null;
-                _currentQueueIndex = -1;
-
                 // 确保所有Die测试都标记为完成
                 Application.Current?.Dispatcher?.Invoke(() =>
                 {
@@ -282,15 +271,15 @@ namespace CVWaferProber.Services
             }
         }
 
-        public async Task DoDieFlowExec(WPFlowViewModel _selectedWPFlow, DieViewModel die, bool hasNext, bool isAuto)
+        public async Task StartDieTestingAsync(WPFlowViewModel selectedFlow, DieViewModel dieVM)
         {
-            if (_selectedWPFlow == null)
+            if (selectedFlow == null || dieVM == null)
             {
                 if (logger.IsErrorEnabled) logger.ErrorFormat("No flow selected for current die");
                 return;
             }
             BaseSerivce? baseSerivce = null;
-            switch (_selectedWPFlow?.FlowType)
+            switch (selectedFlow?.FlowType)
             {
                 case CVWaferProberFlowType.AOI:
                     baseSerivce = flowServices[CVWaferProberFlowType.AOI];
@@ -310,10 +299,17 @@ namespace CVWaferProber.Services
                 default:
                     break;
             }
+            if(baseSerivce == null)
+            {
+                if (logger.IsErrorEnabled) logger.ErrorFormat("No flow selected");
+                return;
+            }
             //获取Motion Axis信息
             proberClientService?.GetCurrentDieAxisAsync();
             //
-            await baseSerivce?.StartTestingAsync(die, _selectedWPFlow, hasNext, isAuto);
+            Task task = baseSerivce.StartTestingAsync(dieVM, selectedFlow, false, false);
+
+            await task;
         }
         private void DoNextDieFlowExec(AutoTestingItem item)
         {
@@ -333,7 +329,7 @@ namespace CVWaferProber.Services
                     //logger.InfoFormat("DoAutoDieFlowExecAsync={0}/{1}", dieNext.die.MapAxisToString(), dieNext.die.Status.ToString());
                     Task.Factory.StartNew(async () =>
                     {
-                        await DoAutoDieFlowExecAsync(item.CurSelectedWPFlow, dieNext.die, dieNext.diePre == null, item.HasNext, true);
+                        await MoveToDieAndTestingAsync(item.CurSelectedWPFlow, dieNext.die, dieNext.diePre == null, item.HasNext, true);
                         //TODO Testing
                         //await ExecuteDieTestWithProgress(item.CurSelectedWPFlow, dieNext.die, item.HasNext, true);
                     });
@@ -364,7 +360,7 @@ namespace CVWaferProber.Services
                die.Status == Core.Models.Enums.ChipStatus.IVL_COMPLETED ||
                die.Status == Core.Models.Enums.ChipStatus.EQE_COMPLETED;
         }
-        private async Task DoAutoDieFlowExecAsync(WPFlowViewModel _selectedWPFlow, DieViewModel die, bool isFirst, bool hasNext, bool isAuto)
+        private async Task MoveToDieAndTestingAsync(WPFlowViewModel selectedWPFlow, DieViewModel die, bool isFirst, bool hasNext, bool isAuto)
         {
             if (logger.IsInfoEnabled) logger.InfoFormat("Process Current Die={0}[isFirst:{1}/HasNext:{2}/Auto:{3}] => {4}", die.ToMapAxis().ToString(), isFirst, hasNext, isAuto, die.SerialNumber);
             try
@@ -376,7 +372,7 @@ namespace CVWaferProber.Services
                     // 新增：开始单Die进度跟踪
                     MainViewModel.Instance?.DataMappingVM?.StartSingleDieTest(die);
                     // 3. 执行测试流程 - 分阶段更新进度
-                    await ExecuteDieTestWithProgress(_selectedWPFlow, die, hasNext, isAuto);
+                    await ExecuteDieTestWithProgress(selectedWPFlow, die, hasNext, isAuto);
 
                     if (!hasNext)
                     {
@@ -531,16 +527,13 @@ namespace CVWaferProber.Services
             }
         }
 
-        public void StartAutoTesting(WPFlowViewModel? _selectedWPFlow, List<DieViewModel> dieVMList)
+        public void StartAutoTesting(WPFlowViewModel selectedWPFlow, List<DieViewModel> dieVMList)
         {
-            if (dieVMList == null || dieVMList.Count == 0)
+            if (selectedWPFlow == null ||dieVMList == null || dieVMList.Count == 0)
             {
                 logger.Warn("No dice selected for testing");
                 return;
             }
-            // 保存测试队列用于进度计算
-            _currentTestQueue = dieVMList;
-            _currentQueueIndex = -1;
             // 初始化进度条
             // 初始化进度条 - 重要：必须在UI线程执行
             Application.Current.Dispatcher.Invoke(() =>
@@ -555,7 +548,7 @@ namespace CVWaferProber.Services
             });
             //OutputLog(dieVMList);
             proberClientService?.StartAutoTest();
-            autoTestingItem = new AutoTestingItem(dieVMList, _selectedWPFlow);
+            autoTestingItem = new AutoTestingItem(dieVMList, selectedWPFlow);
             DoNextDieFlowExec(autoTestingItem);
         }
 
@@ -564,11 +557,7 @@ namespace CVWaferProber.Services
             // 重置进度条
             MainViewModel.Instance?.DataMappingVM?.ResetProgressBars();
 
-            // 重置队列状态
-            _currentTestQueue = null;
-            _currentQueueIndex = -1;
             autoTestingItem = null;
-            //_clientProber?.StopAsync();
             proberClientService?.StopTestAsync();
             // 停止但不重置进度条，保留当前进度状态
             Application.Current.Dispatcher.Invoke(() =>
