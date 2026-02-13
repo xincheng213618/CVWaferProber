@@ -1,9 +1,8 @@
 ﻿using CVWaferProber.Core.Models.Enums;
-using CVWaferProber.ViewModels;
 using System.IO;
 using System.Windows;
 
-namespace CVWaferProber.WinMsg
+namespace CVWaferProber.WinMessageCtrl
 {
     public static class GSMessages
     {
@@ -317,13 +316,13 @@ namespace CVWaferProber.WinMsg
                 if (logger.IsInfoEnabled) logger.Info("GetEventStatus17成功");
             }
         }
-        public void MeasurementProcessResult(DieViewModel die)
-        {
-            if (die.Status.HasValue && die.MapX.HasValue && die.MapY.HasValue)
-            {
-                MeasurementProcessResult(die.Status.Value, die.MapY.Value, die.MapX.Value);
-            }
-        }
+        //public void MeasurementProcessResult(DieViewModel die)
+        //{
+        //    if (die.Status.HasValue && die.MapX.HasValue && die.MapY.HasValue)
+        //    {
+        //        MeasurementProcessResult(die.Status.Value, die.MapY.Value, die.MapX.Value);
+        //    }
+        //}
 
         private void Logging(string message, int type = 0)
         {

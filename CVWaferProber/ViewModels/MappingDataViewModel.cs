@@ -13,6 +13,7 @@ using CVWaferProber.Models;
 using CVWaferProber.Services;
 using CVWaferProber.Views;
 using FreeSql;
+using Google.Protobuf.WellKnownTypes;
 using log4net;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -239,7 +240,7 @@ namespace CVWaferProber.ViewModels
 
         private string _searchSN;
         public string SearchSN { get => _searchSN; set => SetProperty(ref _searchSN, value); }
-        private List<TestItem> _testQueue;
+        private List<TestItem>? _testQueue;
         private ObservableCollection<DieViewModel> _filteredTestResults;
         public ObservableCollection<DieViewModel> FilteredTestResults { get => _filteredTestResults; set => SetProperty(ref _filteredTestResults, value); }
         #endregion
@@ -345,6 +346,9 @@ namespace CVWaferProber.ViewModels
             _isIVLCameraEnabled = false;
             _isAutoSN = true;
 
+            _Timestamp = string.Empty;
+            _WaferId = string.Empty;
+            _MappingCsvFilePath = string.Empty;
             // 初始化进度属性
             SingleDieTestProgress = 0;
             TotalTestProgress = 0;

@@ -107,7 +107,7 @@ namespace CVWaferProber.Views
             startupWorker.RunWorkerAsync();
         }
 
-        private void StartupWorker_DoWork(object sender, DoWorkEventArgs e)
+        private void StartupWorker_DoWork(object? sender, DoWorkEventArgs e)
         {
             for (int i = 0; i < startupTasks.Count; i++)
             {
@@ -121,7 +121,7 @@ namespace CVWaferProber.Views
             }
         }
 
-        private void StartupWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        private void StartupWorker_ProgressChanged(object? sender, ProgressChangedEventArgs e)
         {
             // 在主线程更新UI
             Dispatcher.BeginInvoke(new Action(() =>
@@ -137,7 +137,7 @@ namespace CVWaferProber.Views
             }), DispatcherPriority.Background);
         }
 
-        private void StartupWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void StartupWorker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
         {
             // 在主线程执行完成操作
             Dispatcher.BeginInvoke(new Action(() =>

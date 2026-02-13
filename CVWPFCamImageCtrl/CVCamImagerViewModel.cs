@@ -18,7 +18,7 @@ namespace CVWPFCamImageCtrl
         private ObservableCollection<ImageItem> _originalImageResults;  // Camera Measurement集合
         private ObservableCollection<POIMarker> _poiMarkers;
         private CVImager? _imageDisplay;
-        private uint id = 1;
+        //private uint id = 1;
 
 
         // 新增：图像新增事件（通知UI层选中最新项）
@@ -79,7 +79,7 @@ namespace CVWPFCamImageCtrl
 
         public void ClearImageResult()
         {
-            id = 1;
+            //id = 1;
             ImageSrc = null;
 
             // 清空所有图像集合

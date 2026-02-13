@@ -1,5 +1,4 @@
-﻿using CVCommCore;
-using CVMQTTLib;
+﻿using CVMQTTLib;
 using CVMQTTNodeClient;
 using CVWaferProber.Models;
 using CVWaferProber.MQTT;
@@ -54,8 +53,22 @@ namespace CVWaferProber.Services
 
             mqttClientNode.MQTTRegistedEvent += Mqtt_MQTTRegistedEvent;
             mqttClientNode.MQTTUnRegistedEvent += Mqtt_MQTTUnRegistedEvent;
+            mqttClientNode.MQTTFlowNodeResponseEvent += MqttClientNode_MQTTFlowNodeResponseEvent; ;
             return true;
         }
+
+        private void MqttClientNode_MQTTFlowNodeResponseEvent(object? sender, CVMQTTBaseResponse e)
+        {
+            if (e.DeviceCode == MQTTFlowDeviceNode.FlowDeviceCode)
+            {
+                if (logger.IsInfoEnabled) logger.InfoFormat("Flow result => {0}/{1}", e.Message, e.Code);
+            }
+            else
+            {
+                if (logger.IsInfoEnabled) logger.InfoFormat("[{0}/{1}]FlowNodeResponse {2} => {3}/{4}", e.DeviceCode, e.ZIndex, e.EventName, e.Message, e.Code);
+            }
+        }
+
         private void Mqtt_MQTTUnRegistedEvent(object? sender, EventArgs e)
         {
             PublishStatus(ConnectionStatus.Disconnected);
@@ -73,7 +86,7 @@ namespace CVWaferProber.Services
         public async Task<CVMQTTBaseResponse?> FlowRunAndWaitResponseAsync(int flowId, string flowName, string serialNumber, TimeSpan? timeout = null)
         {
             //MQTTFlowDeviceNode? flowSvr = mqttClient.GetFlowService();
-            var dev = mqttClientNode.GetDevice("DEV.Flow.Default");
+            var dev = mqttClientNode.GetDevice(MQTTFlowDeviceNode.FlowDeviceCode);
             if (dev == null)
             {
                 if (logger.IsErrorEnabled) logger.Error("Please reconnect to MQTT.");

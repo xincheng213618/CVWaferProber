@@ -17,7 +17,7 @@ namespace CVWPFCamImageCtrl
         public Brush Stroke { get; set; } = Brushes.Red;
         public double StrokeThickness { get; set; } = 1;
         public object Tag { get; set; }
-        public string Label { get; set; }
+        public string Label { get; set; } = string.Empty;
         public OpenCvSharp.Scalar Color { get; set; } = OpenCvSharp.Scalar.Red;
     }
 

@@ -1,9 +1,8 @@
-﻿using System.Reflection.Metadata;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 
-namespace CVWaferProber.WinMsg
+namespace CVWaferProber.WinMessageCtrl
 {
     /// <summary>
     /// Windows 消息处理类

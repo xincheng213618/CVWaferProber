@@ -74,7 +74,7 @@ namespace CVWaferProber.Services
 
         public ResultCSVModel() { }
 
-        public ResultCSVModel(ViewModels.DieViewModel dieViewModel)
+        public ResultCSVModel(DieViewModel dieViewModel)
         {
             this.Id = dieViewModel.Id.Value;
             this.Row = dieViewModel.MapY.Value;

@@ -1020,7 +1020,7 @@ namespace CVWPFCamImageCtrl
 
 
                     string fExt = Path.GetExtension(selectedImage.ImagePath)?.ToLower() ?? string.Empty;
-                    BitmapSource targetBitmap = null;
+                    BitmapSource? targetBitmap = null;
                     (int width, int height, int channels) imageInfo = (0, 0, 0);
 
                     try
@@ -1265,27 +1265,27 @@ namespace CVWPFCamImageCtrl
                 ImageDisplay.SetZoomLevel(newZoom);
             }
         }
-        private void ZoomIn_Click(object sender, RoutedEventArgs e)
+        private void ZoomIn_Click(object? sender, RoutedEventArgs? e)
         {
             ImageDisplay.ZoomIn();
         }
 
-        private void ZoomOut_Click(object sender, RoutedEventArgs e)
+        private void ZoomOut_Click(object? sender, RoutedEventArgs? e)
         {
             ImageDisplay.ZoomOut();
         }
 
-        private void ZoomOriginal_Click(object sender, RoutedEventArgs e)
+        private void ZoomOriginal_Click(object? sender, RoutedEventArgs? e)
         {
             ImageDisplay.ZoomToOriginal();
         }
 
-        private void ZoomFit_Click(object sender, RoutedEventArgs e)
+        private void ZoomFit_Click(object? sender, RoutedEventArgs? e)
         {
             ImageDisplay.ZoomToFit();
         }
 
-        private void PreviousImage_Click(object sender, RoutedEventArgs e)
+        private void PreviousImage_Click(object? sender, RoutedEventArgs? e)
         {
             var currentCollection = GetCurrentActiveCollection(); // 获取当前视图的集合
             if (currentCollection.Any() && _currentImageIndex > 0)
@@ -1294,7 +1294,7 @@ namespace CVWPFCamImageCtrl
             }
         }
 
-        private void NextImage_Click(object sender, RoutedEventArgs e)
+        private void NextImage_Click(object? sender, RoutedEventArgs? e)
         {
             var currentCollection = GetCurrentActiveCollection(); // 获取当前视图的集合
             if (currentCollection.Any() && _currentImageIndex < currentCollection.Count - 1)

@@ -474,12 +474,12 @@ namespace CVWaferProber.Services
         // DTO类保持不变
         public class DetailResult_CommFile_V2
         {
-            public string ResultFileName { get; set; }
+            public string ResultFileName { get; set; } = string.Empty;
         }
 
         public class DarkResultDto
         {
-            public string GradeLevel { get; set; }
+            public string GradeLevel { get; set; } = string.Empty;
         }
     }
 }

@@ -10,8 +10,8 @@ namespace CVWPFCamImageCtrl.Converters
 {
     public class BoolToTextConverter : IValueConverter
     {
-        public string TrueValue { get; set; }
-        public string FalseValue { get; set; }
+        public string TrueValue { get; set; } = string.Empty;
+        public string FalseValue { get; set; } = string.Empty;
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

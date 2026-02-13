@@ -29,7 +29,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WaferComm.Processors", "Waf
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WaferComm.StateMachine", "WaferProberClient\WaferComm.StateMachine\WaferComm.StateMachine.csproj", "{897A2792-F73D-2AD5-DEB5-4193E12A4AB0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CVMQTTNodeClient", "CVMQTTNodeClient\CVMQTTNodeClient.csproj", "{1BFBF81A-155C-460A-896C-A3371A153D78}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CVMQTTNodeClient", "CVMQTTNodeClient\CVMQTTNodeClient.csproj", "{1BFBF81A-155C-460A-896C-A3371A153D78}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinMessageCtrl", "WinMessageCtrl\WinMessageCtrl.csproj", "{793BCFB7-F13B-4B5F-A426-D9BDCB3A20D8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -135,6 +137,14 @@ Global
 		{1BFBF81A-155C-460A-896C-A3371A153D78}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1BFBF81A-155C-460A-896C-A3371A153D78}.Release|x64.ActiveCfg = Release|Any CPU
 		{1BFBF81A-155C-460A-896C-A3371A153D78}.Release|x64.Build.0 = Release|Any CPU
+		{793BCFB7-F13B-4B5F-A426-D9BDCB3A20D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{793BCFB7-F13B-4B5F-A426-D9BDCB3A20D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{793BCFB7-F13B-4B5F-A426-D9BDCB3A20D8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{793BCFB7-F13B-4B5F-A426-D9BDCB3A20D8}.Debug|x64.Build.0 = Debug|Any CPU
+		{793BCFB7-F13B-4B5F-A426-D9BDCB3A20D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{793BCFB7-F13B-4B5F-A426-D9BDCB3A20D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{793BCFB7-F13B-4B5F-A426-D9BDCB3A20D8}.Release|x64.ActiveCfg = Release|Any CPU
+		{793BCFB7-F13B-4B5F-A426-D9BDCB3A20D8}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

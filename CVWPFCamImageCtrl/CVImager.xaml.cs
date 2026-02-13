@@ -23,7 +23,7 @@ namespace CVWPFCamImageCtrl
             DependencyProperty.Register("CurrentImage", typeof(ImageSource), typeof(CVImager),
                 new PropertyMetadata(null, OnCurrentImageChanged));
 
-        public ImageSource CurrentImage
+        public ImageSource? CurrentImage
         {
             get => (ImageSource)GetValue(CurrentImageProperty);
             set
@@ -114,12 +114,12 @@ namespace CVWPFCamImageCtrl
                 MainScrollViewer.ScrollToVerticalOffset(0);
             }, DispatcherPriority.Background);
         }
-        private void OnTransformChanged(object sender, EventArgs e)
+        private void OnTransformChanged(object? sender, EventArgs e)
         {
             UpdateDisplayInfo();
         }
 
-        private void OnScrollChanged(object sender, ScrollChangedEventArgs e)
+        private void OnScrollChanged(object? sender, ScrollChangedEventArgs e)
         {
             UpdateDisplayInfo();
         }

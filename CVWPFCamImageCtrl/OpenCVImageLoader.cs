@@ -12,7 +12,7 @@ namespace CVWPFCamImageCtrl
         /// <summary>
         /// 高效加载大TIFF图像（带内存优化）
         /// </summary>
-        public static BitmapSource LoadTiffImage(string filePath, double scaleFactor = 0.1)
+        public static BitmapSource? LoadTiffImage(string filePath, double scaleFactor = 0.1)
         {
             if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
                 return null;
@@ -72,7 +72,7 @@ namespace CVWPFCamImageCtrl
             return (0, 0, 0);
         }
 
-        public static BitmapSource ConvertMatToBitmap(Mat mat)
+        public static BitmapSource? ConvertMatToBitmap(Mat mat)
         {
             if (mat.Empty()) return null;
 

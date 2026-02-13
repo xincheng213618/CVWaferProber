@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace CVWaferProber.WinMsg
+namespace CVWaferProber.WinMessageCtrl
 {
     public class GSDLLAPI
     {

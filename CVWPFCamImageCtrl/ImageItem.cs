@@ -19,7 +19,10 @@ namespace CVWPFCamImageCtrl
         } 
         public ImageItem(int id) 
         {
-            _id = (int)id;
+            this._id = id;
+            this._imagePath = string.Empty;
+            this._fileName = string.Empty;
+            this._status = string.Empty;
         }
 
         public double BrightnessUniformity 
@@ -61,7 +64,7 @@ namespace CVWPFCamImageCtrl
         }
 
         private static uint id = 1;
-        public static ImageItem CreateFromFile(string filePath)
+        public static ImageItem? CreateFromFile(string filePath)
         {
             if (!File.Exists(filePath))
                 return null;

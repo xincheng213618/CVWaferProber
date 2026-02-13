@@ -95,7 +95,7 @@ namespace CVWaferProber.MQTT
     }
     public class DeviceFlowCombinedRunParam<T>
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public int Timeout { get; set; } = 600;
         public CVTemplateParam TemplateParam { get; set; }
         public List<T> Services { get; set; }

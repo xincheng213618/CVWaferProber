@@ -4,7 +4,6 @@ using CVCommCore;
 using CVWaferProber.Config;
 using CVWaferProber.Models;
 using CVWaferProber.ViewModels;
-using CVWaferProber.WinMsg;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
 using System.Text;
@@ -24,7 +23,7 @@ namespace CVWaferProber.Services
         #endregion
         private MQTTService mqttService;
         private MappingService mappingService;
-        private GSWMProcessor? _wmProcessor;
+        //private GSWMProcessor? _wmProcessor;
         private ProberClientService proberClientService;
         private readonly Dictionary<CVWaferProberFlowType, BaseSerivce> flowServices =
             new Dictionary<CVWaferProberFlowType, BaseSerivce>();
@@ -233,6 +232,7 @@ namespace CVWaferProber.Services
         }
 
         #region Window Message
+        /*
         public void InitializeWindow(System.Windows.Window win)
         {
             _wmProcessor = new GSWMProcessor(win);
@@ -261,6 +261,7 @@ namespace CVWaferProber.Services
                 _wmProcessor.MeasurementStoped();
             }
         }
+        //////////////////////////////*/
         #endregion
 
         public void ResultDisplay(DieViewModel dieViewModel)
@@ -304,8 +305,8 @@ namespace CVWaferProber.Services
                 if (logger.IsErrorEnabled) logger.ErrorFormat("No flow selected");
                 return;
             }
-            //获取Motion Axis信息
-            proberClientService?.GetCurrentDieAxisAsync();
+            ////获取Motion Axis信息
+            //proberClientService?.GetCurrentDieAxisAsync();
             //
             Task task = baseSerivce.StartTestingAsync(dieVM, selectedFlow, false, false);
 
@@ -320,11 +321,11 @@ namespace CVWaferProber.Services
                 if (dieNext.die.Status == Core.Models.Enums.ChipStatus.WAITING)
                 {
                     if(logger.IsDebugEnabled) logger.DebugFormat("Starting Visual Inspection... => {0}", dieNext.die.MapAxisToString());
-                    // 修复：提前初始化下一个Die的进度
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        MainViewModel.Instance?.DataMappingVM?.StartSingleDieTest(dieNext.die);
-                    });
+                    //// 修复：提前初始化下一个Die的进度
+                    //Application.Current.Dispatcher.Invoke(() =>
+                    //{
+                    //    MainViewModel.Instance?.DataMappingVM?.StartSingleDieTest(dieNext.die);
+                    //});
                     PreAutoTestingNextDie?.Invoke(this, (dieNext.diePre, dieNext.die));
                     //logger.InfoFormat("DoAutoDieFlowExecAsync={0}/{1}", dieNext.die.MapAxisToString(), dieNext.die.Status.ToString());
                     Task.Factory.StartNew(async () =>
@@ -464,6 +465,8 @@ namespace CVWaferProber.Services
                 return;
             }
 
+            //获取Motion Axis信息
+            proberClientService?.GetCurrentDieAxisAsync();
             try
             {
                 // 执行测试流程

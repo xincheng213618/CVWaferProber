@@ -45,6 +45,7 @@ namespace CVMQTTNodeClient
         private event MQTTConnectedEventHandler? _mqttDisconnectedEvent;
         private event EventHandler? _mqttRegistedEvent;
         private event EventHandler? _mqttUnRegistedEvent;
+        private event EventHandler<CVMQTTBaseResponse>? _mqttFlowNodeResponseEvent;
 
         public event MQTTConnectedEventHandler MQTTConnectedEvent
         {
@@ -68,6 +69,12 @@ namespace CVMQTTNodeClient
         {
             add => _mqttUnRegistedEvent += value;
             remove => _mqttUnRegistedEvent -= value;
+        }
+               
+        public event EventHandler<CVMQTTBaseResponse> MQTTFlowNodeResponseEvent
+        {
+            add => _mqttFlowNodeResponseEvent += value;
+            remove => _mqttFlowNodeResponseEvent -= value;
         }
 
         private CVMQTTClientNode() : base()
@@ -297,7 +304,11 @@ namespace CVMQTTNodeClient
         private void OnMqttMsgEvent(object sender, MQTTMsgEventArgs args)
         {
             if (args == null || string.IsNullOrEmpty(args.Topic) || string.IsNullOrEmpty(args.Data))
+            {
+                if (logger.IsWarnEnabled)
+                    logger.Warn("MQTTMsgEventArgs is null / Topic or Data is empty");
                 return;
+            }
 
             try
             {
@@ -430,9 +441,14 @@ namespace CVMQTTNodeClient
             try
             {
                 var resp = JsonConvert.DeserializeObject<CVMQTTBaseResponse>(data);
+                if (resp == null) { return; }
                 if (logger.IsDebugEnabled)
                     logger.DebugFormat("Recv {0} => {1}", svr.ServiceName, JsonConvert.SerializeObject(resp));
 
+                if (_devices.TryGetValue(resp.DeviceCode, out var device))
+                {
+                    _mqttFlowNodeResponseEvent?.Invoke(device, resp);
+                }
                 svr.SetResponse(resp);
             }
             catch (Exception ex)

@@ -5,6 +5,7 @@ namespace CVWaferProber.MQTT
 {
     public class MQTTFlowDeviceNode : CVBaseDeviceNode
     {
+        public static string FlowDeviceCode  = "DEV.Flow.Default";
         public MQTTFlowDeviceNode(string serviceType, string serviceCode, string serviceName, string serviceToken, string upChannel, string downChannel, string deviceCode, MqttRequestManager requestManager)
             : base(deviceCode, deviceCode, serviceType, serviceCode, serviceName, serviceToken, upChannel, downChannel)
         {
