@@ -20,7 +20,19 @@ namespace CVWPFCamImageCtrl
         private ObservableCollection<ImageItem> _originalImageResults;  // Camera Measurement集合
         private ObservableCollection<POIMarker> _poiMarkers;
         private CVImager? _imageDisplay;
-        private uint id = 1;
+        // 【关键修改】使用静态线程安全计数器，替代原有id字段
+        private static int _globalImageId = 0;
+        // 【新增方法】获取下一个全局唯一ID（线程安全）
+        public int GetNextImageId()
+        {
+            return Interlocked.Increment(ref _globalImageId);
+        }
+
+        // 【新增方法】重置ID计数器（清空图片时调用）
+        public void ResetImageIdCounter()
+        {
+            Interlocked.Exchange(ref _globalImageId, 0);
+        }
         // 新增：实时预览开关（绑定到CheckBox）
         private bool _isRealTimePreviewEnabled = false; // 默认勾选
         public bool IsRealTimePreviewEnabled
@@ -72,7 +84,8 @@ namespace CVWPFCamImageCtrl
 
         public void ClearImageResult()
         {
-            id = 1;
+            // 【关键修改】清空时重置ID计数器
+            ResetImageIdCounter();
             ImageSrc = null;
 
             // 清空所有图像集合
@@ -231,7 +244,7 @@ namespace CVWPFCamImageCtrl
             }
 
             // 构造ImageItem
-            var imageItem = new ImageItem(Interlocked.Increment(ref id))
+            var imageItem = new ImageItem(GetNextImageId())
             {
                 FileName = Path.GetFileName(filePath),
                 ImagePath = filePath,
@@ -283,7 +296,7 @@ namespace CVWPFCamImageCtrl
             }
 
             // 构造ImageItem
-            var imageItem = new ImageItem(Interlocked.Increment(ref id))
+            var imageItem = new ImageItem(GetNextImageId())
             {
                 FileName = Path.GetFileName(filePath),
                 ImagePath = filePath,

@@ -241,7 +241,7 @@ namespace CVWaferProber.Services
                     return;
                 }
 
-                int imageId = 1;
+                //int imageId = 1;
 
                 foreach (var masterResult in algResults)
                 {
@@ -257,7 +257,7 @@ namespace CVWaferProber.Services
                         }
                         Application.Current.Dispatcher.Invoke(() =>
                         {
-                            AddImageToDataGrid(imageId++, filePath);
+                            AddImageToDataGrid(filePath);
                         });
                         continue;
                     }
@@ -278,7 +278,7 @@ namespace CVWaferProber.Services
 
                         Application.Current.Dispatcher.Invoke(() =>
                         {
-                            AddImageToDataGrid(imageId++, filePath);
+                            AddImageToDataGrid(filePath);
                         });
 
                         logger.Debug($"added Analysis Image: {Path.GetFileName(filePath)}");
@@ -310,7 +310,7 @@ namespace CVWaferProber.Services
                     return;
                 }
 
-                int imageId = 1000;
+             
                 int addedCount = 0;
 
                 foreach (var result in cameraResults)
@@ -340,14 +340,7 @@ namespace CVWaferProber.Services
 
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        var imageItem = new ImageItem(imageId++)
-                        {
-                            FileName = Path.GetFileName(filePath),
-                            ImagePath = filePath,
-                            FileSizeMB = new FileInfo(filePath).Length / (1024.0 * 1024.0),
-                            Status = "Ready"
-                        };
-                        CustomImageVM?.AddOriginalImageOnly(imageItem);
+                        AddOriginalImageToDataGrid(filePath);
                     });
 
                     addedCount++;
@@ -489,9 +482,12 @@ namespace CVWaferProber.Services
         }
         #endregion
 
-        private void AddImageToDataGrid(int id, string filePath)
+        private void AddImageToDataGrid(string filePath)
         {
-            var imageItem = new ImageItem(id)
+            // 调用ViewModel的ID生成器获取唯一ID
+            int imageId = CustomImageVM.GetNextImageId();
+
+            var imageItem = new ImageItem(imageId)
             {
                 FileName = Path.GetFileName(filePath),
                 ImagePath = filePath,
@@ -500,6 +496,21 @@ namespace CVWaferProber.Services
             };
 
             CustomImageVM?.AddImage(imageItem);
+        }
+        // 【新增方法】批量添加原始图片时使用统一ID
+        private void AddOriginalImageToDataGrid(string filePath)
+        {
+            int imageId = CustomImageVM.GetNextImageId();
+
+            var imageItem = new ImageItem(imageId)
+            {
+                FileName = Path.GetFileName(filePath),
+                ImagePath = filePath,
+                FileSizeMB = new FileInfo(filePath).Length / (1024.0 * 1024.0),
+                Status = "Ready"
+            };
+
+            CustomImageVM?.AddOriginalImageOnly(imageItem);
         }
 
         /// <summary>
