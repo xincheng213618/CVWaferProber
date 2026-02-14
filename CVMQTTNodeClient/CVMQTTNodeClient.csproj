@@ -14,6 +14,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="ColorVision.Core.Message">
+      <HintPath>..\DLL\ColorVision.Core.Message.dll</HintPath>
+    </Reference>
+    <Reference Include="ColorVision.Message.Flow">
+      <HintPath>..\DLL\ColorVision.Message.Flow.dll</HintPath>
+    </Reference>
+    <Reference Include="ColorVision.Message.Services">
+      <HintPath>..\DLL\ColorVision.Message.Services.dll</HintPath>
+    </Reference>
     <Reference Include="CVCommCore">
       <HintPath>..\DLL\CVCommCore.dll</HintPath>
     </Reference>

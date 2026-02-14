@@ -1,4 +1,6 @@
-﻿using CVMQTTLib;
+﻿using ColorVision.Core.Message.Response;
+using ColorVision.Message.Flow;
+using CVMQTTLib;
 using CVMQTTNodeClient;
 using CVWaferProber.Models;
 using CVWaferProber.MQTT;
@@ -57,7 +59,7 @@ namespace CVWaferProber.Services
             return true;
         }
 
-        private void MqttClientNode_MQTTFlowNodeResponseEvent(object? sender, CVMQTTBaseResponse e)
+        private void MqttClientNode_MQTTFlowNodeResponseEvent(object? sender, DeviceResponseMessageHeader e)
         {
             if (e.DeviceCode == MQTTFlowDeviceNode.FlowDeviceCode)
             {
@@ -83,9 +85,8 @@ namespace CVWaferProber.Services
             ConnectionInfo.SetConnected(status == ConnectionStatus.Connected);
             eventAggregator.Publish(new ConnectionStateChangedEvent(ConnectionInfo.IsConnected, ConnectionInfo.ServerIP, ConnectionInfo.Port));
         }
-        public async Task<CVMQTTBaseResponse?> FlowRunAndWaitResponseAsync(int flowId, string flowName, string serialNumber, TimeSpan? timeout = null)
+        public async Task<DeviceResponseMessageHeader?> FlowRunAndWaitResponseAsync(int flowId, string flowName, string serialNumber, TimeSpan? timeout = null)
         {
-            //MQTTFlowDeviceNode? flowSvr = mqttClient.GetFlowService();
             var dev = mqttClientNode.GetDevice(MQTTFlowDeviceNode.FlowDeviceCode);
             if (dev == null)
             {
@@ -94,7 +95,7 @@ namespace CVWaferProber.Services
             }
             MQTTFlowDeviceNode flowSvr = new MQTTFlowDeviceNode(dev);
             var allSvrs = mqttClientNode.GetAllServices();
-            MQTTCVRequestBaseHeader? req = flowSvr.BuildRequest(serialNumber, flowId, flowName, allSvrs);
+            FlowDeviceRequestRunMessage? req = flowSvr.BuildRequest(serialNumber, flowId, flowName, allSvrs);
             if (req == null)
             {
                 if (logger.IsErrorEnabled) logger.Error("Build MQTT Request is null.");

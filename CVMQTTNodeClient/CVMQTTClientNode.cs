@@ -1,4 +1,9 @@
-﻿using CVCommCore;
+﻿using ColorVision.Core.Message;
+using ColorVision.Core.Message.Request;
+using ColorVision.Core.Message.Response;
+using ColorVision.Message.Model;
+using ColorVision.Message.Services;
+using CVCommCore;
 using CVMQTTLib;
 using Newtonsoft.Json;
 using System.Collections.Concurrent;
@@ -17,7 +22,7 @@ namespace CVMQTTNodeClient
         private readonly ConcurrentDictionary<string, MQTTNodeServiceTO> _nodeServers = new();
         private readonly ConcurrentDictionary<string, MQTTNodeServiceTO> _svrTopics = new();
         private readonly ConcurrentDictionary<string, CVBaseDeviceNode> _devices = new();
-        private readonly List<FlowServiceMO> _flowSvrs = new();
+        private readonly List<ServiceMO> _flowSvrs = new();
 
         private CancellationTokenSource? _closeTokenSource;
         private Task? _hbTask;
@@ -45,7 +50,7 @@ namespace CVMQTTNodeClient
         private event MQTTConnectedEventHandler? _mqttDisconnectedEvent;
         private event EventHandler? _mqttRegistedEvent;
         private event EventHandler? _mqttUnRegistedEvent;
-        private event EventHandler<CVMQTTBaseResponse>? _mqttFlowNodeResponseEvent;
+        private event EventHandler<DeviceResponseMessageHeader>? _mqttFlowNodeResponseEvent;
 
         public event MQTTConnectedEventHandler MQTTConnectedEvent
         {
@@ -71,7 +76,7 @@ namespace CVMQTTNodeClient
             remove => _mqttUnRegistedEvent -= value;
         }
                
-        public event EventHandler<CVMQTTBaseResponse> MQTTFlowNodeResponseEvent
+        public event EventHandler<DeviceResponseMessageHeader> MQTTFlowNodeResponseEvent
         {
             add => _mqttFlowNodeResponseEvent += value;
             remove => _mqttFlowNodeResponseEvent -= value;
@@ -338,24 +343,24 @@ namespace CVMQTTNodeClient
         {
             if (_nodeThis == null) return;
 
-            var resp = JsonConvert.DeserializeObject<MQTTNodeServiceHeader>(data);
+            var resp = JsonConvert.DeserializeObject<ServiceNodeResponseHeader>(data);
             if (resp == null) return;
 
             switch (resp.EventName)
             {
-                case MQTTNodeServiceEventEnum.Event_Regist:
+                case ServiceNodeEventEnum.Event_Regist:
                     ProcessRegistResponse(data);
                     break;
 
-                case MQTTNodeServiceEventEnum.Event_Startup:
+                case ServiceNodeEventEnum.Event_Startup:
                     ProcessStartupResponse();
                     break;
 
-                case MQTTNodeServiceEventEnum.Event_QueryServices:
+                case ServiceNodeEventEnum.Event_QueryServices:
                     ProcessQueryServicesResponse(data);
                     break;
 
-                case MQTTNodeServiceEventEnum.Event_ServiceHeartbeat:
+                case ServiceNodeEventEnum.Event_ServiceHeartbeat:
                     _nodeThis.RecvHeartbeat();
                     break;
 
@@ -368,7 +373,7 @@ namespace CVMQTTNodeClient
 
         private void ProcessRegistResponse(string data)
         {
-            var resp_reg = JsonConvert.DeserializeObject<MQTTNodeServiceRegistResponse>(data);
+            var resp_reg = JsonConvert.DeserializeObject<ServiceNodeRegistResponse>(data);
             if (resp_reg?.Code == 0)
             {
                 if (_nodeThis != null && _nodeThis.RefreshToken(resp_reg.Token) && logger.IsDebugEnabled)
@@ -391,7 +396,7 @@ namespace CVMQTTNodeClient
                 if (_nodeThis.Token != null && !string.IsNullOrEmpty(_nodeThis.Token.AccessToken))
                 {
                     _nodeThis.Startup();
-                    var request = new MQTTRCServicesQueryRequest(_nodeThis.Token.AccessToken);
+                    var request = new ServiceNodeQueryRequest(_nodeThis.Token.AccessToken, _nodeThis.NodeName, _nodeThis.ServiceType.ToString().ToLower());
                     var topic = MQTTCVServiceTopicBuilder.BuildPublicTopic(_nodeThis.RCName);
                     _mqttControl?.Publish(topic, JsonConvert.SerializeObject(request));
                 }
@@ -400,8 +405,8 @@ namespace CVMQTTNodeClient
 
         private void ProcessQueryServicesResponse(string data)
         {
-            var resp_q = JsonConvert.DeserializeObject<CVMQTTResponse<Dictionary<string, List<MQTTNodeServiceTO>>>>(data);
-            if (resp_q?.Data == null)
+            var resp_q = JsonConvert.DeserializeObject<ServiceNodeQueryResponse>(data);
+            if (resp_q == null || resp_q.Data == null || resp_q.Data.Count == 0)
             {
                 if (logger.IsDebugEnabled) logger.DebugFormat("Node Recv mqtt => {0}", data);
                 return;
@@ -411,13 +416,14 @@ namespace CVMQTTNodeClient
 
             foreach (var item in resp_q.Data)
             {
-                foreach (var svr in item.Value)
+                foreach (var _svr in item.Value)
                 {
+                    MQTTNodeServiceTO svr = new MQTTNodeServiceTO(_svr);
                     if (_nodeServers.TryAdd(svr.ServiceCode, svr))
                     {
                         _mqttControl?.Subscribe(svr.DownChannel);
                         _svrTopics.TryAdd(svr.DownChannel, svr);
-                        _flowSvrs.Add(new FlowServiceMO(svr));
+                        _flowSvrs.Add(MessageBuilder.Build(_svr));
                         foreach (var dev in svr.Devices.Values)
                         {
                             CVBaseDeviceNode device = new CVBaseDeviceNode(dev,svr);
@@ -440,7 +446,7 @@ namespace CVMQTTNodeClient
         {
             try
             {
-                var resp = JsonConvert.DeserializeObject<CVMQTTBaseResponse>(data);
+                var resp = JsonConvert.DeserializeObject<DeviceResponseMessageHeader>(data);
                 if (resp == null) { return; }
                 if (logger.IsDebugEnabled)
                     logger.DebugFormat("Recv {0} => {1}", svr.ServiceName, JsonConvert.SerializeObject(resp));
@@ -483,13 +489,19 @@ namespace CVMQTTNodeClient
             {
                 if (isReset) ClearCache();
 
-                var data = JsonConvert.SerializeObject(new MQTTNodeServiceRegist(_nodeThis));
+                var data = JsonConvert.SerializeObject(BuildHBReq());
                 _mqttControl?.Publish(_nodeThis.RCRegTopic, data);
             }
             catch (Exception ex)
             {
                 if (logger.IsErrorEnabled) logger.Error("Regist failed", ex);
             }
+        }
+
+        private ServiceNodeRegistRequest BuildHBReq()
+        {
+            ServiceNodeRegistRequest req = new ServiceNodeRegistRequest(_nodeThis.NodeName, _nodeThis.NodeAppId, _nodeThis.NodeKey, _nodeThis.NodeTopic, _nodeThis.ServiceType.ToString().ToLower());
+            return req;
         }
 
         private void ClearCache()
@@ -519,7 +531,7 @@ namespace CVMQTTNodeClient
         /// <summary>
         /// 发布消息
         /// </summary>
-        public void Publish(string topic, MQTTCVRequestBaseHeader request)
+        public void Publish(string topic, DeviceRequestTokenMessageHeader request)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
             Publish(topic, JsonConvert.SerializeObject(request));
@@ -528,9 +540,9 @@ namespace CVMQTTNodeClient
         /// <summary>
         /// 获取所有服务
         /// </summary>
-        public List<FlowServiceMO> GetAllServices()
+        public List<ServiceMO> GetAllServices()
         {
-            var services = new List<FlowServiceMO>(_flowSvrs.Count);
+            var services = new List<ServiceMO>(_flowSvrs.Count);
 
             foreach (var service in _flowSvrs)
             {

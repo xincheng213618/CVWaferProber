@@ -1,4 +1,6 @@
-﻿using CVCommCore;
+﻿using ColorVision.Core.Message.Model;
+using ColorVision.Message.Services;
+using CVCommCore;
 using Newtonsoft.Json;
 
 namespace CVMQTTNodeClient
@@ -29,7 +31,7 @@ namespace CVMQTTNodeClient
         /// <summary>
         /// 节点访问Token
         /// </summary>
-        public NodeToken? Token { get; set; }
+        public ServiceNodeToken? Token { get; set; }
         public bool IsNotStartup => this.Token != null && !_isStartup;
 
         public int HeartbeatTime { get; private set; } = 5000;
@@ -53,7 +55,7 @@ namespace CVMQTTNodeClient
             this.HeartbeatData = string.Empty;
             this.RCName = rcName;
         }
-        public bool RefreshToken(NodeToken? token)
+        public bool RefreshToken(ServiceNodeToken? token)
         {
             RecvHeartbeat();
             if (Token == null)
@@ -86,7 +88,7 @@ namespace CVMQTTNodeClient
         private string BuildHeartbeat()
         {
             if (Token == null) return string.Empty;
-            MQTTServiceHeartbeat Heartbeat = new MQTTServiceHeartbeat(this.NodeName, this.ServiceType.ToString(), this.Token.AccessToken, HeartbeatTime);
+            ServiceNodeHeartbeatRequest Heartbeat = new ServiceNodeHeartbeatRequest(this.Token.AccessToken, this.NodeName, this.ServiceType.ToString());
             return JsonConvert.SerializeObject(Heartbeat);
         }
 

@@ -74,6 +74,12 @@
     <Content Include="LOG.ico" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="ColorVision.Core.Message">
+      <HintPath>..\DLL\ColorVision.Core.Message.dll</HintPath>
+    </Reference>
+    <Reference Include="ColorVision.Message.Flow">
+      <HintPath>..\DLL\ColorVision.Message.Flow.dll</HintPath>
+    </Reference>
     <Reference Include="CV.DBEntities">
       <HintPath>..\DLL\CV.DBEntities.dll</HintPath>
     </Reference>

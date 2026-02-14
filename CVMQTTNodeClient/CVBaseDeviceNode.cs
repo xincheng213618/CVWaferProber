@@ -1,4 +1,6 @@
-﻿namespace CVMQTTNodeClient
+﻿using ColorVision.Core.Message;
+
+namespace CVMQTTNodeClient
 {
     public class CVBaseService : CVAbstractBaseServiceNode
     {
@@ -23,14 +25,14 @@
         public string DeviceCode { get; set; }
         public string DeviceName { get; set; }
         public CVBaseService Service { get; protected set; }
-        public MqttRequestManager RequestManager { get; protected set; }
+        public DeviceMessageManager RequestManager { get; protected set; }
 
-        public CVBaseDeviceNode(string deviceCode, string deviceName, CVBaseService service, MqttRequestManager? requestManager = null)
+        public CVBaseDeviceNode(string deviceCode, string deviceName, CVBaseService service, DeviceMessageManager? requestManager = null)
         {
             this.DeviceCode = deviceCode;
             this.DeviceName = deviceName;
             this.Service = service;
-            if(requestManager == null) this.RequestManager = new MqttRequestManager();
+            if(requestManager == null) this.RequestManager = new DeviceMessageManager();
             else this.RequestManager = requestManager;
         }
 

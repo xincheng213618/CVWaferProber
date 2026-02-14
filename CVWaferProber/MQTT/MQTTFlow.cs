@@ -1,4 +1,9 @@
-﻿using CVMQTTNodeClient;
+﻿using ColorVision.Core.Message;
+using ColorVision.Core.Message.Param;
+using ColorVision.Core.Message.Response;
+using ColorVision.Message.Flow;
+using ColorVision.Message.Model;
+using CVMQTTNodeClient;
 using Newtonsoft.Json;
 
 namespace CVWaferProber.MQTT
@@ -6,7 +11,7 @@ namespace CVWaferProber.MQTT
     public class MQTTFlowDeviceNode : CVBaseDeviceNode
     {
         public static string FlowDeviceCode  = "DEV.Flow.Default";
-        public MQTTFlowDeviceNode(string serviceType, string serviceCode, string serviceName, string serviceToken, string upChannel, string downChannel, string deviceCode, MqttRequestManager requestManager)
+        public MQTTFlowDeviceNode(string serviceType, string serviceCode, string serviceName, string serviceToken, string upChannel, string downChannel, string deviceCode, DeviceMessageManager requestManager)
             : base(deviceCode, deviceCode, serviceType, serviceCode, serviceName, serviceToken, upChannel, downChannel)
         {
             this.DeviceCode = deviceCode;
@@ -18,32 +23,32 @@ namespace CVWaferProber.MQTT
         {
         }
 
-        public string BuildRequestString(string serialNumber, int flowId, string flowName, List<FlowServiceMO> services)
+        public string BuildRequestString(string serialNumber, int flowId, string flowName, List<ServiceMO> services)
         {
             return BuildRequestString(serialNumber, serialNumber, flowId, flowName, services);
         } 
-        public string BuildRequestString(string serialNumber, string name, int flowId, string flowName, List<FlowServiceMO> services)
+        public string BuildRequestString(string serialNumber, string name, int flowId, string flowName, List<ServiceMO> services)
         {
-            MQTTCVRequestBaseHeader req = BuildRequest(serialNumber, name, flowId, flowName, services);
+            FlowDeviceRequestRunMessage req = BuildRequest(serialNumber, name, flowId, flowName, services);
             return JsonConvert.SerializeObject(req);
         }
-        public MQTTCVRequestBaseHeader BuildRequest(string serialNumber, int flowId, string flowName, List<FlowServiceMO> services)
+        public FlowDeviceRequestRunMessage BuildRequest(string serialNumber, int flowId, string flowName, List<ServiceMO> services)
         {
             return BuildRequest(serialNumber, serialNumber, flowId, flowName, services);
         } 
-        public MQTTCVRequestBaseHeader BuildRequest(string serialNumber, string name, int flowId, string flowName, List<FlowServiceMO> services)
+        public FlowDeviceRequestRunMessage BuildRequest(string serialNumber, string name, int flowId, string flowName, List<ServiceMO> services)
         {
-            DeviceFlowRunParam<FlowServiceMO> data = new DeviceFlowRunParam<FlowServiceMO>()
+            FlowDeviceRunRequestParam data = new FlowDeviceRunRequestParam()
             {
                 Name = name,
                 Services = services,
-                TemplateParam = new CVTemplateParam() { ID = flowId, Name = flowName }
+                TemplateParam = new DeviceTemplateParam(flowId, flowName),
             };
-            MQTTFlowRun<FlowServiceMO> req = new MQTTFlowRun<FlowServiceMO>(this.Service.ServiceCode, this.DeviceCode, serialNumber, this.Service.ServiceToken, data);
+            FlowDeviceRequestRunMessage req = new FlowDeviceRequestRunMessage(this.Service.ServiceCode, this.DeviceCode, serialNumber, this.Service.ServiceToken, data);
             return req;
         }
 
-        public async Task<CVMQTTBaseResponse?> WaitForResponseAsync(string msgId, TimeSpan? timeout = null)
+        public async Task<DeviceResponseMessageHeader?> WaitForResponseAsync(string msgId, TimeSpan? timeout = null)
         {
             return await RequestManager.WaitForResponseAsync(msgId, timeout);
         }
@@ -52,22 +57,5 @@ namespace CVWaferProber.MQTT
         {
             return RequestManager.SetException(msgId, exception);
         }
-    }
-
-    public class MQTTFlowRun<T> : MQTTCVBaseRequest<DeviceFlowRunParam<T>>
-    {
-        public MQTTFlowRun(string serviceName, string deviceName, string serialNumber, string token, DeviceFlowRunParam<T> data) : base(serviceName, deviceName, MQTTFlowEventEnum.Event_Flow_Run, serialNumber, token, data)
-        {
-        }
-    }
-    public class MQTTFlowEventEnum
-    {
-        public const string Event_Flow_CombinedRun = "Flow_CombinedRun";
-        public const string Event_Flow_Run = "Flow_Run";
-        public const string Event_Flow_RunEx = "Flow_RunEx";
-        public const string Event_Flow_Stop = "Flow_Stop";
-        public const string Event_Flow_StopCombined = "Flow_CombinedStop";
-        public const string Event_Flow_Load = "Flow_Load";
-        public const string Event_Flow_GetCombinedResult = "Flow_GetCombinedResult";
     }
 }

@@ -55,7 +55,7 @@ namespace CVWaferProber.Services
                     //    new CancellationTokenSource(TimeSpan.FromSeconds(_selectedWPFlow.Timeout)).Token);
 
                     //if (flowResult != null && flowResult.IsSuccess)
-                    if (response.IsOK())
+                    if (response.IsSuccess())
                     {
                         ChipStatus status = await FlowResultDisplayAsync(dieViewModel);
                         dieViewModel.ChangeStatus(status, true);
