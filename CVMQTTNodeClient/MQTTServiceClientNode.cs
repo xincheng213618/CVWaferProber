@@ -16,12 +16,14 @@ namespace CVMQTTNodeClient
                 this._RCName = value;
                 this.RCRegTopic = MQTTCVServiceTopicBuilder.BuildRegTopic(RCName);
                 this.RCHBTopic = MQTTCVServiceTopicBuilder.BuildHeartbeatTopic(RCName);
+                this.RCTopic = MQTTCVServiceTopicBuilder.BuildPublicTopic(RCName);
                 this.NodeName = "client." + Guid.NewGuid().ToString();
                 this.NodeTopic = MQTTCVServiceTopicBuilder.BuildNodeTopic(NodeName, RCName);
             }
         }
         public string RCRegTopic { get; private set; }
         public string RCHBTopic { get; private set; }
+        public string RCTopic { get; private set; }
         public string NodeName { get; private set; }
         public string NodeKey { get; set; }
         public string NodeAppId { get; set; }
@@ -49,6 +51,7 @@ namespace CVMQTTNodeClient
             this.Token = null;
             this.RCRegTopic = string.Empty;
             this.RCHBTopic = string.Empty;
+            this.RCTopic = string.Empty;
             this._RCName = string.Empty;
             this.NodeName = string.Empty;
             this.NodeTopic = string.Empty;
@@ -73,10 +76,11 @@ namespace CVMQTTNodeClient
             this.HeartbeatData = string.Empty;
             return false;
         }
-        public void Startup()
+        public void Startup(int heartbeatTime = 5000)
         {
-            _isStartup = true;
-            this.overTS = System.TimeSpan.FromMilliseconds(this.HeartbeatTime * 2);
+            this.HeartbeatTime = heartbeatTime;
+            this._isStartup = true;
+            this.overTS = System.TimeSpan.FromMilliseconds(this.HeartbeatTime * 1.5);
         }
         public void Reset()
         {
@@ -88,7 +92,8 @@ namespace CVMQTTNodeClient
         private string BuildHeartbeat()
         {
             if (Token == null) return string.Empty;
-            ServiceNodeHeartbeatRequest Heartbeat = new ServiceNodeHeartbeatRequest(this.Token.AccessToken, this.NodeName, this.ServiceType.ToString());
+            //ServiceNodeHeartbeatRequest Heartbeat = new ServiceNodeHeartbeatRequest(this.Token.AccessToken, this.NodeName, this.ServiceType.ToString());
+            ServiceNodeQueryStatusRequest Heartbeat = new ServiceNodeQueryStatusRequest(this.Token.AccessToken, this.NodeName, this.ServiceType.ToString());
             return JsonConvert.SerializeObject(Heartbeat);
         }
 

@@ -8,18 +8,19 @@ using Newtonsoft.Json;
 
 namespace CVWaferProber.MQTT
 {
-    public class MQTTFlowDeviceNode : CVBaseDeviceNode
+    public class MQTTFlowDeviceNode : PhysicDeviceProxy
     {
         public static string FlowDeviceCode  = "DEV.Flow.Default";
-        public MQTTFlowDeviceNode(string serviceType, string serviceCode, string serviceName, string serviceToken, string upChannel, string downChannel, string deviceCode, DeviceMessageManager requestManager)
-            : base(deviceCode, deviceCode, serviceType, serviceCode, serviceName, serviceToken, upChannel, downChannel)
+        public MQTTFlowDeviceNode(string serviceType, string serviceCode, string serviceName, string serviceToken, string upChannel, string downChannel, string deviceCode, string deviceName, string deviceStatus, DeviceMessageManager requestManager)
+            : base(deviceCode, deviceName, deviceStatus, serviceType, serviceCode, serviceName, serviceToken, upChannel, downChannel)
         {
-            this.DeviceCode = deviceCode;
             this.RequestManager = requestManager;
         }
 
-        public MQTTFlowDeviceNode(CVBaseDeviceNode dev) :
-            this(dev.Service.ServiceType, dev.Service.ServiceCode, dev.Service.ServiceName, dev.Service.ServiceToken, dev.Service.UpChannel, dev.Service.DownChannel, dev.DeviceCode, dev.RequestManager)
+        public MQTTFlowDeviceNode(PhysicDeviceProxy dev) :
+            this(dev.ServiceProxy.ServiceType, dev.ServiceProxy.ServiceCode, dev.ServiceProxy.ServiceName,
+                dev.ServiceProxy.ServiceToken, dev.ServiceProxy.UpChannel, dev.ServiceProxy.DownChannel,
+                dev.DeviceCode, dev.DeviceName, dev.DeviceStatus, dev.RequestManager)
         {
         }
 
@@ -44,7 +45,7 @@ namespace CVWaferProber.MQTT
                 Services = services,
                 TemplateParam = new DeviceTemplateParam(flowId, flowName),
             };
-            FlowDeviceRequestRunMessage req = new FlowDeviceRequestRunMessage(this.Service.ServiceCode, this.DeviceCode, serialNumber, this.Service.ServiceToken, data);
+            FlowDeviceRequestRunMessage req = new FlowDeviceRequestRunMessage(this.ServiceProxy.ServiceCode, this.DeviceCode, serialNumber, this.ServiceProxy.ServiceToken, data);
             return req;
         }
 

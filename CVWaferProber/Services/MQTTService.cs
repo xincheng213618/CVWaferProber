@@ -105,7 +105,7 @@ namespace CVWaferProber.Services
             var waitTask = flowSvr.WaitForResponseAsync(msgId, timeout);
             try
             {
-                mqttClientNode.Publish(flowSvr.Service.UpChannel, JsonConvert.SerializeObject(req));
+                mqttClientNode.Publish(flowSvr.ServiceProxy.UpChannel, JsonConvert.SerializeObject(req));
                 // 等待响应
                 var response = await waitTask;
                 return response;

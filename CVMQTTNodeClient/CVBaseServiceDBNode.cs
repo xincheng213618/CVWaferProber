@@ -1,4 +1,6 @@
-﻿namespace CVMQTTNodeClient
+﻿using ColorVision.Message.Services;
+
+namespace CVMQTTNodeClient
 {
     public class CVBaseServiceDBNode : CVAbstractBaseServiceNode
     {
@@ -41,27 +43,27 @@
                 this.Devices.Add(device.Code, device);
             }
         }
-        public bool Update(CVServiceHeartbeat shb)
+        public bool Update(ServiceNodeHeartbeatResponse shb)
         {
             if (IsThisNode(shb))
             {
-                this.DownChannel = shb.DownChannel;
-                this.UpChannel = shb.UpChannel;
-                this.LiveTime = System.DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss");
-                this.OverTime = shb.OverTime;
-                foreach (var dev_shb in shb.Devices)
-                {
-                    if (Devices.ContainsKey(dev_shb.DeviceCode))
-                    {
-                        Devices[dev_shb.DeviceCode].Status = dev_shb.DeviceStatus;
-                    }
-                }
+                //this.DownChannel = shb.DownChannel;
+                //this.UpChannel = shb.UpChannel;
+                //this.LiveTime = System.DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss");
+                //this.OverTime = shb.OverTime;
+                //foreach (var dev_shb in shb.Devices)
+                //{
+                //    if (Devices.ContainsKey(dev_shb.DeviceCode))
+                //    {
+                //        Devices[dev_shb.DeviceCode].Status = dev_shb.DeviceStatus;
+                //    }
+                //}
                 return true;
             }
             return false;
         }
 
-        public bool IsThisNode(CVServiceHeartbeat shb)
+        public bool IsThisNode(ServiceNodeHeartbeatResponse shb)
         {
             return IsThisNode(shb.ServiceCode, shb.ServiceType);
         }
@@ -75,10 +77,10 @@
         {
             System.DateTime dt;
             System.DateTime dt_now = System.DateTime.Now;
-            string fmt = "HH:mm:ss";
             if (System.DateTime.TryParse(this.LiveTime, out dt))
             {
                 if (this.OverTime > 0) dt = dt.AddMilliseconds(this.OverTime);
+                string fmt = "HH:mm:ss";
                 logger.DebugFormat("Node={4}, LiveTime={0}/{3}, OverTime={1}, Now={2}", LiveTime, dt.ToString(fmt), dt_now.ToString(fmt), OverTime, ServiceCode);
                 if (dt > dt_now)
                 {
