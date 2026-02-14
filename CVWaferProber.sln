@@ -31,7 +31,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WaferComm.StateMachine", "W
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CVMQTTNodeClient", "CVMQTTNodeClient\CVMQTTNodeClient.csproj", "{1BFBF81A-155C-460A-896C-A3371A153D78}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinMessageCtrl", "WinMessageCtrl\WinMessageCtrl.csproj", "{793BCFB7-F13B-4B5F-A426-D9BDCB3A20D8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinMessageCtrl", "WinMessageCtrl\WinMessageCtrl.csproj", "{793BCFB7-F13B-4B5F-A426-D9BDCB3A20D8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
