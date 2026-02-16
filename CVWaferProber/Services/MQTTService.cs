@@ -139,5 +139,10 @@ namespace CVWaferProber.Services
 
             return ConnectionInfo.IsConnected;
         }
+
+        public List<PhysicDeviceProxy> GetAllDevices()
+        {
+            return mqttClientNode.GetAllDevices();
+        }
     }
 }
