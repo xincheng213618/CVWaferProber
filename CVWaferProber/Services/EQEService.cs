@@ -24,12 +24,9 @@ namespace CVWaferProber.Services
         //private readonly GlobalConfigModel _globalConfig;
 
         // 构造函数：完全复刻IVL，仅替换VM名称
-        public EQEService(MainViewModel mainVM, CVEQEViewModel customEQEVM, IFlowService flowService) : base(mainVM, flowService)
+        public EQEService(MainViewModel mainVM, IFlowService flowService) : base(mainVM, flowService)
         {
-            this.CustomEQEVM = customEQEVM;
-        }
-        public EQEService(MainViewModel mainVM, IFlowService flowService) : this(mainVM,new CVEQEViewModel(),flowService)
-        {
+            this.CustomEQEVM = mainVM.CustomIVLVM.CustomEQEVM;
         }
 
         // 核心测试启动方法：移除所有Camera相关逻辑，保留IVL核心流程

@@ -1,6 +1,6 @@
-﻿using CVWaferProber.Language;
+﻿using CVWaferProber.Core.ViewModels;
+using CVWaferProber.Language;
 using CVWaferProber.Services;
-using System.ComponentModel;
 
 namespace CVWaferProber.Models
 {
@@ -13,7 +13,7 @@ namespace CVWaferProber.Models
         Failed      // 失败
     }
     // 启动任务类
-    public abstract class StartupTask : INotifyPropertyChanged
+    public abstract class StartupTask : ViewModelBase
     {
         private string _description;
         private string _statusColor;
@@ -25,13 +25,13 @@ namespace CVWaferProber.Models
         public string Description
         {
             get => _description;
-            set { _description = value; OnPropertyChanged(nameof(Description)); }
+            set => SetProperty(ref _description, value);
         }
 
         public string StatusColor
         {
             get => _statusColor;
-            set { _statusColor = value; OnPropertyChanged(nameof(StatusColor)); }
+            set => SetProperty(ref _statusColor, value);
         }
 
         public bool IsActive
@@ -122,7 +122,7 @@ namespace CVWaferProber.Models
         public string StatusIcon
         {
             get => _statusIcon;
-            set { _statusIcon = value; OnPropertyChanged(nameof(StatusIcon)); }
+            set => SetProperty(ref _statusIcon, value);
         }
 
         public StartupTask(string description, string statusColor)
@@ -133,13 +133,6 @@ namespace CVWaferProber.Models
             IsCompleted = false;
             StatusIcon = "";
             Status = TaskStatus.Pending;
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         public abstract void Exec();

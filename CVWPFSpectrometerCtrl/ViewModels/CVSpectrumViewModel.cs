@@ -633,6 +633,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             InitializeVLPlotModel();
             InitializePower_LPlotModel();
             // 新增：初始化EQE图表
+            CustomEQEVM = new CVEQEViewModel();
             //InitializeEQEPlotModel();
             InitializeIVLCameraModel();
             BtnResetStatus = new RelayCommand(IVResetStatus);
@@ -3328,7 +3329,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
         }
 
-        public CVEQEViewModel? CustomEQEVM { get; set; }
+        public CVEQEViewModel CustomEQEVM { get; private set; }
         #endregion
 
     }

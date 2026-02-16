@@ -44,29 +44,6 @@ namespace CVWaferProber.Services
         {
             ChipSelected?.Invoke(this, e);
         }
-        public CVSpectrumViewModel? GetIVLVM()
-        {
-            IVLService ivlService = flowServices[CVWaferProberFlowType.IVL] as IVLService;
-            if (ivlService != null) return ivlService.CustomIVLVM;
-            return null;
-        }
-        public CVEQEViewModel? GetEQEVM()
-        {
-            EQEService eqeService = flowServices[CVWaferProberFlowType.EQE] as EQEService;
-            if (eqeService != null) return eqeService.CustomEQEVM;
-            return null;
-        }
-        public CVCamImagerViewModel? GetAOIVM()
-        {
-            AOIService aoiService = flowServices[CVWaferProberFlowType.AOI] as AOIService;
-            if (aoiService != null) return aoiService.CustomImageVM;
-            return null;
-        }
-        public ChipMappingControlViewModel? GetMappingVM()
-        {
-            if (mappingService != null) return mappingService.CustomVM;
-            return null;
-        }
 
         public void Startup()
         {

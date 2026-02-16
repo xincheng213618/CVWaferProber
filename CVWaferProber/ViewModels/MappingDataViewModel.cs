@@ -13,7 +13,6 @@ using CVWaferProber.Models;
 using CVWaferProber.Services;
 using CVWaferProber.Views;
 using FreeSql;
-using Google.Protobuf.WellKnownTypes;
 using log4net;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -24,7 +23,6 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Threading;
-using static CVWaferProber.ViewModels.MainViewModel;
 using Application = System.Windows.Application;
 using Binding = System.Windows.Data.Binding;
 using CheckBox = System.Windows.Controls.CheckBox;
@@ -111,7 +109,9 @@ namespace CVWaferProber.ViewModels
 
         #region 原有核心属性+命令（保留，无修改）
         public event EventHandler<WPFlowViewModel> ActivateCorrespondingPanel;
-        public ChipMappingControlViewModel? CustomMappingVM { get; set; }
+        public ChipMappingControlViewModel CustomMappingVM { get; private set; }
+
+        #region 命令 ICommand
         public ICommand LoadMappingFileCommand { get; }
         public ICommand ClearMappingCommand { get; }
         public ICommand FlowLoadCommand { get; }
@@ -127,12 +127,11 @@ namespace CVWaferProber.ViewModels
         public ICommand InvertSelectVAMCommand { get; }
         public ICommand SearchCommand { get; }
 
+        #endregion
+
         public ObservableCollection<DieViewModel> TestResults { get; } = new ObservableCollection<DieViewModel>();
         //public RangeEnabledObservableCollection<FlowViewModel> FlowItems { get; } = new RangeEnabledObservableCollection<FlowViewModel>();
         public ObservableCollection<WPFlowViewModel> WPFlows { get; } = new ObservableCollection<WPFlowViewModel>();
-
-        //private FlowViewModel? _selectedFlow;
-        //public FlowViewModel? SelectedFlow { get => _selectedFlow; set { if (_selectedFlow != value) SetProperty(ref _selectedFlow, value); } }
 
         private WPFlowViewModel? _selectedWPFlow;
         public WPFlowViewModel? SelectedWPFlow
@@ -240,7 +239,7 @@ namespace CVWaferProber.ViewModels
 
         private string _searchSN;
         public string SearchSN { get => _searchSN; set => SetProperty(ref _searchSN, value); }
-        private List<TestItem>? _testQueue;
+        private List<MainViewModel.TestItem>? _testQueue;
         private ObservableCollection<DieViewModel> _filteredTestResults;
         public ObservableCollection<DieViewModel> FilteredTestResults { get => _filteredTestResults; set => SetProperty(ref _filteredTestResults, value); }
         #endregion
@@ -345,6 +344,7 @@ namespace CVWaferProber.ViewModels
             _dataGrid = null;
             _isIVLCameraEnabled = false;
             _isAutoSN = true;
+            CustomMappingVM = new ChipMappingControlViewModel();
 
             _Timestamp = string.Empty;
             _WaferId = string.Empty;
@@ -684,7 +684,7 @@ namespace CVWaferProber.ViewModels
             if (_isAutoSN) Timestamp = timestamp;
         }
 
-        private void TestingReady(List<TestItem> testItems)
+        private void TestingReady(List<MainViewModel.TestItem> testItems)
         {
             CustomMappingVM.DisabledInput = IsProcessing = true;
             string timestamp = DateTime.Now.ToString("yyyyMMdd'T'HHmmss.fff");
@@ -757,7 +757,7 @@ namespace CVWaferProber.ViewModels
         {
             if (IsNotProcessing && value is DieViewModel die && selfClick)
             {
-                CustomMappingVM?.SetSelectedChip((uint)die.Id);
+                CustomMappingVM.SetSelectedChip((uint)die.Id);
 
                 DieResultDisplay(die);
             }
@@ -867,8 +867,8 @@ namespace CVWaferProber.ViewModels
         {
             // 清理时释放所有Die的定时器资源
             foreach (var die in TestResults) die.Dispose();
-            CustomMappingVM?.Cleanup();
-            CustomMappingVM?.Chips.Clear();
+            CustomMappingVM.Cleanup();
+            CustomMappingVM.Chips.Clear();
             TestResults.Clear();
             ResetProgressBars();
         }
@@ -1142,7 +1142,7 @@ namespace CVWaferProber.ViewModels
             bool bR = CsvMappingDataTool.LoadMappingCsv(MappingCsvFilePath, ref mappingData);
             if (bR && mappingData != null && mappingData.Count > 0)
             {
-                CustomMappingVM?.RefreshFromMap(mappingData);
+                CustomMappingVM.RefreshFromMap(mappingData);
                 ObservableCollection<DieViewModel> _TestResults = new ObservableCollection<DieViewModel>();
                 foreach (var map in CustomMappingVM.Chips)
                 {
@@ -1466,15 +1466,15 @@ namespace CVWaferProber.ViewModels
             if (itemToSelect != null) { selfClick = false; SelectedItem = itemToSelect; }
         }
 
-        private List<TestItem> GetSelectedTestItems()
+        private List<MainViewModel.TestItem> GetSelectedTestItems()
         {
-            var testQueue = new List<TestItem>();
+            var testQueue = new List<MainViewModel.TestItem>();
             foreach (var die in TestResults)
             {
-                if (die.IsAOIEnabled) testQueue.Add(new TestItem { Die = die, TestType = "AOI" });
-                if (die.IsIVLEnabled) testQueue.Add(new TestItem { Die = die, TestType = "IVL" });
-                if (die.IsEQEEnabled) testQueue.Add(new TestItem { Die = die, TestType = "EQE" });
-                if (die.IsVAMEnabled) testQueue.Add(new TestItem { Die = die, TestType = "VAM" });
+                if (die.IsAOIEnabled) testQueue.Add(new MainViewModel.TestItem { Die = die, TestType = "AOI" });
+                if (die.IsIVLEnabled) testQueue.Add(new MainViewModel.TestItem { Die = die, TestType = "IVL" });
+                if (die.IsEQEEnabled) testQueue.Add(new MainViewModel.TestItem { Die = die, TestType = "EQE" });
+                if (die.IsVAMEnabled) testQueue.Add(new MainViewModel.TestItem { Die = die, TestType = "VAM" });
             }
             return testQueue;
         }

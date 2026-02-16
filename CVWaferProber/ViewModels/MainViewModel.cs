@@ -26,12 +26,10 @@ namespace CVWaferProber.ViewModels
     public class MainViewModel : ViewModelBase
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(MainViewModel));
-
-        //public static MainViewModel? Instance { get; private set; }
-        public MappingDataViewModel? DataMappingVM { get; set; }
-        public ChipMappingControlViewModel? CustomMappingVM { get; set; }
-        public CVCamImagerViewModel? CustomImageVM { get; set; }
-        public CVSpectrumViewModel? CustomIVLVM { get; set; }
+        public MappingDataViewModel DataMappingVM { get; set; }
+        public ChipMappingControlViewModel CustomMappingVM { get; set; }
+        public CVCamImagerViewModel CustomImageVM { get; set; }
+        public CVSpectrumViewModel CustomIVLVM { get; set; }
         // AvalonDock面板引用
         public DockingManager? DockingManager { get; set; }
         public LayoutAnchorable? AnchorableCamera { get; set; }
@@ -208,11 +206,10 @@ namespace CVWaferProber.ViewModels
             //rcService = new RCRestService();
             //_rcConnectionInfo = rcService.ConnectionInfo;
             //
-            DataMappingVM = new MappingDataViewModel();
-            DataMappingVM.ActivateCorrespondingPanel += DataMappingVM_ActivateCorrespondingPanel;
+            // 初始化重置布局命令
+            InitializeVM();
             //
             InitializeServive();
-            // 初始化重置布局命令
 
             OpenVEyeWindowCommand = new RelayCommand(OpenVEyeWindow);
             //StartAutoTestCommand = new RelayCommand(_ => StartAutoTest(),
@@ -251,9 +248,7 @@ namespace CVWaferProber.ViewModels
             Snowflake.Instance.SnowflakesInit(1, 1);
             //InitializeSimAutoTestTimer();
 
-            InitializeEvents();
-
-            InitRc();
+            //InitializeEvents();
 
             //var ivlService = new IVLService(CustomIVLVM, CustomMappingVM, rcService);
             //ivlService.SetSpPanelView(SpPanelView);
@@ -263,9 +258,21 @@ namespace CVWaferProber.ViewModels
             //IsCameraPanelVisible = Properties.Settings.Default.IsCameraPanelVisible;
             //IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
 
+        }
+        private void InitializeVM()
+        {
+            InitializeEvents();
+
+            DataMappingVM = new MappingDataViewModel();
+            DataMappingVM.ActivateCorrespondingPanel += DataMappingVM_ActivateCorrespondingPanel;
+
+            CustomMappingVM = DataMappingVM.CustomMappingVM;
+            CustomImageVM = new CVCamImagerViewModel();
+            CustomIVLVM = new CVSpectrumViewModel();
+            //CustomIVLVM.CustomEQEVM = mainService.GetEQEVM();
+            //
             ToolsVM = new ToolsBarViewModel(this, ProberClientService.Instance.ProberClient, ProberClientService.Instance.StateMachine, EventAggregator);
         }
-
         private void DataMappingVM_ActivateCorrespondingPanel(object? sender, WPFlowViewModel e)
         {
             ActivateCorrespondingPanel(e);
@@ -281,12 +288,6 @@ namespace CVWaferProber.ViewModels
         private void ReconnectDev()
         {
             mainService.ReconnectDev();
-        }
-        private void InitRc()
-        {
-            //Task.Factory.StartNew(() => {
-            //    rcService.RcRegist();
-            //});
         }
 
         private void ShowRcConnectionSettings(object obj)
@@ -319,13 +320,8 @@ namespace CVWaferProber.ViewModels
         {
             mainService.InitializeService(this, vam, ivl);
 
-            CustomMappingVM = mainService.GetMappingVM();
-            CustomImageVM = mainService.GetAOIVM();
-            CustomIVLVM = mainService.GetIVLVM();
-            if (CustomIVLVM != null) CustomIVLVM.CustomEQEVM = mainService.GetEQEVM();
             if (DataMappingVM != null)
             {
-                DataMappingVM.CustomMappingVM = CustomMappingVM;
                 DataMappingVM.LoadBuzWPFlows();
             }
         }

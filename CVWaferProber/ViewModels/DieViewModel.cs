@@ -42,14 +42,7 @@ namespace CVWaferProber.ViewModels
         public string? SerialNumber
         {
             get => _serialNumber;
-            set
-            {
-                if (_serialNumber != value)
-                {
-                    _serialNumber = value;
-                    OnPropertyChanged(nameof(SerialNumber));
-                }
-            }
+            set => SetProperty(ref _serialNumber, value);
         }
 
         private int _currentTestStep; // 0:未开始, 1:移动完成, 2:初始化完成, 3:测试中, 4:完成
@@ -79,21 +72,21 @@ namespace CVWaferProber.ViewModels
         public bool IsIVLEnabled
         {
             get => _isIVLEnabled;
-            set { _isIVLEnabled = value; OnPropertyChanged(); }
+            set => SetProperty(ref _isIVLEnabled, value);
         }
 
         private bool _isEQEEnabled;
         public bool IsEQEEnabled
         {
             get => _isEQEEnabled;
-            set { _isEQEEnabled = value; OnPropertyChanged(); }
+            set => SetProperty(ref _isEQEEnabled, value);
         }
 
         private bool _isVAMEnabled;
         public bool IsVAMEnabled
         {
             get => _isVAMEnabled;
-            set { _isVAMEnabled = value; OnPropertyChanged(); }
+            set => SetProperty(ref _isVAMEnabled, value);
         }
 
         public ChipStatus? Status => chipViewModel?.Status;
