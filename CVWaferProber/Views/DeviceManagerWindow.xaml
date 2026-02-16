@@ -1,0 +1,333 @@
+﻿<Window x:Class="CVWaferProber.Views.DeviceManagerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:cv="clr-namespace:CVWaferProber.Converters"
+        xmlns:local="clr-namespace:CVWaferProber.Views"
+        mc:Ignorable="d"
+        Title="{DynamicResource DeviceManagerWindow_Title}" Height="600" Width="900"
+        WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <!-- 状态颜色转换器 -->
+        <cv:BooleanToBrushConverter x:Key="BooleanToBrushConverter"/>
+        <!-- 状态文本转换器 -->
+        <cv:StatusTextConverter x:Key="StatusTextConverter"/>
+
+        <!-- 状态指示灯样式 -->
+        <Style x:Key="StatusIndicatorStyle" TargetType="Ellipse">
+            <Setter Property="Width" Value="12"/>
+            <Setter Property="Height" Value="12"/>
+            <Setter Property="Fill" Value="{Binding StatusColor}"/>
+            <Setter Property="ToolTip" Value="{Binding StatusText}"/>
+            <Setter Property="Margin" Value="5,0"/>
+        </Style>
+
+        <!-- 操作按钮样式 -->
+        <Style x:Key="ActionButtonStyle" TargetType="Button">
+            <Setter Property="Padding" Value="8,3"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="#F0F0F0"/>
+            <Setter Property="BorderBrush" Value="#CCC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="3"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#E0E0E0"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#CCC"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.5"/>
+                    <Setter Property="Background" Value="#F5F5F5"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- 打开按钮样式 - 使用带前缀的资源 -->
+        <Style x:Key="OpenButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
+            <Setter Property="Foreground" Value="#4CAF50"/>
+            <Setter Property="BorderBrush" Value="#4CAF50"/>
+            <Setter Property="Content" Value="{DynamicResource SysDev_Open}"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#E8F5E9"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- 关闭按钮样式 - 使用带前缀的资源 -->
+        <Style x:Key="CloseButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
+            <Setter Property="Foreground" Value="#F44336"/>
+            <Setter Property="BorderBrush" Value="#F44336"/>
+            <Setter Property="Content" Value="{DynamicResource SysDev_Close}"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FFEBEE"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 工具栏 -->
+        <Border Grid.Row="0" Background="#F5F5F5" Padding="10" BorderBrush="#DDD" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 左侧操作按钮 - 使用带前缀的资源 -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Button Content="{DynamicResource SysDev_Refresh}" 
+                            Command="{Binding RefreshCommand}" 
+                            Padding="10,5" Margin="0,0,5,0" Width="70"/>
+                    <Button Style="{StaticResource OpenButtonStyle}"
+                            Command="{Binding OpenDeviceCommand}" 
+                            Padding="10,5" Margin="5,0" Width="70"/>
+                    <Button Style="{StaticResource CloseButtonStyle}"
+                            Command="{Binding CloseDeviceCommand}" 
+                            Padding="10,5" Margin="5,0" Width="70"/>
+                </StackPanel>
+
+                <!-- 右侧搜索和过滤 -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <CheckBox Content="{DynamicResource SysDev_ShowOnlineOnly}" 
+                              IsChecked="{Binding ShowOnlineOnly}" 
+                              Margin="0,0,10,0"
+                              VerticalAlignment="Center"/>
+
+                    <Border Background="White" BorderBrush="#CCC" BorderThickness="1" CornerRadius="3">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="SearchBox" 
+                                     Width="200" 
+                                     Height="25" 
+                                     BorderThickness="0"
+                                     Padding="5,0"
+                                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                     VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="🔍" 
+                                       VerticalAlignment="Center" 
+                                       Margin="0,0,8,0" 
+                                       Foreground="#999"/>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- DataGrid设备列表 -->
+        <DataGrid Grid.Row="1" 
+                  x:Name="DeviceDataGrid"
+                  ItemsSource="{Binding FilteredDevices}"
+                  SelectedItem="{Binding SelectedDevice}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  SelectionUnit="FullRow"
+                  GridLinesVisibility="Horizontal"
+                  HorizontalGridLinesBrush="#EEE"
+                  Background="White"
+                  BorderBrush="#DDD"
+                  BorderThickness="0,1"
+                  RowHeight="50"
+                  FontSize="12"
+                  CanUserSortColumns="True"
+                  CanUserResizeColumns="True"
+                  CanUserReorderColumns="False"
+                  HeadersVisibility="Column">
+
+            <DataGrid.Resources>
+                <!-- 数据网格列样式 -->
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="Background" Value="#F5F5F5"/>
+                    <Setter Property="Foreground" Value="#333"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                    <Setter Property="Height" Value="35"/>
+                    <Setter Property="BorderBrush" Value="#DDD"/>
+                    <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                    <Setter Property="Padding" Value="10,0"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                </Style>
+
+                <Style TargetType="DataGridCell">
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                    <Setter Property="Padding" Value="10,0"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="DataGridCell">
+                                <Border Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="#E3F2FD"/>
+                            <Setter Property="Foreground" Value="Black"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.Resources>
+
+            <DataGrid.Columns>
+                <!-- 状态指示灯列 - 使用带前缀的资源 -->
+                <DataGridTemplateColumn Header="{DynamicResource SysDev_Status}" Width="120" SortMemberPath="IsLive">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                <Ellipse Style="{StaticResource StatusIndicatorStyle}"/>
+                                <TextBlock Text="{Binding IsLive, Converter={StaticResource StatusTextConverter}}" 
+                                           FontSize="11" 
+                                           Margin="2,0"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- 设备编码列 - 使用带前缀的资源 -->
+                <DataGridTextColumn Header="{DynamicResource SysDev_DeviceCode}" 
+                                    Binding="{Binding DeviceCode}"
+                                    Width="120"
+                                    SortMemberPath="DeviceCode">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style>
+                            <Setter Property="TextBlock.FontFamily" Value="Consolas"/>
+                            <Setter Property="TextBlock.Foreground" Value="#666"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- 设备名称列 - 使用带前缀的资源 -->
+                <DataGridTextColumn Header="{DynamicResource SysDev_DeviceName}" 
+                                    Binding="{Binding DeviceName}"
+                                    Width="*"
+                                    SortMemberPath="DeviceName">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style>
+                            <Setter Property="TextBlock.FontWeight" Value="Bold"/>
+                            <Setter Property="TextBlock.FontSize" Value="13"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- 运行状态列 - 使用带前缀的资源 -->
+                <DataGridTextColumn Header="{DynamicResource SysDev_RunningStatus}" 
+                                    Binding="{Binding DeviceStatus}"
+                                    Width="100"
+                                    SortMemberPath="DeviceStatus">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style>
+                            <Setter Property="TextBlock.Foreground" Value="#2196F3"/>
+                            <Setter Property="TextBlock.Padding" Value="5,0"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- 最后活动时间列 - 使用带前缀的资源 -->
+                <DataGridTextColumn Header="{DynamicResource SysDev_LastActivity}" 
+                                    Binding="{Binding LastActivityTimeDisplay}"
+                                    Width="130"
+                                    SortMemberPath="LastActivityTime">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style>
+                            <Setter Property="TextBlock.Foreground" Value="#666"/>
+                            <Setter Property="TextBlock.FontSize" Value="11"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- 操作列 - 使用带前缀的资源 -->
+                <DataGridTemplateColumn Header="{DynamicResource SysDev_Actions}" Width="150">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Style="{StaticResource OpenButtonStyle}"
+                                        Command="{Binding DataContext.OpenDeviceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        IsEnabled="{Binding CanOpen}"
+                                        Width="60"/>
+                                <Button Style="{StaticResource CloseButtonStyle}"
+                                        Command="{Binding DataContext.CloseDeviceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        IsEnabled="{Binding CanClose}"
+                                        Width="60"
+                                        Margin="5,0,0,0"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- 状态栏 - 使用带前缀的资源 -->
+        <Border Grid.Row="2" Background="#F5F5F5" Padding="10" BorderBrush="#DDD" BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 总数统计 -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,20,0">
+                    <TextBlock Text="{DynamicResource SysDev_TotalDevices}" Foreground="#666"/>
+                    <TextBlock Text="{Binding TotalCount}" FontWeight="Bold" Margin="5,0,0,0"/>
+                </StackPanel>
+
+                <!-- 在线统计 -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,20,0">
+                    <Ellipse Width="8" Height="8" Fill="#4CAF50" Margin="0,4,5,0"/>
+                    <TextBlock Text="{DynamicResource SysDev_OnlineCount}" Foreground="#666"/>
+                    <TextBlock Text="{Binding OnlineCount}" FontWeight="Bold" Foreground="#4CAF50" Margin="5,0,0,0"/>
+                </StackPanel>
+
+                <!-- 离线统计 -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="0,0,20,0">
+                    <Ellipse Width="8" Height="8" Fill="#F44336" Margin="0,4,5,0"/>
+                    <TextBlock Text="{DynamicResource SysDev_OfflineCount}" Foreground="#666"/>
+                    <TextBlock Text="{Binding OfflineCount}" FontWeight="Bold" Foreground="#F44336" Margin="5,0,0,0"/>
+                </StackPanel>
+
+                <!-- 状态信息 -->
+                <TextBlock Grid.Column="4" Text="{Binding StatusMessage}" Foreground="#666" FontStyle="Italic"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

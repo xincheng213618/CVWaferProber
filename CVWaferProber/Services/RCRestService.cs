@@ -1,9 +1,7 @@
 ﻿using ColorVision.Core.Message.Response;
-using CVMQTTNodeClient;
 using CVWaferProber.Core.Restful;
 using CVWaferProber.Core.Restful.DTO;
 using CVWaferProber.Models;
-using CVWaferProber.MQTT;
 using Newtonsoft.Json;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;

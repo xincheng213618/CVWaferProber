@@ -66,6 +66,7 @@ namespace CVWaferProber.ViewModels
         public ICommand OpenCommand { get; }
         //打开机台设备调试窗口
         public ICommand OpenProberDeviceDebugCommand { get; }
+        public ICommand OpenDeviceManagerCommand { get; }
         // 打开关于命令
         public ICommand OpenAboutCommand { get; }
 
@@ -224,6 +225,7 @@ namespace CVWaferProber.ViewModels
             OpenHelpCommand = new RelayCommand(ExecuteOpenHelp);
             OpenAboutCommand = new RelayCommand(ExecuteOpenAbout);
             OpenProberDeviceDebugCommand = new RelayCommand(OpenProberDeviceDebug);
+            OpenDeviceManagerCommand = new RelayCommand(OpenDeviceManager);
             ExitCommand = new CVImgRelayCommand(() =>
             {
                 var result = MessageBox.Show((string)Application.Current.FindResource("Sureex"), (string)Application.Current.FindResource("ExitPrompt"), MessageBoxButton.YesNo, MessageBoxImage.Question);
@@ -420,6 +422,22 @@ namespace CVWaferProber.ViewModels
                 {
                     DataContext = new DevProberDebugViewModel(ProberClientService.Instance.ProberClient,
                     ProberClientService.Instance.StateMachine, _connectionInfo),
+                    Owner = Application.Current.MainWindow
+                };
+
+                window.ShowDialog();
+            });
+        }
+
+        public void OpenDeviceManager(object obj)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var vm = new DeviceListViewModel();
+                vm.LoadDevices(MainService.Instance.GetAllDevices());
+                var window = new DeviceManagerWindow
+                {
+                    DataContext = vm,
                     Owner = Application.Current.MainWindow
                 };
 

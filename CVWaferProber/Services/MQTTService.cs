@@ -1,7 +1,8 @@
 ﻿using ColorVision.Core.Message.Response;
 using ColorVision.Message.Flow;
+using ColorVision.Node.MQTT;
+using ColorVision.Services.Proxy;
 using CVMQTTLib;
-using CVMQTTNodeClient;
 using CVWaferProber.Models;
 using CVWaferProber.MQTT;
 using Newtonsoft.Json;
@@ -13,9 +14,9 @@ namespace CVWaferProber.Services
     public class MQTTService : IFlowService
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(MQTTService));
-        private CVMQTTClientNode mqttClientNode;
+        private MQTTNodeClient? mqttClientNode;
         private readonly EventAggregator eventAggregator;
-        private MQTTServiceClientNode? nodeThis;
+        //private FlowDeviceProxy? flowDeviceProxy;
 
         public ConnectionInfo ConnectionInfo { get; private set; }
 
@@ -50,8 +51,8 @@ namespace CVWaferProber.Services
                 IsServer = false,
                 IsDebugOut = false
             };
-            this.nodeThis = new MQTTServiceClientNode("RC_local");
-            this.mqttClientNode = CVMQTTClientNode.Instance.Init(nodeThis,mqtt_cfg);
+            this.mqttClientNode = new MQTTNodeClient(new ServiceNodeClientConfig("RC_local"), mqtt_cfg);
+            //this.mqttClientNode = CVMQTTClientNode.Instance.Init(new ServiceClientNodeConfig("RC_local"), mqtt_cfg);
 
             mqttClientNode.MQTTRegistedEvent += Mqtt_MQTTRegistedEvent;
             mqttClientNode.MQTTUnRegistedEvent += Mqtt_MQTTUnRegistedEvent;
@@ -61,7 +62,7 @@ namespace CVWaferProber.Services
 
         private void MqttClientNode_MQTTFlowNodeResponseEvent(object? sender, DeviceResponseMessageHeader e)
         {
-            if (e.DeviceCode == MQTTFlowDeviceNode.FlowDeviceCode)
+            if (e.DeviceCode == FlowDeviceProxy.DefaultDeviceCode)
             {
                 if (logger.IsInfoEnabled) logger.InfoFormat("Flow result => {0}/{1}", e.Message, e.Code);
             }
@@ -87,25 +88,24 @@ namespace CVWaferProber.Services
         }
         public async Task<DeviceResponseMessageHeader?> FlowRunAndWaitResponseAsync(int flowId, string flowName, string serialNumber, TimeSpan? timeout = null)
         {
-            var dev = mqttClientNode.GetDevice(MQTTFlowDeviceNode.FlowDeviceCode);
-            if (dev == null)
-            {
-                if (logger.IsErrorEnabled) logger.Error("Please reconnect to MQTT.");
-                return null;
-            }
-            MQTTFlowDeviceNode flowSvr = new MQTTFlowDeviceNode(dev);
-            var allSvrs = mqttClientNode.GetAllServices();
-            FlowDeviceRequestRunMessage? req = flowSvr.BuildRequest(serialNumber, flowId, flowName, allSvrs);
+            var flowDeviceProxy = mqttClientNode?.GetDefaultFlowDevice();
+            FlowDeviceRequestRunMessage? req = flowDeviceProxy?.BuildRequest(serialNumber, flowId, flowName);
             if (req == null)
             {
                 if (logger.IsErrorEnabled) logger.Error("Build MQTT Request is null.");
                 return null;
             }
+            string? topic = flowDeviceProxy?.UpChannel;
+            if (string.IsNullOrEmpty(topic))
+            {
+                if (logger.IsErrorEnabled) logger.Error("Build MQTT Request is null.");
+                return null;
+            }
             string msgId = req.MsgID;
-            var waitTask = flowSvr.WaitForResponseAsync(msgId, timeout);
+            var waitTask = flowDeviceProxy?.WaitForResponseAsync(msgId, timeout);
             try
             {
-                mqttClientNode.Publish(flowSvr.ServiceProxy.UpChannel, JsonConvert.SerializeObject(req));
+                mqttClientNode.Publish(topic, JsonConvert.SerializeObject(req));
                 // 等待响应
                 var response = await waitTask;
                 return response;
@@ -113,7 +113,7 @@ namespace CVWaferProber.Services
             catch (Exception)
             {
                 // 确保移除等待任务
-                flowSvr.SetException(msgId,
+                flowDeviceProxy?.SetException(msgId,
                     new OperationCanceledException("请求被取消"));
                 throw;
             }
@@ -122,6 +122,11 @@ namespace CVWaferProber.Services
         public void Reconnect()
         {
             mqttClientNode.ReRegist();
+        }
+
+        public List<PhysicDeviceProxy> GetAllDevices()
+        {
+            return mqttClientNode.GetAllDevices();
         }
     }
 }

@@ -190,6 +190,7 @@
     <!--  设备调试相关  -->
     <sys:String x:Key="Menu.DeviceDebug">Device(D)</sys:String>
     <sys:String x:Key="Menu.ProberDeviceDebug">ProberDebug</sys:String>
+    <sys:String x:Key="Menu.SysDeviceManager">SysDevice</sys:String>
     <sys:String x:Key="Menu.GlobalConfig">Global Configuration</sys:String>
 
     <sys:String x:Key="GlobalConfig.ExportPath">Auto-Export Default Path:</sys:String>
@@ -267,6 +268,7 @@
 
     <!--  流程窗口标题  -->
     <sys:String x:Key="SysFlowCfgWindow_Title">System Flow Configuration</sys:String>
+    <sys:String x:Key="DeviceManagerWindow_Title">System Device Manager</sys:String>
 
     <!--  主标题区域  -->
     <sys:String x:Key="MainTitle">System Flow Configuration Management</sys:String>
@@ -727,4 +729,43 @@
     <sys:String x:Key="TestStep_ParsingResult">Result analysis in progress...</sys:String>
     <sys:String x:Key="TestStep_Completed">Test completed</sys:String>
     <sys:String x:Key="TestStep_Failed">Test failure</sys:String>
+
+    <!-- 以下是系统设备管理 -->
+    <sys:String x:Key="SysDev_Refresh">Refresh</sys:String>
+    <sys:String x:Key="SysDev_Open">Open</sys:String>
+    <sys:String x:Key="SysDev_Close">Close</sys:String>
+    <sys:String x:Key="SysDev_ShowOnlineOnly">Show online only</sys:String>
+    <sys:String x:Key="SysDev_SearchPlaceholder">Search...</sys:String>
+
+    <!-- 列标题 -->
+    <sys:String x:Key="SysDev_Status">Regist Status</sys:String>
+    <sys:String x:Key="SysDev_DeviceCode">Device Code</sys:String>
+    <sys:String x:Key="SysDev_DeviceName">Device Name</sys:String>
+    <sys:String x:Key="SysDev_RunningStatus">Running Status</sys:String>
+    <sys:String x:Key="SysDev_LastActivity">Last Activity</sys:String>
+    <sys:String x:Key="SysDev_Actions">Actions</sys:String>
+
+    <!-- 状态文本 -->
+    <sys:String x:Key="SysDev_Online">Registed</sys:String>
+    <sys:String x:Key="SysDev_Offline">UnRegisted</sys:String>
+    <sys:String x:Key="SysDev_Running">Running</sys:String>
+    <sys:String x:Key="SysDev_Standby">Standby</sys:String>
+    <sys:String x:Key="SysDev_Maintenance">Maintenance</sys:String>
+
+    <!-- 状态栏 -->
+    <sys:String x:Key="SysDev_TotalDevices">Total Devices:</sys:String>
+    <sys:String x:Key="SysDev_OnlineCount">Registed:</sys:String>
+    <sys:String x:Key="SysDev_OfflineCount">UnRegisted:</sys:String>
+    <sys:String x:Key="SysDev_Ready">Ready</sys:String>
+    <sys:String x:Key="SysDev_Refreshing">Refreshing...</sys:String>
+    <sys:String x:Key="SysDev_Selected">Selected:</sys:String>
+    <sys:String x:Key="SysDev_Showing">Showing</sys:String>
+    <sys:String x:Key="SysDev_Of">of</sys:String>
+    <sys:String x:Key="SysDev_Devices">devices</sys:String>
+
+    <!-- 消息 -->
+    <sys:String x:Key="SysDev_DeviceOpened">Device opened</sys:String>
+    <sys:String x:Key="SysDev_DeviceClosed">Device closed</sys:String>
+    <sys:String x:Key="SysDev_DeviceListRefreshed">Device list refreshed - {0} total, {1} online</sys:String>
+    <sys:String x:Key="SysDev_NoDeviceSelected">No device selected</sys:String>
 </ResourceDictionary>

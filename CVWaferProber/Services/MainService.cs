@@ -1,4 +1,5 @@
 ﻿using ChipMapping.ViewModels;
+using ColorVision.Services.Proxy;
 using CVAVMControl;
 using CVCommCore;
 using CVWaferProber.Config;
@@ -649,6 +650,11 @@ namespace CVWaferProber.Services
         {
             mqttService.Reconnect();
         }
+        public List<PhysicDeviceProxy> GetAllDevices()
+        {
+            return mqttService.GetAllDevices();
+        }
+
 
         private (List<DieViewModel> testQueue, int currentIndex, int completedCount)? _pauseContext;
 

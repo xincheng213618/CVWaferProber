@@ -1,13 +1,13 @@
-﻿using ColorVision.Core.Message.Model;
+﻿using ColorVision.Core.Message;
+using ColorVision.Core.Message.Model;
 using ColorVision.Message.Services;
-using CVCommCore;
 using Newtonsoft.Json;
 
 namespace CVMQTTNodeClient
 {
-    public class MQTTServiceClientNode
+    public class ServiceClientNodeConfig : ServiceNodeConfig
     {
-        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(MQTTServiceClientNode));
+        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(ServiceClientNodeConfig));
         public string RCName
         {
             get => _RCName;
@@ -24,16 +24,11 @@ namespace CVMQTTNodeClient
         public string RCRegTopic { get; private set; }
         public string RCHBTopic { get; private set; }
         public string RCTopic { get; private set; }
-        public string NodeName { get; private set; }
-        public string NodeKey { get; set; }
-        public string NodeAppId { get; set; }
-        public string NodeTopic { get; private set; }
         public string HeartbeatData { get; private set; }
-        public CVServiceType ServiceType { get; set; }
+        //public CVServiceType ServiceType { get; set; }
         /// <summary>
         /// 节点访问Token
         /// </summary>
-        public ServiceNodeToken? Token { get; set; }
         public bool IsNotStartup => this.Token != null && !_isStartup;
 
         public int HeartbeatTime { get; private set; } = 5000;
@@ -42,11 +37,11 @@ namespace CVMQTTNodeClient
         private string _RCName;
         private bool _isStartup = false;
 
-        public MQTTServiceClientNode(string rcName, string nodeAppId = "app1", string nodeKey = "123456")
+        public ServiceClientNodeConfig(string rcName, string nodeAppId = "app1", string nodeKey = "123456")
         {
             this.NodeKey = nodeKey;
             this.NodeAppId = nodeAppId;
-            this.ServiceType = CVServiceType.Client;
+            this.ServiceType =  ServiceNodeType.Client;
             this._isStartup = false;
             this.Token = null;
             this.RCRegTopic = string.Empty;
@@ -93,7 +88,7 @@ namespace CVMQTTNodeClient
         {
             if (Token == null) return string.Empty;
             //ServiceNodeHeartbeatRequest Heartbeat = new ServiceNodeHeartbeatRequest(this.Token.AccessToken, this.NodeName, this.ServiceType.ToString());
-            ServiceNodeQueryStatusRequest Heartbeat = new ServiceNodeQueryStatusRequest(this.Token.AccessToken, this.NodeName, this.ServiceType.ToString());
+            ServiceNodeQueryStatusRequest Heartbeat = MessageBuilder.BuildRequestQueryStatus(this);
             return JsonConvert.SerializeObject(Heartbeat);
         }
 
@@ -108,42 +103,5 @@ namespace CVMQTTNodeClient
             if (ts > overTS) return false;
             return true;
         }
-    }
-    public class NodeToken
-    {
-        public NodeToken(int expires)
-        {
-            this.AccessToken = Guid.NewGuid().ToString();
-            this.RefreshToken = Guid.NewGuid().ToString();
-            this.Timestamp = DateTime.Now.Ticks;
-            this.Expires = expires;
-
-        }
-
-        public bool IsExpired()
-        {
-            //TODO 暂时Token永不过期
-            return false;
-            //DateTime dt = new DateTime(Timestamp).AddSeconds(Expires);
-            //return DateTime.Now.Ticks > dt.Ticks;
-        }
-
-        public void Refresh()
-        {
-            this.AccessToken = Guid.NewGuid().ToString();
-            this.Timestamp = DateTime.Now.Ticks;
-        }
-
-        public void Refresh(int expires)
-        {
-            this.Expires = expires;
-            this.Refresh();
-        }
-
-        public string AccessToken { get; set; }
-        public string RefreshToken { get; set; }
-        public long Timestamp { get; set; }
-        public int Expires { get; set; }
-
     }
 }
