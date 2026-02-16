@@ -18,11 +18,11 @@ namespace CVWaferProber.Views
     public partial class WaferProberStartupWindow : Window
     {
         // 定义启动完成事件
-        public event EventHandler StartupCompleted;
+        public event EventHandler? StartupCompleted;
         // 启动任务列表
         private List<StartupTask> startupTasks = new List<StartupTask>();
         private int currentTaskIndex = 0;
-        private BackgroundWorker startupWorker;
+        private BackgroundWorker? startupWorker;
         public WaferProberStartupWindow()
         {
             InitializeComponent();

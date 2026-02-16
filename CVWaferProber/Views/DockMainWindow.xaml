@@ -147,6 +147,10 @@
                     Command="{Binding OpenProberDeviceDebugCommand}"
                     Header="{DynamicResource Menu.ProberDeviceDebug}"
                     InputGestureText="Alt+G" />
+                <MenuItem
+                    Command="{Binding OpenDeviceManagerCommand}"
+                    Header="{DynamicResource Menu.SysDeviceManager}"
+                    InputGestureText="Alt+M" />
             </MenuItem>
             <!--  新增：顶级“导出”菜单  -->
             <!--<MenuItem Header="导出配置(E)" InputGestureText="Alt+E">

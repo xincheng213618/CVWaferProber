@@ -4,9 +4,6 @@ using CVWaferProber.Core.Events;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
 using Newtonsoft.Json;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Threading; // WPF用这个，WinForm替换为 System.Windows.Forms
 
 namespace CVWaferProber.Services
@@ -20,8 +17,8 @@ namespace CVWaferProber.Services
         // WPF专属：若用WinForm，注释这个，保留上面的SynchronizationContext即可
         private readonly Dispatcher _uiDispatcher;
 
-        public VAMService(IFlowService flowService, CVVAMAnalyzer cVVAMAnalyzer)
-            : base(flowService, CVWPEventAggregatorInstance.Instance)
+        public VAMService(MainViewModel mainVM, IFlowService flowService, CVVAMAnalyzer cVVAMAnalyzer)
+            : base(mainVM, flowService, CVWPEventAggregatorInstance.Instance)
         {
             _cVVAMAnalyzer = cVVAMAnalyzer ?? throw new ArgumentNullException(nameof(cVVAMAnalyzer));
             // 初始化：在构造函数（主线程执行）中获取UI同步上下文

@@ -27,7 +27,7 @@ namespace CVWaferProber.ViewModels
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(MainViewModel));
 
-        public static MainViewModel? Instance { get; private set; }
+        //public static MainViewModel? Instance { get; private set; }
         public MappingDataViewModel? DataMappingVM { get; set; }
         public ChipMappingControlViewModel? CustomMappingVM { get; set; }
         public CVCamImagerViewModel? CustomImageVM { get; set; }
@@ -66,6 +66,7 @@ namespace CVWaferProber.ViewModels
         public ICommand OpenCommand { get; }
         //打开机台设备调试窗口
         public ICommand OpenProberDeviceDebugCommand { get; }
+        public ICommand OpenDeviceManagerCommand { get; }
         // 打开关于命令
         public ICommand OpenAboutCommand { get; }
 
@@ -198,7 +199,7 @@ namespace CVWaferProber.ViewModels
         public IEventAggregator? EventAggregator;
         public MainViewModel()
         {
-            Instance = this;
+            //Instance = this;
 
             // 获取主程序集版本
             Version version = Assembly.GetEntryAssembly()?.GetName().Version;
@@ -224,6 +225,7 @@ namespace CVWaferProber.ViewModels
             OpenHelpCommand = new RelayCommand(ExecuteOpenHelp);
             OpenAboutCommand = new RelayCommand(ExecuteOpenAbout);
             OpenProberDeviceDebugCommand = new RelayCommand(OpenProberDeviceDebug);
+            OpenDeviceManagerCommand = new RelayCommand(OpenDeviceManager);
             ExitCommand = new CVImgRelayCommand(() =>
             {
                 var result = MessageBox.Show((string)Application.Current.FindResource("Sureex"), (string)Application.Current.FindResource("ExitPrompt"), MessageBoxButton.YesNo, MessageBoxImage.Question);
@@ -261,7 +263,7 @@ namespace CVWaferProber.ViewModels
             //IsCameraPanelVisible = Properties.Settings.Default.IsCameraPanelVisible;
             //IsSPPanelVisible = Properties.Settings.Default.IsSPPanelVisible;
 
-            ToolsVM = new ToolsBarViewModel(ProberClientService.Instance.ProberClient, ProberClientService.Instance.StateMachine, EventAggregator);
+            ToolsVM = new ToolsBarViewModel(this, ProberClientService.Instance.ProberClient, ProberClientService.Instance.StateMachine, EventAggregator);
         }
 
         private void DataMappingVM_ActivateCorrespondingPanel(object? sender, WPFlowViewModel e)
@@ -315,7 +317,7 @@ namespace CVWaferProber.ViewModels
         }
         public void InitializeServiveVM(CVVAMAnalyzer vam, CVSpectrumAnalyzer ivl)
         {
-            mainService.InitializeService(vam, ivl);
+            mainService.InitializeService(this, vam, ivl);
 
             CustomMappingVM = mainService.GetMappingVM();
             CustomImageVM = mainService.GetAOIVM();
@@ -420,6 +422,22 @@ namespace CVWaferProber.ViewModels
                 {
                     DataContext = new DevProberDebugViewModel(ProberClientService.Instance.ProberClient,
                     ProberClientService.Instance.StateMachine, _connectionInfo),
+                    Owner = Application.Current.MainWindow
+                };
+
+                window.ShowDialog();
+            });
+        }
+
+        public void OpenDeviceManager(object obj)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var vm = new DeviceListViewModel();
+                vm.LoadDevices(MainService.Instance.GetAllDevices());
+                var window = new DeviceManagerWindow
+                {
+                    DataContext = vm,
                     Owner = Application.Current.MainWindow
                 };
 

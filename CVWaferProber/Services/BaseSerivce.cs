@@ -13,6 +13,7 @@ namespace CVWaferProber.Services
 
         //protected IFlowService rcService;
         protected IFlowService _flowService;
+        protected MainViewModel mainVM;
         protected readonly IEventAggregator? EventAggregator;
 
         public string ProberId { get; set; }
@@ -23,8 +24,9 @@ namespace CVWaferProber.Services
      
         // 保留原方法为私有，避免子类直接调用
       
-        public BaseSerivce(IFlowService flowService, IEventAggregator? eventAggregator = null)
+        public BaseSerivce(MainViewModel mainVM, IFlowService flowService, IEventAggregator? eventAggregator = null)
         {
+            this.mainVM = mainVM;
             this._flowService = flowService;
             this.ProberId = string.Empty;
             this.EventAggregator = eventAggregator;
@@ -125,7 +127,7 @@ namespace CVWaferProber.Services
 
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                    var mappingVM = mainVM.DataMappingVM;
                     if (mappingVM != null)
                     {
                         mappingVM.UpdateSingleDieProgress(stage.Value, stage.Key);

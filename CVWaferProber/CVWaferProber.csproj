@@ -35,7 +35,6 @@
     <ProjectReference Include="..\ChipMapping\ChipMapping.csproj" />
     <ProjectReference Include="..\CVAVMControl\CVVAMControl.csproj" />
     <ProjectReference Include="..\CVDB\CVDB.csproj" />
-    <ProjectReference Include="..\CVMQTTNodeClient\CVMQTTNodeClient.csproj" />
     <ProjectReference Include="..\CVWaferProber.Core\CVWaferProber.Core.csproj" />
     <ProjectReference Include="..\CVWPFCamImageCtrl\CVWPFCamImageCtrl.csproj" />
     <ProjectReference Include="..\CVWPFSpectrometerCtrl\CVWPFSpectrometerCtrl.csproj" />
@@ -79,6 +78,15 @@
     </Reference>
     <Reference Include="ColorVision.Message.Flow">
       <HintPath>..\DLL\ColorVision.Message.Flow.dll</HintPath>
+    </Reference>
+    <Reference Include="ColorVision.Message.Services">
+      <HintPath>..\DLL\ColorVision.Message.Services.dll</HintPath>
+    </Reference>
+    <Reference Include="ColorVision.Node.MQTT">
+      <HintPath>..\DLL\ColorVision.Node.MQTT.dll</HintPath>
+    </Reference>
+    <Reference Include="ColorVision.Services.Proxy">
+      <HintPath>..\DLL\ColorVision.Services.Proxy.dll</HintPath>
     </Reference>
     <Reference Include="CV.DBEntities">
       <HintPath>..\DLL\CV.DBEntities.dll</HintPath>

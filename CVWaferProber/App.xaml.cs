@@ -90,6 +90,9 @@ namespace CVWaferProber
 
             base.OnStartup(e);
 
+            _mainWindow = new DockMainWindow();
+            Application.Current.MainWindow = _mainWindow;
+
             // 初始化语言（读取Settings中的默认语言）
             AppSettingsManager.InitializeLanguage();
 
@@ -101,8 +104,6 @@ namespace CVWaferProber
             _splash.InitializeStartupTasks();
             _splash.StartupCompleted += OnStartupCompleted;
             _splash.Show();
-
-            _mainWindow = new DockMainWindow();
 
             // 1. 定义DataGrid行的样式（覆盖选中状态）
             var rowStyle = new Style(typeof(DataGridRow))
@@ -206,9 +207,9 @@ namespace CVWaferProber
             //    log.Warn("Failed to schedule ResetStatusCommand invocation.", dex);
             //}
         }
-        private DockMainWindow _mainWindow;
+        private DockMainWindow? _mainWindow;
 
-        private void OnStartupCompleted(object sender, EventArgs e)
+        private void OnStartupCompleted(object? sender, EventArgs e)
         {
             // 关闭启动窗口
             _splash.Close();
@@ -221,13 +222,7 @@ namespace CVWaferProber
             // 使用 Dispatcher.BeginInvoke 确保在 UI 线程执行
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (_mainWindow == null)
-                {
-                    _mainWindow = new DockMainWindow();
-                }
-
-                Application.Current.MainWindow = _mainWindow;
-                _mainWindow.Show();
+                _mainWindow?.Show();
             }));
         }
 

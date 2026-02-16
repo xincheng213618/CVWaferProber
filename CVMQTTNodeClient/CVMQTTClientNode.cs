@@ -3,6 +3,7 @@ using ColorVision.Core.Message.Request;
 using ColorVision.Core.Message.Response;
 using ColorVision.Message.Model;
 using ColorVision.Message.Services;
+using ColorVision.Services.Proxy;
 using CVCommCore;
 using CVMQTTLib;
 using Newtonsoft.Json;
@@ -16,7 +17,7 @@ namespace CVMQTTNodeClient
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(CVMQTTClientNode));
 
         private CVMQTTControl? _mqttControl;
-        private MQTTServiceClientNode? _nodeThis;
+        private ServiceClientNodeConfig? _nodeThis;
 
         // 使用ConcurrentDictionary替代Dictionary，线程安全
         private readonly ConcurrentDictionary<string, ServiceNodeProxy> _nodeServers = new();
@@ -29,6 +30,8 @@ namespace CVMQTTNodeClient
 
         private readonly object _statusLock = new();
         private MqttNodeClientStatus _status;
+
+        public ServiceClientNodeConfig? Config => _nodeThis;
 
         public MqttNodeClientStatus Status
         {
@@ -92,18 +95,13 @@ namespace CVMQTTNodeClient
         /// </summary>
         public CVMQTTClientNode Init(CVMQTTConfig mqtt_cfg, string rcName, string nodeAppId = "app1", string nodeKey = "123456")
         {
-            return Init(new MQTTServiceClientNode(rcName, nodeAppId, nodeKey)
-            {
-                NodeAppId = nodeAppId,
-                NodeKey = nodeKey,
-                ServiceType = CVServiceType.Client
-            }, mqtt_cfg);
+            return Init(new ServiceClientNodeConfig(rcName, nodeAppId, nodeKey), mqtt_cfg);
         }
 
         /// <summary>
         /// 初始化MQTT客户端
         /// </summary>
-        public CVMQTTClientNode Init(MQTTServiceClientNode node, CVMQTTConfig mqtt_cfg)
+        public CVMQTTClientNode Init(ServiceClientNodeConfig node, CVMQTTConfig mqtt_cfg)
         {
             if (node == null) throw new ArgumentNullException(nameof(node));
 
@@ -165,10 +163,10 @@ namespace CVMQTTNodeClient
             _mqttControl.MQTTConnectedEvent += OnMqttConnectedEvent;
             _mqttControl.MQTTDisconnectedEvent += OnMqttDisconnectedEvent;
 
-            StartFlow(mqtt_cfg);
+            StartMQTT(mqtt_cfg);
         }
 
-        private void StartFlow(CVMQTTConfig mqtt_cfg)
+        private void StartMQTT(CVMQTTConfig mqtt_cfg)
         {
             try
             {
@@ -282,18 +280,17 @@ namespace CVMQTTNodeClient
         {
             // 只有当状态为Disconnected时才更新为Connected
             if (Status == MqttNodeClientStatus.Disconnected)
+            {
                 Status = MqttNodeClientStatus.Connected;
-
-            // 如果节点未初始化或状态不是已连接，直接返回
-            if (_nodeThis == null || Status != MqttNodeClientStatus.Connected)
-                return;
-
-            // 触发连接事件
-            _mqttConnectedEvent?.Invoke(_nodeThis, args);
-
-            // 订阅和注册
-            _mqttControl?.Subscribe(_nodeThis.NodeTopic);
-            Regist();
+                // 如果节点未初始化或状态不是已连接，直接返回
+                if (_nodeThis == null)
+                    return;
+                // 触发连接事件
+                _mqttConnectedEvent?.Invoke(_nodeThis, args);
+                // 订阅和注册
+                _mqttControl?.Subscribe(_nodeThis.NodeTopic);
+                Regist();
+            }
         }
 
         private void OnMqttDisconnectedEvent(object sender, MQTTConnectedEventArgs args)
@@ -379,7 +376,7 @@ namespace CVMQTTNodeClient
 
         private void ProcessQueryServiceStatusResponse(string data)
         {
-            _nodeThis.RecvHeartbeat();
+            _nodeThis?.RecvHeartbeat();
             //if (logger.IsDebugEnabled) logger.DebugFormat("QueryServiceStatusResponse => {0}", data);
             var resp_q = JsonConvert.DeserializeObject<ServiceNodeQueryStatusResponse>(data);
             if (resp_q == null || resp_q.Data == null || resp_q.Data.Count == 0)
@@ -392,7 +389,7 @@ namespace CVMQTTNodeClient
                 if(_nodeServers.TryGetValue(svr.ServiceCode,out var nodeSvr))
                 {
                     nodeSvr.Update(svr);
-                    if (logger.IsDebugEnabled) logger.DebugFormat("service update => {0}", JsonConvert.SerializeObject(nodeSvr, Formatting.Indented));
+                    //if (logger.IsDebugEnabled) logger.DebugFormat("service update => {0}", JsonConvert.SerializeObject(nodeSvr, Formatting.Indented));
                 }
             }
         }
@@ -422,7 +419,7 @@ namespace CVMQTTNodeClient
                 if (_nodeThis.Token != null && !string.IsNullOrEmpty(_nodeThis.Token.AccessToken))
                 {
                     _nodeThis.Startup();
-                    var request = new ServiceNodeQueryRequest(_nodeThis.Token.AccessToken, _nodeThis.NodeName, _nodeThis.ServiceType.ToString().ToLower());
+                    var request = MessageBuilder.BuildRequestQuery(_nodeThis);
                     //var topic = MQTTCVServiceTopicBuilder.BuildPublicTopic(_nodeThis.RCName);
                     _mqttControl?.Publish(_nodeThis.RCTopic, JsonConvert.SerializeObject(request));
                 }
@@ -445,10 +442,11 @@ namespace CVMQTTNodeClient
                 foreach (var _svr in item.Value)
                 {
                     ServiceNodeProxy svr = new ServiceNodeProxy(_svr);
-                    if (_nodeServers.TryAdd(svr.ServiceCode, svr))
+                    if (_nodeServers.TryAdd(svr.Config.ServiceCode, svr))
                     {
-                        _mqttControl?.Subscribe(svr.DownChannel);
-                        _svrTopics.TryAdd(svr.DownChannel, svr);
+                        _mqttControl?.Subscribe(svr.Config.DownChannel);
+                        //if (logger.IsDebugEnabled) logger.DebugFormat("{0} Subscribe => {1}", svr.ServiceCode, svr.DownChannel);
+                        _svrTopics.TryAdd(svr.Config.DownChannel, svr);
                         _flowSvrs.Add(MessageBuilder.Build(_svr));
                         foreach (var device in svr.Devices.Values)
                         {
@@ -462,22 +460,39 @@ namespace CVMQTTNodeClient
 
             if (hasNewService)
             {
+                var dev = this.GetDevice(FlowDeviceProxy.DefaultDeviceCode);
+                if (dev != null)
+                {
+                    var flowDeviceProxy = dev as FlowDeviceProxy;
+                    var allSvrs = this.GetAllServices();
+                    flowDeviceProxy?.Init(allSvrs);
+                }
+
                 if (logger.IsInfoEnabled) logger.Info("MQTT Registed ok");
                 _mqttRegistedEvent?.Invoke(_nodeThis, EventArgs.Empty);
                 Status = MqttNodeClientStatus.Registed;
             }
         }
 
-        private void ProcessServiceMessage(ServiceNodeProxy svr, string data)
+        private void ProcessServiceMessage(ServiceNodeProxy svrProxy, string data)
         {
             try
             {
                 var resp = JsonConvert.DeserializeObject<DeviceResponseMessageHeader>(data);
                 if (resp == null) { return; }
                 if (logger.IsDebugEnabled)
-                    logger.DebugFormat("Recv {0} => {1}", svr.ServiceName, JsonConvert.SerializeObject(resp));
-
-                if (_devices.TryGetValue(resp.DeviceCode, out var device))
+                    logger.DebugFormat("[{0}]Recv => {1}", svrProxy.Config.ServiceName, JsonConvert.SerializeObject(resp));
+                if (resp.EventName == "Heartbeat")
+                {
+                    var hb_resp = JsonConvert.DeserializeObject<ServiceNodeHeartbeatResponse>(data);
+                    if (_nodeServers.TryGetValue(svrProxy.Config.ServiceName,out var svr))
+                    {
+                        svr.Update(hb_resp);
+                    }
+                    //if (logger.IsDebugEnabled)
+                    //    logger.DebugFormat("[{0}]Heartbeat => {1}", svr.ServiceName, data);
+                }
+                else if (_devices.TryGetValue(resp.DeviceCode, out var device))
                 {
                     _mqttFlowNodeResponseEvent?.Invoke(device, resp);
                     device.SetResponse(resp);
@@ -487,7 +502,7 @@ namespace CVMQTTNodeClient
             {
                 if (logger.IsErrorEnabled)
                     logger.ErrorFormat("Process service message failed. Service:{0}, Error:{1}",
-                        svr.ServiceName, ex.Message);
+                        svrProxy.Config.ServiceName, ex.Message);
             }
         }
 
@@ -526,13 +541,16 @@ namespace CVMQTTNodeClient
 
         private ServiceNodeRegistRequest BuildHBReq()
         {
-            ServiceNodeRegistRequest req = new ServiceNodeRegistRequest(_nodeThis.NodeName, _nodeThis.NodeAppId, _nodeThis.NodeKey, _nodeThis.NodeTopic, _nodeThis.ServiceType.ToString().ToLower());
-            return req;
+            return MessageBuilder.BuildRequestRegist(_nodeThis);
         }
 
         private void ClearCache()
         {
             _nodeThis?.Reset();
+            foreach (var svr in _nodeServers.Values)
+            {
+                _mqttControl?.Unsubscribe(svr.Config.DownChannel);  
+            }
             _nodeServers.Clear();
             _svrTopics.Clear();
             _flowSvrs.Clear();
@@ -576,6 +594,17 @@ namespace CVMQTTNodeClient
             }
 
             return services;
+        }
+        public List<PhysicDeviceProxy> GetAllDevices()
+        {
+            var devices = new List<PhysicDeviceProxy>(_devices.Count);
+
+            foreach (var dev in _devices.Values)
+            {
+                devices.Add(dev);
+            }
+
+            return devices;
         }
     }
 

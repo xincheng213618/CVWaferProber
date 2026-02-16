@@ -71,10 +71,15 @@ namespace CVWaferProber.Views
 
         private void DockMainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            Task.Factory.StartNew(() =>
-            {
-                MainService.Instance.Startup();
-            });
+            InitUI();
+        }
+
+        private void InitUI()
+        {
+            //MainService.Instance.InitUI();
+            //this.Dispatcher.Invoke(new Action(() =>
+            //{ 
+            //}));
         }
 
         private void DockMainWindow_Closed(object? sender, EventArgs e)

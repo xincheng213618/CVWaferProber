@@ -1,9 +1,8 @@
 ﻿using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
-using CVWaferProber.ViewModels;
+using CVWaferProber.Services;
 using System.Globalization;
 using System.Windows.Data;
-using System.Windows.Media;
 using Brushes = System.Windows.Media.Brushes;
 
 namespace CVWaferProber.Converters
@@ -14,9 +13,10 @@ namespace CVWaferProber.Converters
         {
             if (value == null) return Brushes.Transparent;
 
-            if (MainViewModel.Instance != null)
+            var mainVM = MainService.Instance.MainVM;
+            if (mainVM != null && mainVM.DataMappingVM != null)
             {
-                bool isColorEnabled = MainViewModel.Instance.DataMappingVM.IsColorEnabled; // 或者通过其他方式获取
+                bool isColorEnabled = mainVM.DataMappingVM.IsColorEnabled; // 或者通过其他方式获取
                 if (!isColorEnabled) return Brushes.White;
             }
 

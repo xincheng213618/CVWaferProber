@@ -207,6 +207,7 @@
     <!--  设备调试相关  -->
     <sys:String x:Key="Menu.DeviceDebug">设备(D)</sys:String>
     <sys:String x:Key="Menu.ProberDeviceDebug">机台调试</sys:String>
+    <sys:String x:Key="Menu.SysDeviceManager">系统设备</sys:String>
 
     <!--  VAM相关  -->
     <sys:String x:Key="VAM.OpenCVCIEFile">VAM文件载入</sys:String>
@@ -284,6 +285,7 @@
 
     <!--  窗口标题  -->
     <sys:String x:Key="SysFlowCfgWindow_Title">系统Flow配置</sys:String>
+    <sys:String x:Key="DeviceManagerWindow_Title">系统设备管理</sys:String>
 
     <!--  主标题区域  -->
     <sys:String x:Key="MainTitle">系统Flow配置管理</sys:String>
@@ -740,4 +742,43 @@
     <sys:String x:Key="TestStep_ParsingResult">结果解析中...</sys:String>
     <sys:String x:Key="TestStep_Completed">测试完成</sys:String>
     <sys:String x:Key="TestStep_Failed">测试失败</sys:String>
+
+    <!-- 以下是系统设备管理 -->
+    <sys:String x:Key="SysDev_Refresh">刷新</sys:String>
+    <sys:String x:Key="SysDev_Open">打开</sys:String>
+    <sys:String x:Key="SysDev_Close">关闭</sys:String>
+    <sys:String x:Key="SysDev_ShowOnlineOnly">只显示在线设备</sys:String>
+    <sys:String x:Key="SysDev_SearchPlaceholder">搜索...</sys:String>
+
+    <!-- 列标题 -->
+    <sys:String x:Key="SysDev_Status">注册状态</sys:String>
+    <sys:String x:Key="SysDev_DeviceCode">设备编码</sys:String>
+    <sys:String x:Key="SysDev_DeviceName">设备名称</sys:String>
+    <sys:String x:Key="SysDev_RunningStatus">运行状态</sys:String>
+    <sys:String x:Key="SysDev_LastActivity">最后活动</sys:String>
+    <sys:String x:Key="SysDev_Actions">操作</sys:String>
+
+    <!-- 状态文本 -->
+    <sys:String x:Key="SysDev_Online">已注册</sys:String>
+    <sys:String x:Key="SysDev_Offline">未注册</sys:String>
+    <sys:String x:Key="SysDev_Running">运行中</sys:String>
+    <sys:String x:Key="SysDev_Standby">待机</sys:String>
+    <sys:String x:Key="SysDev_Maintenance">维护中</sys:String>
+
+    <!-- 状态栏 -->
+    <sys:String x:Key="SysDev_TotalDevices">设备总数:</sys:String>
+    <sys:String x:Key="SysDev_OnlineCount">已注册:</sys:String>
+    <sys:String x:Key="SysDev_OfflineCount">未注册:</sys:String>
+    <sys:String x:Key="SysDev_Ready">就绪</sys:String>
+    <sys:String x:Key="SysDev_Refreshing">刷新中...</sys:String>
+    <sys:String x:Key="SysDev_Selected">已选择:</sys:String>
+    <sys:String x:Key="SysDev_Showing">显示</sys:String>
+    <sys:String x:Key="SysDev_Of">/</sys:String>
+    <sys:String x:Key="SysDev_Devices">台设备</sys:String>
+
+    <!-- 消息 -->
+    <sys:String x:Key="SysDev_DeviceOpened">设备已打开</sys:String>
+    <sys:String x:Key="SysDev_DeviceClosed">设备已关闭</sys:String>
+    <sys:String x:Key="SysDev_DeviceListRefreshed">设备列表已刷新 - 共{0}台，{1}台在线</sys:String>
+    <sys:String x:Key="SysDev_NoDeviceSelected">未选择设备</sys:String>
 </ResourceDictionary>

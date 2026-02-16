@@ -154,8 +154,11 @@ namespace CVWaferProber.Models
         public override void Exec()
         {
             this.Status = TaskStatus.Running;
-            Thread.Sleep(500);
-            this.Status = TaskStatus.Completed;
+            var task = MainService.Instance.TryRegistAsync();
+            task.Wait();
+            bool bR = task.Result;
+            if (bR) this.Status = TaskStatus.Completed;
+            else this.Status = TaskStatus.Failed;
         }
     } 
     public class MotionStartupTask : StartupTask
@@ -167,7 +170,9 @@ namespace CVWaferProber.Models
         public override void Exec()
         {
             this.Status = TaskStatus.Running;
-            bool bR = MainService.Instance.TryConnectAsync();
+            var task = MainService.Instance.TryConnectAsync();
+            task.Wait();
+            bool bR = task.Result;
             if (bR) this.Status = TaskStatus.Completed;
             else this.Status = TaskStatus.Failed;
         }
@@ -181,7 +186,7 @@ namespace CVWaferProber.Models
         public override void Exec()
         {
             this.Status = TaskStatus.Running;
-            Thread.Sleep(1000);
+            MainService.Instance.Startup();
             this.Status = TaskStatus.Completed;
         }
     }

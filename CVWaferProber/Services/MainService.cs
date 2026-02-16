@@ -1,4 +1,5 @@
 ﻿using ChipMapping.ViewModels;
+using ColorVision.Services.Proxy;
 using CVAVMControl;
 using CVCommCore;
 using CVWaferProber.Config;
@@ -23,13 +24,14 @@ namespace CVWaferProber.Services
         #endregion
         private MQTTService mqttService;
         private MappingService mappingService;
+        private MainViewModel _mainVM;
         //private GSWMProcessor? _wmProcessor;
         private ProberClientService proberClientService;
         private readonly Dictionary<CVWaferProberFlowType, BaseSerivce> flowServices =
             new Dictionary<CVWaferProberFlowType, BaseSerivce>();
         public AutoTestingItem? autoTestingItem { get; private set; }
         public ConnectionInfo ConnectionInfo { get => mqttService.ConnectionInfo; }
-
+        public MainViewModel MainVM => _mainVM;
         private MainService()
         {
             mqttService = new MQTTService();
@@ -69,33 +71,38 @@ namespace CVWaferProber.Services
         public void Startup()
         {
             proberClientService.Startup();
+
+            InitUI();
         }
 
-        public bool TryConnectAsync()
+        public async Task<bool> TryRegistAsync()
         {
-            var task = proberClientService.TryConnectAsync();
-            task.Wait();
-            return task.Result;
+            return await mqttService.TryRegistAsync();
         }
-        public void InitializeService(CVVAMAnalyzer _cVVAMAnalyzer, CVWPFSpectrometerCtrl.CVSpectrumAnalyzer ivlAnalyzer)
+        public async Task<bool> TryConnectAsync()
         {
+            return await proberClientService.TryConnectAsync();
+        }
+        public void InitializeService(MainViewModel mainVM, CVVAMAnalyzer _cVVAMAnalyzer, CVWPFSpectrometerCtrl.CVSpectrumAnalyzer ivlAnalyzer)
+        {
+            this._mainVM = mainVM;
             //
-            BaseSerivce ivlService = new IVLService(mqttService, ivlAnalyzer);
+            BaseSerivce ivlService = new IVLService(mainVM, mqttService, ivlAnalyzer);
             flowServices[CVWaferProberFlowType.IVL] = ivlService;
             ivlService.TestingCompleted += OnTestingCompleted;
             ivlService.AutoTestingNextCompleted += OnAutoTestingNextCompleted;
 
-            BaseSerivce aoiService = new AOIService(mqttService);
+            BaseSerivce aoiService = new AOIService(mainVM, mqttService);
             flowServices[CVWaferProberFlowType.AOI] = aoiService;
             aoiService.TestingCompleted += OnTestingCompleted;
             aoiService.AutoTestingNextCompleted += OnAutoTestingNextCompleted;
          
-            BaseSerivce eqeService = new EQEService(mqttService);
+            BaseSerivce eqeService = new EQEService(mainVM, mqttService);
             flowServices[CVWaferProberFlowType.EQE] = eqeService;
             eqeService.TestingCompleted += OnTestingCompleted;
             eqeService.AutoTestingNextCompleted += OnAutoTestingNextCompleted;
           
-            BaseSerivce vamService = new VAMService(mqttService, _cVVAMAnalyzer);
+            BaseSerivce vamService = new VAMService(mainVM, mqttService, _cVVAMAnalyzer);
             flowServices[CVWaferProberFlowType.VAM] = vamService;
             vamService.TestingCompleted += OnTestingCompleted;
             vamService.AutoTestingNextCompleted += OnAutoTestingNextCompleted;          
@@ -142,7 +149,7 @@ namespace CVWaferProber.Services
                     // 关键：在开始下一个Die测试之前，先完成当前Die的进度
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                        var mappingVM = _mainVM?.DataMappingVM;
                         if (mappingVM != null)
                         {
                             // 完成当前Die测试（增加CompletedTestCount）
@@ -169,13 +176,13 @@ namespace CVWaferProber.Services
             try
             {
                 // 增加空值检查
-                if (MainViewModel.Instance?.DataMappingVM != null)
+                if (_mainVM.DataMappingVM != null)
                 {
                     // 确保只在UI线程执行
                     Application.Current.Dispatcher.Invoke(() =>
                     {
                         // 进度更新现在在OnAutoTestingNextCompleted中处理
-                        var mappingVM = MainViewModel.Instance.DataMappingVM;
+                        var mappingVM = _mainVM.DataMappingVM;
 
                         // 只更新单Die进度到100%，但不增加CompletedTestCount
                         mappingVM.SingleDieTestProgress = 100;
@@ -185,7 +192,7 @@ namespace CVWaferProber.Services
                     });
 
                     if (logger.IsDebugEnabled)
-                        logger.DebugFormat($"进度更新: {dieVM.MapAxisToString()} 测试完成, 当前完成数: {MainViewModel.Instance.DataMappingVM.CompletedTestCount}");
+                        logger.DebugFormat($"进度更新: {dieVM.MapAxisToString()} 测试完成, 当前完成数: {_mainVM.DataMappingVM.CompletedTestCount}");
                 }
             }
             catch (Exception ex)
@@ -213,16 +220,16 @@ namespace CVWaferProber.Services
                 // 确保所有Die测试都标记为完成
                 Application.Current?.Dispatcher?.Invoke(() =>
                 {
-                    if (MainViewModel.Instance?.DataMappingVM != null)
+                    if (_mainVM.DataMappingVM != null)
                     {
                         // 如果还有未完成的Die，强制标记为完成
-                        if (MainViewModel.Instance.DataMappingVM.CompletedTestCount < MainViewModel.Instance.DataMappingVM.TotalTestCount)
+                        if (_mainVM.DataMappingVM.CompletedTestCount < _mainVM.DataMappingVM.TotalTestCount)
                         {
-                            MainViewModel.Instance.DataMappingVM.CompleteSingleDieTest();
+                            _mainVM.DataMappingVM.CompleteSingleDieTest();
                         }
 
-                        MainViewModel.Instance.DataMappingVM.SingleDieTestProgress = 100;
-                        MainViewModel.Instance.DataMappingVM.CurrentDieInfo = "Test completed";
+                        _mainVM.DataMappingVM.SingleDieTestProgress = 100;
+                        _mainVM.DataMappingVM.CurrentDieInfo = "Test completed";
                     }
                 });
             }
@@ -324,7 +331,7 @@ namespace CVWaferProber.Services
                     //// 修复：提前初始化下一个Die的进度
                     //Application.Current.Dispatcher.Invoke(() =>
                     //{
-                    //    MainViewModel.Instance?.DataMappingVM?.StartSingleDieTest(dieNext.die);
+                    //    mainVM?.DataMappingVM?.StartSingleDieTest(dieNext.die);
                     //});
                     PreAutoTestingNextDie?.Invoke(this, (dieNext.diePre, dieNext.die));
                     //logger.InfoFormat("DoAutoDieFlowExecAsync={0}/{1}", dieNext.die.MapAxisToString(), dieNext.die.Status.ToString());
@@ -371,7 +378,7 @@ namespace CVWaferProber.Services
                 if (isOK)
                 {
                     // 新增：开始单Die进度跟踪
-                    MainViewModel.Instance?.DataMappingVM?.StartSingleDieTest(die);
+                    _mainVM?.DataMappingVM?.StartSingleDieTest(die);
                     // 3. 执行测试流程 - 分阶段更新进度
                     await ExecuteDieTestWithProgress(selectedWPFlow, die, hasNext, isAuto);
 
@@ -435,7 +442,7 @@ namespace CVWaferProber.Services
             // 关键修复：确保每个Die测试开始时调用StartSingleDieTest
             Application.Current.Dispatcher.Invoke(() =>
             {
-                MainViewModel.Instance?.DataMappingVM?.StartSingleDieTest(die);
+                _mainVM?.DataMappingVM?.StartSingleDieTest(die);
             });
             BaseSerivce? baseService = null;
             switch (_selectedWPFlow?.FlowType)
@@ -494,8 +501,8 @@ namespace CVWaferProber.Services
             {
                 Application.Current?.Dispatcher?.Invoke(() =>
                 {
-                    // 替换：MainViewModel.Instance?.DataMappingVM.IsManualTesting = false;
-                    var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                    // 替换：mainVM?.DataMappingVM.IsManualTesting = false;
+                    var mappingVM = _mainVM?.DataMappingVM;
                     if (mappingVM != null)
                     {
                         mappingVM.IsManualTesting = false;
@@ -541,7 +548,7 @@ namespace CVWaferProber.Services
             // 初始化进度条 - 重要：必须在UI线程执行
             Application.Current.Dispatcher.Invoke(() =>
             {
-                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                var mappingVM = _mainVM?.DataMappingVM;
                 if (mappingVM != null)
                 {
                     mappingVM.InitializeAutoTestProgress(dieVMList);
@@ -558,14 +565,14 @@ namespace CVWaferProber.Services
         public void StopAutoTesting()
         {
             // 重置进度条
-            MainViewModel.Instance?.DataMappingVM?.ResetProgressBars();
+            _mainVM?.DataMappingVM?.ResetProgressBars();
 
             autoTestingItem = null;
             proberClientService?.StopTestAsync();
             // 停止但不重置进度条，保留当前进度状态
             Application.Current.Dispatcher.Invoke(() =>
             {
-                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                var mappingVM = _mainVM?.DataMappingVM;
                 if (mappingVM != null)
                 {
                     mappingVM._progressUpdateTimer.Stop(); // 仅停止定时器
@@ -582,22 +589,22 @@ namespace CVWaferProber.Services
                 _pauseContext = (
                     autoTestingItem.TestingDieVMList,
                     autoTestingItem.CurTestingIndex,
-                    MainViewModel.Instance.DataMappingVM.CompletedTestCount
+                    _mainVM.DataMappingVM.CompletedTestCount
                 );
                 autoTestingItem.IsPaused = true;
                 if (isRollback) autoTestingItem.RollbackToPrevious();
                 // 停止进度定时器，但不重置进度数据
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    var mappingVM = MainViewModel.Instance.DataMappingVM;
+                    var mappingVM = _mainVM.DataMappingVM;
                     mappingVM._progressUpdateTimer.Stop(); // 仅停止定时器，不重置进度值
                     mappingVM.IsProcessing = false; // 仅恢复按钮状态，不重置进度
                 });
             }
             proberClientService?.PausedAutoTest();
-            //MainViewModel.Instance.IsProcessing=false;
-            MainViewModel.Instance.DataMappingVM.EnableBtnGUI(true);
-            //MainViewModel.Instance.IsNotProcessing=true;
+            //mainVM.IsProcessing=false;
+            _mainVM.DataMappingVM.EnableBtnGUI(true);
+            //mainVM.IsNotProcessing=true;
             if (logger.IsInfoEnabled) logger.Info("Pause auto testing");
         }
 
@@ -617,7 +624,7 @@ namespace CVWaferProber.Services
                 // 恢复时重新初始化进度状态
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    var mappingVM = MainViewModel.Instance.DataMappingVM;
+                    var mappingVM = _mainVM.DataMappingVM;
                     // 恢复进度上下文
                     mappingVM.TotalTestCount = _pauseContext.Value.testQueue.Count;
                     mappingVM.CompletedTestCount = _pauseContext.Value.completedCount;
@@ -648,6 +655,18 @@ namespace CVWaferProber.Services
         public void ReRegist()
         {
             mqttService.Reconnect();
+        }
+        public List<PhysicDeviceProxy>? GetAllDevices()
+        {
+            return mqttService.GetAllDevices();
+        }
+
+        public void InitUI()
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                proberClientService.InitUI();
+            });
         }
 
         private (List<DieViewModel> testQueue, int currentIndex, int completedCount)? _pauseContext;

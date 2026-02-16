@@ -23,6 +23,9 @@
     <Reference Include="ColorVision.Message.Services">
       <HintPath>..\DLL\ColorVision.Message.Services.dll</HintPath>
     </Reference>
+    <Reference Include="ColorVision.Services.Proxy">
+      <HintPath>..\DLL\ColorVision.Services.Proxy.dll</HintPath>
+    </Reference>
     <Reference Include="CVCommCore">
       <HintPath>..\DLL\CVCommCore.dll</HintPath>
     </Reference>

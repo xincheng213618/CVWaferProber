@@ -23,7 +23,8 @@ namespace CVWaferProber.Services
         public CVSpectrumViewModel CustomIVLVM { get; private set; }
 
         //private readonly GlobalConfigModel _globalConfig;
-        public IVLService(CVSpectrumViewModel customIVLVM, IFlowService flowService, CVSpectrumAnalyzer ivlAnalyzer) : base(flowService)
+        public IVLService(MainViewModel mainVM, CVSpectrumViewModel customIVLVM, IFlowService flowService, CVSpectrumAnalyzer ivlAnalyzer)
+            : base(mainVM, flowService)
         {
             this.CustomIVLVM = customIVLVM;
             //this._chipMappingControlViewModel = chipMappingControlViewModel;
@@ -31,8 +32,8 @@ namespace CVWaferProber.Services
             // 初始化导出文件夹（确保目录存在）
             //AutoExportHelper.InitFolders();
         }
-        public IVLService(IFlowService flowService, CVSpectrumAnalyzer ivlAnalyzer) :
-            this(new CVSpectrumViewModel(), flowService, ivlAnalyzer)
+        public IVLService(MainViewModel mainVM, IFlowService flowService, CVSpectrumAnalyzer ivlAnalyzer) :
+            this(mainVM, new CVSpectrumViewModel(), flowService, ivlAnalyzer)
         {
         }
         //引用SP面板的视图控件（从外部传递）

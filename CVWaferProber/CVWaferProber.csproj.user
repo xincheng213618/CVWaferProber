@@ -21,6 +21,9 @@
     <Compile Update="Views\ConnectionSettingsWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Views\DeviceManagerWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Views\DockMainWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -69,6 +72,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Views\ConnectionSettingsWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\DeviceManagerWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="Views\DockMainWindow.xaml">

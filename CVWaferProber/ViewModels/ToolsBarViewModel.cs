@@ -9,8 +9,9 @@ namespace CVWaferProber.ViewModels
 {
     public class ToolsBarViewModel : ViewModelBase
     {
-        private readonly IWaferProberClient? _client;
-        private readonly IStateMachine? _proberState;
+        private readonly IWaferProberClient _client;
+        private readonly IStateMachine _proberState;
+        private readonly MainViewModel _mainVM;
 
         public ICommand LiftAllCommand { get; }
         public ICommand ToMainCameraCommand { get; }
@@ -34,14 +35,15 @@ namespace CVWaferProber.ViewModels
         public bool CanStartAutoTest => _proberState.CurrentState == ProberState.WaferLoaded ||
             _proberState.CurrentState == ProberState.Stoped;
         public bool CanContinuAutoTest => _proberState.CurrentState == ProberState.Paused &&
-            MainViewModel.Instance.IsNotProcessing;
-        public bool CanStopAutoTest => MainViewModel.Instance.IsNotProcessing && 
+            _mainVM.IsNotProcessing;
+        public bool CanStopAutoTest => _mainVM.IsNotProcessing && 
             (_proberState.CurrentState == ProberState.Testing || _proberState.CurrentState == ProberState.WaferLoaded ||
             _proberState.CurrentState == ProberState.Paused || _proberState.CurrentState == ProberState.Stoped);
         public bool CanPauseAutoTest => _proberState.CurrentState == ProberState.Testing;
 
-        public ToolsBarViewModel(IWaferProberClient client, IStateMachine? proberState, IEventAggregator? eventAggregator = null)
+        public ToolsBarViewModel(MainViewModel mainVM,IWaferProberClient client, IStateMachine proberState, IEventAggregator? eventAggregator = null)
         {
+            _mainVM = mainVM;
             _client = client;
             _proberState = proberState;
             _client.EventAggregator.Subscribe<ZAxisPosChangedEvent>(OnZAxisPosChanged);
@@ -76,22 +78,22 @@ namespace CVWaferProber.ViewModels
 
         private void PauseAutoTest()
         {
-            MainViewModel.Instance.PauseAutoFlow();
+            _mainVM.PauseAutoFlow();
         }
 
         private void StopAutoTest()
         {
-            MainViewModel.Instance.StopAutoFlow();
+            _mainVM.StopAutoFlow();
         }
 
         private void ContinuAutoTest()
         {
-            MainViewModel.Instance.ContinuAutoFlow();
+            _mainVM.ContinuAutoFlow();
         }
 
         private void StartAutoTest()
         {
-            MainViewModel.Instance.StartAutoFlow();
+            _mainVM.StartAutoFlow();
         }
 
         private void OnZAxisPosChanged(ZAxisPosChangedEvent @event)
@@ -101,19 +103,19 @@ namespace CVWaferProber.ViewModels
         private async void ToIntegratingSphere()
         {
             await _client?.ZToIntegratingSphereAsync();
-            MainViewModel.Instance?.ToIntegratingSphere();
+            _mainVM?.ToIntegratingSphere();
         }
 
         private async void ToAuxCamera()
         {
             await _client?.ZToAuxCameraAsync();
-            MainViewModel.Instance?.ToAuxCamera();
+            _mainVM?.ToAuxCamera();
         }
 
         private async void ToMainCamera()
         {
             await _client?.ZToMainCameraAsync();
-            MainViewModel.Instance?.ToMainCamera();
+            _mainVM?.ToMainCamera();
         }
 
         private async void LiftAll()

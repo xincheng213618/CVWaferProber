@@ -99,7 +99,7 @@ namespace CVWaferProber.Services
             }
             else if (@event.ToState == ProberState.WaferLoaded)
             {
-                _mappingDataViewModel?.LoadMappingFile(_proberState.GetStatus().CurrentMappingFile);
+                //_mappingDataViewModel?.LoadMappingFile(_proberState.GetStatus().CurrentMappingFile);
                 _mappingDataViewModel.WaferId = _proberState.GetStatus().CurrentWaferId;
             }
             if (logger.IsInfoEnabled) logger.InfoFormat("StateTransition {0} => {1}", @event.FromState.ToString(), @event.ToState.ToString());
@@ -427,6 +427,20 @@ namespace CVWaferProber.Services
                 logger.Error(e);
                 return false;
             }
+        }
+
+        public void InitUI()
+        {
+            for (int i = 0; i < 100; i++)
+            {
+                if (_connectionInfo.DevCurrentState == ProberState.WaferLoaded)
+                {
+                    _mappingDataViewModel?.LoadMappingFile(_proberState.GetStatus().CurrentMappingFile);
+                    break;
+                }
+                Task.Delay(100).Wait();
+            }
+
         }
     }
 }
