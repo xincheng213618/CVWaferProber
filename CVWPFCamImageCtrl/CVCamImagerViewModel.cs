@@ -22,6 +22,47 @@ namespace CVWPFCamImageCtrl
         private CVImager? _imageDisplay;
         // 【关键修改】使用静态线程安全计数器，替代原有id字段
         private static int _globalImageId = 0;
+
+        // 1. 新增：当前视图模式（Analysis/Camera）
+        private string _currentViewMode = "Camera"; // 默认值改为 Camera，对应原图
+        public string CurrentViewMode
+        {
+            get => _currentViewMode;
+            set
+            {
+                if (_currentViewMode != value)
+                {
+                    _currentViewMode = value;
+                    OnPropertyChanged(nameof(CurrentViewMode));
+                    OnPropertyChanged(nameof(CurrentDisplayCollection)); // 触发集合刷新
+                    logger.Debug($"Switch view mode: {value}");
+                }
+            }
+        }
+        // 2. 新增：供外部调用的视图切换方法
+        public void SwitchViewMode(string mode)
+        {
+            if (mode == "Analysis" || mode == "Camera")
+            {
+                CurrentViewMode = mode;
+            }
+            else
+            {
+                logger.Warn($"Invalid view mode: {mode}，Default Use Camera");
+                CurrentViewMode = "Camera";
+            }
+        }
+
+        // 3. 新增：当前显示的集合（绑定到 DataGrid 的 ItemsSource）
+        public ObservableCollection<ImageItem> CurrentDisplayCollection
+        {
+            get
+            {
+                return CurrentViewMode == "Analysis"
+                    ? _processedImageResults  // 分析图
+                    : _originalImageResults;  // 原图（默认）
+            }
+        }
         // 【新增方法】获取下一个全局唯一ID（线程安全）
         public int GetNextImageId()
         {

@@ -1,14 +1,17 @@
-﻿<Window x:Class="CVWaferProber.Views.DevProberDebugWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:CVWaferProber.Views"
-        xmlns:comp="clr-namespace:CVWaferProber.Components"
-        xmlns:vm="clr-namespace:CVWaferProber.ViewModels"
-        mc:Ignorable="d"
-        Title="ProberDebugWindow" Height="800" Width="1200">
+﻿<Window
+    x:Class="CVWaferProber.Views.DevProberDebugWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:comp="clr-namespace:CVWaferProber.Components"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:CVWaferProber.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:CVWaferProber.ViewModels"
+    Title="ProberDebugWindow"
+    Width="1200"
+    Height="800"
+    mc:Ignorable="d">
     <Grid>
-        <comp:DevProberDebugControl/>
+        <comp:DevProberDebugControl />
     </Grid>
 </Window>
