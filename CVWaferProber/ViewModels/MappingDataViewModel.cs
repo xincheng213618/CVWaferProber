@@ -482,40 +482,84 @@ namespace CVWaferProber.ViewModels
         /// </summary>
         private void OnProgressUpdateTimerElapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            // 1. 前置防护：检查应用和调度器是否可用，避免空引用/取消异常
+            if (Application.Current == null ||
+                Application.Current.Dispatcher == null ||
+                Application.Current.Dispatcher.HasShutdownStarted)
             {
-                if (SingleDieTestProgress >= 100 || TotalTestCount == 0)
-                {
-                    _progressUpdateTimer.Stop();
-                    return;
-                }
+                // 应用已关闭，停止定时器并退出
+                _progressUpdateTimer?.Stop();
+                return;
+            }
 
+            // 2. 核心业务逻辑移到后台线程计算，仅UI更新走Dispatcher
+            double newProgress = 0;
+            bool shouldStopTimer = false;
+
+            
+            if (SingleDieTestProgress >= 100 || TotalTestCount == 0)
+            {
+                shouldStopTimer = true;
+            }
+            else
+            {
                 // 计算已过时间
                 var elapsed = (DateTime.Now - _currentDieStartTime).TotalSeconds;
 
                 // 线性进度计算：已过时间/预测时间 * 100
                 // 但限制在99%以内，只有完成时才到100%
-                double progress = Math.Min(99, (elapsed / _currentDiePredictSeconds) * 100);
+                newProgress = Math.Min(99, (elapsed / _currentDiePredictSeconds) * 100);
 
                 // 平滑更新：每次增加不超过10%
-                if (progress > SingleDieTestProgress + 10)
+                if (newProgress > SingleDieTestProgress + 10)
                 {
-                    progress = SingleDieTestProgress + 10;
+                    newProgress = SingleDieTestProgress + 10;
                 }
 
                 // 确保最小增量为0.5%
-                if (progress < SingleDieTestProgress + 0.5 && SingleDieTestProgress < 99)
+                if (newProgress < SingleDieTestProgress + 0.5 && SingleDieTestProgress < 99)
                 {
-                    progress = SingleDieTestProgress + 0.5;
+                    newProgress = SingleDieTestProgress + 0.5;
                 }
 
-                SingleDieTestProgress = Math.Min(99, progress);
+                newProgress = Math.Min(99, newProgress);
+            }
+            // }
 
-                // 只在进度有明显变化时更新UI
-                OnPropertyChanged(nameof(SingleDieTestProgress));
-                OnPropertyChanged(nameof(ProgressText));
-                UpdateTotalProgress();
-            });
+            // 3. 需停止定时器则直接停止，无需走UI线程
+            if (shouldStopTimer)
+            {
+                _progressUpdateTimer?.Stop();
+                return;
+            }
+
+            // 4. 安全更新UI：使用InvokeAsync+异常捕获，避免阻塞/取消异常
+            try
+            {
+                Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    // 再次校验状态，防止排队期间状态变化
+                    if (SingleDieTestProgress < 100 && TotalTestCount > 0)
+                    {
+                        SingleDieTestProgress = newProgress;
+
+                        // 只在进度有明显变化时更新UI
+                        OnPropertyChanged(nameof(SingleDieTestProgress));
+                        OnPropertyChanged(nameof(ProgressText));
+                        UpdateTotalProgress();
+                    }
+                }).Wait(TimeSpan.FromMilliseconds(200)); // 超时保护，避免无限等待
+            }
+            catch (TaskCanceledException)
+            {
+                // 预期内的取消异常：应用关闭时UI调度器不可用，静默处理
+                _progressUpdateTimer?.Stop();
+            }
+            catch (Exception ex) when (ex.InnerException is TaskCanceledException)
+            {
+                // 捕获嵌套的取消异常
+                _progressUpdateTimer?.Stop();
+            }
         }
         /// <summary>
         /// 更新单个Die进度 - 由DieViewModel定时器触发

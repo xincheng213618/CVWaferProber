@@ -184,22 +184,49 @@ namespace CVWaferProber.ViewModels
         /// </summary>
         private void OnProgressTimerElapsed(object sender, ElapsedEventArgs e) 
         {
+            // 1. 先提取需要的变量，缩小锁的范围
+            double currentProgress = 0;
+            int testElapsedSeconds = 0;
+            bool shouldUpdate = false;
+
             lock (_progressLock)
             {
                 if (!_isTesting || _disposed) return;
 
                 _testElapsedSeconds++;
-                //double currentProgress = CalculateTestProgress();
-                if (Application.Current != null)
+                testElapsedSeconds = _testElapsedSeconds;
+                // 恢复你的进度计算方法
+                // currentProgress = CalculateTestProgress();
+                shouldUpdate = true;
+            }
+
+            // 2. 在锁外安全地更新UI，避免死锁
+            if (shouldUpdate && Application.Current != null && !Application.Current.Dispatcher.HasShutdownStarted)
+            {
+                // 使用InvokeAsync，避免阻塞调用线程
+                var uiTask = Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    // 跨线程更新UI：同步到WPF主线程
-                    Application.Current.Dispatcher.Invoke(() =>
+                    // 再次检查状态，防止在任务排队期间状态发生变化
+                    if (!_disposed)
                     {
-                        //MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgress(
-                        //    currentProgress,
-                        //    $"Running for {_testElapsedSeconds}s / Estimated {_predictTestSeconds}s"
-                        //);
-                    });
+                        MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgress(
+                            currentProgress,
+                            $"Running for {testElapsedSeconds}s / Estimated {_predictTestSeconds}s"
+                        );
+                    }
+                });
+
+                // 3. 如果应用正在关闭，等待任务完成或取消
+                if (Application.Current.Dispatcher.HasShutdownStarted)
+                {
+                    try
+                    {
+                        uiTask.Wait(TimeSpan.FromMilliseconds(100));
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        // 预期内的取消，静默处理
+                    }
                 }
             }
         }
@@ -253,14 +280,16 @@ namespace CVWaferProber.ViewModels
         {
             lock (_progressLock)
             {
-                if (_testProgressTimer != null && !_disposed)
-                {
-                    _testProgressTimer.Stop();
-                    _testProgressTimer.Elapsed -= OnProgressTimerElapsed;
-                    _testProgressTimer.Dispose();
-                    _testProgressTimer = null;
-                }
                 _isTesting = false;
+                _disposed = true;
+            }
+
+            if (_testProgressTimer != null)
+            {
+                _testProgressTimer.Stop();
+                _testProgressTimer.Elapsed -= OnProgressTimerElapsed;
+                _testProgressTimer.Dispose();
+                _testProgressTimer = null;
             }
         }
         #endregion
