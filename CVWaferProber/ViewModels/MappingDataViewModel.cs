@@ -1458,6 +1458,100 @@ namespace CVWaferProber.ViewModels
         private void ApplyDtosToTestResults(List<TestResultDto> dtos)
         {
             if (dtos == null || dtos.Count == 0) return;
+
+            // 加锁确保线程安全，避免加载过程中UI刷新冲突
+            lock (TestResults)
+            {
+                foreach (var dto in dtos)
+                {
+                    try
+                    {
+                        DieViewModel? die = null;
+
+                        // 优先按ID匹配 → 其次按SN匹配 → 最后按行列匹配
+                        if (dto.Id != 0)
+                            die = TestResults.FirstOrDefault(d => d.Id == dto.Id);
+                        if (die == null && !string.IsNullOrEmpty(dto.SerialNumber))
+                            die = TestResults.FirstOrDefault(d =>
+                                !string.IsNullOrEmpty(d.SerialNumber) &&
+                                d.SerialNumber.Trim().Equals(dto.SerialNumber.Trim(), StringComparison.OrdinalIgnoreCase));
+                        if (die == null && dto.MapX.HasValue && dto.MapY.HasValue)
+                            die = TestResults.FirstOrDefault(d => d.MapX == dto.MapX && d.MapY == dto.MapY);
+
+                        if (die == null)
+                        {
+                            //logger.WarnFormat("No matching Die found：Id={0}, SN={1}, MapX={2}, MapY={3}",
+                            //    dto.Id, dto.SerialNumber, dto.MapX, dto.MapY);
+                            continue;
+                        }
+
+                        // 1. 恢复基础选中状态
+                        die.IsAOIEnabled = dto.IsAOIEnabled;
+                        die.IsIVLEnabled = dto.IsIVLEnabled;
+                        die.IsEQEEnabled = dto.IsEQEEnabled;
+                        die.IsVAMEnabled = dto.IsVAMEnabled;
+                        die.SerialNumber = dto.SerialNumber;
+
+                        // 2. 核心修复：强制同步DisplayStatus和Status枚举（解决状态显示不一致）
+                        if (!string.IsNullOrWhiteSpace(dto.DisplayStatus))
+                        {
+                            string raw = dto.DisplayStatus.Trim().Trim('"').Trim();
+                            ChipStatus finalStatus = ChipStatus.WAITING; // 兜底默认值
+
+                            // 尝试直接解析枚举（英文枚举值）
+                            if (Enum.TryParse<ChipStatus>(raw, true, out var enumStatus))
+                            {
+                                finalStatus = enumStatus;
+                            }
+                            else
+                            {
+                                // 尝试通过本地化字符串解析（中文/英文显示文本）
+                                try
+                                {
+                                    finalStatus = ChipStatusTool.GetStatusFromDisplay(raw, die.IsChinese);
+                                }
+                                catch (Exception ex1)
+                                {
+                                    logger.DebugFormat("Failed to parse Display Status in Chinese：{0}，Attempt English parsing - {1}", raw, ex1.Message);
+                                    try
+                                    {
+                                        finalStatus = ChipStatusTool.GetStatusFromDisplay(raw, !die.IsChinese);
+                                    }
+                                    catch (Exception ex2)
+                                    {
+                                        logger.WarnFormat("Failed to parse DisplayStatus，Using default state WAITING：{0} - {1}", raw, ex2.Message);
+                                    }
+                                }
+                            }
+
+                            // 强制更新Status枚举（关键：同步Mapping视图和DataGrid状态）
+                            die.ChangeStatusOnly(finalStatus);
+                           
+                        }
+
+                        // 3. 恢复其他测试数据
+                        if (die.chipViewModel?.ChipData != null && !string.IsNullOrEmpty(dto.DataValue) && double.TryParse(dto.DataValue, out double dataValue))
+                        {
+                            die.chipViewModel.ChipData.DataValue = dataValue;
+                            die.RefreshDataValue();
+                        }
+                        die.StartTestTime = dto.StartTestTime;
+                        die.EndTestTime = dto.EndTestTime;
+                        die.TotalTime = dto.TotalTime;
+                        die.AOIGradeLevel = dto.AOIGradeLevel;
+                        die.BlackPattern = dto.BlackPattern;
+
+                        //logger.DebugFormat("Successfully restored Die [{0}] status：Status={1}, DisplayStatus={2}",
+                        //    die.Id, die.Status, die.DisplayStatus);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.ErrorFormat("Recovery of Die data failed：DTO={0} - {1}", dto, ex.Message);
+                    }
+                }
+            }
+           /* 
+            if (dtos == null || dtos.Count == 0) return;
             foreach (var dto in dtos)
             {
                 try
@@ -1495,6 +1589,7 @@ namespace CVWaferProber.ViewModels
                 }
                 catch (Exception ex) { logger.Warn("Failed to apply DTO to TestResults", ex); }
             }
+           */
         }
 
         private void SaveTestResultsToDefaultFile()
