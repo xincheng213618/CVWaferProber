@@ -477,57 +477,83 @@ namespace CVWaferProber.Views
         {
             try
             {
-                // 1. 获取当前进程信息
-                Process currentProcess = Process.GetCurrentProcess();
-                string exePath = currentProcess.MainModule?.FileName ??
-                    Assembly.GetEntryAssembly()?.Location ??
-                    throw new InvalidOperationException(GetLocalizedText("无法获取程序路径", "Failed to get program path"));
+                // 1. 获取当前程序路径和参数（简化获取逻辑，减少耗时）
+                string exePath = Process.GetCurrentProcess().MainModule!.FileName;
 
-                // 2. 构建启动参数（保留原命令行参数，适配带参数启动场景）
-                ProcessStartInfo startInfo = new ProcessStartInfo(exePath)
+                // 2. 快速启动新实例（不等待、无窗口隐藏，加速启动）
+                Process.Start(new ProcessStartInfo(exePath)
                 {
                     CreateNoWindow = false,
-                    UseShellExecute = true,
-                    WindowStyle = ProcessWindowStyle.Normal,
-                    Arguments = Environment.CommandLine.Replace(exePath, "").Trim()
-                };
-
-                // 3. 启动新实例
-                Process newProcess = Process.Start(startInfo);
-                if (newProcess == null)
-                {
-                    throw new InvalidOperationException(GetLocalizedText("启动新程序实例失败", "Failed to start new program instance"));
-                }
-
-                //logger.Info($"程序重启：新实例PID={newProcess.Id}，原实例PID={currentProcess.Id}");
-
-                // 4. 优雅退出当前实例（先关闭窗口，再退出应用）
-                this.Dispatcher.Invoke(() =>
-                {
-                    this.Close(); // 触发Closed事件，执行Application.Shutdown
+                    UseShellExecute = true, // 用系统外壳启动，比直接启动更快
+                    WindowStyle = ProcessWindowStyle.Normal
                 });
 
-                // 兜底：如果Close后仍未退出，延迟强制终止（给WPF清理资源的时间）
-                Task.Delay(2000).ContinueWith(_ =>
-                {
-                    if (!currentProcess.HasExited)
-                    {
-                        currentProcess.Kill();
-                        logger.Warn("程序重启：原实例未正常退出，已强制终止");
-                    }
-                });
+                // 3. 强制退出当前进程（跳过WPF的Shutdown流程，大幅缩短退出耗时）
+                Process.GetCurrentProcess().Kill();
             }
             catch (Exception ex)
             {
-                logger.Error("程序重启失败", ex);
                 ShowLocalizedMessageBox(
                     $"重启程序失败：{ex.Message}\n请手动关闭并重新启动程序",
-                    $"Failed to restart program: {ex.Message}\nPlease close and restart the program manually",
+                    $"Failed to restart program: {ex.Message} Please close and restart the program manually",
                     "错误",
                     "Error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }
+            //try
+            //{
+            //    // 1. 获取当前进程信息
+            //    Process currentProcess = Process.GetCurrentProcess();
+            //    string exePath = currentProcess.MainModule?.FileName ??
+            //        Assembly.GetEntryAssembly()?.Location ??
+            //        throw new InvalidOperationException(GetLocalizedText("无法获取程序路径", "Failed to get program path"));
+
+            //    // 2. 构建启动参数（保留原命令行参数，适配带参数启动场景）
+            //    ProcessStartInfo startInfo = new ProcessStartInfo(exePath)
+            //    {
+            //        CreateNoWindow = false,
+            //        UseShellExecute = true,
+            //        WindowStyle = ProcessWindowStyle.Normal,
+            //        Arguments = Environment.CommandLine.Replace(exePath, "").Trim()
+            //    };
+
+            //    // 3. 启动新实例
+            //    Process newProcess = Process.Start(startInfo);
+            //    if (newProcess == null)
+            //    {
+            //        throw new InvalidOperationException(GetLocalizedText("启动新程序实例失败", "Failed to start new program instance"));
+            //    }
+
+            //    //logger.Info($"程序重启：新实例PID={newProcess.Id}，原实例PID={currentProcess.Id}");
+
+            //    // 4. 优雅退出当前实例（先关闭窗口，再退出应用）
+            //    this.Dispatcher.Invoke(() =>
+            //    {
+            //        this.Close(); // 触发Closed事件，执行Application.Shutdown
+            //    });
+
+            //    // 兜底：如果Close后仍未退出，延迟强制终止（给WPF清理资源的时间）
+            //    Task.Delay(2000).ContinueWith(_ =>
+            //    {
+            //        if (!currentProcess.HasExited)
+            //        {
+            //            currentProcess.Kill();
+            //            logger.Warn("程序重启：原实例未正常退出，已强制终止");
+            //        }
+            //    });
+            //}
+            //catch (Exception ex)
+            //{
+            //    logger.Error("程序重启失败", ex);
+            //    ShowLocalizedMessageBox(
+            //        $"重启程序失败：{ex.Message}\n请手动关闭并重新启动程序",
+            //        $"Failed to restart program: {ex.Message}\nPlease close and restart the program manually",
+            //        "错误",
+            //        "Error",
+            //        MessageBoxButton.OK,
+            //        MessageBoxImage.Error);
+            //}
         }
         private void InitializeLogging()
         {

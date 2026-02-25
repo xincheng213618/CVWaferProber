@@ -345,7 +345,7 @@
                                 </Ellipse.Fill>
                             </Ellipse>
                             <TextBlock
-                                Width="80"
+                                Width="120"
                                 VerticalAlignment="Center"
                                 Text="{Binding ConnectionInfo.DevStatusMessage}" />
                         </StackPanel>

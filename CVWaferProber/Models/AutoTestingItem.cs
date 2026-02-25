@@ -16,7 +16,7 @@ namespace CVWaferProber.Models
             TestingDieVMList = testingDieVMList;
             CurTestingIndex = -1;
             CurSelectedWPFlow = curSelectedWPFlow;
-            //CurTestingIndex = 0;
+            CurTestingIndex = 0;
             IsPaused = false;
         }
         // 恢复断点时使用

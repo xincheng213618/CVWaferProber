@@ -1367,7 +1367,7 @@ namespace CVWaferProber.ViewModels
         }
 
         private void  LoadTestResult(object? obj) 
-        {
+        {    
             if (obj is string path && !string.IsNullOrWhiteSpace(path))
             {
                 try 
@@ -1389,17 +1389,17 @@ namespace CVWaferProber.ViewModels
                     try 
                     { 
                         await LoadFromPersistenceAsync();
-                        // 【修改】确保在UI线程中刷新
+                        // 确保在UI线程中刷新
                         Application.Current.Dispatcher.Invoke(() =>
                         {
                             // 强制刷新DataGrid
                             _dataGrid?.Items.Refresh();
 
-                            // 重新构建索引和计算良率
+                            
                             BuildSNIndex();
                             CalculateYieldBySerialNumber();
 
-                            logger.Info("成功从持久化存储加载上次会话结果");
+                            logger.Info("Successfully loaded the results of the last session from the persistent storage");
                         });
                     }
                     catch (Exception ex) 
@@ -1499,14 +1499,14 @@ namespace CVWaferProber.ViewModels
                         ChipStatus statusToRestore = ChipStatus.WAITING;
                         bool statusRestored = false;
 
-                        // 优先从ChipStatus恢复（最稳定）
+                        // 优先从ChipStatus恢复
                         if (!string.IsNullOrWhiteSpace(dto.ChipStatus))
                         {
                             if (Enum.TryParse<ChipStatus>(dto.ChipStatus.Trim(), true, out var parsedStatus))
                             {
                                 statusToRestore = parsedStatus;
                                 statusRestored = true;
-                                logger.Debug($"Recover status from ChipStatus: {dto.ChipStatus} -> {parsedStatus}");
+                                //logger.Debug($"Recover status from ChipStatus: {dto.ChipStatus} -> {parsedStatus}");
                             }
                         }
 
@@ -1520,7 +1520,7 @@ namespace CVWaferProber.ViewModels
                             {
                                 statusToRestore = enumStatus;
                                 statusRestored = true;
-                                logger.Debug($"Parse the enumeration directly from DisplayStatus: {raw} -> {enumStatus}");
+                                //logger.Debug($"Parse the enumeration directly from DisplayStatus: {raw} -> {enumStatus}");
                             }
                             else
                             {
