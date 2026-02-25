@@ -13,7 +13,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
-using MessageBox = System.Windows.MessageBox;
+using MessageBox = System.Windows.MessageBox; 
 using TabControl = System.Windows.Controls.TabControl;
 
 namespace CVWaferProber.Views
@@ -113,8 +113,7 @@ namespace CVWaferProber.Views
             }
 
             // 2. 校验Tag值：确保是支持的语言类型
-            if (menuItem.Tag is not string targetLanguage ||
-                (targetLanguage != ChineseTag && targetLanguage != EnglishTag))
+            if (menuItem.Tag is not string targetLanguage ||(targetLanguage != ChineseTag && targetLanguage != EnglishTag))
             {
                 logger.Warn($"Language Switching: Invalid Language Tag Value：{menuItem.Tag}");
                 ShowLocalizedMessageBox(
