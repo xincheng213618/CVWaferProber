@@ -1389,10 +1389,17 @@ namespace CVWaferProber.ViewModels
                     try 
                     { 
                         await LoadFromPersistenceAsync();
-                        Application.Current.Dispatcher.Invoke(() => 
+                        // 【修改】确保在UI线程中刷新
+                        Application.Current.Dispatcher.Invoke(() =>
                         {
-                            _dataGrid?.Items.Refresh(); 
-                            logger.Info("Successfully loaded the results of last session from persistent storage"); 
+                            // 强制刷新DataGrid
+                            _dataGrid?.Items.Refresh();
+
+                            // 重新构建索引和计算良率
+                            BuildSNIndex();
+                            CalculateYieldBySerialNumber();
+
+                            logger.Info("成功从持久化存储加载上次会话结果");
                         });
                     }
                     catch (Exception ex) 
@@ -1454,12 +1461,13 @@ namespace CVWaferProber.ViewModels
             }
             catch (Exception ex) { logger.Error("Failed to load from persistence", ex); }
         }
-
         private void ApplyDtosToTestResults(List<TestResultDto> dtos)
         {
             if (dtos == null || dtos.Count == 0) return;
 
-            // 加锁确保线程安全，避免加载过程中UI刷新冲突
+            // 创建一个列表记录所有被更新的Die，最后统一刷新
+            var updatedDies = new List<DieViewModel>();
+
             lock (TestResults)
             {
                 foreach (var dto in dtos)
@@ -1478,12 +1486,7 @@ namespace CVWaferProber.ViewModels
                         if (die == null && dto.MapX.HasValue && dto.MapY.HasValue)
                             die = TestResults.FirstOrDefault(d => d.MapX == dto.MapX && d.MapY == dto.MapY);
 
-                        if (die == null)
-                        {
-                            //logger.WarnFormat("No matching Die found：Id={0}, SN={1}, MapX={2}, MapY={3}",
-                            //    dto.Id, dto.SerialNumber, dto.MapX, dto.MapY);
-                            continue;
-                        }
+                        if (die == null) continue;
 
                         // 1. 恢复基础选中状态
                         die.IsAOIEnabled = dto.IsAOIEnabled;
@@ -1492,105 +1495,267 @@ namespace CVWaferProber.ViewModels
                         die.IsVAMEnabled = dto.IsVAMEnabled;
                         die.SerialNumber = dto.SerialNumber;
 
-                        // 2. 核心修复：强制同步DisplayStatus和Status枚举（解决状态显示不一致）
-                        if (!string.IsNullOrWhiteSpace(dto.DisplayStatus))
+                        // 2. 【核心修复】优先使用保存的ChipStatus枚举值恢复状态
+                        ChipStatus statusToRestore = ChipStatus.WAITING;
+                        bool statusRestored = false;
+
+                        // 优先从ChipStatus恢复（最稳定）
+                        if (!string.IsNullOrWhiteSpace(dto.ChipStatus))
+                        {
+                            if (Enum.TryParse<ChipStatus>(dto.ChipStatus.Trim(), true, out var parsedStatus))
+                            {
+                                statusToRestore = parsedStatus;
+                                statusRestored = true;
+                                logger.Debug($"Recover status from ChipStatus: {dto.ChipStatus} -> {parsedStatus}");
+                            }
+                        }
+
+                        // 降级方案：如果ChipStatus不存在或解析失败，尝试从DisplayStatus解析
+                        if (!statusRestored && !string.IsNullOrWhiteSpace(dto.DisplayStatus))
                         {
                             string raw = dto.DisplayStatus.Trim().Trim('"').Trim();
-                            ChipStatus finalStatus = ChipStatus.WAITING; // 兜底默认值
 
-                            // 尝试直接解析枚举（英文枚举值）
+                            // 尝试直接解析枚举
                             if (Enum.TryParse<ChipStatus>(raw, true, out var enumStatus))
                             {
-                                finalStatus = enumStatus;
+                                statusToRestore = enumStatus;
+                                statusRestored = true;
+                                logger.Debug($"Parse the enumeration directly from DisplayStatus: {raw} -> {enumStatus}");
                             }
                             else
                             {
-                                // 尝试通过本地化字符串解析（中文/英文显示文本）
+                                // 尝试通过本地化工具解析
                                 try
                                 {
-                                    finalStatus = ChipStatusTool.GetStatusFromDisplay(raw, die.IsChinese);
+                                    statusToRestore = ChipStatusTool.GetStatusFromDisplay(raw, die.IsChinese);
+                                    statusRestored = true;
+                                    logger.Debug($"Localized parsing from Display Status (Chinese): {raw} -> {statusToRestore}");
                                 }
-                                catch (Exception ex1)
+                                catch
                                 {
-                                    logger.DebugFormat("Failed to parse Display Status in Chinese：{0}，Attempt English parsing - {1}", raw, ex1.Message);
                                     try
                                     {
-                                        finalStatus = ChipStatusTool.GetStatusFromDisplay(raw, !die.IsChinese);
+                                        statusToRestore = ChipStatusTool.GetStatusFromDisplay(raw, !die.IsChinese);
+                                        statusRestored = true;
+                                        logger.Debug($"Localized parsing from Display Status (in English): {raw} -> {statusToRestore}");
                                     }
-                                    catch (Exception ex2)
+                                    catch (Exception ex)
                                     {
-                                        logger.WarnFormat("Failed to parse DisplayStatus，Using default state WAITING：{0} - {1}", raw, ex2.Message);
+                                        logger.Warn($"Unable to parse status string: {raw}", ex);
                                     }
                                 }
                             }
-
-                            // 强制更新Status枚举（关键：同步Mapping视图和DataGrid状态）
-                            die.ChangeStatusOnly(finalStatus);
-                           
                         }
 
-                        // 3. 恢复其他测试数据
-                        if (die.chipViewModel?.ChipData != null && !string.IsNullOrEmpty(dto.DataValue) && double.TryParse(dto.DataValue, out double dataValue))
+                        // 3. 应用恢复的状态
+                        if (statusRestored)
+                        {
+                            // 使用ChangeStatusOnly更新状态
+                            die.ChangeStatusOnly(statusToRestore);
+
+                            // 【重要】手动触发所有相关属性的更新
+                            die.OnPropertyChanged(nameof(DieViewModel.Status));
+                            die.OnPropertyChanged(nameof(DieViewModel.DisplayStatus));
+                        }
+
+                        // 4. 恢复其他测试数据
+                        if (die.chipViewModel?.ChipData != null &&
+                            !string.IsNullOrEmpty(dto.DataValue) &&
+                            double.TryParse(dto.DataValue, out double dataValue))
                         {
                             die.chipViewModel.ChipData.DataValue = dataValue;
                             die.RefreshDataValue();
                         }
+
                         die.StartTestTime = dto.StartTestTime;
                         die.EndTestTime = dto.EndTestTime;
                         die.TotalTime = dto.TotalTime;
                         die.AOIGradeLevel = dto.AOIGradeLevel;
                         die.BlackPattern = dto.BlackPattern;
 
-                        //logger.DebugFormat("Successfully restored Die [{0}] status：Status={1}, DisplayStatus={2}",
-                        //    die.Id, die.Status, die.DisplayStatus);
+                        // 记录被更新的Die
+                        updatedDies.Add(die);
                     }
                     catch (Exception ex)
                     {
-                        logger.ErrorFormat("Recovery of Die data failed：DTO={0} - {1}", dto, ex.Message);
+                        logger.Error($"Recovery of Die data failed: {ex.Message}");
                     }
                 }
             }
-           /* 
-            if (dtos == null || dtos.Count == 0) return;
-            foreach (var dto in dtos)
+
+            // 5. 【关键】在UI线程中强制刷新所有被更新的Die
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                try
+                foreach (var die in updatedDies)
                 {
-                    DieViewModel? die = null;
-                    if (dto.Id != 0) die = TestResults.FirstOrDefault(d => d.Id == dto.Id);
-                    if (die == null && !string.IsNullOrEmpty(dto.SerialNumber)) die = TestResults.FirstOrDefault(d => !string.IsNullOrEmpty(d.SerialNumber) && d.SerialNumber.Trim().Equals(dto.SerialNumber.Trim(), StringComparison.OrdinalIgnoreCase));
-                    if (die == null && dto.MapX.HasValue && dto.MapY.HasValue) die = TestResults.FirstOrDefault(d => d.MapX == dto.MapX && d.MapY == dto.MapY);
-                    if (die == null) continue;
-                    die.IsAOIEnabled = dto.IsAOIEnabled;
-                    die.IsIVLEnabled = dto.IsIVLEnabled;
-                    die.IsEQEEnabled = dto.IsEQEEnabled;
-                    die.IsVAMEnabled = dto.IsVAMEnabled;
-                    die.SerialNumber = dto.SerialNumber;
-                    if (!string.IsNullOrWhiteSpace(dto.DisplayStatus))
-                    {
-                        string raw = dto.DisplayStatus.Trim().Trim('"').Trim();
-                        if (Enum.TryParse<ChipStatus>(raw, true, out var enumStatus)) die.ChangeStatusOnly(enumStatus);
-                        else
-                        {
-                            try { die.ChangeStatusOnly(ChipStatusTool.GetStatusFromDisplay(raw, die.IsChinese)); }
-                            catch { try { die.ChangeStatusOnly(ChipStatusTool.GetStatusFromDisplay(raw, !die.IsChinese)); } catch { logger.WarnFormat("解析DisplayStatus失败：{0}", dto.DisplayStatus); } }
-                        }
-                    }
-                    if (die.chipViewModel?.ChipData != null && !string.IsNullOrEmpty(dto.DataValue) && double.TryParse(dto.DataValue, out double dataValue))
-                    {
-                        die.chipViewModel.ChipData.DataValue = dataValue;
-                        die.RefreshDataValue();
-                    }
-                    die.StartTestTime = dto.StartTestTime;
-                    die.EndTestTime = dto.EndTestTime;
-                    die.TotalTime = dto.TotalTime;
-                    die.AOIGradeLevel = dto.AOIGradeLevel;
-                    die.BlackPattern = dto.BlackPattern;
+                    // 再次触发所有属性的更新
+                    die.OnPropertyChanged(nameof(DieViewModel.Status));
+                    die.OnPropertyChanged(nameof(DieViewModel.DisplayStatus));
+                    die.OnPropertyChanged(nameof(DieViewModel.StartTestTime));
+                    die.OnPropertyChanged(nameof(DieViewModel.EndTestTime));
+                    die.OnPropertyChanged(nameof(DieViewModel.TotalTime));
+                    die.OnPropertyChanged(nameof(DieViewModel.DataValue));
                 }
-                catch (Exception ex) { logger.Warn("Failed to apply DTO to TestResults", ex); }
-            }
-           */
+
+                // 刷新整个DataGrid
+                _dataGrid?.Items.Refresh();
+
+                // 重新构建索引和计算良率
+                BuildSNIndex();
+                CalculateYieldBySerialNumber();
+            });
         }
+        //private void ApplyDtosToTestResults(List<TestResultDto> dtos)
+        //{
+        //    if (dtos == null || dtos.Count == 0) return;
+        //    // 创建一个列表记录所有被更新的Die，最后统一刷新
+        //    var updatedDies = new List<DieViewModel>();
+        //    // 加锁确保线程安全，避免加载过程中UI刷新冲突
+        //    lock (TestResults)
+        //    {
+        //        foreach (var dto in dtos)
+        //        {
+        //            try
+        //            {
+        //                DieViewModel? die = null;
+
+        //                // 优先按ID匹配 → 其次按SN匹配 → 最后按行列匹配
+        //                if (dto.Id != 0)
+        //                    die = TestResults.FirstOrDefault(d => d.Id == dto.Id);
+        //                if (die == null && !string.IsNullOrEmpty(dto.SerialNumber))
+        //                    die = TestResults.FirstOrDefault(d =>
+        //                        !string.IsNullOrEmpty(d.SerialNumber) &&
+        //                        d.SerialNumber.Trim().Equals(dto.SerialNumber.Trim(), StringComparison.OrdinalIgnoreCase));
+        //                if (die == null && dto.MapX.HasValue && dto.MapY.HasValue)
+        //                    die = TestResults.FirstOrDefault(d => d.MapX == dto.MapX && d.MapY == dto.MapY);
+
+        //                if (die == null)
+        //                {
+        //                    //logger.WarnFormat("No matching Die found：Id={0}, SN={1}, MapX={2}, MapY={3}",
+        //                    //    dto.Id, dto.SerialNumber, dto.MapX, dto.MapY);
+        //                    continue;
+        //                }
+
+        //                // 1. 恢复基础选中状态
+        //                die.IsAOIEnabled = dto.IsAOIEnabled;
+        //                die.IsIVLEnabled = dto.IsIVLEnabled;
+        //                die.IsEQEEnabled = dto.IsEQEEnabled;
+        //                die.IsVAMEnabled = dto.IsVAMEnabled;
+        //                die.SerialNumber = dto.SerialNumber;
+
+        //                // 优先使用保存的ChipStatus枚举值恢复状态
+        //                ChipStatus statusToRestore = ChipStatus.WAITING;
+        //                bool statusRestored = false;
+
+        //                // 优先从ChipStatus恢复（最稳定）
+        //                if (!string.IsNullOrWhiteSpace(dto.ChipStatus))
+        //                {
+        //                    if (Enum.TryParse<ChipStatus>(dto.ChipStatus.Trim(), true, out var parsedStatus))
+        //                    {
+        //                        statusToRestore = parsedStatus;
+        //                        statusRestored = true;
+        //                        logger.Debug($"从ChipStatus恢复状态: {dto.ChipStatus} -> {parsedStatus}");
+        //                    }
+        //                }
+        //                // 2. 核心修复：强制同步DisplayStatus和Status枚举（解决状态显示不一致）
+        //                if (!string.IsNullOrWhiteSpace(dto.DisplayStatus))
+        //                {
+        //                    string raw = dto.DisplayStatus.Trim().Trim('"').Trim();
+        //                    ChipStatus finalStatus = ChipStatus.WAITING; // 兜底默认值
+
+        //                    // 尝试直接解析枚举（英文枚举值）
+        //                    if (Enum.TryParse<ChipStatus>(raw, true, out var enumStatus))
+        //                    {
+        //                        finalStatus = enumStatus;
+        //                    }
+        //                    else
+        //                    {
+        //                        // 尝试通过本地化字符串解析（中文/英文显示文本）
+        //                        try
+        //                        {
+        //                            finalStatus = ChipStatusTool.GetStatusFromDisplay(raw, die.IsChinese);
+        //                        }
+        //                        catch (Exception ex1)
+        //                        {
+        //                            logger.DebugFormat("Failed to parse Display Status in Chinese：{0}，Attempt English parsing - {1}", raw, ex1.Message);
+        //                            try
+        //                            {
+        //                                finalStatus = ChipStatusTool.GetStatusFromDisplay(raw, !die.IsChinese);
+        //                            }
+        //                            catch (Exception ex2)
+        //                            {
+        //                                logger.WarnFormat("Failed to parse DisplayStatus，Using default state WAITING：{0} - {1}", raw, ex2.Message);
+        //                            }
+        //                        }
+        //                    }
+
+        //                    // 强制更新Status枚举（关键：同步Mapping视图和DataGrid状态）
+        //                    die.ChangeStatusOnly(finalStatus);
+
+        //                }
+
+        //                // 3. 恢复其他测试数据
+        //                if (die.chipViewModel?.ChipData != null && !string.IsNullOrEmpty(dto.DataValue) && double.TryParse(dto.DataValue, out double dataValue))
+        //                {
+        //                    die.chipViewModel.ChipData.DataValue = dataValue;
+        //                    die.RefreshDataValue();
+        //                }
+        //                die.StartTestTime = dto.StartTestTime;
+        //                die.EndTestTime = dto.EndTestTime;
+        //                die.TotalTime = dto.TotalTime;
+        //                die.AOIGradeLevel = dto.AOIGradeLevel;
+        //                die.BlackPattern = dto.BlackPattern;
+
+        //                //logger.DebugFormat("Successfully restored Die [{0}] status：Status={1}, DisplayStatus={2}",
+        //                //    die.Id, die.Status, die.DisplayStatus);
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                logger.ErrorFormat("Recovery of Die data failed：DTO={0} - {1}", dto, ex.Message);
+        //            }
+        //        }
+        //    }
+        //   /* 
+        //    if (dtos == null || dtos.Count == 0) return;
+        //    foreach (var dto in dtos)
+        //    {
+        //        try
+        //        {
+        //            DieViewModel? die = null;
+        //            if (dto.Id != 0) die = TestResults.FirstOrDefault(d => d.Id == dto.Id);
+        //            if (die == null && !string.IsNullOrEmpty(dto.SerialNumber)) die = TestResults.FirstOrDefault(d => !string.IsNullOrEmpty(d.SerialNumber) && d.SerialNumber.Trim().Equals(dto.SerialNumber.Trim(), StringComparison.OrdinalIgnoreCase));
+        //            if (die == null && dto.MapX.HasValue && dto.MapY.HasValue) die = TestResults.FirstOrDefault(d => d.MapX == dto.MapX && d.MapY == dto.MapY);
+        //            if (die == null) continue;
+        //            die.IsAOIEnabled = dto.IsAOIEnabled;
+        //            die.IsIVLEnabled = dto.IsIVLEnabled;
+        //            die.IsEQEEnabled = dto.IsEQEEnabled;
+        //            die.IsVAMEnabled = dto.IsVAMEnabled;
+        //            die.SerialNumber = dto.SerialNumber;
+        //            if (!string.IsNullOrWhiteSpace(dto.DisplayStatus))
+        //            {
+        //                string raw = dto.DisplayStatus.Trim().Trim('"').Trim();
+        //                if (Enum.TryParse<ChipStatus>(raw, true, out var enumStatus)) die.ChangeStatusOnly(enumStatus);
+        //                else
+        //                {
+        //                    try { die.ChangeStatusOnly(ChipStatusTool.GetStatusFromDisplay(raw, die.IsChinese)); }
+        //                    catch { try { die.ChangeStatusOnly(ChipStatusTool.GetStatusFromDisplay(raw, !die.IsChinese)); } catch { logger.WarnFormat("解析DisplayStatus失败：{0}", dto.DisplayStatus); } }
+        //                }
+        //            }
+        //            if (die.chipViewModel?.ChipData != null && !string.IsNullOrEmpty(dto.DataValue) && double.TryParse(dto.DataValue, out double dataValue))
+        //            {
+        //                die.chipViewModel.ChipData.DataValue = dataValue;
+        //                die.RefreshDataValue();
+        //            }
+        //            die.StartTestTime = dto.StartTestTime;
+        //            die.EndTestTime = dto.EndTestTime;
+        //            die.TotalTime = dto.TotalTime;
+        //            die.AOIGradeLevel = dto.AOIGradeLevel;
+        //            die.BlackPattern = dto.BlackPattern;
+        //        }
+        //        catch (Exception ex) { logger.Warn("Failed to apply DTO to TestResults", ex); }
+        //    }
+        //   */
+        //}
 
         private void SaveTestResultsToDefaultFile()
         {

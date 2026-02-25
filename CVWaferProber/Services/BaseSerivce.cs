@@ -23,7 +23,7 @@ namespace CVWaferProber.Services
 
         public event EventHandler<TestCompletedEventArgs> TestingCompleted;
         public event EventHandler<DieViewModel> AutoTestingNextCompleted;
-        //public event EventHandler<DieViewModel> AutoTestingPaused;
+       
      
         // 保留原方法为私有，避免子类直接调用
       
@@ -49,8 +49,6 @@ namespace CVWaferProber.Services
 
                 if (resp)
                 {
-                    // 移除手动进度更新，让定时器控制进度
-                    // UpdateProgressInStages(dieViewModel); // 注释掉这一行
 
                     var flowResult = await PollFlowResultWithRxAsync(dieViewModel.SerialNumber,
                         new CancellationTokenSource(TimeSpan.FromSeconds(_selectedWPFlow.Timeout)).Token);
@@ -60,15 +58,6 @@ namespace CVWaferProber.Services
                         ChipStatus status = await FlowResultDisplay(dieViewModel);
                         dieViewModel.ChangeStatus(status, true);
 
-                        // 移除手动设置100%进度，由CompleteSingleDieTest控制
-                        // Application.Current.Dispatcher.Invoke(() =>
-                        // {
-                        //     var mappingVM = MainViewModel.Instance?.DataMappingVM;
-                        //     if (mappingVM != null)
-                        //     {
-                        //         mappingVM.UpdateSingleDieProgress(100, "测试完成");
-                        //     }
-                        // });
                     }
                     else
                     {
@@ -121,7 +110,7 @@ namespace CVWaferProber.Services
         protected abstract Task<ChipStatus> FlowResultDisplay(DieViewModel dieViewModel);
         protected async Task<RespDataBaseFlowResultDTO?> AsyncRunFlow(string fname, string sn, int timeout)
         {
-            // 优化3：使用using包裹CancellationTokenSource，确保资源释放
+            // 使用using包裹CancellationTokenSource，确保资源释放
             using var cancellationTokenSource = timeout > 0
                 ? new CancellationTokenSource(TimeSpan.FromSeconds(timeout))
                 : new CancellationTokenSource();
@@ -143,7 +132,7 @@ namespace CVWaferProber.Services
 
         protected async Task<RespDataBaseFlowResultDTO> PollFlowResultWithRxAsync(string sn, CancellationToken cancellationToken)
         {
-            // 优化4：添加TakeWhile+超时兜底，避免无限轮询；同时优化异常提示
+            // 添加TakeWhile+超时兜底，避免无限轮询；同时优化异常提示
             return await Observable.Interval(TimeSpan.FromSeconds(1))
                  // 取消时立即终止轮询
                  .TakeUntil(_ => cancellationToken.IsCancellationRequested)

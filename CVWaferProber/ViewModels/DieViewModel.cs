@@ -362,6 +362,8 @@ namespace CVWaferProber.ViewModels
         public void ChangeStatusOnly(ChipStatus status)
         {
             chipViewModel?.SetStatus(status);
+            OnPropertyChanged(nameof(Status));
+            OnPropertyChanged(nameof(DisplayStatus));
             FirePropertyChanged();
         }
 

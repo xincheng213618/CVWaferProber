@@ -91,7 +91,8 @@ namespace CVWaferProber.Core
         //public string Pressure { get; set;}
         //public int TouchDownCounts { get; set;}
         //public string ProbingCardSN { get; set;}
-
+        // 新增：保存精确的枚举值
+        public string ChipStatus { get; set; }
 
         public static TestResultDto FromObject(object die)
         {
@@ -107,6 +108,8 @@ namespace CVWaferProber.Core
                 IsEQEEnabled = ToBool(Get("IsEQEEnabled")),
                 IsVAMEnabled = ToBool(Get("IsVAMEnabled")),
                 SerialNumber = ToStr(Get("SerialNumber")),
+                // 通过反射获取Status
+                ChipStatus = ToStr(Get("Status")),
                 DisplayStatus = ToStr(Get("DisplayStatus")),
                 DataValue = ToStr(Get("DataValue")),
                 StartTestTime = ToDate(Get("StartTestTime")),

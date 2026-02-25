@@ -330,7 +330,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             }
         }
-        private bool _isShowAllEQEData = true;
+        private bool _isShowAllEQEData = false;
         public bool IsShowAllEQEData
         {
             get => _isShowAllEQEData;
