@@ -6,6 +6,7 @@ using CVWPFSpectrometerCtrl;
 using log4net;
 using log4net.Config;
 using System.Diagnostics;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -38,7 +39,9 @@ namespace CVWaferProber.Views
         private TabControl? _spInnerTabControl;  // spaly内的innerTabControl
                                                  // 1. 红框第一项：切换到SP内层面板索引0（光谱）
                                                  // 暴露MappingDataControl
-       
+                                                 // 语言切换相关常量（和AppSettingsManager保持一致）
+        private const string ChineseTag = "Chinese";
+        private const string EnglishTag = "English";
         public DockMainWindow()
         {
             InitializeComponent();
@@ -48,6 +51,10 @@ namespace CVWaferProber.Views
             this.Closed += DockMainWindow_Closed;
             // 注册窗口按键监听（关键：捕获所有按键）
             this.KeyDown += DockMainWindow_KeyDown;
+
+            // 初始化语言菜单选中状态（适配Properties.Settings实现）
+            InitializeLanguageMenuSelection();
+
             if (DataContext is MainViewModel mainVm)
             {
                 // 传递DockingManager和面板实例
@@ -68,6 +75,170 @@ namespace CVWaferProber.Views
                 };
             }
         }
+        #region 语言切换核心逻辑
+        private void InitializeLanguageMenuSelection()
+        {
+            try
+            {
+                // 从Properties.Settings获取当前语言（适配你的AppSettingsManager）
+                string currentLanguage = AppSettingsManager.CurrentLanguage ?? ChineseTag;
+
+                // 严格匹配，设置菜单选中状态
+                MenuLanguageChinese.IsChecked = string.Equals(currentLanguage, ChineseTag, StringComparison.OrdinalIgnoreCase);
+                MenuLanguageEnglish.IsChecked = string.Equals(currentLanguage, EnglishTag, StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception ex)
+            {
+                //logger.Error("初始化语言菜单选中状态失败", ex);
+                // 兜底：默认选中中文，确保菜单状态不混乱
+                MenuLanguageChinese.IsChecked = true;
+                MenuLanguageEnglish.IsChecked = false;
+            }
+        }
+
+        private void LanguageMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            // 1. 基础校验：确保触发控件是MenuItem
+            if (sender is not MenuItem menuItem)
+            {
+                //logger.Warn("语言切换：触发事件的控件不是MenuItem");
+                ShowLocalizedMessageBox(
+                    "切换语言失败：无效的操作对象",
+                    "Failed to switch language: Invalid operation object",
+                    "错误",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+
+            // 2. 校验Tag值：确保是支持的语言类型
+            if (menuItem.Tag is not string targetLanguage ||
+                (targetLanguage != ChineseTag && targetLanguage != EnglishTag))
+            {
+                logger.Warn($"Language Switching: Invalid Language Tag Value：{menuItem.Tag}");
+                ShowLocalizedMessageBox(
+                    $"切换语言失败：不支持的语言类型「{menuItem.Tag}」",
+                    $"Failed to switch language: Unsupported language type「{menuItem.Tag}」",
+                    "错误",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+
+            // 3. 校验是否重复切换：避免无意义操作
+            string currentLanguage = AppSettingsManager.CurrentLanguage ?? ChineseTag;
+            if (string.Equals(currentLanguage, targetLanguage, StringComparison.OrdinalIgnoreCase))
+            {
+                string langName = targetLanguage == ChineseTag ? "简体中文" : "English";
+                
+                ShowLocalizedMessageBox(
+                    $"当前已使用{langName}，无需重复切换",
+                    $"Currently using {langName}, no need to switch again",
+                    "提示",
+                    "Tips",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                // 确保菜单选中状态正确（防止手动修改导致的状态不一致）
+                menuItem.IsChecked = true;
+                return;
+            }
+
+            // 4. 确认用户是否要切换：防止误操作（多语言确认框）
+            string targetLangName = targetLanguage == ChineseTag ? "简体中文" : "English";
+            var confirmResult = ShowLocalizedMessageBox(
+                $"确认切换为{targetLangName}吗？\n切换后程序将自动重启以生效",
+                $"Confirm switch to {targetLangName}?\nThe program will restart automatically to take effect",
+                "语言切换确认",
+                "Language Switch Confirmation",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirmResult != MessageBoxResult.Yes)
+            {
+                logger.Info($"Language switching: The user cancels the switch to「{targetLanguage}」");
+                // 恢复原选中状态
+                InitializeLanguageMenuSelection();
+                return;
+            }
+
+            // 5. 执行语言切换逻辑
+            try
+            {
+                // 5.1 调用你的AppSettingsManager保存语言设置
+                AppSettingsManager.ChangeLanguage(targetLanguage);
+
+                // 5.2 记录日志
+                logger.Info($"Language switching: Successfully saved the language to 「{targetLanguage}」");
+
+                RestartApplication();
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Language switching: Failed to save settings", ex);
+                ShowLocalizedMessageBox(
+                    $"切换语言失败：{ex.Message}\n请检查程序权限!",
+                    $"Failed to switch language: {ex.Message}\nPlease check program permissions!",
+                    "错误",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                // 恢复原选中状态，避免菜单状态异常
+                InitializeLanguageMenuSelection();
+            }
+            //var menuItem = sender as MenuItem;
+
+            //if (menuItem?.Tag is string language)
+            //{
+            //    // 1. 保存语言设置
+            //    AppSettingsManager.ChangeLanguage(language);
+
+            //    // 2. 提示用户重启程序
+            //    var result = MessageBox.Show("语言已切换，需要重启程序生效！\n即将重启！", "提示",
+            //                                 MessageBoxButton.OK, MessageBoxImage.Information);
+            //    if (result == MessageBoxResult.OK)
+            //    {
+            //        // 3. 重启程序
+            //        RestartApplication();
+            //    }
+            //}
+
+        }
+    
+        #region 多语言 MessageBox 封装
+        /// 获取多语言提示文本
+        /// </summary>
+        /// <param name="chineseText">中文文本</param>
+        /// <param name="englishText">英文文本</param>
+        /// <returns>对应语言的文本</returns>
+        private string GetLocalizedText(string chineseText, string englishText)
+        {
+            return AppSettingsManager.CurrentLanguage == EnglishTag ? englishText : chineseText;
+        }
+
+        /// <summary>
+        /// 显示多语言 MessageBox
+        /// </summary>
+        /// <param name="chineseMessage">中文消息</param>
+        /// <param name="englishMessage">英文消息</param>
+        /// <param name="chineseTitle">中文标题</param>
+        /// <param name="englishTitle">英文标题</param>
+        /// <param name="button">按钮类型</param>
+        /// <param name="icon">图标类型</param>
+        /// <returns>MessageBox 结果</returns>
+        private MessageBoxResult ShowLocalizedMessageBox(string chineseMessage, string englishMessage,
+                                                         string chineseTitle, string englishTitle,
+                                                         MessageBoxButton button = MessageBoxButton.OK,
+                                                         MessageBoxImage icon = MessageBoxImage.Information)
+        {
+            string message = GetLocalizedText(chineseMessage, englishMessage);
+            string title = GetLocalizedText(chineseTitle, englishTitle);
+            return System.Windows.MessageBox.Show(message, title, button, icon);
+        }
+        #endregion
+        #endregion
+
 
         private void DockMainWindow_Loaded(object sender, RoutedEventArgs e)
         {
@@ -94,7 +265,13 @@ namespace CVWaferProber.Views
                 _spAnalyzer = spaly;
                 if (_spAnalyzer == null)
                 {
-                    MessageBox.Show("未找到x:Name=spaly的CVSpectrumAnalyzer控件！");
+                    ShowLocalizedMessageBox(
+                        "未找到x:Name=spaly的CVSpectrumAnalyzer控件！",
+                        "Cannot find CVSpectrumAnalyzer control with x:Name=spaly!",
+                        "错误",
+                        "Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
                     return;
                 }
 
@@ -102,7 +279,13 @@ namespace CVWaferProber.Views
                 _spInnerTabControl = _spAnalyzer.FindName("innerTabControl") as TabControl;
                 if (_spInnerTabControl == null)
                 {
-                    MessageBox.Show("spaly内未找到x:Name=innerTabControl的TabControl！");
+                    ShowLocalizedMessageBox(
+                        "spaly内未找到x:Name=innerTabControl的TabControl！",
+                        "Cannot find TabControl with x:Name=innerTabControl in spaly!",
+                        "错误",
+                        "Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
                     return;
                 }
 
@@ -289,51 +472,63 @@ namespace CVWaferProber.Views
             }
 
         }
-        private void LanguageMenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            var menuItem = sender as MenuItem;
-            
-            if (menuItem?.Tag is string language)
-            {
-                // 1. 保存语言设置
-                AppSettingsManager.ChangeLanguage(language);
-
-                // 2. 提示用户重启程序
-                var result = MessageBox.Show("语言已切换，需要重启程序生效！\n即将重启！", "提示",
-                                             MessageBoxButton.OK, MessageBoxImage.Information);
-                if (result == MessageBoxResult.OK)
-                {
-                    // 3. 重启程序
-                    RestartApplication();
-                }
-            }
-           
-        }
 
         private void RestartApplication()
         {
             try
             {
-                // 1. 获取当前程序路径和参数（简化获取逻辑，减少耗时）
-                string exePath = Process.GetCurrentProcess().MainModule.FileName;
+                // 1. 获取当前进程信息
+                Process currentProcess = Process.GetCurrentProcess();
+                string exePath = currentProcess.MainModule?.FileName ??
+                    Assembly.GetEntryAssembly()?.Location ??
+                    throw new InvalidOperationException(GetLocalizedText("无法获取程序路径", "Failed to get program path"));
 
-                // 2. 快速启动新实例（不等待、无窗口隐藏，加速启动）
-                Process.Start(new ProcessStartInfo(exePath)
+                // 2. 构建启动参数（保留原命令行参数，适配带参数启动场景）
+                ProcessStartInfo startInfo = new ProcessStartInfo(exePath)
                 {
                     CreateNoWindow = false,
-                    UseShellExecute = true, // 用系统外壳启动，比直接启动更快
-                    WindowStyle = ProcessWindowStyle.Normal
+                    UseShellExecute = true,
+                    WindowStyle = ProcessWindowStyle.Normal,
+                    Arguments = Environment.CommandLine.Replace(exePath, "").Trim()
+                };
+
+                // 3. 启动新实例
+                Process newProcess = Process.Start(startInfo);
+                if (newProcess == null)
+                {
+                    throw new InvalidOperationException(GetLocalizedText("启动新程序实例失败", "Failed to start new program instance"));
+                }
+
+                //logger.Info($"程序重启：新实例PID={newProcess.Id}，原实例PID={currentProcess.Id}");
+
+                // 4. 优雅退出当前实例（先关闭窗口，再退出应用）
+                this.Dispatcher.Invoke(() =>
+                {
+                    this.Close(); // 触发Closed事件，执行Application.Shutdown
                 });
 
-                // 3. 强制退出当前进程（跳过WPF的Shutdown流程，大幅缩短退出耗时）
-                Process.GetCurrentProcess().Kill();
+                // 兜底：如果Close后仍未退出，延迟强制终止（给WPF清理资源的时间）
+                Task.Delay(2000).ContinueWith(_ =>
+                {
+                    if (!currentProcess.HasExited)
+                    {
+                        currentProcess.Kill();
+                        logger.Warn("程序重启：原实例未正常退出，已强制终止");
+                    }
+                });
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"重启失败：{ex.Message}", "错误");
+                logger.Error("程序重启失败", ex);
+                ShowLocalizedMessageBox(
+                    $"重启程序失败：{ex.Message}\n请手动关闭并重新启动程序",
+                    $"Failed to restart program: {ex.Message}\nPlease close and restart the program manually",
+                    "错误",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
-
         private void InitializeLogging()
         {
             // 配置log4net
