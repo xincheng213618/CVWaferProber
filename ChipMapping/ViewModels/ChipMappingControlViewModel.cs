@@ -230,10 +230,37 @@ namespace ChipMapping.ViewModels
                     UpdateChipDetails();
                     OnPropertyChanged(nameof(SelectedChipId));
                     OnPropertyChanged(nameof(SelectedChipDisplay));
+                    // 新增：更新选中数量
+                    UpdateSelectedChipCount();
                 }
             }
         }
+        // 新增：批量更新选中状态并统计数量
+        /// <summary>
+        /// 批量设置芯片选中状态
+        /// </summary>
+        /// <param name="chipIds">要选中的芯片ID列表</param>
+        public void SetSelectedChips(List<uint> chipIds)
+        {
+            // 先取消所有选中
+            foreach (var chip in Chips)
+            {
+                chip.IsSelected = false;
+            }
 
+            // 选中指定ID的芯片
+            foreach (var id in chipIds)
+            {
+                var chip = Chips.FirstOrDefault(c => c.Id == id);
+                if (chip != null)
+                {
+                    chip.IsSelected = true;
+                }
+            }
+
+            // 更新选中数量
+            UpdateSelectedChipCount();
+        }
         // 清理资源的方法
         public void Cleanup()
         {
@@ -277,7 +304,27 @@ namespace ChipMapping.ViewModels
             {
                 // 查找点击位置附近的芯片
                 var clickedChip = FindChipAtPosition(clickPosition);
-                SelectedChip = clickedChip;
+
+                if (clickedChip != null)
+                {
+                    if (IsMultiSelect)
+                    {
+                        // 多选模式：切换选中状态
+                        clickedChip.IsSelected = !clickedChip.IsSelected;
+                        SelectedChip = null; // 清空单个选中
+                        UpdateSelectedChipCount(); // 更新数量
+                    }
+                    else
+                    {
+                        // 单选模式：原有逻辑
+                        SelectedChip = clickedChip;
+                    }
+                }
+                else if (!IsMultiSelect)
+                {
+                    // 点击空白处取消选中
+                    SelectedChip = null;
+                }
             }
         }
 
@@ -512,8 +559,41 @@ namespace ChipMapping.ViewModels
             get => _yieldInfo;
             set => SetProperty(ref _yieldInfo, value);
         }
+        private int _total = 0;
+        public int DieTotal
+        {
+            get => _total;
+            set => SetProperty(ref _total, value);
+        }
+        // 新增：支持多选的属性
+        private bool _isMultiSelect = false;
+        public bool IsMultiSelect
+        {
+            get => _isMultiSelect;
+            set => SetProperty(ref _isMultiSelect, value);
+        }
 
+        /// <summary>
+        /// 新增：统计当前选中的芯片数量
+        /// </summary>
+        public void UpdateSelectedChipCount()
+        {
+            if (Chips == null)
+            {
+                DieTotal = 0;
+                return;
+            }
+            // 统计所有IsSelected为true的芯片数量
+            int selectedCount = Chips.Count(c => c.IsSelected);
+            DieTotal = selectedCount;
 
+            // 同步更新DieTotal（如果需要保持DieTotal和Total一致）
+            OnPropertyChanged(nameof(DieTotal));
+        }
+        /// <summary>
+        /// DieTotal转发属性（保持原有UI绑定兼容）
+        /// </summary>
+       
         // 计算画布大小
         public double CanvasWidth { get; private set; } = 1000;
         public double CanvasHeight { get; private set; } = 1000;
@@ -547,6 +627,8 @@ namespace ChipMapping.ViewModels
             //GenerateChipData_FromCsv("E:\\work\\cv\\New版\\晶圆台\\CVWaferProber\\ChipMapping\\ScanData_sc.csv");
             //GenerateChipData_Circle();
             StartProgressiveRendering();
+            DieTotal = 0;
+            OnPropertyChanged(nameof(DieTotal));
         }
         //public void RefreshFromCsv(string csvFile)
         //{
