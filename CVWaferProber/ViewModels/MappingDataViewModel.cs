@@ -28,6 +28,7 @@ using static CVWaferProber.ViewModels.MainViewModel;
 using Application = System.Windows.Application;
 using Binding = System.Windows.Data.Binding;
 using CheckBox = System.Windows.Controls.CheckBox;
+using Cursors = System.Windows.Input.Cursors;
 using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
@@ -1382,40 +1383,131 @@ namespace CVWaferProber.ViewModels
             };
         }
 
-        private void ExecuteInvertSelectAOI(object obj)
+        private async void ExecuteInvertSelectAOI(object obj)
         {
-            foreach (var item in TestResults) item.IsAOIEnabled = !item.IsAOIEnabled;
-            _dataGrid?.Items.Refresh();
-            UpdateSelectAllAOIState();
-            // 新增：同步更新选中数量
-            UpdateChipMappingSelectedCount();
+            try
+            {
+                _isBatchUpdating = true; 
+                _isUpdatingFromHeader_AOI = true;
+                Mouse.OverrideCursor = Cursors.Wait;
+
+                // 批量设置
+                foreach (var item in TestResults)
+                {
+                    // 只有当状态需要改变时才设置，减少不必要的事件触发
+                    item.IsAOIEnabled = !item.IsAOIEnabled;
+                }
+
+                // 延迟刷新，让UI有机会处理
+                await Task.Delay(10);
+
+                // 一次性更新
+                _dataGrid?.Items.Refresh();
+                UpdateSelectAllAOIState();
+                UpdateChipMappingSelectedCount();
+            }
+            finally
+            {
+                _isUpdatingFromHeader_AOI = false;
+                Mouse.OverrideCursor = null;
+            }
+           
         }
 
-        private void ExecuteInvertSelectIVL(object obj)
+        private async void ExecuteInvertSelectIVL(object obj)
         {
-            foreach (var item in TestResults) item.IsIVLEnabled = !item.IsIVLEnabled;
-            _dataGrid?.Items.Refresh();
-            UpdateSelectAllIVLState();
-            // 新增：同步更新选中数量
-            UpdateChipMappingSelectedCount();
+            try
+            {
+                _isUpdatingFromHeader_IVL = true;
+                Mouse.OverrideCursor = Cursors.Wait;
+
+                // 计算目标状态
+                bool targetState = !TestResults.FirstOrDefault()?.IsIVLEnabled ?? false;
+
+                // 批量设置
+                foreach (var item in TestResults)
+                {
+                    
+                    item.IsIVLEnabled = !item.IsIVLEnabled;
+                }
+
+                // 延迟刷新，让UI有机会处理
+                await Task.Delay(10);
+
+                // 一次性更新
+                _dataGrid?.Items.Refresh();
+                UpdateSelectAllIVLState();
+                UpdateChipMappingSelectedCount();
+            }
+            finally
+            {
+                _isUpdatingFromHeader_IVL = false;
+                Mouse.OverrideCursor = null;
+            }
         }
 
-        private void ExecuteInvertSelectEQE(object obj)
+        private async void ExecuteInvertSelectEQE(object obj)
         {
-            foreach (var item in TestResults) item.IsEQEEnabled = !item.IsEQEEnabled;
-            _dataGrid?.Items.Refresh();
-            UpdateSelectAllEQEState();
-            // 新增：同步更新选中数量
-            UpdateChipMappingSelectedCount();
+            try
+            {
+                _isUpdatingFromHeader_EQE = true;
+                Mouse.OverrideCursor = Cursors.Wait;
+
+                // 计算目标状态
+                bool targetState = !TestResults.FirstOrDefault()?.IsEQEEnabled ?? false;
+
+                // 批量设置
+                foreach (var item in TestResults)
+                {
+
+                    item.IsEQEEnabled = !item.IsEQEEnabled;
+                }
+
+                // 延迟刷新，让UI有机会处理
+                await Task.Delay(10);
+
+                // 一次性更新
+                _dataGrid?.Items.Refresh();
+                UpdateSelectAllEQEState();
+                UpdateChipMappingSelectedCount();
+            }
+            finally
+            {
+                _isUpdatingFromHeader_EQE = false;
+                Mouse.OverrideCursor = null;
+            }
         }
 
-        private void ExecuteInvertSelectVAM(object obj)
+        private async void ExecuteInvertSelectVAM(object obj)
         {
-            foreach (var item in TestResults) item.IsVAMEnabled = !item.IsVAMEnabled;
-            _dataGrid?.Items.Refresh();
-            UpdateSelectAllVAMState();
-            // 新增：同步更新选中数量
-            UpdateChipMappingSelectedCount();
+            try
+            {
+                _isUpdatingFromHeader_VAM = true;
+                Mouse.OverrideCursor = Cursors.Wait;
+
+                // 计算目标状态
+                bool targetState = !TestResults.FirstOrDefault()?.IsVAMEnabled ?? false;
+
+                // 批量设置
+                foreach (var item in TestResults)
+                {
+
+                    item.IsVAMEnabled = !item.IsVAMEnabled;
+                }
+
+                // 延迟刷新，让UI有机会处理
+                await Task.Delay(10);
+
+                // 一次性更新
+                _dataGrid?.Items.Refresh();
+                UpdateSelectAllVAMState();
+                UpdateChipMappingSelectedCount();
+            }
+            finally
+            {
+                _isUpdatingFromHeader_VAM = false;
+                Mouse.OverrideCursor = null;
+            }
         }
         #endregion
 
@@ -2245,16 +2337,29 @@ namespace CVWaferProber.ViewModels
                 }
             };
         }
-
+        private bool _isBatchUpdating = false;
         private void Die_PropertyChangedForSave(object? sender, PropertyChangedEventArgs e)
         {
             if (sender == null) return;
-            // 只关注关键字段变化：状态/开始时间/结束时间/SN/DataValue（这些表示有新结果或状态发生）
-            if (e.PropertyName == nameof(DieViewModel.Status) ||
-                e.PropertyName == nameof(DieViewModel.EndTestTime) ||
-                e.PropertyName == nameof(DieViewModel.StartTestTime) ||
-                e.PropertyName == nameof(DieViewModel.SerialNumber) ||
-                e.PropertyName == nameof(DieViewModel.DataValue))
+            if (e.PropertyName == nameof(DieViewModel.IsAOIEnabled) ||
+        e.PropertyName == nameof(DieViewModel.IsIVLEnabled) ||
+        e.PropertyName == nameof(DieViewModel.IsEQEEnabled) ||
+        e.PropertyName == nameof(DieViewModel.IsVAMEnabled))
+            {
+                // 使用 Dispatcher 延迟执行，给批量操作完成的时间
+                Application.Current?.Dispatcher?.BeginInvoke(new Action(() =>
+                {
+                    if (!_isBatchUpdating)
+                    {
+                        UpdateChipMappingSelectedCount();
+                    }
+                }), DispatcherPriority.Background);
+            }
+            else if (e.PropertyName == nameof(DieViewModel.Status) ||
+                     e.PropertyName == nameof(DieViewModel.EndTestTime) ||
+                     e.PropertyName == nameof(DieViewModel.StartTestTime) ||
+                     e.PropertyName == nameof(DieViewModel.SerialNumber) ||
+                     e.PropertyName == nameof(DieViewModel.DataValue))
             {
                 DebouncedSaveLastSession();
             }
