@@ -104,6 +104,9 @@ namespace CVWaferProber.ViewModels
         public ICommand InvertSelectVAMCommand { get; }
         public ICommand SearchCommand { get; }
 
+        // 自动保存防抖器和锁
+        private System.Timers.Timer? _autoSaveDebounceTimer;
+        private readonly object _autoSaveLock = new object();
         public ObservableCollection<DieViewModel> TestResults { get; } = new ObservableCollection<DieViewModel>();
         public RangeEnabledObservableCollection<FlowViewModel> FlowItems { get; } = new RangeEnabledObservableCollection<FlowViewModel>();
         public ObservableCollection<WPFlowViewModel> WPFlows { get; } = new ObservableCollection<WPFlowViewModel>();
@@ -140,113 +143,238 @@ namespace CVWaferProber.ViewModels
         private string _MappingCsvFilePath;
         public string MappingCsvFilePath
         {
-            get => _MappingCsvFilePath; 
+            get => _MappingCsvFilePath;
             set => SetProperty(ref _MappingCsvFilePath, value);
         }
 
         private bool? _selectAllAOI = false;
-        public bool? SelectAllAOI 
-        { 
-            get => _selectAllAOI; 
-            set 
-            { 
+        private bool _isUpdatingFromHeader_AOI = false;
+        public bool? SelectAllAOI
+        {
+            get => _selectAllAOI;
+            set
+            {
                 if (!Equals(_selectAllAOI, value))
-                { 
+                {
+                    // 标记开始更新，避免循环
+                    bool oldUpdatingState = _isUpdatingFromHeader_AOI;
+                    _isUpdatingFromHeader_AOI = true;
+
                     _selectAllAOI = value;
                     OnPropertyChanged();
-                    UpdateSelectAllAOIState(); 
+
+                    // 当用户点击全选复选框时，更新所有项的选中状态
+                    if (!oldUpdatingState && value.HasValue)
+                    {
+                        bool newState = value.Value;
+                        foreach (var item in TestResults)
+                        {
+                            if (item.IsAOIEnabled != newState)
+                                item.IsAOIEnabled = newState;
+                        }
+
+                        // 刷新DataGrid
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            _dataGrid?.Items.Refresh();
+                        });
+
+                        // 更新ChipMapping中的选中数量
+                        UpdateChipMappingSelectedCount();
+                    }
+
+                    // 更新全选状态（基于实际选中项）
+                    UpdateSelectAllAOIState();
+
+                    // 标记更新结束
+                    _isUpdatingFromHeader_AOI = false;
                 }
             }
         }
-        private bool _isUpdatingFromHeader_AOI;
+
 
         private bool? _selectAllIVL = false;
+        private bool _isUpdatingFromHeader_IVL = false;
         public bool? SelectAllIVL
-        { 
+        {
             get => _selectAllIVL;
-            set 
-            { if (!Equals(_selectAllIVL, value)) 
+            set
+            {
+                if (!Equals(_selectAllIVL, value))
                 {
-                    _selectAllIVL = value; OnPropertyChanged(); UpdateSelectAllIVLState(); 
+                    // 标记开始更新，避免循环
+                    bool oldUpdatingState = _isUpdatingFromHeader_IVL;
+                    _isUpdatingFromHeader_IVL = true;
+
+                    _selectAllIVL = value;
+                    OnPropertyChanged();
+
+                    // 当用户点击全选复选框时，更新所有项的选中状态
+                    if (!oldUpdatingState && value.HasValue)
+                    {
+                        bool newState = value.Value;
+                        foreach (var item in TestResults)
+                        {
+                            if (item.IsIVLEnabled != newState)
+                                item.IsIVLEnabled = newState;
+                        }
+
+                        // 刷新DataGrid
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            _dataGrid?.Items.Refresh();
+                        });
+
+                        // 更新ChipMapping中的选中数量
+                        UpdateChipMappingSelectedCount();
+                    }
+
+                    // 更新全选状态（基于实际选中项）
+                    UpdateSelectAllIVLState();
+
+                    // 标记更新结束
+                    _isUpdatingFromHeader_IVL = false;
                 }
             }
         }
-        private bool _isUpdatingFromHeader_IVL;
+
+
 
         private bool? _selectAllEQE = false;
-        public bool? SelectAllEQE 
+        private bool _isUpdatingFromHeader_EQE = false;
+        public bool? SelectAllEQE
         {
             get => _selectAllEQE;
-            set 
-            { 
-                if (!Equals(_selectAllEQE, value)) 
-                { 
+            set
+            {
+                if (!Equals(_selectAllEQE, value))
+                {
+                    // 标记开始更新，避免循环
+                    bool oldUpdatingState = _isUpdatingFromHeader_EQE;
+                    _isUpdatingFromHeader_EQE = true;
+
                     _selectAllEQE = value;
                     OnPropertyChanged();
-                    UpdateSelectAllEQEState(); 
-                } 
+
+                    // 当用户点击全选复选框时，更新所有项的选中状态
+                    if (!oldUpdatingState && value.HasValue)
+                    {
+                        bool newState = value.Value;
+                        foreach (var item in TestResults)
+                        {
+                            if (item.IsEQEEnabled != newState)
+                                item.IsEQEEnabled = newState;
+                        }
+
+                        // 刷新DataGrid
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            _dataGrid?.Items.Refresh();
+                        });
+
+                        // 更新ChipMapping中的选中数量
+                        UpdateChipMappingSelectedCount();
+                    }
+
+                    // 更新全选状态（基于实际选中项）
+                    UpdateSelectAllEQEState();
+
+                    // 标记更新结束
+                    _isUpdatingFromHeader_EQE = false;
+                }
             }
         }
-        private bool _isUpdatingFromHeader_EQE;
+  
 
         private bool? _selectAllVAM = false;
-        public bool? SelectAllVAM 
+        private bool _isUpdatingFromHeader_VAM = false;
+        public bool? SelectAllVAM
         {
             get => _selectAllVAM;
-            set 
-            { 
+            set
+            {
+
                 if (!Equals(_selectAllVAM, value))
-                { 
+                {
+                    // 标记开始更新，避免循环
+                    bool oldUpdatingState = _isUpdatingFromHeader_VAM;
+                    _isUpdatingFromHeader_VAM = true;
+
                     _selectAllVAM = value;
-                    OnPropertyChanged(); 
-                    UpdateSelectAllVAMState(); 
-                } 
-            } 
+                    OnPropertyChanged();
+
+                    // 当用户点击全选复选框时，更新所有项的选中状态
+                    if (!oldUpdatingState && value.HasValue)
+                    {
+                        bool newState = value.Value;
+                        foreach (var item in TestResults)
+                        {
+                            if (item.IsVAMEnabled != newState)
+                                item.IsVAMEnabled = newState;
+                        }
+
+                        // 刷新DataGrid
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            _dataGrid?.Items.Refresh();
+                        });
+
+                        // 更新ChipMapping中的选中数量
+                        UpdateChipMappingSelectedCount();
+                    }
+
+                    // 更新全选状态（基于实际选中项）
+                    UpdateSelectAllVAMState();
+
+                    // 标记更新结束
+                    _isUpdatingFromHeader_VAM = false;
+                }
+            }
         }
-        private bool _isUpdatingFromHeader_VAM;
+       
 
         public bool IsColorEnabled { get; set; }
         public string ProberId { get; set; }
         private string _Timestamp;
-        public string Timestamp 
-        { 
+        public string Timestamp
+        {
             get => _Timestamp;
             set => SetProperty(ref _Timestamp, value);
         }
         private bool _isAutoSN;
-        public bool IsAutoSN 
-        { 
+        public bool IsAutoSN
+        {
             get => _isAutoSN;
             set => SetProperty(ref _isAutoSN, value);
         }
         private bool _isProcessing = false;
         public bool IsNotProcessing => !_isProcessing;
-        public bool IsProcessing 
-        { 
+        public bool IsProcessing
+        {
             get => _isProcessing;
-            set => SetProperty(ref _isProcessing, value); 
+            set => SetProperty(ref _isProcessing, value);
         }
         private bool _isIVLCameraEnabled;
-        public bool IsIVLCameraEnabled 
+        public bool IsIVLCameraEnabled
         {
             get => _isIVLCameraEnabled;
-            set => SetProperty(ref _isIVLCameraEnabled, value); 
+            set => SetProperty(ref _isIVLCameraEnabled, value);
         }
         private bool selfClick = true;
         private DataGrid? _dataGrid;
 
         private string _yieldInfo = "0/0 (0.00%)";
-        public string YieldInfo 
-        { 
+        public string YieldInfo
+        {
             get => _yieldInfo;
-            set 
-            { 
-                if (_yieldInfo != value) 
-                { 
+            set
+            {
+                if (_yieldInfo != value)
+                {
                     _yieldInfo = value;
-                    OnPropertyChanged(); 
+                    OnPropertyChanged();
                     CustomMappingVM.YieldInfo = value;
-                } 
+                }
             }
         }
 
@@ -338,7 +466,7 @@ namespace CVWaferProber.ViewModels
                 }
             }
         }
-       
+
         // 当前测试Die的行列信息（如：X1/Y2）
         private string _currentDieInfo = string.Empty;
         public string CurrentDieInfo
@@ -414,6 +542,9 @@ namespace CVWaferProber.ViewModels
             SubscribeItems_EQE(TestResults);
             SubscribeItems_VAM(TestResults);
 
+            // 新增：订阅每个 Die 的 PropertyChanged，用于触发自动保存（防抖）
+            SubscribeToSaveEvents();
+
             ProberId = "CVProber01";
             ProberClientService.Instance.InitializeMapVM(this);
             InitColumnConfigs();
@@ -458,7 +589,7 @@ namespace CVWaferProber.ViewModels
                 // 如果当前Die就是正在测试的Die，且进度不是0，不重复初始化
                 if (CurrentDieInfo == $"{die.MapX}/{die.MapY}" && SingleDieTestProgress > 0)
                     return;
-    
+
                 CurrentDieInfo = $"{die.MapX}/{die.MapY}";
                 SingleDieTestProgress = 0; // 强制重置为0
 
@@ -496,7 +627,7 @@ namespace CVWaferProber.ViewModels
             double newProgress = 0;
             bool shouldStopTimer = false;
 
-            
+
             if (SingleDieTestProgress >= 100 || TotalTestCount == 0)
             {
                 shouldStopTimer = true;
@@ -608,6 +739,8 @@ namespace CVWaferProber.ViewModels
                     UpdateTotalProgress();
 
                     logger.DebugFormat("Single Die test completed; cumulative completion: {0}/{1}", CompletedTestCount, TotalTestCount);
+                    // ========== 新增：单个Die测试完成时显式保存 ==========
+                    DebouncedSaveLastSession(500); // 500ms防抖，避免高频调用
                 }
             });
         }
@@ -785,10 +918,11 @@ namespace CVWaferProber.ViewModels
             MainService.Instance.StopAutoTesting();
             ResetProgressBars(); // 重置进度条
             CalculateYieldBySerialNumber();
+            _ = SaveLastSessionIfNeededAsync();
         }
         #endregion
 
-        #region 原有其他方法（保留，无修改：集合事件/列配置/良率计算/CSV导出/持久化等）
+        #region 原有其他方法（保留，集合事件/列配置/良率计算/CSV导出/持久化等）
         private void InitAutoSave()
         {
             if (Application.Current != null)
@@ -803,6 +937,7 @@ namespace CVWaferProber.ViewModels
                 {
                     try
                     {
+                        await TestResultPersistenceService.CleanupOldSessionsAsync(10); // 改为异步版本
                         await LoadFromPersistenceAsync();
                     }
                     catch (Exception ex)
@@ -825,7 +960,7 @@ namespace CVWaferProber.ViewModels
                     try { SaveTestResultsToDefaultFile(); }
                     catch (Exception ex) { logger.Warn("Failed to auto-export CSV on exit", ex); }
                 });
-                if (!saveTask.Wait(TimeSpan.FromSeconds(5))) logger.Warn("Save timed out on exit");
+                if (!saveTask.Wait(TimeSpan.FromSeconds(2))) logger.Warn("Save timed out on exit");
             }
             catch (Exception ex) { logger.Error("Exception occurred on exit", ex); }
         }
@@ -836,6 +971,7 @@ namespace CVWaferProber.ViewModels
             {
                 CustomMappingVM?.SetSelectedChip((uint)die.Id);
 
+                CustomMappingVM?.UpdateSelectedChipCount();
                 DieResultDisplay(die);
             }
             else selfClick = true;
@@ -932,6 +1068,9 @@ namespace CVWaferProber.ViewModels
             // 关键：测试完成后重置IsManualTesting=false
             if (!isAuto) IsManualTesting = false;
             if (isAuto && CompletedTestCount >= TotalTestCount) ResetProgressBars(); // 自动测试全部完成，重置进度条
+
+            // ========== 测试整体结束时立即保存（无防抖） ==========            
+            _ = SaveLastSessionIfNeededAsync();
         }
 
         public void EnableBtnGUI(bool enabled)
@@ -942,12 +1081,61 @@ namespace CVWaferProber.ViewModels
 
         private void ClearMapping()
         {
-            // 清理时释放所有Die的定时器资源
-            foreach (var die in TestResults) die.Dispose();
+            // 1. 停止并释放进度条定时器
+            if (_progressUpdateTimer != null)
+            {
+                _progressUpdateTimer.Elapsed -= OnProgressUpdateTimerElapsed;
+                _progressUpdateTimer.Stop();
+                _progressUpdateTimer.Dispose();
+                _progressUpdateTimer = null;
+            }
+            // 新增：重置选中数量
+            if (CustomMappingVM != null)
+            {
+                CustomMappingVM.DieTotal = 0;
+                CustomMappingVM.OnPropertyChanged(nameof(CustomMappingVM.DieTotal));
+            }
+            // 2. 停止并释放自动保存防抖定时器
+            lock (_autoSaveLock)
+            {
+                if (_autoSaveDebounceTimer != null)
+                {
+                    _autoSaveDebounceTimer.Stop();
+                    _autoSaveDebounceTimer.Dispose();
+                    _autoSaveDebounceTimer = null;
+                }
+            }
+
+            // 3. 释放所有Die的资源+解绑事件
+            lock (TestResults)
+            {
+                foreach (var die in TestResults)
+                {
+                    die.Dispose();
+                    // 解绑自动保存的PropertyChanged事件
+                    die.PropertyChanged -= Die_PropertyChangedForSave;
+                }
+                // 清空集合前先解绑集合变更事件
+                TestResults.CollectionChanged -= AOIItems_CollectionChanged;
+                TestResults.CollectionChanged -= IVLItems_CollectionChanged;
+                TestResults.CollectionChanged -= EQEItems_CollectionChanged;
+                TestResults.CollectionChanged -= VAMItems_CollectionChanged;
+
+                TestResults.Clear();
+            }
+
+            // 4. 重置进度条和状态
+            ResetProgressBars();
+
+            // 5. 重新绑定集合变更事件（供下次使用）
+            TestResults.CollectionChanged += AOIItems_CollectionChanged;
+            TestResults.CollectionChanged += IVLItems_CollectionChanged;
+            TestResults.CollectionChanged += EQEItems_CollectionChanged;
+            TestResults.CollectionChanged += VAMItems_CollectionChanged;
+
+            // 6. 清理映射VM
             CustomMappingVM?.Cleanup();
             CustomMappingVM.Chips.Clear();
-            TestResults.Clear();
-            ResetProgressBars();
         }
 
         private List<DieViewModel> GetSelectedDieTestItems()
@@ -1014,8 +1202,10 @@ namespace CVWaferProber.ViewModels
         #region 全选/反选事件（保留）
         private void AOIItems_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            if (e.NewItems != null) SubscribeItems_AOI(e.NewItems.Cast<DieViewModel>());
-            if (e.OldItems != null) UnsubscribeItems_AOI(e.OldItems.Cast<DieViewModel>());
+            if (e.NewItems != null)
+                SubscribeItems_AOI(e.NewItems.Cast<DieViewModel>());
+            if (e.OldItems != null)
+                UnsubscribeItems_AOI(e.OldItems.Cast<DieViewModel>());
             UpdateSelectAllAOIState();
         }
 
@@ -1031,7 +1221,12 @@ namespace CVWaferProber.ViewModels
 
         private void AOI_Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(DieViewModel.IsAOIEnabled) && !_isUpdatingFromHeader_AOI) UpdateSelectAllAOIState();
+            if (e.PropertyName == nameof(DieViewModel.IsAOIEnabled) && !_isUpdatingFromHeader_AOI)
+            {
+                UpdateSelectAllAOIState();
+                // 新增：当单个Die的AOI启用状态改变时，更新Total
+                UpdateChipMappingSelectedCount();
+            }
         }
 
         private void IVLItems_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -1043,23 +1238,32 @@ namespace CVWaferProber.ViewModels
 
         private void SubscribeItems_IVL(IEnumerable<DieViewModel> items)
         {
-            foreach (var item in items) item.PropertyChanged += IVL_Item_PropertyChanged;
+            foreach (var item in items)
+                item.PropertyChanged += IVL_Item_PropertyChanged;
         }
 
         private void UnsubscribeItems_IVL(IEnumerable<DieViewModel> items)
         {
-            foreach (var item in items) item.PropertyChanged -= IVL_Item_PropertyChanged;
+            foreach (var item in items)
+                item.PropertyChanged -= IVL_Item_PropertyChanged;
         }
 
         private void IVL_Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(DieViewModel.IsIVLEnabled) && !_isUpdatingFromHeader_IVL) UpdateSelectAllIVLState();
+            if (e.PropertyName == nameof(DieViewModel.IsIVLEnabled) && !_isUpdatingFromHeader_IVL)
+            {
+                UpdateSelectAllIVLState();
+                // 新增：当单个Die的IVL启用状态改变时，更新Total
+                UpdateChipMappingSelectedCount();
+            }
         }
 
         private void EQEItems_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            if (e.NewItems != null) SubscribeItems_EQE(e.NewItems.Cast<DieViewModel>());
-            if (e.OldItems != null) UnsubscribeItems_EQE(e.OldItems.Cast<DieViewModel>());
+            if (e.NewItems != null)
+                SubscribeItems_EQE(e.NewItems.Cast<DieViewModel>());
+            if (e.OldItems != null)
+                UnsubscribeItems_EQE(e.OldItems.Cast<DieViewModel>());
             UpdateSelectAllEQEState();
         }
 
@@ -1075,57 +1279,107 @@ namespace CVWaferProber.ViewModels
 
         private void EQE_Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(DieViewModel.IsEQEEnabled) && !_isUpdatingFromHeader_EQE) UpdateSelectAllEQEState();
+            if (e.PropertyName == nameof(DieViewModel.IsEQEEnabled) && !_isUpdatingFromHeader_EQE)
+            {
+                UpdateSelectAllEQEState();
+                // 新增：当单个Die的EQE启用状态改变时，更新Total
+                UpdateChipMappingSelectedCount();
+            }
         }
 
         private void VAMItems_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            if (e.NewItems != null) SubscribeItems_VAM(e.NewItems.Cast<DieViewModel>());
-            if (e.OldItems != null) UnsubscribeItems_VAM(e.OldItems.Cast<DieViewModel>());
+            if (e.NewItems != null)
+                SubscribeItems_VAM(e.NewItems.Cast<DieViewModel>());
+            if (e.OldItems != null)
+                UnsubscribeItems_VAM(e.OldItems.Cast<DieViewModel>());
             UpdateSelectAllVAMState();
         }
 
         private void SubscribeItems_VAM(IEnumerable<DieViewModel> items)
         {
-            foreach (var item in items) item.PropertyChanged += VAM_Item_PropertyChanged;
+            foreach (var item in items)
+                item.PropertyChanged += VAM_Item_PropertyChanged;
         }
 
         private void UnsubscribeItems_VAM(IEnumerable<DieViewModel> items)
         {
-            foreach (var item in items) item.PropertyChanged -= VAM_Item_PropertyChanged;
+            foreach (var item in items)
+                item.PropertyChanged -= VAM_Item_PropertyChanged;
         }
 
         private void VAM_Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(DieViewModel.IsVAMEnabled) && !_isUpdatingFromHeader_VAM) UpdateSelectAllVAMState();
+            if (e.PropertyName == nameof(DieViewModel.IsVAMEnabled) && !_isUpdatingFromHeader_VAM)
+            {
+                UpdateSelectAllVAMState();
+                // 新增：当单个Die的VAM启用状态改变时，更新Total
+                UpdateChipMappingSelectedCount();
+            }
         }
 
         private void UpdateSelectAllAOIState()
         {
-            if (TestResults.Count == 0) { SelectAllAOI = false; return; }
+            if (TestResults.Count == 0)
+            {
+                SelectAllAOI = false;
+                return;
+            }
             int selectedCount = TestResults.Count(item => item.IsAOIEnabled);
-            SelectAllAOI = selectedCount switch { 0 => false, var c when c == TestResults.Count => true, _ => null };
+            SelectAllAOI = selectedCount switch
+            {
+                0 => false,
+                var c when c == TestResults.Count => true,
+                _ => null
+            };
         }
 
         private void UpdateSelectAllIVLState()
         {
-            if (TestResults.Count == 0) { SelectAllIVL = false; return; }
+            if (TestResults.Count == 0)
+            {
+                SelectAllIVL = false;
+                return;
+            }
             int selectedCount = TestResults.Count(item => item.IsIVLEnabled);
-            SelectAllIVL = selectedCount switch { 0 => false, var c when c == TestResults.Count => true, _ => null };
+            SelectAllIVL = selectedCount switch
+            {
+                0 => false,
+                var c when c == TestResults.Count => true,
+                _ => null
+            };
         }
 
         private void UpdateSelectAllEQEState()
         {
-            if (TestResults.Count == 0) { SelectAllEQE = false; return; }
+            if (TestResults.Count == 0)
+            {
+                SelectAllEQE = false;
+                return;
+            }
             int selectedCount = TestResults.Count(item => item.IsEQEEnabled);
-            SelectAllEQE = selectedCount switch { 0 => false, var c when c == TestResults.Count => true, _ => null };
+            SelectAllEQE = selectedCount switch
+            {
+                0 => false,
+                var c when c == TestResults.Count => true,
+                _ => null
+            };
         }
 
         private void UpdateSelectAllVAMState()
         {
-            if (TestResults.Count == 0) { SelectAllVAM = false; return; }
+            if (TestResults.Count == 0)
+            {
+                SelectAllVAM = false;
+                return;
+            }
             int selectedCount = TestResults.Count(item => item.IsVAMEnabled);
-            SelectAllVAM = selectedCount switch { 0 => false, var c when c == TestResults.Count => true, _ => null };
+            SelectAllVAM = selectedCount switch
+            {
+                0 => false,
+                var c when c == TestResults.Count => true,
+                _ => null
+            };
         }
 
         private void ExecuteInvertSelectAOI(object obj)
@@ -1133,6 +1387,8 @@ namespace CVWaferProber.ViewModels
             foreach (var item in TestResults) item.IsAOIEnabled = !item.IsAOIEnabled;
             _dataGrid?.Items.Refresh();
             UpdateSelectAllAOIState();
+            // 新增：同步更新选中数量
+            UpdateChipMappingSelectedCount();
         }
 
         private void ExecuteInvertSelectIVL(object obj)
@@ -1140,6 +1396,8 @@ namespace CVWaferProber.ViewModels
             foreach (var item in TestResults) item.IsIVLEnabled = !item.IsIVLEnabled;
             _dataGrid?.Items.Refresh();
             UpdateSelectAllIVLState();
+            // 新增：同步更新选中数量
+            UpdateChipMappingSelectedCount();
         }
 
         private void ExecuteInvertSelectEQE(object obj)
@@ -1147,6 +1405,8 @@ namespace CVWaferProber.ViewModels
             foreach (var item in TestResults) item.IsEQEEnabled = !item.IsEQEEnabled;
             _dataGrid?.Items.Refresh();
             UpdateSelectAllEQEState();
+            // 新增：同步更新选中数量
+            UpdateChipMappingSelectedCount();
         }
 
         private void ExecuteInvertSelectVAM(object obj)
@@ -1154,8 +1414,24 @@ namespace CVWaferProber.ViewModels
             foreach (var item in TestResults) item.IsVAMEnabled = !item.IsVAMEnabled;
             _dataGrid?.Items.Refresh();
             UpdateSelectAllVAMState();
+            // 新增：同步更新选中数量
+            UpdateChipMappingSelectedCount();
         }
         #endregion
+
+        // 新增：更新ChipMapping中的选中数量
+        private void UpdateChipMappingSelectedCount()
+        {
+            if (CustomMappingVM == null) return;
+
+            // 获取当前选中的Die ID列表（只要任一测试启用，就视为选中）
+            var selectedIds = TestResults.Where(d => d.IsAOIEnabled || d.IsIVLEnabled || d.IsEQEEnabled || d.IsVAMEnabled)
+                                         .Select(d => (uint)d.Id)
+                                         .ToList();
+
+            // 更新ChipMapping中的选中状态和数量
+            CustomMappingVM.SetSelectedChips(selectedIds);
+        }
 
         public void SetDataGrid(DataGrid dataGrid)
         {
@@ -1174,7 +1450,10 @@ namespace CVWaferProber.ViewModels
         private void LoadMappingFileFromCsv()
         {
             List<CVMappingData> mappingData = null;
-            if (!File.Exists(MappingCsvFilePath)) { logger.WarnFormat("File does not exist：{0}", MappingCsvFilePath); return; }
+            if (!File.Exists(MappingCsvFilePath))
+            {
+                logger.WarnFormat("File does not exist：{0}", MappingCsvFilePath); return;
+            }
             bool bR = CsvMappingDataTool.LoadMappingCsv(MappingCsvFilePath, ref mappingData);
             if (bR && mappingData != null && mappingData.Count > 0)
             {
@@ -1194,7 +1473,8 @@ namespace CVWaferProber.ViewModels
                 foreach (var item in sorted) if (item.Status != ChipStatus.SKIP) TestResults.Add(item);
             }
             BuildSNIndex();
-            if (string.IsNullOrWhiteSpace(SearchSN)) FilteredTestResults = new ObservableCollection<DieViewModel>(TestResults);
+            if (string.IsNullOrWhiteSpace(SearchSN))
+                FilteredTestResults = new ObservableCollection<DieViewModel>(TestResults);
             else ExecuteSearch();
             CalculateYieldBySerialNumber();
         }
@@ -1297,15 +1577,23 @@ namespace CVWaferProber.ViewModels
                 double yieldRate = (double)successCount / testedDices.Count * 100;
                 YieldInfo = $"{successCount}/{testedDices.Count} ({yieldRate:F2}%)";
             }
-            catch (Exception ex) { logger.Error("Yield calculation exception", ex); YieldInfo = (string)Application.Current.FindResource("CalculationException"); }
+            catch (Exception ex)
+            {
+                logger.Error("Yield calculation exception", ex);
+                YieldInfo = (string)Application.Current.FindResource("CalculationException");
+            }
         }
 
         private void AutoExportSummaryResult()
         {
             try
             {
-                if (TestResults == null || !TestResults.Any()) { logger.Info("No test results, skip Summary export"); return; }
-                string exportRootPath = ConfigManager.Config.ExportPathSettings?.SummaryExportPath ;//?? @"D:\Project\IVL"
+                if (TestResults == null || !TestResults.Any())
+                {
+                    logger.Info("No test results, skip Summary export");
+                    return;
+                }
+                string exportRootPath = ConfigManager.Config.ExportPathSettings?.SummaryExportPath;//?? @"D:\Project\IVL"
                 if (!Directory.Exists(exportRootPath)) Directory.CreateDirectory(exportRootPath);
                 var savePath = Path.Combine(exportRootPath, $"Summary_Result_{DateTime.Now:yyyyMMddHHmmss}.csv");
                 var allSelectedColumns = new List<ColumnConfig>();
@@ -1340,7 +1628,13 @@ namespace CVWaferProber.ViewModels
         {
             FlowItems.Clear();
             SelectedFlow = null;
-            if (flows != null) { foreach (var flow in flows) FlowItems.Add(new FlowViewModel(flow)); if (FlowItems.Count > 0) SelectedFlow = FlowItems[FlowItems.Count - 1]; }
+            if (flows != null)
+            {
+                foreach (var flow in flows)
+                    FlowItems.Add(new FlowViewModel(flow));
+                if (FlowItems.Count > 0)
+                    SelectedFlow = FlowItems[FlowItems.Count - 1];
+            }
         }
 
         private void ResetStatus(object? obj)
@@ -1348,6 +1642,7 @@ namespace CVWaferProber.ViewModels
             foreach (var die in TestResults) die.ResetStatus();
             CalculateYieldBySerialNumber();
             ResetProgressBars();
+            DebouncedSaveLastSession(300);
         }
 
         private void SaveTestResult(object? obj)
@@ -1366,19 +1661,19 @@ namespace CVWaferProber.ViewModels
             }
         }
 
-        private void  LoadTestResult(object? obj) 
-        {    
+        private void LoadTestResult(object? obj)
+        {
             if (obj is string path && !string.IsNullOrWhiteSpace(path))
             {
-                try 
-                { 
-                    ResultService.LoadFromCSV(path, TestResults); 
-                    _dataGrid?.Items.Refresh(); 
-                    logger.InfoFormat("Result loaded successfully：{0}", path); 
-                }
-                catch (Exception ex) 
+                try
                 {
-                    logger.Error(ex); 
+                    ResultService.LoadFromCSV(path, TestResults);
+                    _dataGrid?.Items.Refresh();
+                    logger.InfoFormat("Result loaded successfully：{0}", path);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex);
                 }
                 return;
             }
@@ -1386,8 +1681,8 @@ namespace CVWaferProber.ViewModels
             {
                 Task.Run(async () =>
                 {
-                    try 
-                    { 
+                    try
+                    {
                         await LoadFromPersistenceAsync();
                         // 确保在UI线程中刷新
                         Application.Current.Dispatcher.Invoke(() =>
@@ -1395,16 +1690,16 @@ namespace CVWaferProber.ViewModels
                             // 强制刷新DataGrid
                             _dataGrid?.Items.Refresh();
 
-                            
+
                             BuildSNIndex();
                             CalculateYieldBySerialNumber();
 
                             logger.Info("Successfully loaded the results of the last session from the persistent storage");
                         });
                     }
-                    catch (Exception ex) 
-                    { 
-                        logger.Error("Failed to load from persistence", ex); 
+                    catch (Exception ex)
+                    {
+                        logger.Error("Failed to load from persistence", ex);
                     }
                 });
                 return;
@@ -1418,15 +1713,15 @@ namespace CVWaferProber.ViewModels
             };
             if (openFileDialog.ShowDialog() == true)
             {
-                try 
-                { 
+                try
+                {
                     ResultService.LoadFromCSV(openFileDialog.FileName, TestResults);
-                    _dataGrid?.Items.Refresh(); 
-                    logger.InfoFormat("Result loaded successfully：{0}", openFileDialog.FileName); 
+                    _dataGrid?.Items.Refresh();
+                    logger.InfoFormat("Result loaded successfully：{0}", openFileDialog.FileName);
                 }
                 catch (Exception ex)
-                { 
-                    logger.Error(ex); 
+                {
+                    logger.Error(ex);
                 }
             }
         }
@@ -1437,29 +1732,60 @@ namespace CVWaferProber.ViewModels
             {
                 var dtos = await TestResultPersistenceService.LoadAsync();
                 if (dtos == null || dtos.Count == 0) return;
-                Application.Current.Dispatcher.Invoke(() =>
+
+
+                var dispatcher = Application.Current?.Dispatcher;
+                if (dispatcher == null || dispatcher.HasShutdownStarted) return;
+                // 异步执行UI更新，超时3秒
+                var uiTask = dispatcher.InvokeAsync(() =>
                 {
-                    ApplyDtosToTestResults(dtos);
+                    lock (TestResults) // 加锁避免并发修改
+                    {
+                        ApplyDtosToTestResults(dtos);
+                    }
                     _dataGrid?.Items.Refresh();
                     BuildSNIndex();
                     CalculateYieldBySerialNumber();
+
                     try
                     {
                         DieViewModel? toSelect = null;
                         var dtoWithSN = dtos.FirstOrDefault(d => !string.IsNullOrWhiteSpace(d.SerialNumber));
-                        if (dtoWithSN != null) toSelect = TestResults.FirstOrDefault(t => !string.IsNullOrWhiteSpace(t.SerialNumber) && t.SerialNumber.Equals(dtoWithSN.SerialNumber, StringComparison.OrdinalIgnoreCase));
+                        if (dtoWithSN != null)
+                            toSelect = TestResults.FirstOrDefault(t =>
+                                !string.IsNullOrWhiteSpace(t.SerialNumber) &&
+                                t.SerialNumber.Equals(dtoWithSN.SerialNumber, StringComparison.OrdinalIgnoreCase));
                         if (toSelect == null && TestResults.Count > 0) toSelect = TestResults[0];
-                        if (toSelect != null) 
+                        if (toSelect != null)
                         {
-                            selfClick = false; SelectedItem = toSelect;
-                            ManScrollToItem(toSelect); 
-                            logger.InfoFormat("Auto-selected after loading：Id={0}, SN={1}", toSelect.Id, toSelect.SerialNumber); 
+                            selfClick = false;
+                            SelectedItem = toSelect;
+                            ManScrollToItem(toSelect);
+                            logger.InfoFormat("Auto-selected after loading：Id={0}, SN={1}", toSelect.Id, toSelect.SerialNumber);
                         }
                     }
-                    catch (Exception ex) { logger.Warn("Failed to auto-select after loading", ex); }
+                    catch (Exception ex)
+                    {
+                        logger.Warn("Failed to auto-select after loading", ex);
+                    }
                 });
+                var completedTask = await Task.WhenAny(uiTask.Task, Task.Delay(3000));
+                if (completedTask == uiTask.Task)
+                {
+                    if (uiTask.Task.IsFaulted)
+                    {
+                        logger.Error("UI update failed", uiTask.Task.Exception);
+                    }
+                }
+                else
+                {
+                    logger.Warn("LoadFromPersistence UI update timed out");
+                }
             }
-            catch (Exception ex) { logger.Error("Failed to load from persistence", ex); }
+            catch (Exception ex)
+            {
+                logger.Error("Failed to load from persistence", ex);
+            }
         }
         private void ApplyDtosToTestResults(List<TestResultDto> dtos)
         {
@@ -1771,16 +2097,54 @@ namespace CVWaferProber.ViewModels
             }
             catch (Exception ex) { logger.Error("Failed to auto-save test results", ex); }
         }
-
         public async Task SaveLastSessionAsync()
+        {
+            await SaveLastSessionIfNeededAsync();
+        }
+        // 新增：检查并保存（供防抖或直接调用）
+        private async Task SaveLastSessionIfNeededAsync()
         {
             try
             {
-                var dtos = TestResults.Select(r => TestResultDto.FromObject(r)).Where(x => x != null).ToList();
+                // 空值保护：先检查TestResults是否为null
+                if (TestResults == null || !TestResults.Any())
+                {
+                    logger.Info("TestResults is empty, skip saving");
+                    return;
+                }
+
+                // 判断是否有有意义的结果
+                bool hasMeaningful = TestResults.Any(r =>
+                    (r.Status != null && r.Status != ChipStatus.WAITING) ||
+                    !string.IsNullOrWhiteSpace(r.SerialNumber) ||
+                    r.StartTestTime.HasValue ||
+                    r.EndTestTime.HasValue);
+
+                if (!hasMeaningful)
+                {
+                    logger.Info("No meaningful test results detected, skip saving last session to persistence.");
+                    return;
+                }
+
+                // 转换为DTO（添加空值过滤）
+                var dtos = TestResults.Select(r => TestResultDto.FromObject(r))
+                                      .Where(x => x != null) // 过滤null的DTO
+                                      .ToList();
+
+                if (dtos.Count == 0)
+                {
+                    logger.Info("No valid DTOs to save");
+                    return;
+                }
+
+                // 【修改2】调用改造后的SaveAsync（忽略返回值，保持兼容）
                 await TestResultPersistenceService.SaveAsync(dtos);
                 logger.Info("Successfully saved last session results to persistence");
             }
-            catch (Exception ex) { logger.Error("Failed to save the last session", ex); }
+            catch (Exception ex)
+            {
+                logger.Error("Failed to save the last session", ex);
+            }
         }
 
         public void SelectItemById(uint id)
@@ -1788,6 +2152,18 @@ namespace CVWaferProber.ViewModels
             var itemToSelect = TestResults.FirstOrDefault(item => item.Id == id);
             if (itemToSelect != null) { selfClick = false; SelectedItem = itemToSelect; }
         }
+        //public async Task SaveLastSessionAsync()
+        //{
+        //    try
+        //    {
+        //        var dtos = TestResults.Select(r => TestResultDto.FromObject(r)).Where(x => x != null).ToList();
+        //        await TestResultPersistenceService.SaveAsync(dtos);
+        //        logger.Info("Successfully saved last session results to persistence");
+        //    }
+        //    catch (Exception ex) { logger.Error("Failed to save the last session", ex); }
+        //}
+
+
 
         private List<TestItem> GetSelectedTestItems()
         {
@@ -1847,7 +2223,106 @@ namespace CVWaferProber.ViewModels
                 logger.Debug("Progress timer restarted");
             }
         }
+        #region 新增：订阅 TestResults 中 Die 的变更以触发自动保存（防抖）
+        private void SubscribeToSaveEvents()
+        {
+            // 订阅已有项
+            foreach (var die in TestResults)
+            {
+                die.PropertyChanged += Die_PropertyChangedForSave;
+            }
 
+            // 订阅集合变更，新增/移除时绑定或解绑
+            TestResults.CollectionChanged += (s, e) =>
+            {
+                if (e.NewItems != null)
+                {
+                    foreach (DieViewModel die in e.NewItems) die.PropertyChanged += Die_PropertyChangedForSave;
+                }
+                if (e.OldItems != null)
+                {
+                    foreach (DieViewModel die in e.OldItems) die.PropertyChanged -= Die_PropertyChangedForSave;
+                }
+            };
+        }
+
+        private void Die_PropertyChangedForSave(object? sender, PropertyChangedEventArgs e)
+        {
+            if (sender == null) return;
+            // 只关注关键字段变化：状态/开始时间/结束时间/SN/DataValue（这些表示有新结果或状态发生）
+            if (e.PropertyName == nameof(DieViewModel.Status) ||
+                e.PropertyName == nameof(DieViewModel.EndTestTime) ||
+                e.PropertyName == nameof(DieViewModel.StartTestTime) ||
+                e.PropertyName == nameof(DieViewModel.SerialNumber) ||
+                e.PropertyName == nameof(DieViewModel.DataValue))
+            {
+                DebouncedSaveLastSession();
+            }
+        }
+
+
+        // 防抖：在最后一次变更后等待一段时间再保存，避免频繁IO
+        private async Task DebouncedSaveLastSession(int debounceMs = 100)
+        {
+            lock (_autoSaveLock)
+            {
+                if (_autoSaveDebounceTimer == null)
+                {
+                    _autoSaveDebounceTimer = new System.Timers.Timer(debounceMs) { AutoReset = false };
+                    _autoSaveDebounceTimer.Elapsed += async (s, e) =>
+                    {
+                        try
+                        {
+                            await SaveLastSessionIfNeededAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.Error("Auto save (debounced) failed", ex);
+                        }
+                        finally
+                        {
+                            // 释放定时器资源
+                            ((System.Timers.Timer)s).Dispose();
+                        }
+                    };
+                }
+                else
+                {
+                    _autoSaveDebounceTimer.Interval = debounceMs;
+                }
+
+                _autoSaveDebounceTimer.Stop();
+                _autoSaveDebounceTimer.Start();
+            }
+
+
+            //lock (_autoSaveLock)
+            //{
+            //    if (_autoSaveDebounceTimer == null)
+            //    {
+            //        _autoSaveDebounceTimer = new System.Timers.Timer(debounceMs) { AutoReset = false };
+            //        _autoSaveDebounceTimer.Elapsed += async (s, e) =>
+            //        {
+            //            try
+            //            {
+            //                await SaveLastSessionIfNeededAsync();
+            //            }
+            //            catch (Exception ex)
+            //            {
+            //                logger.Error("Auto save (debounced) failed", ex);
+            //            }
+            //        };
+            //    }
+            //    else
+            //    {
+            //        _autoSaveDebounceTimer.Interval = debounceMs;
+            //    }
+
+            //    _autoSaveDebounceTimer.Stop();
+            //    _autoSaveDebounceTimer.Start();
+            //}
+        }
+        #endregion
 
     }
 }

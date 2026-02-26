@@ -138,6 +138,29 @@ namespace CVWaferProber.Services
             //发送结果给机台
             proberClientService?.SendResultAsync(dieVM);
             //
+            try
+            {
+                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                if (mappingVM != null)
+                {
+                    Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await mappingVM.SaveLastSessionAsync().ConfigureAwait(false);
+                            if (logger.IsInfoEnabled) logger.Info("Auto-saved last session after die completion");
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.Warn("Auto-save last session failed after die completion", ex);
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Warn("Enqueue auto-save failed", ex);
+            }
             if (autoTestingItem != null)
             {
                 if(logger.IsInfoEnabled) logger.InfoFormat("IsPaused={0},Status={1} => {2}",
@@ -249,6 +272,30 @@ namespace CVWaferProber.Services
 
             if (e.IsAuto) autoTestingItem = null;
             DoAutoTestEnd(e.DieVM, e.IsAuto);
+            // —— 新增：整批测试结束后强制保存最后会话
+            try
+            {
+                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                if (mappingVM != null)
+                {
+                    Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await mappingVM.SaveLastSessionAsync().ConfigureAwait(false);
+                            if (logger.IsInfoEnabled) logger.Info("Auto-saved last session after testing completed");
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.Warn("Auto-save last session failed after testing completed", ex);
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Warn("Enqueue final auto-save failed", ex);
+            }
             // 测试完成时清除断点
             if (e.IsAuto && autoTestingItem == null)
             {
