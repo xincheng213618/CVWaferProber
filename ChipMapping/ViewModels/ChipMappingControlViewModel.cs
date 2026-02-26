@@ -102,6 +102,7 @@ namespace ChipMapping.ViewModels
                 Color = new SolidColorBrush(Colors.Blue), // 蓝
                 Description = (string)Application.Current.FindResource("StatusPanel.WAITING")
             });
+
             StatusTips.Add(new StatusTip
             {
                 Status = ChipStatus.TESTING,
@@ -265,10 +266,10 @@ namespace ChipMapping.ViewModels
         public void Cleanup()
         {
             // 停止所有芯片的闪烁计时器
-            foreach (var chip in Chips)
-            {
-                chip.StopBlinking();
-            }
+            //foreach (var chip in Chips)
+            //{
+            //    chip.StopBlinking();
+            //}
 
             if (SelectedChip != null)
             {
