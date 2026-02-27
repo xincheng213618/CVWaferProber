@@ -40,8 +40,12 @@ namespace ChipMapping.Converters
                 ChipStatus.CAL_NG => new SolidColorBrush(Colors.Purple),     // 校准不良 - 紫色
                 ChipStatus.I2C_NG => new SolidColorBrush(Colors.White),      // I2C异常 - 白色
                 ChipStatus.AOI_LINE_NG => new SolidColorBrush(Colors.Olive), // 线缺陷 - 橄榄色
-                ChipStatus.IVL_TESTING => new SolidColorBrush(Colors.LightYellow), // IVL测试中 - 浅黄
-                ChipStatus.IVL_COMPLETED => new SolidColorBrush(Colors.LightGreen), // IVL完成 - 浅绿
+                ChipStatus.IVL_TESTING => new SolidColorBrush(Colors.Yellow), // IVL测试中 - 浅黄
+                ChipStatus.EQE_TESTING => new SolidColorBrush(Colors.Yellow),    // EQE测试中 - 浅黄
+                ChipStatus.VAM_TESTING => new SolidColorBrush(Colors.Yellow),    // VAM测试中 - 浅黄
+                ChipStatus.IVL_COMPLETED => new SolidColorBrush(Colors.Green), // IVL完成 - 浅绿
+                ChipStatus.EQE_COMPLETED => new SolidColorBrush(Colors.Green), // EQE完成 - 浅蓝
+                ChipStatus.VAM_COMPLETED => new SolidColorBrush(Colors.Green), // VAM完成 - 浅绿
                 ChipStatus.SKIP => new SolidColorBrush(Colors.Orange),    // 跳过 - 橙色
                 _ => new SolidColorBrush(Colors.Gray)                        // 默认灰色
             };
