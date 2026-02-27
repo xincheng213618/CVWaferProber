@@ -52,6 +52,7 @@ namespace CVWaferProber
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            base.OnStartup(e);
             // 尝试创建命名的 Mutex
             _mutex = new Mutex(true, AppMutexName, out _isFirstInstance);
 
@@ -90,13 +91,29 @@ namespace CVWaferProber
 
             log.Info("Application starting...");
 
-            base.OnStartup(e);
+
             // 设置未处理异常捕获
-            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             DispatcherUnhandledException += App_DispatcherUnhandledException;
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            
             // 初始化语言（读取Settings中的默认语言）
             AppSettingsManager.InitializeLanguage();
+            RegisterGlobalStyles();
+           
 
+            
+            try
+            {
+                // 调用DLL初始化方法
+                CV_Ali_initial();
+                Console.WriteLine("CV_algorithm.dll Initialization successful");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"DLL Initialization failed：{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown(); // 初始化失败则关闭应用
+                return;
+            }
             // 1. 创建并显示启动窗口
             _splash = new CVWaferProber.Views.WaferProberStartupWindow();
             _splash.AddStartupTasks(new MainStartupTask());
@@ -108,6 +125,10 @@ namespace CVWaferProber
 
             _mainWindow = new DockMainWindow();
 
+        }
+        private DockMainWindow _mainWindow;
+        private void RegisterGlobalStyles()
+        {
             // 1. 定义DataGrid行的样式（覆盖选中状态）
             var rowStyle = new Style(typeof(DataGridRow))
             {
@@ -174,21 +195,7 @@ namespace CVWaferProber
             // 3. 注册全局样式
             Application.Current.Resources.Add(typeof(DataGridRow), rowStyle);
             Application.Current.Resources.Add(typeof(DataGridCell), cellStyle);
-            try
-            {
-                // 调用DLL初始化方法
-                CV_Ali_initial();
-                Console.WriteLine("CV_algorithm.dll Initialization successful");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"DLL Initialization failed：{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                Shutdown(); // 初始化失败则关闭应用
-            }
-          
         }
-        private DockMainWindow _mainWindow;
-
         private void OnStartupCompleted(object sender, EventArgs e)
         {
             // 关闭启动窗口
@@ -200,16 +207,22 @@ namespace CVWaferProber
             //_mainWindow.Show();
             // 创建主窗口（确保在UI线程执行）
             // 使用 Dispatcher.BeginInvoke 确保在 UI 线程执行
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                if (_mainWindow == null)
-                {
-                    _mainWindow = new DockMainWindow();
-                }
+            //Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            //{
+            //    if (_mainWindow == null)
+            //    {
+            //        _mainWindow = new DockMainWindow();
+            //    }
 
+            //    Application.Current.MainWindow = _mainWindow;
+            //    _mainWindow.Show();
+            //}));
+            Dispatcher.Invoke(() =>
+            {
+                _mainWindow = new DockMainWindow();
                 Application.Current.MainWindow = _mainWindow;
                 _mainWindow.Show();
-            }));
+            });
         }
 
         // 应用关闭时调用释放
