@@ -352,6 +352,15 @@ namespace CVWaferProber.ViewModels
                 }
                 CurrentTestStep = 4; // 标记为完成
                 //CompleteTestProgress(); // 核心：拉满进度到100%
+                // 关键修复：测试完成/非测试状态时停止并释放定时器，避免后续回调使用已释放对象
+                try
+                {
+                    CompleteTestProgress(); // 停止并释放测试进度定时器
+                }
+                catch (Exception ex)
+                {
+                    logger.Warn("Failed to stop test progress timer on ChangeStatus", ex);
+                }
             }
 
             chipViewModel?.SetStatus(status);

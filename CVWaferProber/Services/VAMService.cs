@@ -35,7 +35,7 @@ namespace CVWaferProber.Services
             return ChipStatus.FAILED;
         }
 
-        // 核心修复：异步方法全程await，耗时操作后台执行，UI事件切回主线程
+        // 异步方法全程await，耗时操作后台执行，UI事件切回主线程
         protected override async Task<ChipStatus> FlowResultDisplay(DieViewModel dieViewModel)
         {
             if (string.IsNullOrEmpty(dieViewModel.SerialNumber))

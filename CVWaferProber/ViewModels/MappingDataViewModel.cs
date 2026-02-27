@@ -614,20 +614,23 @@ namespace CVWaferProber.ViewModels
         /// </summary>
         private void OnProgressUpdateTimerElapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            // 1. 前置防护：检查应用和调度器是否可用，避免空引用/取消异常
+            // 1. 从 sender 获取当前触发事件的定时器实例
+            var timer = sender as System.Timers.Timer;
+            if (timer == null) return;
+
+            // 2. 前置防护：检查应用和调度器是否可用
             if (Application.Current == null ||
                 Application.Current.Dispatcher == null ||
                 Application.Current.Dispatcher.HasShutdownStarted)
             {
-                // 应用已关闭，停止定时器并退出
-                _progressUpdateTimer?.Stop();
+                // 应用已关闭，安全停止当前触发的定时器
+                timer?.Stop();
                 return;
             }
 
-            // 2. 核心业务逻辑移到后台线程计算，仅UI更新走Dispatcher
+            // 3. 核心业务逻辑
             double newProgress = 0;
             bool shouldStopTimer = false;
-
 
             if (SingleDieTestProgress >= 100 || TotalTestCount == 0)
             {
@@ -635,20 +638,14 @@ namespace CVWaferProber.ViewModels
             }
             else
             {
-                // 计算已过时间
                 var elapsed = (DateTime.Now - _currentDieStartTime).TotalSeconds;
-
-                // 线性进度计算：已过时间/预测时间 * 100
-                // 但限制在99%以内，只有完成时才到100%
                 newProgress = Math.Min(99, (elapsed / _currentDiePredictSeconds) * 100);
 
-                // 平滑更新：每次增加不超过10%
                 if (newProgress > SingleDieTestProgress + 10)
                 {
                     newProgress = SingleDieTestProgress + 10;
                 }
 
-                // 确保最小增量为0.5%
                 if (newProgress < SingleDieTestProgress + 0.5 && SingleDieTestProgress < 99)
                 {
                     newProgress = SingleDieTestProgress + 0.5;
@@ -656,41 +653,34 @@ namespace CVWaferProber.ViewModels
 
                 newProgress = Math.Min(99, newProgress);
             }
-            // }
 
-            // 3. 需停止定时器则直接停止，无需走UI线程
             if (shouldStopTimer)
             {
-                _progressUpdateTimer?.Stop();
+                timer?.Stop();
                 return;
             }
 
-            // 4. 安全更新UI：使用InvokeAsync+异常捕获，避免阻塞/取消异常
+            // 4. 安全更新UI
             try
             {
                 Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    // 再次校验状态，防止排队期间状态变化
                     if (SingleDieTestProgress < 100 && TotalTestCount > 0)
                     {
                         SingleDieTestProgress = newProgress;
-
-                        // 只在进度有明显变化时更新UI
                         OnPropertyChanged(nameof(SingleDieTestProgress));
                         OnPropertyChanged(nameof(ProgressText));
                         UpdateTotalProgress();
                     }
-                }).Wait(TimeSpan.FromMilliseconds(200)); // 超时保护，避免无限等待
+                }).Wait(TimeSpan.FromMilliseconds(200));
             }
             catch (TaskCanceledException)
             {
-                // 预期内的取消异常：应用关闭时UI调度器不可用，静默处理
-                _progressUpdateTimer?.Stop();
+                timer?.Stop();
             }
             catch (Exception ex) when (ex.InnerException is TaskCanceledException)
             {
-                // 捕获嵌套的取消异常
-                _progressUpdateTimer?.Stop();
+                timer?.Stop();
             }
         }
         /// <summary>
@@ -1550,6 +1540,22 @@ namespace CVWaferProber.ViewModels
             if (bR && mappingData != null && mappingData.Count > 0)
             {
                 CustomMappingVM.RefreshFromMap(mappingData);
+                // --- 关键：先 Dispose 旧的 TestResults 项，解绑定时器/事件，防止旧计时器继续触发 ---
+                lock (TestResults)
+                {
+                    foreach (var oldDie in TestResults.ToList())
+                    {
+                        try
+                        {
+                            oldDie.Dispose();
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.Warn("Dispose old DieViewModel failed", ex);
+                        }
+                    }
+                    TestResults.Clear();
+                }
                 ObservableCollection<DieViewModel> _TestResults = new ObservableCollection<DieViewModel>();
                 foreach (var map in CustomMappingVM.Chips)
                 {
@@ -1561,7 +1567,7 @@ namespace CVWaferProber.ViewModels
                     _TestResults.Add(dieViewModel);
                 }
                 var sorted = _TestResults.OrderBy(x => x.MapY).ToList();
-                TestResults.Clear();
+                //TestResults.Clear();
                 foreach (var item in sorted) if (item.Status != ChipStatus.SKIP) TestResults.Add(item);
             }
             BuildSNIndex();
