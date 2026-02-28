@@ -20,7 +20,7 @@
     <sys:String x:Key="BtnSaveTestResult">保存测试结果</sys:String>
     <sys:String x:Key="BtnLoadTestResult">加载测试结果</sys:String>
     <sys:String x:Key="CalculationException">计算异常</sys:String>
-
+    <sys:String x:Key="PleaseSelectDieToTest">请选择需要测试的Die</sys:String>
 
     <sys:String x:Key="ChkColorStatus">启用结果状态颜色</sys:String>
     <sys:String x:Key="Auto SN">自动SN</sys:String>

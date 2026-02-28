@@ -858,7 +858,17 @@ namespace CVWaferProber.ViewModels
         #region 原有业务方法（修改StartManFlow/StartAutoFlow，集成新进度逻辑）
         private void StartManTest(object? obj)
         {
-
+            // 新增：检查是否选择了Die
+            if (SelectedItem == null || !(SelectedItem is DieViewModel))
+            {
+                // 弹出提示框
+                MessageBox.Show(
+                    (string)Application.Current.FindResource("PleaseSelectDieToTest") ?? "请选择需要测试的Die",
+                    (string)Application.Current.FindResource("Prompt") ?? "提示",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
             StartManFlow();
         }
         private void StartManFlow()
@@ -885,6 +895,17 @@ namespace CVWaferProber.ViewModels
 
         public void StartAutoFlow()
         {
+            // 新增：检查是否选择了Die
+            if (SelectedItem == null || !(SelectedItem is DieViewModel))
+            {
+                // 弹出提示框
+                MessageBox.Show(
+                    (string)Application.Current.FindResource("PleaseSelectDieToTest") ?? "请选择需要测试的Die",
+                    (string)Application.Current.FindResource("Prompt") ?? "提示",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
             if (SelectedWPFlow == null)
             {
                 logger.Error("Test flow (Flow) not selected");

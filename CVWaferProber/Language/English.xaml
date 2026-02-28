@@ -720,6 +720,7 @@
     <sys:String x:Key="Maping.StartingTest">Starting test...</sys:String>
     <sys:String x:Key="Maping.Die">die</sys:String>
     <sys:String x:Key="Maping.Dies">dies</sys:String>
+    <sys:String x:Key="PleaseSelectDieToTest">Please Select Die To Test</sys:String>
 
 
     <sys:String x:Key="TestStep_None">Not started</sys:String>
@@ -730,14 +731,14 @@
     <sys:String x:Key="TestStep_Completed">Test completed</sys:String>
     <sys:String x:Key="TestStep_Failed">Test failure</sys:String>
 
-    <!-- 以下是系统设备管理 -->
+    <!--  以下是系统设备管理  -->
     <sys:String x:Key="SysDev_Refresh">Refresh</sys:String>
     <sys:String x:Key="SysDev_Open">Open</sys:String>
     <sys:String x:Key="SysDev_Close">Close</sys:String>
     <sys:String x:Key="SysDev_ShowOnlineOnly">Show online only</sys:String>
     <sys:String x:Key="SysDev_SearchPlaceholder">Search...</sys:String>
 
-    <!-- 列标题 -->
+    <!--  列标题  -->
     <sys:String x:Key="SysDev_Status">Regist Status</sys:String>
     <sys:String x:Key="SysDev_DeviceCode">Device Code</sys:String>
     <sys:String x:Key="SysDev_DeviceName">Device Name</sys:String>
@@ -745,14 +746,14 @@
     <sys:String x:Key="SysDev_LastActivity">Last Activity</sys:String>
     <sys:String x:Key="SysDev_Actions">Actions</sys:String>
 
-    <!-- 状态文本 -->
+    <!--  状态文本  -->
     <sys:String x:Key="SysDev_Online">Registed</sys:String>
     <sys:String x:Key="SysDev_Offline">UnRegisted</sys:String>
     <sys:String x:Key="SysDev_Running">Running</sys:String>
     <sys:String x:Key="SysDev_Standby">Standby</sys:String>
     <sys:String x:Key="SysDev_Maintenance">Maintenance</sys:String>
 
-    <!-- 状态栏 -->
+    <!--  状态栏  -->
     <sys:String x:Key="SysDev_TotalDevices">Total Devices:</sys:String>
     <sys:String x:Key="SysDev_OnlineCount">Registed:</sys:String>
     <sys:String x:Key="SysDev_OfflineCount">UnRegisted:</sys:String>
@@ -763,7 +764,7 @@
     <sys:String x:Key="SysDev_Of">of</sys:String>
     <sys:String x:Key="SysDev_Devices">devices</sys:String>
 
-    <!-- 消息 -->
+    <!--  消息  -->
     <sys:String x:Key="SysDev_DeviceOpened">Device opened</sys:String>
     <sys:String x:Key="SysDev_DeviceClosed">Device closed</sys:String>
     <sys:String x:Key="SysDev_DeviceListRefreshed">Device list refreshed - {0} total, {1} online</sys:String>
