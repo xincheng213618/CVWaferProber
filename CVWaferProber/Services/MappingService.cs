@@ -7,9 +7,7 @@ namespace CVWaferProber.Services
     {
         public event EventHandler<ChipViewModel> ChipSelected;
         public ChipMappingControlViewModel CustomVM { get; private set; }
-        public MappingService() : this(new ChipMappingControlViewModel())
-        {
-        }
+
         public MappingService(ChipMappingControlViewModel customVM)
         {
             CustomVM = customVM;
