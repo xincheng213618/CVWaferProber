@@ -283,25 +283,49 @@ namespace CVWaferProber
             // 程序崩溃前尝试保存断点
             try
             {
-                var mainService = MainService.Instance;
-                var mappingVM = mainService.MainVM.DataMappingVM;
-
-                if (mappingVM != null && (mainService.autoTestingItem != null || mappingVM.IsManualTesting))
+                // 通过Dispatcher切换到UI线程访问mappingVM
+                Application.Current.Dispatcher.Invoke(() =>
                 {
-                    // 同步保存断点（不能异步，因为程序即将退出）
-                    Task.Run(async () =>
+                    var mainService = MainService.Instance;
+                    var mappingVM = mainService.MainVM.DataMappingVM;
+
+                    if (mappingVM != null && (mainService.autoTestingItem != null || mappingVM.IsManualTesting))
                     {
-                        await BreakpointMemoryService.SaveBreakpointAsync(
+                        // 同步保存断点（避免异步阻塞，直接在UI线程执行）
+                        BreakpointMemoryService.SaveBreakpointAsync(
                             mappingVM,
                             mainService,
-                            mainService.autoTestingItem?.CurSelectedWPFlow);
-                    }).Wait(TimeSpan.FromSeconds(2)); // 最多等待2秒
-                }
+                            mainService.autoTestingItem?.CurSelectedWPFlow).Wait(TimeSpan.FromSeconds(2));
+                    }
+                });
             }
-            catch
+            catch (Exception ex)
             {
+                log.Error("Failed to save breakpoint on crash", ex);
                 // 忽略保存失败，程序即将崩溃
             }
+            //// 程序崩溃前尝试保存断点
+            //try
+            //{
+            //    var mainService = MainService.Instance;
+            //    var mappingVM = mainService.MainVM.DataMappingVM;
+
+            //    if (mappingVM != null && (mainService.autoTestingItem != null || mappingVM.IsManualTesting))
+            //    {
+            //        // 同步保存断点（不能异步，因为程序即将退出）
+            //        Task.Run(async () =>
+            //        {
+            //            await BreakpointMemoryService.SaveBreakpointAsync(
+            //                mappingVM,
+            //                mainService,
+            //                mainService.autoTestingItem?.CurSelectedWPFlow);
+            //        }).Wait(TimeSpan.FromSeconds(2)); // 最多等待2秒
+            //    }
+            //}
+            //catch
+            //{
+            //    // 忽略保存失败，程序即将崩溃
+            //}
         }
 
         private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
@@ -311,22 +335,22 @@ namespace CVWaferProber
             // 尝试保存断点
             try
             {
+                // 在UI线程访问UI相关对象
                 var mainService = MainService.Instance;
                 var mappingVM = mainService.MainVM.DataMappingVM;
 
                 if (mappingVM != null && (mainService.autoTestingItem != null || mappingVM.IsManualTesting))
                 {
-                    Task.Run(async () =>
-                    {
-                        await BreakpointMemoryService.SaveBreakpointAsync(
-                            mappingVM,
-                            mainService,
-                            mainService.autoTestingItem?.CurSelectedWPFlow);
-                    });
+                    // 直接在UI线程执行保存（避免跨线程）
+                    BreakpointMemoryService.SaveBreakpointAsync(
+                        mappingVM,
+                        mainService,
+                        mainService.autoTestingItem?.CurSelectedWPFlow).ConfigureAwait(false);
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                log.Error("Failed to save breakpoint on unhandled exception", ex);
                 // 忽略
             }
 
@@ -335,6 +359,35 @@ namespace CVWaferProber
 
             e.Handled = true;
         }
+        //log.Error("Unhandled exception", e.Exception);
+
+        //// 尝试保存断点
+        //try
+        //{
+        //    var mainService = MainService.Instance;
+        //    var mappingVM = mainService.MainVM.DataMappingVM;
+
+        //    if (mappingVM != null && (mainService.autoTestingItem != null || mappingVM.IsManualTesting))
+        //    {
+        //        Task.Run(async () =>
+        //        {
+        //            await BreakpointMemoryService.SaveBreakpointAsync(
+        //                mappingVM,
+        //                mainService,
+        //                mainService.autoTestingItem?.CurSelectedWPFlow);
+        //        });
+        //    }
+        //}
+        //catch
+        //{
+        //    // 忽略
+        //}
+
+        //MessageBox.Show($"程序发生未处理异常：{e.Exception.Message}\n\n程序将尝试保存当前状态后退出。",
+        //    "程序异常", MessageBoxButton.OK, MessageBoxImage.Error);
+
+        //e.Handled = true;
+    
     }
 
 }
