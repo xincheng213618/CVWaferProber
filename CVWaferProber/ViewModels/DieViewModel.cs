@@ -202,7 +202,7 @@ namespace CVWaferProber.ViewModels
                     // 再次检查状态，防止在任务排队期间状态发生变化
                     if (!_disposed)
                     {
-                        MainViewModel.Instance?.DataMappingVM?.UpdateSingleDieProgress(
+                        MainService.Instance.MainVM.DataMappingVM?.UpdateSingleDieProgress(
                             currentProgress,
                             $"Running for {testElapsedSeconds}s / Estimated {_predictTestSeconds}s"
                         );

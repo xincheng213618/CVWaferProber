@@ -37,6 +37,7 @@ namespace CVWaferProber.ViewModels
         private static readonly ILog logger = LogManager.GetLogger(typeof(MappingDataViewModel));
 
         #region DataGrid 行选择
+        /*
         private bool? _selectAllAOI = false;
         private bool _isUpdatingFromHeader_AOI;
         public bool? SelectAllAOI
@@ -105,9 +106,9 @@ namespace CVWaferProber.ViewModels
                 }
             }
         }
+        */
         #endregion DataGrid 行选择
 
-        #region 原有核心属性+命令（保留，无修改）
         public event EventHandler<WPFlowViewModel> ActivateCorrespondingPanel;
         public ChipMappingControlViewModel CustomMappingVM { get; private set; }
 
@@ -354,7 +355,9 @@ namespace CVWaferProber.ViewModels
        
 
         public bool IsColorEnabled { get; set; }
-        public string ProberId { get; set; }
+
+        private string _WaferId;
+        public string WaferId { get; set; }
         private string _Timestamp;
         public string Timestamp
         {
@@ -569,7 +572,7 @@ namespace CVWaferProber.ViewModels
             // 新增：订阅每个 Die 的 PropertyChanged，用于触发自动保存（防抖）
             SubscribeToSaveEvents();
 
-            ProberId = "CVProber01";
+            WaferId = "CVProber01";
             ProberClientService.Instance.InitializeMapVM(this);
             InitColumnConfigs();
             InitAutoSave();
@@ -1743,19 +1746,6 @@ namespace CVWaferProber.ViewModels
                 logger.InfoFormat("Summary results automatically exported：{0}", savePath);
             }
             catch (Exception ex) { logger.Error("Failed to export Summary results", ex); }
-        }
-
-        public void LoadFlow(List<RespDataFlowTempDTO>? flows)
-        {
-            FlowItems.Clear();
-            SelectedFlow = null;
-            if (flows != null)
-            {
-                foreach (var flow in flows)
-                    FlowItems.Add(new FlowViewModel(flow));
-                if (FlowItems.Count > 0)
-                    SelectedFlow = FlowItems[FlowItems.Count - 1];
-            }
         }
 
         private void ResetStatus(object? obj)

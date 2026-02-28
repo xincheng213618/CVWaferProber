@@ -284,7 +284,7 @@ namespace CVWaferProber
             try
             {
                 var mainService = MainService.Instance;
-                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                var mappingVM = mainService.MainVM.DataMappingVM;
 
                 if (mappingVM != null && (mainService.autoTestingItem != null || mappingVM.IsManualTesting))
                 {
@@ -312,7 +312,7 @@ namespace CVWaferProber
             try
             {
                 var mainService = MainService.Instance;
-                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                var mappingVM = mainService.MainVM.DataMappingVM;
 
                 if (mappingVM != null && (mainService.autoTestingItem != null || mappingVM.IsManualTesting))
                 {

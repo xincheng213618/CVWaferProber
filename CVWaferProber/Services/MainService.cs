@@ -110,7 +110,7 @@ namespace CVWaferProber.Services
             //
             try
             {
-                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                var mappingVM = this.MainVM.DataMappingVM;
                 if (mappingVM != null)
                 {
                     Task.Run(async () =>
@@ -242,7 +242,7 @@ namespace CVWaferProber.Services
             // —— 新增：整批测试结束后强制保存最后会话
             try
             {
-                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                var mappingVM = this.MainVM.DataMappingVM;
                 if (mappingVM != null)
                 {
                     Task.Run(async () =>
@@ -579,8 +579,8 @@ namespace CVWaferProber.Services
             // 清除旧断点
             BreakpointMemoryService.ClearBreakpoint();
             // 保存测试队列用于进度计算
-            _currentTestQueue = dieVMList;
-            _currentQueueIndex = -1;
+            //_currentTestQueue = dieVMList;
+            //_currentQueueIndex = -1;
             // 初始化进度条
             // 初始化进度条 - 重要：必须在UI线程执行
             Application.Current.Dispatcher.Invoke(() =>
@@ -727,14 +727,14 @@ namespace CVWaferProber.Services
             try
             {
                 // 只有测试中才保存断点
-                if (autoTestingItem == null && MainViewModel.Instance?.DataMappingVM?.IsManualTesting != true)
+                if (autoTestingItem == null && this.MainVM.DataMappingVM?.IsManualTesting != true)
                     return;
 
                 // 限制保存频率，至少间隔1秒
                 if ((DateTime.Now - _lastBreakpointSaveTime).TotalSeconds < 1)
                     return;
 
-                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                var mappingVM = this.MainVM.DataMappingVM;
                 if (mappingVM == null)
                     return;
 
@@ -762,7 +762,7 @@ namespace CVWaferProber.Services
                 logger.Info("Attempting to recover from breakpoint...");
 
                 // 获取MappingDataViewModel
-                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                var mappingVM = this.MainVM.DataMappingVM;
                 if (mappingVM == null)
                     return false;
 

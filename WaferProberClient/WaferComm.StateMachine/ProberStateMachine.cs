@@ -529,6 +529,7 @@ namespace WaferComm.StateMachine
             }else if (command.StartsWith("rr") && command.Length > 1)
             {
                 _currentStatus.CurrentMappingFile = command.Substring(2);
+                EventAggregator.Publish(new MappingFileLoadEvent(_currentStatus.CurrentMappingFile));
             }
         }
 
@@ -751,5 +752,14 @@ public class MotionAxisUpdatedEvent : BaseEvent
     public MotionAxisUpdatedEvent(ProberMotionAxisStatus axis)
     {
         Axis = axis;
+    }
+}
+
+public class MappingFileLoadEvent : BaseEvent
+{
+    public string MappingFile { get; }
+    public MappingFileLoadEvent(string mappingFile)
+    {
+        MappingFile = mappingFile;
     }
 }

@@ -33,7 +33,7 @@ namespace CVWaferProber.Services
         }
 
         // 异步方法全程await，耗时操作后台执行，UI事件切回主线程
-        protected override async Task<ChipStatus> FlowResultDisplay(DieViewModel dieViewModel)
+        protected override async Task<ChipStatus> FlowResultDisplayAsync(DieViewModel dieViewModel)
         {
             if (string.IsNullOrEmpty(dieViewModel.SerialNumber))
             {

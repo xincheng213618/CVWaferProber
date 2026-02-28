@@ -98,7 +98,7 @@ namespace CVWaferProber.Services
                 var data = new BreakpointData
                 {
                     Timestamp = DateTime.Now,
-                    ProberId = mappingVM.ProberId,
+                    ProberId = mappingVM.WaferId,
                     TestFlowType = selectedFlow?.FlowType.ToString(),
                     TestFlowName = selectedFlow?.Name,
 

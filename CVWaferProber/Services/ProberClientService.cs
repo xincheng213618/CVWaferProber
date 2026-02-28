@@ -63,7 +63,10 @@ namespace CVWaferProber.Services
             eventAggregator.Subscribe<StateUpdatedEvent>(OnProberStateUpdated);
             _proberState.StartAsync().Wait();
         }
-
+        private void OnMappingFileLoad(MappingFileLoadEvent @event)
+        {
+            _mappingDataViewModel?.LoadMappingFile(@event.MappingFile);
+        }
         private void OnCommandSented(CommandSentEvent @event)
         {
             string cmd = @event.Command.Trim('$', '#');
@@ -431,7 +434,7 @@ namespace CVWaferProber.Services
 
         public void InitUI()
         {
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 50; i++)
             {
                 if (_connectionInfo.DevCurrentState == ProberState.WaferLoaded)
                 {
@@ -440,7 +443,8 @@ namespace CVWaferProber.Services
                 }
                 Task.Delay(100).Wait();
             }
-
+            var eventAggregator = _clientProber.EventAggregator;
+            eventAggregator.Subscribe<MappingFileLoadEvent>(OnMappingFileLoad);
         }
     }
 }

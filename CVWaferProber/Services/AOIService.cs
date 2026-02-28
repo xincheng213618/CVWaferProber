@@ -143,7 +143,7 @@ namespace CVWaferProber.Services
             {
                 CustomImageVM?.ClearImageResult();
                 // 改为异步执行
-                _ = FlowResultDisplay(dieViewModel);
+                _ = FlowResultDisplayAsync(dieViewModel);
             }
         }
 
