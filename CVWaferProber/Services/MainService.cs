@@ -370,9 +370,9 @@ namespace CVWaferProber.Services
                     Task.Factory.StartNew(async () =>
                     {
                         //现场实际运控
-                        //await MoveToDieAndTestingAsync(item.CurSelectedWPFlow, dieNext.die, dieNext.diePre == null, item.HasNext, true);
+                        await MoveToDieAndTestingAsync(item.CurSelectedWPFlow, dieNext.die, dieNext.diePre == null, item.HasNext, true);
                         //TODO Testing
-                        await ExecuteDieTestWithProgress(item.CurSelectedWPFlow, dieNext.die, item.HasNext, true);
+                        //await ExecuteDieTestWithProgress(item.CurSelectedWPFlow, dieNext.die, item.HasNext, true);
                     });
                 }
                 else if (IsDieCompleted(dieNext.die))
