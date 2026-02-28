@@ -529,6 +529,12 @@ namespace CVWaferProber.Services
                 proberClientService?.SendResultAsync(dieVM);
             }
             proberClientService?.TestingCompleted();
+            // 自动测试结束（无论成功/失败），停止定时器
+            if (isAuto)
+            {
+                StopBreakpointTimer(); //  测试完成，停止自动保存
+                BreakpointMemoryService.ClearBreakpoint(); // 清除无用断点
+            }
             // 新增：手动测试异常结束时，重置IsManualTesting
             if (!isAuto)
             {
@@ -539,6 +545,11 @@ namespace CVWaferProber.Services
                     if (mappingVM != null)
                     {
                         mappingVM.IsManualTesting = false;
+                        // 手动测试结束且无自动测试时，停止定时器
+                        if (autoTestingItem == null)
+                        {
+                            StopBreakpointTimer(); //  手动测试结束，停止定时器
+                        }
                     }
                 });
             }
@@ -607,6 +618,8 @@ namespace CVWaferProber.Services
 
             autoTestingItem = null;
             proberClientService?.StopTestAsync();
+            // 停止自动测试时，停止定时器
+            StopBreakpointTimer(); // 主动停止测试，停止定时器
             // 停止但不重置进度条，保留当前进度状态
             Application.Current.Dispatcher.Invoke(() =>
             {
@@ -631,6 +644,7 @@ namespace CVWaferProber.Services
                 );
                 autoTestingItem.IsPaused = true;
                 if (isRollback) autoTestingItem.RollbackToPrevious();
+                StopBreakpointTimer(); 
                 // 停止进度定时器，但不重置进度数据
                 Application.Current.Dispatcher.Invoke(() =>
                 {
@@ -659,6 +673,11 @@ namespace CVWaferProber.Services
                 autoTestingItem.IsPaused = false;
                 proberClientService?.ContinuAutoTest();
 
+                // 恢复定时器
+                if (_breakpointSaveTimer != null && !_breakpointSaveTimer.Enabled)
+                {
+                    _breakpointSaveTimer.Start();
+                }
                 // 恢复时重新初始化进度状态
                 Application.Current.Dispatcher.Invoke(() =>
                 {
@@ -720,8 +739,31 @@ namespace CVWaferProber.Services
             _breakpointSaveTimer.Elapsed += async (sender, e) => await SaveBreakpointAsync();
             _breakpointSaveTimer.AutoReset = true;
             _breakpointSaveTimer.Start();
+            // 关键：设置定时器为后台线程（程序退出时自动终止，兜底方案）
+            _breakpointSaveTimer.SynchronizingObject = null;
+            _breakpointSaveTimer.Enabled = true;
         }
-
+        // ========== 新增：定时器停止的核心方法 ==========
+        /// <summary>
+        /// 安全停止断点保存定时器（防止空引用）
+        /// </summary>
+        private void StopBreakpointTimer()
+        {
+            try
+            {
+                if (_breakpointSaveTimer != null && _breakpointSaveTimer.Enabled)
+                {
+                    _breakpointSaveTimer.Stop();
+                    _breakpointSaveTimer.Elapsed -= async (sender, e) => await SaveBreakpointAsync(); // 移除事件绑定（避免内存泄漏）
+                    _breakpointSaveTimer.Dispose(); // 释放资源
+                    logger.Info("Breakpoint save timer stopped and disposed");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Warn("Failed to stop breakpoint save timer", ex);
+            }
+        }
         // 新增方法：保存断点
         private async Task SaveBreakpointAsync()
         {
