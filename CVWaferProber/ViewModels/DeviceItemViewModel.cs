@@ -89,16 +89,22 @@ namespace CVWaferProber.ViewModels
         // 打开按钮可用性：
         // 1. 设备必须在线 (IsLive = true)
         // 2. 设备状态必须是 "Closed" 或 "已关闭"
-        public bool CanOpen => IsLive && (DeviceStatus?.Equals("Closed", StringComparison.OrdinalIgnoreCase) == true ||
-                                          DeviceStatus?.Equals("已关闭", StringComparison.OrdinalIgnoreCase) == true);
+        public bool CanOpen => _device.CanOpen;
 
         // 关闭按钮可用性：
         // 1. 设备必须在线 (IsLive = true)
         // 2. 设备状态必须是 "Opened" 或 "运行中"
-        public bool CanClose => IsLive && (DeviceStatus?.Equals("Opened", StringComparison.OrdinalIgnoreCase) == true ||
-                                           DeviceStatus?.Equals("运行中", StringComparison.OrdinalIgnoreCase) == true);
+        public bool CanClose => _device.CanClose;
 
 
+        public void Open()
+        {
+            _device.Open();
+        }
+        public void Close()
+        {
+            _device.Close();
+        }
         public void UpdateFromDevice()
         {
             OnPropertyChanged(nameof(LastActivityTimeDisplay));

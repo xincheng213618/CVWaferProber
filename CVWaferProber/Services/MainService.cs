@@ -5,8 +5,6 @@ using CVCommCore;
 using CVWaferProber.Config;
 using CVWaferProber.Models;
 using CVWaferProber.ViewModels;
-using CVWPFCamImageCtrl;
-using CVWPFSpectrometerCtrl.ViewModels;
 using System.Text;
 using Application = System.Windows.Application;
 using ConnectionInfo = CVWaferProber.Models.ConnectionInfo;
@@ -18,11 +16,11 @@ namespace CVWaferProber.Services
         public static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(MainService));
 
         #region Events
-        public event EventHandler<TestCompletedEventArgs> TestingCompleted;
-        public event EventHandler<ChipViewModel> ChipSelected;
-        public event EventHandler<(DieViewModel?, DieViewModel)> PreAutoTestingNextDie;
+        public event EventHandler<TestCompletedEventArgs>? TestingCompleted;
+        public event EventHandler<ChipViewModel>? ChipSelected;
+        public event EventHandler<(DieViewModel?, DieViewModel)>? PreAutoTestingNextDie;
         #endregion
-        private MQTTService mqttService;
+        private FlowMQTTService mqttService;
         private MappingService mappingService;
         private MainViewModel _mainVM;
         //private GSWMProcessor? _wmProcessor;
@@ -34,7 +32,7 @@ namespace CVWaferProber.Services
         public MainViewModel MainVM => _mainVM;
         private MainService()
         {
-            mqttService = new MQTTService();
+            mqttService = new FlowMQTTService();
             mappingService = new MappingService();
             mappingService.ChipSelected += MappingService_ChipSelected;
             InitializeClientProber();

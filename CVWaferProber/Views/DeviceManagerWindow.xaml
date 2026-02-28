@@ -106,10 +106,10 @@
                     <Button Content="{DynamicResource SysDev_Refresh}" 
                             Command="{Binding RefreshCommand}" 
                             Padding="10,5" Margin="0,0,5,0" Width="70"/>
-                    <Button Style="{StaticResource OpenButtonStyle}"
+                    <Button Content="{DynamicResource SysDev_Open}" 
                             Command="{Binding OpenDeviceCommand}" 
                             Padding="10,5" Margin="5,0" Width="70"/>
-                    <Button Style="{StaticResource CloseButtonStyle}"
+                    <Button Content="{DynamicResource SysDev_Close}" 
                             Command="{Binding CloseDeviceCommand}" 
                             Padding="10,5" Margin="5,0" Width="70"/>
                 </StackPanel>
@@ -153,12 +153,8 @@
                   IsReadOnly="True"
                   SelectionMode="Single"
                   SelectionUnit="FullRow"
-                  GridLinesVisibility="Horizontal"
-                  HorizontalGridLinesBrush="#EEE"
-                  Background="White"
-                  BorderBrush="#DDD"
-                  BorderThickness="0,1"
-                  RowHeight="50"
+                  GridLinesVisibility="None"
+                  RowHeight="40"
                   FontSize="12"
                   CanUserSortColumns="True"
                   CanUserResizeColumns="True"
@@ -168,44 +164,18 @@
             <DataGrid.Resources>
                 <!-- 数据网格列样式 -->
                 <Style TargetType="DataGridColumnHeader">
-                    <Setter Property="Background" Value="#F5F5F5"/>
-                    <Setter Property="Foreground" Value="#333"/>
                     <Setter Property="FontWeight" Value="Bold"/>
                     <Setter Property="Height" Value="35"/>
-                    <Setter Property="BorderBrush" Value="#DDD"/>
-                    <Setter Property="BorderThickness" Value="0,0,1,1"/>
                     <Setter Property="Padding" Value="10,0"/>
                     <Setter Property="HorizontalContentAlignment" Value="Left"/>
-                </Style>
-
-                <Style TargetType="DataGridCell">
-                    <Setter Property="BorderThickness" Value="0"/>
-                    <Setter Property="VerticalAlignment" Value="Center"/>
-                    <Setter Property="Padding" Value="10,0"/>
-                    <Setter Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate TargetType="DataGridCell">
-                                <Border Background="{TemplateBinding Background}"
-                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                        Padding="{TemplateBinding Padding}">
-                                    <ContentPresenter VerticalAlignment="Center"/>
-                                </Border>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-                    <Style.Triggers>
-                        <Trigger Property="IsSelected" Value="True">
-                            <Setter Property="Background" Value="#E3F2FD"/>
-                            <Setter Property="Foreground" Value="Black"/>
-                        </Trigger>
-                    </Style.Triggers>
                 </Style>
             </DataGrid.Resources>
 
             <DataGrid.Columns>
                 <!-- 状态指示灯列 - 使用带前缀的资源 -->
-                <DataGridTemplateColumn Header="{DynamicResource SysDev_Status}" Width="120" SortMemberPath="IsLive">
+                <DataGridTemplateColumn Header="{DynamicResource SysDev_Status}" 
+                                        Width="100" 
+                                        SortMemberPath="IsLive">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">

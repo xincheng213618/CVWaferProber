@@ -1,5 +1,4 @@
 ﻿using CVWaferProber.Core.ViewModels;
-using System.Windows.Forms;
 using System.Windows.Input;
 using WaferComm.Client;
 using WaferComm.Core;

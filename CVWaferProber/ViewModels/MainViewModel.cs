@@ -61,18 +61,18 @@ namespace CVWaferProber.ViewModels
         public ICommand ExitCommand { get; }
         // 打开帮助命令
         public ICommand OpenHelpCommand { get; }
-        public ICommand OpenCommand { get; }
+        //public ICommand OpenCommand { get; }
         //打开机台设备调试窗口
         public ICommand OpenProberDeviceDebugCommand { get; }
         public ICommand OpenDeviceManagerCommand { get; }
         // 打开关于命令
         public ICommand OpenAboutCommand { get; }
 
-        public ICommand StartAutoTestCommand { get; }
-        public ICommand StopAutoTestCommand { get; }
-        public ICommand IVLTestCommand { get; }
+        //public ICommand StartAutoTestCommand { get; }
+        //public ICommand StopAutoTestCommand { get; }
+        //public ICommand IVLTestCommand { get; }
 
-        public ICommand RCRegCommand { get; }
+        //public ICommand RCRegCommand { get; }
         public ICommand OpenVEyeWindowCommand { get; }
 
 
@@ -488,16 +488,6 @@ namespace CVWaferProber.ViewModels
             ExternalWindow newWindow = new ExternalWindow();
             newWindow.Show();
         }
-        //private void RCReg()
-        //{
-        //    bool bR = rcService.RcRegist();
-        //    if (bR)
-        //    {
-        //        var flows = rcService.RcLoadFlows();
-
-        //       DataMappingVM.LoadFlow(flows);
-        //    }
-        //}
 
         private string testingStatus = $"{(string)Application.Current.FindResource("Maping.NoMeasurement")}";
         public string TestingStatus

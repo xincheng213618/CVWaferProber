@@ -11,16 +11,15 @@ using WaferComm.Core;
 
 namespace CVWaferProber.Services
 {
-    public class MQTTService : IFlowService
+    public class FlowMQTTService : IFlowService
     {
-        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(MQTTService));
+        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(FlowMQTTService));
         private MQTTNodeClient? mqttClientNode;
         private readonly EventAggregator eventAggregator;
-        //private FlowDeviceProxy? flowDeviceProxy;
 
         public ConnectionInfo ConnectionInfo { get; private set; }
 
-        public MQTTService()
+        public FlowMQTTService()
         {
             this.ConnectionInfo = new ConnectionInfo("Registed", "UnRegisted") { ServerIP = "127.0.0.1", Port = 8080 };
             this.eventAggregator = new EventAggregator();
@@ -52,7 +51,6 @@ namespace CVWaferProber.Services
                 IsDebugOut = false
             };
             this.mqttClientNode = new MQTTNodeClient(new ServiceNodeClientConfig("RC_local"), mqtt_cfg);
-            //this.mqttClientNode = CVMQTTClientNode.Instance.Init(new ServiceClientNodeConfig("RC_local"), mqtt_cfg);
 
             mqttClientNode.MQTTRegistedEvent += Mqtt_MQTTRegistedEvent;
             mqttClientNode.MQTTUnRegistedEvent += Mqtt_MQTTUnRegistedEvent;

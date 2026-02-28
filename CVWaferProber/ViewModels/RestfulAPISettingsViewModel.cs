@@ -8,12 +8,11 @@ using MessageBox = System.Windows.MessageBox;
 
 namespace CVWaferProber.ViewModels
 {
-    public class RcConnectionSettingsViewModel : ViewModelBase
+    public class RestfulAPISettingsViewModel : ViewModelBase
     {
         private readonly ConnectionInfo ConnectionInfo;
-        private readonly RCRestService? _proberClient;
+        private readonly FlowRestfulService _restfulAPI;
 
-        //private string _serverIP = "127.0.0.1";
         public string ServerIP
         {
             get => ConnectionInfo.ServerIP;
@@ -23,7 +22,6 @@ namespace CVWaferProber.ViewModels
             }
         }
 
-        //private int _port = 8080;
         public int Port
         {
             get => ConnectionInfo.Port;
@@ -55,20 +53,18 @@ namespace CVWaferProber.ViewModels
         public ICommand DisconnectCommand { get; }
         public ICommand CloseCommand { get; }
 
-        public RcConnectionSettingsViewModel(RCRestService? restClient)
+        public RestfulAPISettingsViewModel(FlowRestfulService restClient)
         {
-            _proberClient = restClient;
+            this._restfulAPI = restClient;
             this.ConnectionInfo = restClient.ConnectionInfo;
             // Initialize with current connection info
             ServerIP = ConnectionInfo.ServerIP;
             Port = ConnectionInfo.Port;
 
-            SetConnected(_proberClient.IsRegistered);
+            SetConnected(_restfulAPI.IsRegistered);
 
             // Subscribe to service events
-            _proberClient.Subscribe<ConnectionStateChangedEvent>(OnConnectionStatusChanged);
-            //_proberClient.EventAggregator.Subscribe<ConnectionStateChangedEvent>(OnConnectionStatusChanged);
-            //_tcpClientService.StatusMessage += OnStatusMessageChanged;
+            _restfulAPI.Subscribe<ConnectionStateChangedEvent>(OnConnectionStatusChanged);
 
             // Initialize commands
             ConnectCommand = new RelayCommand(
@@ -119,7 +115,7 @@ namespace CVWaferProber.ViewModels
 
             try
             {
-                bool bR = _proberClient.RcRegist();
+                bool bR = _restfulAPI.RcRegist();
             }
             catch (Exception ex)
             {
@@ -130,7 +126,7 @@ namespace CVWaferProber.ViewModels
 
         private void Disconnect()
         {
-            _proberClient.RcUnRegist();
+            _restfulAPI.RcUnRegist();
         }
 
         private void CloseWindow(object? parameter)
@@ -146,8 +142,7 @@ namespace CVWaferProber.ViewModels
 
         public void Cleanup()
         {
-            _proberClient.Unsubscribe<ConnectionStateChangedEvent>(OnConnectionStatusChanged);
-            //_tcpClientService.StatusMessage -= OnStatusMessageChanged;
+            _restfulAPI.Unsubscribe<ConnectionStateChangedEvent>(OnConnectionStatusChanged);
         }
     }
 }

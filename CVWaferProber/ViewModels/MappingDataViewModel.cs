@@ -7,7 +7,6 @@ using CVWaferProber.Config;
 using CVWaferProber.Core;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
-using CVWaferProber.Core.Restful.DTO;
 using CVWaferProber.Core.ViewModels;
 using CVWaferProber.Models;
 using CVWaferProber.Services;
@@ -1298,13 +1297,6 @@ namespace CVWaferProber.ViewModels
                 logger.InfoFormat("Summary results automatically exported：{0}", savePath);
             }
             catch (Exception ex) { logger.Error("Failed to export Summary results", ex); }
-        }
-
-        public void LoadFlow(List<RespDataFlowTempDTO>? flows)
-        {
-            //FlowItems.Clear();
-            //SelectedFlow = null;
-            //if (flows != null) { foreach (var flow in flows) FlowItems.Add(new FlowViewModel(flow)); if (FlowItems.Count > 0) SelectedFlow = FlowItems[FlowItems.Count - 1]; }
         }
 
         private void ResetStatus(object? obj)

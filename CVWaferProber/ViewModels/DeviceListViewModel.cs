@@ -9,7 +9,7 @@ namespace CVWaferProber.ViewModels
 {
     public class DeviceListViewModel : ViewModelBase
     {
-        private ObservableCollection<DeviceItemViewModel> _devices;
+        private ObservableCollection<DeviceItemViewModel> _deviceVMs;
         private ICollectionView _filteredDevices;
         private DeviceItemViewModel _selectedDevice;
         private string _searchText = string.Empty;
@@ -18,8 +18,8 @@ namespace CVWaferProber.ViewModels
 
         public DeviceListViewModel()
         {
-            Devices = new ObservableCollection<DeviceItemViewModel>();
-            _filteredDevices = CollectionViewSource.GetDefaultView(Devices);
+            DeviceVMs = new ObservableCollection<DeviceItemViewModel>();
+            _filteredDevices = CollectionViewSource.GetDefaultView(DeviceVMs);
             _filteredDevices.Filter = FilterDevices;
 
             OpenDeviceCommand = new RelayCommand(OpenDevice, CanOpenDevice);
@@ -27,12 +27,12 @@ namespace CVWaferProber.ViewModels
             RefreshCommand = new RelayCommand(RefreshDevices);
         }
 
-        public ObservableCollection<DeviceItemViewModel> Devices
+        public ObservableCollection<DeviceItemViewModel> DeviceVMs
         {
-            get => _devices;
+            get => _deviceVMs;
             set
             {
-                _devices = value;
+                _deviceVMs = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(TotalCount));
                 OnPropertyChanged(nameof(OnlineCount));
@@ -90,9 +90,9 @@ namespace CVWaferProber.ViewModels
             }
         }
 
-        public int TotalCount => Devices.Count;
-        public int OnlineCount => Devices.Count(d => d.IsLive);
-        public int OfflineCount => Devices.Count(d => !d.IsLive);
+        public int TotalCount => DeviceVMs.Count;
+        public int OnlineCount => DeviceVMs.Count(d => d.IsLive);
+        public int OfflineCount => DeviceVMs.Count(d => !d.IsLive);
 
         public ICommand OpenDeviceCommand { get; }
         public ICommand CloseDeviceCommand { get; }
@@ -100,19 +100,19 @@ namespace CVWaferProber.ViewModels
 
         private bool FilterDevices(object item)
         {
-            if (item is not DeviceItemViewModel device)
+            if (item is not DeviceItemViewModel deviceVM)
                 return false;
 
             // 在线过滤
-            if (ShowOnlineOnly && !device.IsLive)
+            if (ShowOnlineOnly && !deviceVM.IsLive)
                 return false;
 
             // 搜索文本过滤
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
-                return device.DeviceName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-                       device.DeviceCode.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-                       device.ServiceCode.Contains(SearchText, StringComparison.OrdinalIgnoreCase);
+                return deviceVM.DeviceName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                       deviceVM.DeviceCode.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                       deviceVM.ServiceCode.Contains(SearchText, StringComparison.OrdinalIgnoreCase);
             }
 
             return true;
@@ -120,19 +120,16 @@ namespace CVWaferProber.ViewModels
 
         private bool CanOpenDevice(object parameter)
         {
-            var device = parameter as DeviceItemViewModel ?? SelectedDevice;
-            return device != null && device.CanOpen;
+            var deviceVM = parameter as DeviceItemViewModel ?? SelectedDevice;
+            return deviceVM != null && deviceVM.CanOpen;
         }
 
         private void OpenDevice(object parameter)
         {
-            var device = parameter as DeviceItemViewModel ?? SelectedDevice;
-            if (device != null)
+            var deviceVM = parameter as DeviceItemViewModel ?? SelectedDevice;
+            if (deviceVM != null)
             {
-                //device.IsLive = true;
-                //device.DeviceStatus = "运行中";
-
-                //StatusMessage = $"设备 {device.DeviceName} 已打开";
+                deviceVM.Open();
                 FilteredDevices.Refresh();
                 OnPropertyChanged(nameof(OnlineCount));
                 OnPropertyChanged(nameof(OfflineCount));
@@ -141,19 +138,16 @@ namespace CVWaferProber.ViewModels
 
         private bool CanCloseDevice(object parameter)
         {
-            var device = parameter as DeviceItemViewModel ?? SelectedDevice;
-            return device != null && device.CanClose;
+            var deviceVM = parameter as DeviceItemViewModel ?? SelectedDevice;
+            return deviceVM != null && deviceVM.CanClose;
         }
 
         private void CloseDevice(object parameter)
         {
-            var device = parameter as DeviceItemViewModel ?? SelectedDevice;
-            if (device != null)
+            var deviceVM = parameter as DeviceItemViewModel ?? SelectedDevice;
+            if (deviceVM != null)
             {
-                //device.IsLive = false;
-                //device.DeviceStatus = "已关闭";
-
-                //StatusMessage = $"设备 {device.DeviceName} 已关闭";
+                deviceVM.Close();
                 FilteredDevices.Refresh();
                 OnPropertyChanged(nameof(OnlineCount));
                 OnPropertyChanged(nameof(OfflineCount));
@@ -193,7 +187,7 @@ namespace CVWaferProber.ViewModels
         public void AddDevice(PhysicDeviceProxy device)
         {
             var vm = new DeviceItemViewModel(device);
-            Devices.Add(vm);
+            DeviceVMs.Add(vm);
             FilteredDevices.Refresh();
             OnPropertyChanged(nameof(TotalCount));
             OnPropertyChanged(nameof(OnlineCount));
@@ -203,10 +197,10 @@ namespace CVWaferProber.ViewModels
 
         public void RemoveDevice(string deviceCode)
         {
-            var device = Devices.FirstOrDefault(d => d.DeviceCode == deviceCode);
+            var device = DeviceVMs.FirstOrDefault(d => d.DeviceCode == deviceCode);
             if (device != null)
             {
-                Devices.Remove(device);
+                DeviceVMs.Remove(device);
                 FilteredDevices.Refresh();
                 OnPropertyChanged(nameof(TotalCount));
                 OnPropertyChanged(nameof(OnlineCount));
@@ -221,7 +215,7 @@ namespace CVWaferProber.ViewModels
             foreach (var pro_device in pro_devices)
             {
                 var vm = new DeviceItemViewModel(pro_device);
-                _devices.Add(vm);
+                _deviceVMs.Add(vm);
             }
         }
     }

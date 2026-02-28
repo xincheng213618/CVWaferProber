@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <PlatformTarget>x64</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <Platforms>AnyCPU;x64</Platforms>
     <UseWindowsForms>True</UseWindowsForms>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -73,6 +73,9 @@
     <Content Include="LOG.ico" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="ColorVision.API.Restful">
+      <HintPath>..\DLL\ColorVision.API.Restful.dll</HintPath>
+    </Reference>
     <Reference Include="ColorVision.Core.Message">
       <HintPath>..\DLL\ColorVision.Core.Message.dll</HintPath>
     </Reference>

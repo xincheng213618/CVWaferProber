@@ -12,12 +12,14 @@ namespace WaferComm.Client
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(WaferProberTCPClient));
 
-        private TcpClient _tcpClient;
-        private NetworkStream _stream;
+        private TcpClient? _tcpClient;
+        private NetworkStream? _stream;
         private double readTimeout = 10;//Second
-        private CancellationTokenSource _receiveCts;
+        private CancellationTokenSource? _receiveCts;
         private readonly StringBuilder _receiveBuffer = new StringBuilder();
         private readonly object _sendLock = new object();
+        private string _lastConnectedIp = string.Empty;
+        private int _lastConnectedPort;
 
         public IEventAggregator EventAggregator { get; }
         public bool IsConnected => _tcpClient?.Connected == true;
@@ -243,9 +245,6 @@ namespace WaferComm.Client
                 // 忽略清理错误
             }
         }
-        // 添加字段来记录最后连接的信息
-        private string _lastConnectedIp;
-        private int _lastConnectedPort;
         private async Task<bool> TryRecoverConnectionAsync()
         {
             try
