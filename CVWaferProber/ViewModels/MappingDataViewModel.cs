@@ -543,6 +543,20 @@ namespace CVWaferProber.ViewModels
             _progressUpdateTimer = new System.Timers.Timer(1000); // 1秒更新一次
             _progressUpdateTimer.Elapsed += OnProgressUpdateTimerElapsed;
             _progressUpdateTimer.AutoReset = true;
+            // 订阅芯片选中事件（核心）
+            CustomMappingVM.ChipSelected += (sender, chip) =>
+            {
+                if (chip != null && chip.Id.HasValue)
+                {
+                    // 调用定位方法
+                    LocateDieInDataGrid(chip.Id.Value);
+                }
+                else
+                {
+                    // 取消选中时清空DataGrid选中状态
+                    SelectedItem = null;
+                }
+            };
             // 初始化命令
             SearchCommand = new RelayCommand(ExecuteSearch);
             ClearMappingCommand = new RelayCommand(_ => ClearMapping());
@@ -558,7 +572,7 @@ namespace CVWaferProber.ViewModels
             InvertSelectIVLCommand = new RelayCommand(ExecuteInvertSelectIVL);
             InvertSelectEQECommand = new RelayCommand(ExecuteInvertSelectEQE);
             InvertSelectVAMCommand = new RelayCommand(ExecuteInvertSelectVAM);
-
+           
             // 初始化集合事件
             TestResults.CollectionChanged += AOIItems_CollectionChanged;
             TestResults.CollectionChanged += IVLItems_CollectionChanged;
@@ -576,6 +590,7 @@ namespace CVWaferProber.ViewModels
             ProberClientService.Instance.InitializeMapVM(this);
             InitColumnConfigs();
             InitAutoSave();
+
         }
         #endregion
 
@@ -2447,6 +2462,55 @@ namespace CVWaferProber.ViewModels
             //}
         }
         #endregion
+        /// <summary>
+        /// 根据芯片ID定位并选中DataGrid中的对应行
+        /// </summary>
+        /// <param name="chipId">芯片ID</param>
+        public void LocateDieInDataGrid(uint chipId)
+        {
+            // 空值保护
+            if (_dataGrid == null || TestResults == null || !TestResults.Any())
+            {
+                logger.Warn("DataGrid or TestResults is empty, cannot locate die");
+                return;
+            }
 
+            // 在UI线程中执行定位操作
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                // 1. 根据ID查找对应的DieViewModel
+                var targetDie = TestResults.FirstOrDefault(die => die.Id == chipId);
+                if (targetDie == null)
+                {
+                    logger.WarnFormat("Die with ID {0} not found in TestResults", chipId);
+                    return;
+                }
+
+                // 2. 设置选中项
+                selfClick = false; // 避免循环触发
+                SelectedItem = targetDie;
+
+                // 3. 强制DataGrid滚动到选中行并高亮
+                if (_dataGrid.SelectedItem != null)
+                {
+                    // 滚动到选中行
+                    _dataGrid.ScrollIntoView(_dataGrid.SelectedItem);
+
+                    // 强制更新布局，确保滚动生效
+                    _dataGrid.UpdateLayout();
+
+                    // 可选：高亮选中行（如果需要）
+                    var row = _dataGrid.ItemContainerGenerator.ContainerFromItem(_dataGrid.SelectedItem) as DataGridRow;
+                    if (row != null)
+                    {
+                        row.Focus(); // 聚焦行
+                        row.IsSelected = true; // 确保选中
+                    }
+
+                    logger.DebugFormat("Successfully located Die ID {0} in DataGrid (Row:{1}, Column:{2})",
+                        chipId, targetDie.MapY, targetDie.MapX);
+                }
+            });
+        }
     }
 }

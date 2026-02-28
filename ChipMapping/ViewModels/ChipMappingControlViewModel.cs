@@ -236,6 +236,7 @@ namespace ChipMapping.ViewModels
                 }
             }
         }
+
         // 新增：批量更新选中状态并统计数量
         /// <summary>
         /// 批量设置芯片选中状态
