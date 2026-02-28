@@ -34,8 +34,6 @@ namespace CVWaferProber.Services
         private MainService()
         {
             mqttService = new FlowMQTTService();
-            mappingService = new MappingService();
-            mappingService.ChipSelected += MappingService_ChipSelected;
             InitializeClientProber();
             InitializeBreakpointTimer(); // 新增
         }
@@ -63,6 +61,8 @@ namespace CVWaferProber.Services
         public void InitializeService(MainViewModel mainVM, CVVAMAnalyzer _cVVAMAnalyzer, CVWPFSpectrometerCtrl.CVSpectrumAnalyzer ivlAnalyzer)
         {
             this._mainVM = mainVM;
+            mappingService = new MappingService(mainVM.CustomMappingVM);
+            mappingService.ChipSelected += MappingService_ChipSelected;
             //
             BaseSerivce ivlService = new IVLService(mainVM, mqttService, ivlAnalyzer);
             flowServices[CVWaferProberFlowType.IVL] = ivlService;
