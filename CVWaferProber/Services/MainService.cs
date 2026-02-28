@@ -369,9 +369,9 @@ namespace CVWaferProber.Services
                     //logger.InfoFormat("DoAutoDieFlowExecAsync={0}/{1}", dieNext.die.MapAxisToString(), dieNext.die.Status.ToString());
                     Task.Factory.StartNew(async () =>
                     {
-                        await MoveToDieAndTestingAsync(item.CurSelectedWPFlow, dieNext.die, dieNext.diePre == null, item.HasNext, true);
+                        //await MoveToDieAndTestingAsync(item.CurSelectedWPFlow, dieNext.die, dieNext.diePre == null, item.HasNext, true);
                         //TODO Testing
-                        //await ExecuteDieTestWithProgress(item.CurSelectedWPFlow, dieNext.die, item.HasNext, true);
+                        await ExecuteDieTestWithProgress(item.CurSelectedWPFlow, dieNext.die, item.HasNext, true);
                     });
                 }
                 else if (IsDieCompleted(dieNext.die))
