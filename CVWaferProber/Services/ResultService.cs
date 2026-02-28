@@ -97,6 +97,11 @@ namespace CVWaferProber.Services
             Map(m => m.SerialNumber).Name("序列号").Index(3);
             Map(m => m.Status).Name("状态").Index(4);
             Map(m => m.DataValue).Name("均匀性").Index(5);
+            Map(m => m.TotalTime).Name("总用时").Index(6);
+            Map(m => m.StartTestTime).Name("开始时间").Index(7);
+            Map(m => m.EndTestTime).Name("结束时间").Index(8);
+
+
         }
     }
 

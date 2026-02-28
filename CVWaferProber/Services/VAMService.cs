@@ -32,8 +32,8 @@ namespace CVWaferProber.Services
             return ChipStatus.FAILED;
         }
 
-        // 核心修复：异步方法全程await，耗时操作后台执行，UI事件切回主线程
-        protected override async Task<ChipStatus> FlowResultDisplayAsync(DieViewModel dieViewModel)
+        // 异步方法全程await，耗时操作后台执行，UI事件切回主线程
+        protected override async Task<ChipStatus> FlowResultDisplay(DieViewModel dieViewModel)
         {
             if (string.IsNullOrEmpty(dieViewModel.SerialNumber))
             {
@@ -61,11 +61,20 @@ namespace CVWaferProber.Services
 
                         // 3. 延迟1秒导出：异步延迟（不阻塞），导出事件仍切回UI线程
                         await Task.Delay(1000); // 替换ContinueWith，用await更安全
-                        await RunOnUiThreadAsync(() =>
-                            EventAggregator?.Publish(new VAMAutoExportCsvEvent
-                            {
-                                CvcieFilePath = cieFileName
-                            }));
+                        await Task.Run(() =>
+                        {
+                            // 导出操作后台执行，避免阻塞UI
+                            RunOnUiThread(() =>
+                                EventAggregator?.Publish(new VAMAutoExportCsvEvent
+                                {
+                                    CvcieFilePath = cieFileName
+                                }));
+                        });
+                        //await RunOnUiThreadAsync(() =>
+                        //    EventAggregator?.Publish(new VAMAutoExportCsvEvent
+                        //    {
+                        //        CvcieFilePath = cieFileName
+                        //    }));
 
                         return ChipStatus.VAM_COMPLETED;
                     }
@@ -76,8 +85,9 @@ namespace CVWaferProber.Services
                 }
                 else
                 {
-                    logger.ErrorFormat("VAM result is empty or count > 1 => {0}",
-                        results != null ? results.Count : 0);
+                    return ChipStatus.FAILED; // 结果为空或多于1条，直接失败
+                    //logger.ErrorFormat("VAM result is empty or count > 1 => {0}",
+                    //    results != null ? results.Count : 0);
                 }
             }
             catch (Exception ex)

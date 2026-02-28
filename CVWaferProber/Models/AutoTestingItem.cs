@@ -7,17 +7,23 @@ namespace CVWaferProber.Models
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(AutoTestingItem));
         public List<DieViewModel> TestingDieVMList { get; private set; }
-        public WPFlowViewModel CurSelectedWPFlow { get; private set; }
-        public int CurTestingIndex { get; private set; }
+        public WPFlowViewModel? CurSelectedWPFlow { get; private set; }
+        public int CurTestingIndex { get;  set; }
         public int ErrorCount { get; private set; }
 
         public AutoTestingItem(List<DieViewModel> testingDieVMList, WPFlowViewModel curSelectedWPFlow)
         {
             TestingDieVMList = testingDieVMList;
+            CurTestingIndex = -1;
             CurSelectedWPFlow = curSelectedWPFlow;
             CurTestingIndex = 0;
+            IsPaused = false;
         }
-
+        // 恢复断点时使用
+        public void SetCurrentIndex(int index)
+        {
+            CurTestingIndex = index;
+        }
         public bool IsEnd { get => TestingDieVMList.Count == CurTestingIndex; }
 
         public bool HasNext { get => TestingDieVMList.Count > CurTestingIndex; }

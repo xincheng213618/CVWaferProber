@@ -13,53 +13,106 @@ namespace CVWaferProber.Core
         private static readonly string AppFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "CVWaferProber");
-        private static readonly string FilePath = Path.Combine(AppFolder, "testresults.json");
-
-        public static void EnsureFolder() => Directory.CreateDirectory(AppFolder);
-
+        //private static readonly string FilePath = Path.Combine(AppFolder, "testresults.json");
+        // 会话文件夹：AppData\CVWaferProber\Sessions
+        private static readonly string SessionsFolder = Path.Combine(AppFolder, "Sessions");
+        private static void EnsureFolders()
+        {
+            Directory.CreateDirectory(AppFolder);
+            Directory.CreateDirectory(SessionsFolder);
+        }
         public static async Task SaveAsync(IEnumerable<TestResultDto> items)
         {
             try
             {
-                EnsureFolder();
-                var json = JsonConvert.SerializeObject(items, Formatting.Indented,
-                    new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
-                await File.WriteAllTextAsync(FilePath, json);
+                EnsureFolders();
+                string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                string filePath = Path.Combine(SessionsFolder, $"testresults_{timestamp}.json");
+
+                var json = JsonConvert.SerializeObject(items, Formatting.Indented);
+                await File.WriteAllTextAsync(filePath, json);
             }
-            catch
+            catch (Exception ex)
             {
-                // 不抛出到 UI，调用方可记录日志
+                System.Diagnostics.Debug.WriteLine($"保存失败: {ex}");
             }
         }
 
-        public static List<TestResultDto> Load()
-        {
-            try
-            {
-                if (!File.Exists(FilePath)) return new List<TestResultDto>();
-                var json = File.ReadAllText(FilePath);
-                var list = JsonConvert.DeserializeObject<List<TestResultDto>>(json);
-                return list ?? new List<TestResultDto>();
-            }
-            catch
-            {
-                return new List<TestResultDto>();
-            }
-        }
+        //public static List<TestResultDto> Load()
+        //{
+        //    try
+        //    {
+        //        if (!File.Exists(FilePath)) return new List<TestResultDto>();
+        //        var json = File.ReadAllText(FilePath);
+        //        var list = JsonConvert.DeserializeObject<List<TestResultDto>>(json);
+        //        return list ?? new List<TestResultDto>();
+        //    }
+        //    catch
+        //    {
+        //        return new List<TestResultDto>();
+        //    }
+        //}
 
         public static async Task<List<TestResultDto>> LoadAsync()
         {
             try
             {
-                if (!File.Exists(FilePath)) return new List<TestResultDto>();
-                var json = await File.ReadAllTextAsync(FilePath);
-                var list = JsonConvert.DeserializeObject<List<TestResultDto>>(json);
-                return list ?? new List<TestResultDto>();
+                EnsureFolders();
+                var files = Directory.EnumerateFiles(SessionsFolder, "testresults_*.json")
+                    .OrderByDescending(f => new FileInfo(f).LastWriteTime)
+                    .ToList();
+
+                if (files.Count == 0) return new List<TestResultDto>();
+
+                var json = await File.ReadAllTextAsync(files[0]);
+                return JsonConvert.DeserializeObject<List<TestResultDto>>(json) ?? new List<TestResultDto>();
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Failed to load: {ex}");
                 return new List<TestResultDto>();
             }
+        }
+        public static void CleanupOldSessions(int keepCount = 10)
+        {
+            try
+            {
+                EnsureFolders();
+                var sessionFiles = Directory.EnumerateFiles(SessionsFolder, "testresults_*.json")
+                    .Select(f => new FileInfo(f))
+                    .OrderByDescending(f => f.LastWriteTime)
+                    .ToList();
+
+                if (sessionFiles.Count <= keepCount)
+                    return;
+
+                var filesToDelete = sessionFiles.Skip(keepCount).ToList();
+                foreach (var file in filesToDelete)
+                {
+                    try
+                    {
+                        File.Delete(file.FullName);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"删除旧会话文件失败 {file.Name}: {ex.Message}");
+                    }
+                }
+
+                System.Diagnostics.Debug.WriteLine($"清理了 {filesToDelete.Count} 个旧会话文件");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"清理旧会话失败: {ex.Message}");
+            }
+        }
+        public static async Task CleanupOldSessionsAsync(int keepCount = 10)
+        {
+            // 用Task.Run包装IO操作，不阻塞UI
+            await Task.Run(() =>
+            {
+                CleanupOldSessions(keepCount);
+            }).ConfigureAwait(false);
         }
     }
 
@@ -91,7 +144,8 @@ namespace CVWaferProber.Core
         //public string Pressure { get; set;}
         //public int TouchDownCounts { get; set;}
         //public string ProbingCardSN { get; set;}
-
+        // 新增：保存精确的枚举值
+        public string ChipStatus { get; set; }
 
         public static TestResultDto FromObject(object die)
         {
@@ -107,6 +161,8 @@ namespace CVWaferProber.Core
                 IsEQEEnabled = ToBool(Get("IsEQEEnabled")),
                 IsVAMEnabled = ToBool(Get("IsVAMEnabled")),
                 SerialNumber = ToStr(Get("SerialNumber")),
+                // 通过反射获取Status
+                ChipStatus = ToStr(Get("Status")),
                 DisplayStatus = ToStr(Get("DisplayStatus")),
                 DataValue = ToStr(Get("DataValue")),
                 StartTestTime = ToDate(Get("StartTestTime")),

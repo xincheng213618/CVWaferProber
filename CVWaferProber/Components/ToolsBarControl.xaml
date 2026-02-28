@@ -167,7 +167,7 @@
                 Content="{DynamicResource BtnPauseAutoTest}"
                 Style="{StaticResource IndustrialToolbarButtonStyle}" />
             <Button
-                Width="150"
+                Width="200"
                 Height="30"
                 Command="{Binding StopAutoTestCommand}"
                 Content="{DynamicResource BtnStopAutoTest}"

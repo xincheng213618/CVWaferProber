@@ -246,18 +246,27 @@
                         <ComboBox
                             x:Name="ViewSwitchComboBox"
                             VerticalAlignment="Center"
-                            SelectedIndex="0"
+                            SelectedIndex="1"
                             SelectionChanged="ViewSwitchComboBox_SelectionChanged">
                             <ComboBoxItem Tag="Analysis">Analysis image</ComboBoxItem>
                             <ComboBoxItem Tag="Camera">Camera Measurement</ComboBoxItem>
+
                         </ComboBox>
                     </StackPanel>
+                    <CheckBox
+                        x:Name="RealTimePreviewCheckBox"
+                        Margin="10,0"
+                        VerticalAlignment="Center"
+                        Content="{DynamicResource Image.real-timepreview}"
+                        IsChecked="{Binding IsRealTimePreviewEnabled}" />
                 </StackPanel>
                 <!--  ItemsSource="{Binding ImageResults}"  -->
                 <DataGrid
                     x:Name="MainImageDataGrid"
                     AutoGenerateColumns="False"
                     IsReadOnly="True"
+                    ItemsSource="{Binding CurrentDisplayCollection}"
+                    SelectedItem="{Binding SelectedImageItem, Mode=TwoWay}"
                     SelectionChanged="MainImageDataGrid_SelectionChanged"
                     SelectionMode="Single">
                     <DataGrid.Columns>

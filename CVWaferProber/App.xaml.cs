@@ -2,6 +2,7 @@
 using CVWaferProber.Language;
 using CVWaferProber.Models;
 using CVWaferProber.Services;
+using CVWaferProber.ViewModels;
 using CVWaferProber.Views;
 using log4net;
 using System.Diagnostics;
@@ -9,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Application = System.Windows.Application;
 using Brushes = System.Windows.Media.Brushes;
 using Color = System.Windows.Media.Color;
@@ -50,6 +52,7 @@ namespace CVWaferProber
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            base.OnStartup(e);
             // 尝试创建命名的 Mutex
             _mutex = new Mutex(true, AppMutexName, out _isFirstInstance);
 
@@ -88,14 +91,32 @@ namespace CVWaferProber
 
             log.Info("Application starting...");
 
-            base.OnStartup(e);
 
+            // 设置未处理异常捕获
+            DispatcherUnhandledException += App_DispatcherUnhandledException;
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            
             _mainWindow = new DockMainWindow();
             Application.Current.MainWindow = _mainWindow;
 
             // 初始化语言（读取Settings中的默认语言）
             AppSettingsManager.InitializeLanguage();
+            RegisterGlobalStyles();
+           
 
+            
+            try
+            {
+                // 调用DLL初始化方法
+                CV_Ali_initial();
+                Console.WriteLine("CV_algorithm.dll Initialization successful");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"DLL Initialization failed：{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown(); // 初始化失败则关闭应用
+                return;
+            }
             // 1. 创建并显示启动窗口
             _splash = new CVWaferProber.Views.WaferProberStartupWindow();
             _splash.AddStartupTasks(new MainStartupTask());
@@ -105,6 +126,12 @@ namespace CVWaferProber
             _splash.StartupCompleted += OnStartupCompleted;
             _splash.Show();
 
+            _mainWindow = new DockMainWindow();
+
+        }
+        private DockMainWindow _mainWindow;
+        private void RegisterGlobalStyles()
+        {
             // 1. 定义DataGrid行的样式（覆盖选中状态）
             var rowStyle = new Style(typeof(DataGridRow))
             {
@@ -171,45 +198,8 @@ namespace CVWaferProber
             // 3. 注册全局样式
             Application.Current.Resources.Add(typeof(DataGridRow), rowStyle);
             Application.Current.Resources.Add(typeof(DataGridCell), cellStyle);
-            try
-            {
-                // 调用DLL初始化方法
-                CV_Ali_initial();
-                Console.WriteLine("CV_algorithm.dll Initialization successful");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"DLL Initialization failed：{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                Shutdown(); // 初始化失败则关闭应用
-            }
-            // 新增：应用启动后尝试调用 ResetStatusCommand（通过 Dispatcher 延迟，确保 MainViewModel 已构造）
-            //try
-            //{
-            //    Dispatcher.BeginInvoke(new Action(() =>
-            //    {
-            //        try
-            //        {
-            //            var vm = MainViewModel.Instance;
-            //            if (vm != null && vm.ResetStatusCommand != null)
-            //            {
-            //                if (vm.ResetStatusCommand.CanExecute(null))
-            //                    vm.ResetStatusCommand.Execute(null);
-            //            }
-            //        }
-            //        catch (Exception ex)
-            //        {
-            //            log.Warn("Invoke ResetStatusCommand failed.", ex);
-            //        }
-            //    }), DispatcherPriority.ApplicationIdle);
-            //}
-            //catch (Exception dex)
-            //{
-            //    log.Warn("Failed to schedule ResetStatusCommand invocation.", dex);
-            //}
         }
-        private DockMainWindow? _mainWindow;
-
-        private void OnStartupCompleted(object? sender, EventArgs e)
+        private void OnStartupCompleted(object sender, EventArgs e)
         {
             // 关闭启动窗口
             _splash.Close();
@@ -287,6 +277,63 @@ namespace CVWaferProber
                 ShowWindow(hWnd, SW_RESTORE);
             }
             SetForegroundWindow(hWnd);
+        }
+        private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            // 程序崩溃前尝试保存断点
+            try
+            {
+                var mainService = MainService.Instance;
+                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+
+                if (mappingVM != null && (mainService.autoTestingItem != null || mappingVM.IsManualTesting))
+                {
+                    // 同步保存断点（不能异步，因为程序即将退出）
+                    Task.Run(async () =>
+                    {
+                        await BreakpointMemoryService.SaveBreakpointAsync(
+                            mappingVM,
+                            mainService,
+                            mainService.autoTestingItem?.CurSelectedWPFlow);
+                    }).Wait(TimeSpan.FromSeconds(2)); // 最多等待2秒
+                }
+            }
+            catch
+            {
+                // 忽略保存失败，程序即将崩溃
+            }
+        }
+
+        private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        {
+            log.Error("Unhandled exception", e.Exception);
+
+            // 尝试保存断点
+            try
+            {
+                var mainService = MainService.Instance;
+                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+
+                if (mappingVM != null && (mainService.autoTestingItem != null || mappingVM.IsManualTesting))
+                {
+                    Task.Run(async () =>
+                    {
+                        await BreakpointMemoryService.SaveBreakpointAsync(
+                            mappingVM,
+                            mainService,
+                            mainService.autoTestingItem?.CurSelectedWPFlow);
+                    });
+                }
+            }
+            catch
+            {
+                // 忽略
+            }
+
+            MessageBox.Show($"程序发生未处理异常：{e.Exception.Message}\n\n程序将尝试保存当前状态后退出。",
+                "程序异常", MessageBoxButton.OK, MessageBoxImage.Error);
+
+            e.Handled = true;
         }
     }
 

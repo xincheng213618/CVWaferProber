@@ -3,6 +3,7 @@ using ColorVision.Services.Proxy;
 using CVAVMControl;
 using CVCommCore;
 using CVWaferProber.Config;
+using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Models;
 using CVWaferProber.ViewModels;
 using System.Text;
@@ -36,6 +37,7 @@ namespace CVWaferProber.Services
             mappingService = new MappingService();
             mappingService.ChipSelected += MappingService_ChipSelected;
             InitializeClientProber();
+            InitializeBreakpointTimer(); // 新增
         }
 
         private void MappingService_ChipSelected(object? sender, ChipViewModel e)
@@ -106,6 +108,29 @@ namespace CVWaferProber.Services
             //发送结果给机台
             proberClientService?.SendResultAsync(dieVM);
             //
+            try
+            {
+                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                if (mappingVM != null)
+                {
+                    Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await mappingVM.SaveLastSessionAsync().ConfigureAwait(false);
+                            if (logger.IsInfoEnabled) logger.Info("Auto-saved last session after die completion");
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.Warn("Auto-save last session failed after die completion", ex);
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Warn("Enqueue auto-save failed", ex);
+            }
             if (autoTestingItem != null)
             {
                 if(logger.IsInfoEnabled) logger.InfoFormat("IsPaused={0},Status={1} => {2}",
@@ -142,6 +167,8 @@ namespace CVWaferProber.Services
             {
                 DoAutoTestEnd(dieVM, true);
             }
+            // 在每个Die完成时强制保存断点
+            Task.Run(async () => await SaveBreakpointAsync());
         }
         /// <summary>
         /// 更新Die测试完成进度
@@ -166,13 +193,13 @@ namespace CVWaferProber.Services
                         mappingVM.UpdateTotalProgress();
                     });
 
-                    if (logger.IsDebugEnabled)
-                        logger.DebugFormat($"进度更新: {dieVM.MapAxisToString()} 测试完成, 当前完成数: {_mainVM.DataMappingVM.CompletedTestCount}");
+                    //if (logger.IsDebugEnabled)
+                    //    logger.DebugFormat($"进度更新: {dieVM.MapAxisToString()} 测试完成, 当前完成数: {MainViewModel.Instance.DataMappingVM.CompletedTestCount+1 }");
                 }
             }
             catch (Exception ex)
             {
-                logger.Error("更新进度失败 (Complete)", ex);
+                logger.Error("Update progress failed (Complete)", ex);
             }
         }
         private bool IsTestBreak(DieViewModel dieVM, int errorCount)
@@ -207,10 +234,40 @@ namespace CVWaferProber.Services
                         _mainVM.DataMappingVM.CurrentDieInfo = "Test completed";
                     }
                 });
+
             }
 
             if (e.IsAuto) autoTestingItem = null;
             DoAutoTestEnd(e.DieVM, e.IsAuto);
+            // —— 新增：整批测试结束后强制保存最后会话
+            try
+            {
+                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                if (mappingVM != null)
+                {
+                    Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await mappingVM.SaveLastSessionAsync().ConfigureAwait(false);
+                            if (logger.IsInfoEnabled) logger.Info("Auto-saved last session after testing completed");
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.Warn("Auto-save last session failed after testing completed", ex);
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Warn("Enqueue final auto-save failed", ex);
+            }
+            // 测试完成时清除断点
+            if (e.IsAuto && autoTestingItem == null)
+            {
+                BreakpointMemoryService.ClearBreakpoint();
+            }
         }
 
         #region Window Message
@@ -519,6 +576,11 @@ namespace CVWaferProber.Services
                 logger.Warn("No dice selected for testing");
                 return;
             }
+            // 清除旧断点
+            BreakpointMemoryService.ClearBreakpoint();
+            // 保存测试队列用于进度计算
+            _currentTestQueue = dieVMList;
+            _currentQueueIndex = -1;
             // 初始化进度条
             // 初始化进度条 - 重要：必须在UI线程执行
             Application.Current.Dispatcher.Invoke(() =>
@@ -646,6 +708,169 @@ namespace CVWaferProber.Services
 
 
         private (List<DieViewModel> testQueue, int currentIndex, int completedCount)? _pauseContext;
+        #region 断点保存逻辑
+        // 在现有字段后添加
+        private System.Timers.Timer _breakpointSaveTimer;
+        private DateTime _lastBreakpointSaveTime = DateTime.MinValue;
+        // 新增方法：初始化断点保存定时器
+        private void InitializeBreakpointTimer()
+        {
+            _breakpointSaveTimer = new System.Timers.Timer(5000); // 每5秒保存一次
+            _breakpointSaveTimer.Elapsed += async (sender, e) => await SaveBreakpointAsync();
+            _breakpointSaveTimer.AutoReset = true;
+            _breakpointSaveTimer.Start();
+        }
 
+        // 新增方法：保存断点
+        private async Task SaveBreakpointAsync()
+        {
+            try
+            {
+                // 只有测试中才保存断点
+                if (autoTestingItem == null && MainViewModel.Instance?.DataMappingVM?.IsManualTesting != true)
+                    return;
+
+                // 限制保存频率，至少间隔1秒
+                if ((DateTime.Now - _lastBreakpointSaveTime).TotalSeconds < 1)
+                    return;
+
+                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                if (mappingVM == null)
+                    return;
+
+                await BreakpointMemoryService.SaveBreakpointAsync(
+                    mappingVM,
+                    this,
+                    autoTestingItem?.CurSelectedWPFlow);
+
+                _lastBreakpointSaveTime = DateTime.Now;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Failed to save breakpoint", ex);
+            }
+        }
+        // 新增方法：断点恢复
+        public async Task<bool> TryRecoverFromBreakpointAsync()
+        {
+            try
+            {
+                var breakpointData = await BreakpointMemoryService.LoadBreakpointAsync();
+                if (breakpointData == null)
+                    return false;
+
+                logger.Info("Attempting to recover from breakpoint...");
+
+                // 获取MappingDataViewModel
+                var mappingVM = MainViewModel.Instance?.DataMappingVM;
+                if (mappingVM == null)
+                    return false;
+
+                // 恢复基本进度信息
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    mappingVM.TotalTestCount = breakpointData.TotalTestCount;
+                    mappingVM.CompletedTestCount = breakpointData.CompletedTestCount;
+                    mappingVM.SingleDieTestProgress = breakpointData.SingleDieProgress;
+                    mappingVM.TotalTestProgress = breakpointData.TotalProgress;
+                    mappingVM.CurrentDieInfo = breakpointData.CurrentDieInfo;
+                    mappingVM.IsManualTesting = breakpointData.IsManualTesting;
+
+                    // 恢复时间信息
+                    mappingVM._currentDieStartTime = breakpointData.CurrentDieStartTime;
+                    mappingVM._currentDiePredictSeconds = breakpointData.CurrentDiePredictSeconds;
+
+                    // 触发属性变更
+                    mappingVM.OnPropertyChanged(nameof(mappingVM.TotalTestCount));
+                    mappingVM.OnPropertyChanged(nameof(mappingVM.CompletedTestCount));
+                    mappingVM.OnPropertyChanged(nameof(mappingVM.SingleDieTestProgress));
+                    mappingVM.OnPropertyChanged(nameof(mappingVM.TotalTestProgress));
+                    mappingVM.OnPropertyChanged(nameof(mappingVM.CurrentDieInfo));
+                    mappingVM.OnPropertyChanged(nameof(mappingVM.ProgressText));
+                    mappingVM.OnPropertyChanged(nameof(mappingVM.ProgressTextAll));
+                });
+
+                // 查找当前Die
+                DieViewModel currentDie = null;
+                if (breakpointData.CurrentDieMapX.HasValue && breakpointData.CurrentDieMapY.HasValue)
+                {
+                    currentDie = mappingVM.TestResults.FirstOrDefault(d =>
+                        d.MapX == breakpointData.CurrentDieMapX &&
+                        d.MapY == breakpointData.CurrentDieMapY);
+                }
+
+                // 恢复测试队列
+                if (breakpointData.IsAutoTesting && breakpointData.TestQueue.Any())
+                {
+                    var dieList = new List<DieViewModel>();
+
+                    foreach (var bpDie in breakpointData.TestQueue)
+                    {
+                        var die = mappingVM.TestResults.FirstOrDefault(d =>
+                            d.MapX == bpDie.MapX && d.MapY == bpDie.MapY);
+
+                        if (die != null)
+                        {
+                            // 恢复Die状态
+                            if (Enum.TryParse<ChipStatus>(bpDie.Status, out var status))
+                            {
+                                die.ChangeStatusOnly(status);
+                            }
+
+                            // 添加到测试队列
+                            if (!bpDie.IsCompleted)
+                            {
+                                dieList.Add(die);
+                            }
+                        }
+                    }
+
+                    // 重建自动测试项
+                    if (dieList.Any())
+                    {
+                        // 查找测试流程
+                        WPFlowViewModel selectedFlow = null;
+                        if (!string.IsNullOrEmpty(breakpointData.TestFlowType))
+                        {
+                            var flowType = Enum.Parse<CVWaferProberFlowType>(breakpointData.TestFlowType);
+                            selectedFlow = mappingVM.WPFlows.FirstOrDefault(f => f.FlowType == flowType);
+                        }
+
+                        if (selectedFlow != null)
+                        {
+                            autoTestingItem = new AutoTestingItem(dieList, selectedFlow);
+                            autoTestingItem.CurTestingIndex = breakpointData.CurrentQueueIndex;
+
+                            if (breakpointData.IsPaused)
+                            {
+                                autoTestingItem.IsPaused = true;
+                                logger.Info("Recovered in PAUSED state");
+                            }
+                            else if (currentDie != null && currentDie.Status == ChipStatus.TESTING)
+                            {
+                                // 从当前Die继续测试
+                                logger.InfoFormat("Resuming test from die {0}", currentDie.MapAxisToString());
+
+                                // 重新开始当前Die的进度跟踪
+                                mappingVM.StartSingleDieTest(currentDie);
+
+                                // 继续测试
+                                DoNextDieFlowExec(autoTestingItem);
+                            }
+                        }
+                    }
+                }
+
+                logger.Info("Breakpoint recovery completed");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Failed to recover from breakpoint", ex);
+                BreakpointMemoryService.ClearBreakpoint();
+                return false;
+            }
+        }
+        #endregion
     }
 }

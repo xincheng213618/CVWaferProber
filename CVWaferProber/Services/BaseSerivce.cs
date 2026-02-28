@@ -50,8 +50,6 @@ namespace CVWaferProber.Services
 
                 if (response != null)
                 {
-                    // 移除手动进度更新，让定时器控制进度
-                    // UpdateProgressInStages(dieViewModel); // 注释掉这一行
 
                     //var flowResult = await PollFlowResultWithRxAsync(dieViewModel.SerialNumber,
                     //    new CancellationTokenSource(TimeSpan.FromSeconds(_selectedWPFlow.Timeout)).Token);
@@ -62,15 +60,6 @@ namespace CVWaferProber.Services
                         ChipStatus status = await FlowResultDisplayAsync(dieViewModel);
                         dieViewModel.ChangeStatus(status, true);
 
-                        // 移除手动设置100%进度，由CompleteSingleDieTest控制
-                        // Application.Current.Dispatcher.Invoke(() =>
-                        // {
-                        //     var mappingVM = MainViewModel.Instance?.DataMappingVM;
-                        //     if (mappingVM != null)
-                        //     {
-                        //         mappingVM.UpdateSingleDieProgress(100, "测试完成");
-                        //     }
-                        // });
                     }
                     else
                     {
@@ -107,34 +96,8 @@ namespace CVWaferProber.Services
                     DoEndTesting(dieViewModel, isAuto);
             }
         }
-        // 辅助方法：分阶段更新进度
-        private void UpdateProgressInStages(DieViewModel dieViewModel)
-        {
-            // 模拟测试阶段的进度更新
-            var stages = new Dictionary<string, double>
-            {
-                { "初始化设备", 10 },
-                { "开始测试", 25 },
-                { "数据采集", 50 },
-                { "数据处理", 75 },
-                { "结果分析", 90 }
-            };
+     
 
-            foreach (var stage in stages)
-            {
-                // 模拟阶段间隔
-                Task.Delay(500).Wait();
-
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    var mappingVM = mainVM.DataMappingVM;
-                    if (mappingVM != null)
-                    {
-                        mappingVM.UpdateSingleDieProgress(stage.Value, stage.Key);
-                    }
-                });
-            }
-        }
         /// <summary>
         /// 更新进度
         /// </summary>
