@@ -12,7 +12,9 @@
 
     <UserControl.Resources>
         <cv:StatusToColorConverter x:Key="StatusColorConverter" />
+        <cv:FlowTypeToEnabledConverter x:Key="FlowTypeToEnabledConverter" />
         <ccv:NotBooleanConverter x:Key="NotBooleanConverter" />
+
         <Storyboard x:Key="ProgressPulseAnimation" RepeatBehavior="Forever">
             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity">
                 <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0.7" />
@@ -915,10 +917,13 @@
                                                         <CheckBox
                                                             x:Name="selectAllCheckBox_AOI"
                                                             VerticalAlignment="Center"
-                                                            IsChecked="{Binding DataContext.SelectAllAOI, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                                            IsChecked="{Binding DataContext.SelectAllAOI, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            IsEnabled="{Binding DataContext.SelectedWPFlow.FlowType, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource FlowTypeToEnabledConverter}, ConverterParameter=AOI}" />
+
                                                         <!--  反选按钮  -->
                                                         <Button
                                                             Command="{Binding DataContext.InvertSelectAOICommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            IsEnabled="{Binding DataContext.SelectedWPFlow.FlowType, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource FlowTypeToEnabledConverter}, ConverterParameter=AOI}"
                                                             Style="{StaticResource HeaderActionButtonStyle}"
                                                             ToolTip="{DynamicResource Maping.GridHeader.ReverseSelection}" />
                                                     </StackPanel>
@@ -932,6 +937,7 @@
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
                                                     IsChecked="{Binding IsAOIEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                    IsEnabled="{Binding DataContext.SelectedWPFlow.FlowType, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource FlowTypeToEnabledConverter}, ConverterParameter=AOI}"
                                                     IsHitTestVisible="True"
                                                     Style="{StaticResource CellCheckBoxStyle}" />
                                             </DataTemplate>
@@ -958,9 +964,11 @@
                                                         <CheckBox
                                                             x:Name="selectAllCheckBox_IVL"
                                                             VerticalAlignment="Center"
-                                                            IsChecked="{Binding DataContext.SelectAllIVL, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                                            IsChecked="{Binding DataContext.SelectAllIVL, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            IsEnabled="{Binding DataContext.SelectedWPFlow.FlowType, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource FlowTypeToEnabledConverter}, ConverterParameter=IVL}" />
                                                         <Button
                                                             Command="{Binding DataContext.InvertSelectIVLCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            IsEnabled="{Binding DataContext.SelectedWPFlow.FlowType, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource FlowTypeToEnabledConverter}, ConverterParameter=IVL}"
                                                             Style="{StaticResource HeaderActionButtonStyle}"
                                                             ToolTip="{DynamicResource Maping.GridHeader.ReverseSelection}" />
                                                     </StackPanel>
@@ -974,6 +982,7 @@
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
                                                     IsChecked="{Binding IsIVLEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                    IsEnabled="{Binding DataContext.SelectedWPFlow.FlowType, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource FlowTypeToEnabledConverter}, ConverterParameter=IVL}"
                                                     IsHitTestVisible="True"
                                                     Style="{StaticResource CellCheckBoxStyle}" />
                                             </DataTemplate>
@@ -1000,9 +1009,11 @@
                                                         <CheckBox
                                                             x:Name="selectAllCheckBox_EQE"
                                                             VerticalAlignment="Center"
-                                                            IsChecked="{Binding DataContext.SelectAllEQE, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                                            IsChecked="{Binding DataContext.SelectAllEQE, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            IsEnabled="{Binding DataContext.SelectedWPFlow.FlowType, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource FlowTypeToEnabledConverter}, ConverterParameter=EQE}" />
                                                         <Button
                                                             Command="{Binding DataContext.InvertSelectEQECommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            IsEnabled="{Binding DataContext.SelectedWPFlow.FlowType, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource FlowTypeToEnabledConverter}, ConverterParameter=EQE}"
                                                             Style="{StaticResource HeaderActionButtonStyle}"
                                                             ToolTip="{DynamicResource Maping.GridHeader.ReverseSelection}" />
                                                     </StackPanel>
@@ -1015,6 +1026,7 @@
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
                                                     IsChecked="{Binding IsEQEEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                    IsEnabled="{Binding DataContext.SelectedWPFlow.FlowType, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource FlowTypeToEnabledConverter}, ConverterParameter=EQE}"
                                                     IsHitTestVisible="True"
                                                     Style="{StaticResource CellCheckBoxStyle}" />
                                             </DataTemplate>
@@ -1040,9 +1052,11 @@
                                                         <CheckBox
                                                             x:Name="selectAllCheckBox_VAM"
                                                             VerticalAlignment="Center"
-                                                            IsChecked="{Binding DataContext.SelectAllVAM, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                                            IsChecked="{Binding DataContext.SelectAllVAM, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            IsEnabled="{Binding DataContext.SelectedWPFlow.FlowType, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource FlowTypeToEnabledConverter}, ConverterParameter=VAM}" />
                                                         <Button
                                                             Command="{Binding DataContext.InvertSelectVAMCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            IsEnabled="{Binding DataContext.SelectedWPFlow.FlowType, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource FlowTypeToEnabledConverter}, ConverterParameter=VAM}"
                                                             Style="{StaticResource HeaderActionButtonStyle}"
                                                             ToolTip="{DynamicResource Maping.GridHeader.ReverseSelection}" />
                                                     </StackPanel>
@@ -1055,6 +1069,7 @@
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
                                                     IsChecked="{Binding IsVAMEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                    IsEnabled="{Binding DataContext.SelectedWPFlow.FlowType, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource FlowTypeToEnabledConverter}, ConverterParameter=VAM}"
                                                     IsHitTestVisible="True"
                                                     Style="{StaticResource CellCheckBoxStyle}" />
                                             </DataTemplate>

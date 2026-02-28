@@ -871,6 +871,7 @@ namespace CVWaferProber.ViewModels
         #region 原有业务方法（修改StartManFlow/StartAutoFlow，集成新进度逻辑）
         private void StartManTest(object? obj)
         {
+
             StartManFlow();
         }
         private void StartManFlow()
