@@ -87,12 +87,13 @@ namespace ChipMapping.ViewModels
                 }
             }
         }
+        private bool _isBlinking = false;
 
-        //public bool IsBlinking
-        //{
-        //    get => _isBlinking;
-        //    set => SetProperty(ref _isBlinking, value);
-        //}
+        public bool IsBlinking
+        {
+            get => _isBlinking;
+            set => SetProperty(ref _isBlinking, value);
+        }
 
         //// 闪烁时的填充颜色
         //public SolidColorBrush? BlinkFill { get; private set; }
