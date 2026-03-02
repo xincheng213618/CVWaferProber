@@ -398,11 +398,7 @@ namespace CVWaferProber.ViewModels
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                var globalConfigWindow = new GlobalConfigWindow
-                {
-                    Owner = Application.Current.MainWindow
-                };
-
+                var globalConfigWindow = new GlobalConfigWindow(Application.Current.MainWindow);
                 globalConfigWindow.ShowDialog();
             });
         }
@@ -416,9 +412,20 @@ namespace CVWaferProber.ViewModels
             {
                 var window = new DevProberDebugWindow
                 {
-                    DataContext = new DevProberDebugViewModel(ProberClientService.Instance.ProberClient,
-                    ProberClientService.Instance.StateMachine, _connectionInfo),
-                    Owner = Application.Current.MainWindow
+                    DataContext = new DevProberDebugViewModel(
+                        ProberClientService.Instance.ProberClient,
+                        ProberClientService.Instance.StateMachine,
+                        _connectionInfo
+                    )
+                };
+
+                // 在子窗口加载完成后设置 Owner
+                window.Loaded += (s, e) =>
+                {
+                    if (Application.Current.MainWindow != null && Application.Current.MainWindow.IsVisible)
+                    {
+                        window.Owner = Application.Current.MainWindow;
+                    }
                 };
 
                 window.ShowDialog();
@@ -433,8 +440,16 @@ namespace CVWaferProber.ViewModels
                 vm.LoadDevices(MainService.Instance.GetAllDevices());
                 var window = new DeviceManagerWindow
                 {
-                    DataContext = vm,
-                    Owner = Application.Current.MainWindow
+                    DataContext = vm
+                };
+
+                // 在子窗口加载完成后设置 Owner
+                window.Loaded += (s, e) =>
+                {
+                    if (Application.Current.MainWindow != null && Application.Current.MainWindow.IsVisible)
+                    {
+                        window.Owner = Application.Current.MainWindow;
+                    }
                 };
 
                 window.ShowDialog();

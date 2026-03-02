@@ -1,6 +1,7 @@
 ﻿using CVWaferProber.Config;
 using CVWaferProber.Core.ViewModels;
 using CVWaferProber.Services;
+using Mysqlx.Crud;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -30,20 +31,27 @@ namespace CVWaferProber.Views
     /// </summary>
     public partial class GlobalConfigWindow : Window
     {
+        private Window owner;
+
         // 全局配置模型（用于绑定和保存）
         public GlobalConfigModel ConfigModel { get; set; }
+        public Window MainWindow { get; }
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public GlobalConfigWindow()
+        public GlobalConfigWindow(Window mainWindow)
         {
             InitializeComponent();
             ConfigModel = new GlobalConfigModel();
             LoadSavedConfig();
             this.DataContext = ConfigModel;
+            this.Owner = owner;
             ConfigModel.EnsureDirectoriesExist();
+            MainWindow = mainWindow;
         }
+
+      
 
         /// <summary>
         /// 浏览文件夹按钮点击事件
