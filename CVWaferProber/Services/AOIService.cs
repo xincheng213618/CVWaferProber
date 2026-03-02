@@ -635,7 +635,12 @@ namespace CVWaferProber.Services
         public override void AutoExportData(DieViewModel dieViewModel)
         {
             string serialNumber = dieViewModel.SerialNumber ?? "Unknown";
-            CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
+            });
+
 
             //// 实现自动导出数据逻辑
             var Measurements = CustomIVLVM.Measurements;
