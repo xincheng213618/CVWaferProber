@@ -28,6 +28,7 @@ namespace CVWaferProber.Services
         public AOIService(MainViewModel mainVM, IFlowService flowService) : base(mainVM, flowService)
         {
             this.CustomImageVM = mainVM.CustomImageVM;
+            this.CustomIVLVM = mainVM.CustomIVLVM;
         }
 
         protected override ChipStatus GetResultStatus(string serialNumber)
