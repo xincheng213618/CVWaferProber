@@ -10,6 +10,10 @@ namespace CVDB.Services.Spectrum
         {
             return MysqlControler.GetInstance().Sql.Select<VScgdMeasureResultSpectrometer>().Where(a => a.DeviceCode == deviceCode && a.BatchCode == serialNumber).ToList();
         }
+        public static List<VScgdMeasureResultSpectrometer> LoadResultByBatchCode(string serialNumber)
+        {
+            return MysqlControler.GetInstance().Sql.Select<VScgdMeasureResultSpectrometer>().Where(a => a.BatchCode == serialNumber).ToList();
+        }
         public static List<VScgdMeasureResultEqe> LoadEQEResultByBatchCode(string deviceCode, string serialNumber)
         {
             return MysqlControler.GetInstance().Sql.Select<VScgdMeasureResultEqe>().Where(a => a.DeviceCode == deviceCode && a.BatchCode == serialNumber).ToList();

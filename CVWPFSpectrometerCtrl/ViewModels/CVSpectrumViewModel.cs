@@ -2859,7 +2859,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             IV_viewModel.LoadData(serialNumber);
             VI_viewModel.LoadData(serialNumber);
 
-            var results = SpectrumResultService.LoadResultByBatchCode(DeviceCode, serialNumber);
+            var results = SpectrumResultService.LoadResultByBatchCode(serialNumber);
             if (results == null || results.Count == 0) return;
 
             IL_viewModel.LoadData(results);
