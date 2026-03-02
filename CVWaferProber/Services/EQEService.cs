@@ -98,7 +98,7 @@ namespace CVWaferProber.Services
             base.DoEndTesting(dieViewModel, isAuto); // 调用基类触发TestingCompleted事件
             
         }
-        public override void AutoExportData()
+        public override void AutoExportData(DieViewModel dieViewModel)
         {
             try
             {

@@ -120,12 +120,12 @@ namespace CVWaferProber.Services
             TestingCompleted?.Invoke(this, new TestCompletedEventArgs(dieViewModel, isAuto));
             if (IsAutoExportData)
             {
-                AutoExportData();
+                AutoExportData(dieViewModel);
             }
 
 
         }
-        public abstract void AutoExportData();
+        public abstract void AutoExportData(DieViewModel dieViewModel);
         public abstract void ResultDisplay(DieViewModel dieViewModel);
     }
 }

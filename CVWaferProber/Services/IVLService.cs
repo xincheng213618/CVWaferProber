@@ -290,7 +290,7 @@ namespace CVWaferProber.Services
         }
         //WPFlowViewModel wpfFlowViewModel { get; set; }
 
-        public override void AutoExportData()
+        public override void AutoExportData(DieViewModel dieViewModel)
         {
 
 

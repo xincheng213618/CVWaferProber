@@ -130,7 +130,7 @@ namespace CVWaferProber.Services
             await Task.Run(() => RunFlowAsync(_selectedWPFlow, dieViewModel, hasNext, tranStatus));
         }
 
-        public override void AutoExportData()
+        public override void AutoExportData(DieViewModel dieViewModel)
         {
             // 导出操作可能涉及UI，切回主线程执行
             RunOnUiThread(() => _cVVAMAnalyzer.BtnExportClick());
