@@ -633,6 +633,7 @@ namespace CVWaferProber.Services
 
         public override void AutoExportData(DieViewModel dieViewModel)
         {
+           
             //// 实现自动导出数据逻辑
             var Measurements = CustomIVLVM.Measurements;
             var Wavelengths = CustomIVLVM.Wavelengths;
