@@ -633,7 +633,9 @@ namespace CVWaferProber.Services
 
         public override void AutoExportData(DieViewModel dieViewModel)
         {
+
             CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
+
             //// 实现自动导出数据逻辑
             var Measurements = CustomIVLVM.Measurements;
             var Wavelengths = CustomIVLVM.Wavelengths;
@@ -642,6 +644,7 @@ namespace CVWaferProber.Services
                 logger.Info("No valid IVL data available for export");
                 return;
             }
+
 
             // 读取全局配置的IVL导出路径（核心修改点2）
             string ivlRootPath = ConfigManager.Config.ExportPathSettings?.IvlExportPath ?? @"D:\Project\IVL";
