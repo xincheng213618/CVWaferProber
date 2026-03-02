@@ -633,30 +633,30 @@ namespace CVWaferProber.Services
 
         public override void AutoExportData()
         {
-            // 实现自动导出数据逻辑
-            var Measurements = CustomIVLVM.Measurements;
-            var Wavelengths = CustomIVLVM.Wavelengths;
-            if (Measurements == null || !Measurements.Any() || Wavelengths == null || Wavelengths.Length == 0)
-            {
-                logger.Info("No valid IVL data available for export");
-                return;
-            }
+            //// 实现自动导出数据逻辑
+            //var Measurements = CustomIVLVM.Measurements;
+            //var Wavelengths = CustomIVLVM.Wavelengths;
+            //if (Measurements == null || !Measurements.Any() || Wavelengths == null || Wavelengths.Length == 0)
+            //{
+            //    logger.Info("No valid IVL data available for export");
+            //    return;
+            //}
 
-            // 读取全局配置的IVL导出路径（核心修改点2）
-            string ivlRootPath = ConfigManager.Config.ExportPathSettings?.IvlExportPath ?? @"D:\Project\IVL";
-            // 确保目录存在
-            if (!Directory.Exists(ivlRootPath))
-            {
-                Directory.CreateDirectory(ivlRootPath);
-                logger.Info($"Create IVL export directory：{ivlRootPath}");
-            }
-            // 构造文件名（包含SerialNumber+时间戳）
-            string serialNumber = _currentDieVM?.SerialNumber ?? "Unknown";
-            string fileName = $"IVL_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-            string fullExportPath = Path.Combine(ivlRootPath, fileName);
-            // 执行导出
-            CustomIVLVM.ExportToCsv(fullExportPath, Measurements, Wavelengths);
-            logger.Info($"IVL data exported to：{fullExportPath}");
+            //// 读取全局配置的IVL导出路径（核心修改点2）
+            //string ivlRootPath = ConfigManager.Config.ExportPathSettings?.IvlExportPath ?? @"D:\Project\IVL";
+            //// 确保目录存在
+            //if (!Directory.Exists(ivlRootPath))
+            //{
+            //    Directory.CreateDirectory(ivlRootPath);
+            //    logger.Info($"Create IVL export directory：{ivlRootPath}");
+            //}
+            //// 构造文件名（包含SerialNumber+时间戳）
+            //string serialNumber = _currentDieVM?.SerialNumber ?? "Unknown";
+            //string fileName = $"IVL_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            //string fullExportPath = Path.Combine(ivlRootPath, fileName);
+            //// 执行导出
+            //CustomIVLVM.ExportToCsv(fullExportPath, Measurements, Wavelengths);
+            //logger.Info($"IVL data exported to：{fullExportPath}");
         }
 
         // DTO类
