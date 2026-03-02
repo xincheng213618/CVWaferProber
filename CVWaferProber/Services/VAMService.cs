@@ -1,10 +1,12 @@
-﻿using CVAVMControl;
+﻿using ChipMapping.Models.HZCC;
+using CVAVMControl;
 using CVDB.Services.Image;
 using CVWaferProber.Core.Events;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
 using Newtonsoft.Json;
-using System.Windows.Threading; // WPF用这个，WinForm替换为 System.Windows.Forms
+using System.Windows.Threading;
+using DieViewModel = CVWaferProber.ViewModels.DieViewModel; // WPF用这个，WinForm替换为 System.Windows.Forms
 
 namespace CVWaferProber.Services
 {
