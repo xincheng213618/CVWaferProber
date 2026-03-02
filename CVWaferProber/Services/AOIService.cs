@@ -633,6 +633,7 @@ namespace CVWaferProber.Services
 
         public override void AutoExportData(DieViewModel dieViewModel)
         {
+            string serialNumber = dieViewModel.SerialNumber ?? "Unknown";
             CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
             //// 实现自动导出数据逻辑
             var Measurements = CustomIVLVM.Measurements;
@@ -652,7 +653,6 @@ namespace CVWaferProber.Services
                 logger.Info($"Create IVL export directory：{ivlRootPath}");
             }
             // 构造文件名（包含SerialNumber+时间戳）
-            string serialNumber = _currentDieVM?.SerialNumber ?? "Unknown";
             string fileName = $"IVL_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
             string fullExportPath = Path.Combine(ivlRootPath, fileName);
             // 执行导出
