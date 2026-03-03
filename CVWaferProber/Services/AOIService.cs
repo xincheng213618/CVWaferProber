@@ -9,6 +9,7 @@ using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
 using log4net;
 using Newtonsoft.Json;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -634,38 +635,79 @@ namespace CVWaferProber.Services
 
         public override void AutoExportData(DieViewModel dieViewModel)
         {
+            //string serialNumber = dieViewModel.SerialNumber ?? "Unknown";
+
+            //Application.Current.Dispatcher.Invoke(() =>
+            //{
+            //    CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
+            //});
+
+
+            ////// 实现自动导出数据逻辑
+            //var Measurements = CustomIVLVM.Measurements;
+            //var Wavelengths = CustomIVLVM.Wavelengths;
+            //if (Measurements == null || !Measurements.Any() || Wavelengths == null || Wavelengths.Length == 0)
+            //{
+            //    logger.Info("No valid IVL data available for export");
+            //    return;
+            //}
+
+
+            //// 读取全局配置的IVL导出路径（核心修改点2）
+            //string ivlRootPath = ConfigManager.Config.ExportPathSettings?.IvlExportPath ?? @"D:\Project\IVL";
+            //// 确保目录存在
+            //if (!Directory.Exists(ivlRootPath))
+            //{
+            //    Directory.CreateDirectory(ivlRootPath);
+            //    logger.Info($"Create IVL export directory：{ivlRootPath}");
+            //}
+            //// 构造文件名（包含SerialNumber+时间戳）
+            //string fileName = $"IVL_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            //string fullExportPath = Path.Combine(ivlRootPath, fileName);
+            //// 执行导出
+            //CustomIVLVM.ExportToCsv(fullExportPath, Measurements, Wavelengths);
+            //logger.Info($"IVL data exported to：{fullExportPath}");
             string serialNumber = dieViewModel.SerialNumber ?? "Unknown";
 
             Application.Current.Dispatcher.Invoke(() =>
             {
-                CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
+                // 使用追加方法，而不是重新加载
+                CustomIVLVM.AppendSpectrumData(dieViewModel.SerialNumber);
             });
 
-
-            //// 实现自动导出数据逻辑
+            // 获取所有已累积的数据
             var Measurements = CustomIVLVM.Measurements;
             var Wavelengths = CustomIVLVM.Wavelengths;
+
             if (Measurements == null || !Measurements.Any() || Wavelengths == null || Wavelengths.Length == 0)
             {
                 logger.Info("No valid IVL data available for export");
                 return;
             }
 
-
-            // 读取全局配置的IVL导出路径（核心修改点2）
+            // 为每个 Die 单独导出 CSV 文件
             string ivlRootPath = ConfigManager.Config.ExportPathSettings?.IvlExportPath ?? @"D:\Project\IVL";
-            // 确保目录存在
             if (!Directory.Exists(ivlRootPath))
             {
                 Directory.CreateDirectory(ivlRootPath);
                 logger.Info($"Create IVL export directory：{ivlRootPath}");
             }
-            // 构造文件名（包含SerialNumber+时间戳）
-            string fileName = $"IVL_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-            string fullExportPath = Path.Combine(ivlRootPath, fileName);
-            // 执行导出
-            CustomIVLVM.ExportToCsv(fullExportPath, Measurements, Wavelengths);
-            logger.Info($"IVL data exported to：{fullExportPath}");
+
+            // 只导出当前 Die 的数据
+            var currentDieMeasurements = Measurements
+                .Where(m => m.Meas_Id == dieViewModel.SerialNumber)
+                .ToList();
+
+            if (currentDieMeasurements.Any())
+            {
+                string fileName = $"IVL_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+                string fullExportPath = Path.Combine(ivlRootPath, fileName);
+
+                // 创建当前 Die 的 Measurement 集合
+                var currentMeasurements = new ObservableCollection<SpectrumMeasurement>(currentDieMeasurements);
+                CustomIVLVM.ExportToCsv(fullExportPath, currentMeasurements, Wavelengths);
+                logger.Info($"IVL data exported to：{fullExportPath}");
+            }
         }
 
         // DTO类
