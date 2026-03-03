@@ -1,4 +1,5 @@
 ﻿using ChipMapping.Models;
+using CVWaferProber.Core.Events;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
@@ -11,6 +12,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using WaferComm.Core;
 
 namespace ChipMapping.ViewModels
 {
@@ -30,7 +32,8 @@ namespace ChipMapping.ViewModels
         private float _dieHeight = 8;
         //private ChipStatus _filterStatus = ChipStatus.Normal | ChipStatus.Warning | ChipStatus.Error | ChipStatus.Offline;
         private ChipStatus _filterStatus = ChipStatus.OK | ChipStatus.WAITING;
-
+        // 新增：事件聚合器
+       // private readonly IEventAggregator _eventAggregator;
         /// <summary>
         /// 外圈显示
         /// </summary>
@@ -71,6 +74,8 @@ namespace ChipMapping.ViewModels
 
         public ChipMappingControlViewModel()
         {
+            // 订阅静态温度事件
+            TemperatureManager.TemperatureChanged += OnTemperatureChanged;
             FilteredChips = CollectionViewSource.GetDefaultView(Chips);
             //FilteredChips.Filter = ChipFilter;
 
@@ -89,7 +94,10 @@ namespace ChipMapping.ViewModels
             InitStatusTips();
             Refresh();
         }
-
+        private void OnTemperatureChanged(double temperature)
+        {
+            Temperatures = temperature;
+        }
         #region 颜色状态说明
         // 初始化状态-颜色-说明的映射
         private void InitStatusTips()
@@ -271,7 +279,8 @@ namespace ChipMapping.ViewModels
             //{
             //    chip.StopBlinking();
             //}
-
+            // 取消温度事件订阅（避免内存泄漏）
+            TemperatureManager.TemperatureChanged -= OnTemperatureChanged;
             if (SelectedChip != null)
             {
                 SelectedChip.IsSelected = false;

@@ -1,7 +1,9 @@
-﻿using CVWaferProber.Core.ViewModels;
+﻿using CVWaferProber.Core.Events;
+using CVWaferProber.Core.ViewModels;
 using CVWaferProber.Models;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using WaferComm.Client;
 using WaferComm.Core;
 using WaferComm.StateMachine;
@@ -16,7 +18,10 @@ namespace CVWaferProber.ViewModels
         private IWaferProberClient _client;
         private IStateMachine _stateMachine;
         private ConnectionInfo ConnectionInfo;
-
+        // 新增：定时获取温度的定时器
+        private readonly DispatcherTimer _tempQueryTimer;
+        // 定时周期（可自定义，比如5000ms=5秒）
+        private const int TempQueryInterval = 5000;
         public IWaferProberClient ProberClient { get => _client; }
         public IStateMachine StateMachine { get => _stateMachine; }
         public ICommand DevProberConnectCommand { get; }
@@ -36,10 +41,18 @@ namespace CVWaferProber.ViewModels
         private decimal _Temperature = 25.0M;
         public decimal Temperature
         {
+
             get => _Temperature;
             set
             {
-                SetProperty(ref _Temperature, value);
+                if (SetProperty(ref _Temperature, value))
+                {
+                    // 本地温度属性变化时，也发送事件（比如手动修改温度输入框）
+                    if (_client != null && _client.IsConnected)
+                    {
+                        TemperatureManager.UpdateTemperature(Convert.ToDouble(Temperature));
+                    }
+                }
             }
         }
         private string _CustomCMD = "B";
@@ -110,7 +123,10 @@ namespace CVWaferProber.ViewModels
 
             ResetMotionCommand = null;
             ResetStateMachineCommand = null;
-
+            // ========== 初始化温度查询定时器 ==========
+            _tempQueryTimer = new DispatcherTimer();
+            _tempQueryTimer.Interval = TimeSpan.FromMilliseconds(TempQueryInterval);
+            _tempQueryTimer.Tick += TempQueryTimer_Tick;
             DevProberConnectCommand = new RelayCommand(
                 async _ => await ConnectAsync(),
                 _ => CanConnect);
@@ -163,7 +179,41 @@ namespace CVWaferProber.ViewModels
             // Subscribe to service events
             _client.EventAggregator.Subscribe<ConnectionStateChangedEvent>(OnConnectionStatusChanged);
         }
+        // ========== 定时器Tick事件：定时获取温度 ==========
+        private void TempQueryTimer_Tick(object? sender, EventArgs e)
+        {
+            if (_client != null && _client.IsConnected)
+            {
+                // 调用获取温度方法，并处理结果
+                GetCurrentTemperatureWithEvent();
+            }
+        }
+        // 新增：获取温度并发送更新事件
+        private async void GetCurrentTemperatureWithEvent()
+        {
+            if (_client == null || !_client.IsConnected) return;
 
+            try
+            {
+                // 注意：如果你的 GetCurrentTemperatureAsync 有返回值，需要调整这里
+                // 假设返回值是 Task<decimal>（如果是void，需要从其他地方获取温度）
+                // 先调用接口获取温度
+                await _client.GetCurrentTemperatureAsync();
+
+                // ========== 关键：获取到温度后更新本地属性 + 发送事件 ==========
+                // 【适配说明】：
+                // 如果 GetCurrentTemperatureAsync 有返回值（比如 Task<decimal>），则：
+                // decimal temp = await _client.GetCurrentTemperatureAsync();
+                // Temperature = temp; // 更新本地属性
+
+                // 发送温度更新事件（不管是否有返回值，都可以用本地Temperature属性）
+                TemperatureManager.UpdateTemperature(Convert.ToDouble(Temperature));
+            }
+            catch (Exception ex)
+            {
+                logger.Error("定时获取温度失败", ex);
+            }
+        }
         private void StopHeaterMonitor()
         {
             _stateMachine.StopHeaterMonitorAsync();
@@ -184,9 +234,20 @@ namespace CVWaferProber.ViewModels
             _client.GetCurrentTemperatureAsync();
         }
 
+      
+        // ========== 重构SetTemperature：设置温度后同步发送事件 ==========
         private void SetTemperature()
         {
-            _client.SetTemperatureAsync(_Temperature);
+            if (_client == null || !_client.IsConnected) return;
+
+            _client.SetTemperatureAsync(_Temperature).ContinueWith(task =>
+            {
+                if (task.IsCompletedSuccessfully)
+                {
+                    // 设置温度成功后，发送事件更新UI
+                    TemperatureManager.UpdateTemperature(Convert.ToDouble(Temperature));
+                }
+            }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         private void SendCustomCmd()
@@ -205,6 +266,9 @@ namespace CVWaferProber.ViewModels
         /// <exception cref="NotImplementedException"></exception>
         public void Cleanup()
         {
+            // 停止温度查询定时器
+            _tempQueryTimer.Stop();
+            _tempQueryTimer.Tick -= TempQueryTimer_Tick;
             _client.EventAggregator.Unsubscribe<ConnectionStateChangedEvent>(OnConnectionStatusChanged);
         }
         private void SetConnected(bool isConnected)
@@ -217,6 +281,18 @@ namespace CVWaferProber.ViewModels
             OnPropertyChanged(nameof(ConnectionStatusText));
             OnPropertyChanged(nameof(CanConnect));
             OnPropertyChanged(nameof(CanDisconnect));
+
+            // 连接成功则启动定时器，断开则停止
+            if (@event.IsConnected)
+            {
+                _tempQueryTimer.Start();
+                // 连接后立即获取一次温度
+                GetCurrentTemperatureWithEvent();
+            }
+            else
+            {
+                _tempQueryTimer.Stop();
+            }
         }
         private void SendBasicCmd(object obj)
         {
