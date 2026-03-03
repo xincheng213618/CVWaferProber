@@ -1613,7 +1613,7 @@ namespace CVWaferProber.ViewModels
                     dieViewModel.Temperature = CustomMappingVM.Temperatures.ToString("F1");
                     dieViewModel.Pressure = CustomMappingVM.Pressure;
                     dieViewModel.ProbingCardSN = CustomMappingVM.SN;
-                    dieViewModel.TouchDownCounts = CustomMappingVM.TDCount;
+                    dieViewModel.TouchDownCounts = CustomMappingVM.TDCount; 
                     _TestResults.Add(dieViewModel);
                 }
                 var sorted = _TestResults.OrderBy(x => x.MapY).ToList();

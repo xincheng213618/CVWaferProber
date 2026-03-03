@@ -14,7 +14,7 @@ using System.Windows.Threading;
 namespace CVWPFCamImageCtrl
 {
     /// <summary>
-    /// CVCamImagerCtrl.xaml 的交互逻辑
+    /// CVCamImagerCtrl.xaml.cs 的交互逻辑
     /// </summary>
     public partial class CVCamImagerCtrl : UserControl
     {
