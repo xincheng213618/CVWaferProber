@@ -3,7 +3,6 @@ using CVWaferProber.Models;
 using CVWaferProber.Utils;
 using CVWaferProber.ViewModels;
 using WaferComm.Core;
-using Application = System.Windows.Application;
 
 namespace CVWaferProber.Services
 {
@@ -11,7 +10,6 @@ namespace CVWaferProber.Services
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(BaseSerivce));
 
-        //protected IFlowService rcService;
         protected IFlowService _flowService;
         protected MainViewModel mainVM;
         protected readonly IEventAggregator? EventAggregator;
@@ -20,10 +18,8 @@ namespace CVWaferProber.Services
 
         public event EventHandler<TestCompletedEventArgs>? TestingCompleted;
         public event EventHandler<DieViewModel>? AutoTestingNextCompleted;
-        //public event EventHandler<DieViewModel> AutoTestingPaused;
      
-        // 保留原方法为私有，避免子类直接调用
-      
+        // 保留原方法为私有，避免子类直接调用      
         public BaseSerivce(MainViewModel mainVM, IFlowService flowService, IEventAggregator? eventAggregator = null)
         {
             this.mainVM = mainVM;
@@ -105,6 +101,10 @@ namespace CVWaferProber.Services
         public void DoAutoTestingNextCompleted(DieViewModel dieViewModel)
         {
             AutoTestingNextCompleted?.Invoke(this, dieViewModel);
+            if (IsAutoExportData)
+            {
+                AutoExportData(dieViewModel);
+            }
         }
 
         protected abstract ChipStatus GetResultStatus(string serialNumber);
