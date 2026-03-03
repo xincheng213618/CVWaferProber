@@ -820,6 +820,12 @@ namespace CVWaferProber.Services
         #region 2
         public override void AutoExportData(DieViewModel dieViewModel)
         {
+            // 检查Die状态，只有OK状态才导出数据吧
+            if (dieViewModel.Status != ChipStatus.OK)
+            {
+                logger.Info($"Die {dieViewModel.SerialNumber} status is {dieViewModel.Status}, skip export");
+                return;
+            }
             string serialNumber = dieViewModel.SerialNumber ?? "Unknown";
             logger.InfoFormat("serialNumber => {0}", serialNumber);
 
@@ -893,7 +899,7 @@ namespace CVWaferProber.Services
                 {
                     "No", "Die_x", "Die_y", "LightOnStatus", "RegisterPixels", "Final Class",
                     "Pixel Logic", "AOI GradeLevel", "Defect Density(%)", "Black Pattern",
-                    "Uniformity", "Luminance(nit)", "Voltage(v)", "Current(mA)", "Temperature(℃)",
+                    "Uniformity", "Luminance(nit)", "Voltage(v)", "Current(mA)", 
                     "Measurement Time", "Pin Pressure", "TouchDown Counts", "Probing Card SN",
                     "Lv(cd/m2)", "IP", "Excitation Purity(%)", "BlueLight", "cx", "cy",
                     "u'", "v'", "CCT(K)", "Dominant Wavelength(nm)", "Saturation(%)",
