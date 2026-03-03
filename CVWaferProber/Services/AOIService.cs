@@ -853,7 +853,7 @@ namespace CVWaferProber.Services
             }
 
             // 读取全局配置的IVL导出路径
-            string ivlRootPath = ConfigManager.Config.ExportPathSettings?.IvlExportPath ?? @"D:\Project\IVL";
+            string ivlRootPath = ConfigManager.Config.ExportPathSettings?.AoiExportPath ?? @"D:\Project\AOI";
             if (!Directory.Exists(ivlRootPath))
             {
                 Directory.CreateDirectory(ivlRootPath);
