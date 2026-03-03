@@ -406,5 +406,7 @@ namespace CVWPFCamImageCtrl
         }
         public DataGrid MainImageDataGrid { get; set; }
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(CVCamImagerViewModel));
+      
     }
+     
 }
