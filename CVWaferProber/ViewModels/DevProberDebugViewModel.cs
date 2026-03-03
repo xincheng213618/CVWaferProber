@@ -127,6 +127,7 @@ namespace CVWaferProber.ViewModels
             _tempQueryTimer = new DispatcherTimer();
             _tempQueryTimer.Interval = TimeSpan.FromMilliseconds(TempQueryInterval);
             _tempQueryTimer.Tick += TempQueryTimer_Tick;
+
             DevProberConnectCommand = new RelayCommand(
                 async _ => await ConnectAsync(),
                 _ => CanConnect);
@@ -195,16 +196,12 @@ namespace CVWaferProber.ViewModels
 
             try
             {
-                // 注意：如果你的 GetCurrentTemperatureAsync 有返回值，需要调整这里
-                // 假设返回值是 Task<decimal>（如果是void，需要从其他地方获取温度）
+               
                 // 先调用接口获取温度
                 await _client.GetCurrentTemperatureAsync();
 
                 // ========== 关键：获取到温度后更新本地属性 + 发送事件 ==========
-                // 【适配说明】：
-                // 如果 GetCurrentTemperatureAsync 有返回值（比如 Task<decimal>），则：
-                // decimal temp = await _client.GetCurrentTemperatureAsync();
-                // Temperature = temp; // 更新本地属性
+               
 
                 // 发送温度更新事件（不管是否有返回值，都可以用本地Temperature属性）
                 TemperatureManager.UpdateTemperature(Convert.ToDouble(Temperature));

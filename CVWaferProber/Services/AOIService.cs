@@ -961,19 +961,19 @@ namespace CVWaferProber.Services
             row.Add(dieViewModel.MapY.ToString()); // Die_y
             row.Add("OK"); // LightOnStatus
             row.Add("OK"); // RegisterPixels (默认值)
-            row.Add("0"); // Final Class
+            row.Add("OK"); // Final Class
             row.Add("OK"); // Pixel Logic (默认值)
             row.Add(string.IsNullOrEmpty(dieViewModel.AOIGradeLevel) ? "na" : dieViewModel.AOIGradeLevel); // AOI GradeLevel
             row.Add("2"); // Defect Density(%) (默认值)
             row.Add(string.IsNullOrEmpty(dieViewModel.AOIGradeLevel) ? "na" : dieViewModel.AOIGradeLevel); // Black Pattern
-            row.Add("0"); // Uniformity
+            row.Add("na"); // Uniformity
             row.Add(measurement.Luminance.ToString("F0")); // Luminance(nit)
             row.Add(measurement.Voltage.ToString("F2")); // Voltage(v)
             row.Add(measurement.Current.ToString("F2")); // Current(mA)
             row.Add(DateTime.Now.ToString("yyyy/MM/dd")); // Measurement Time
-            row.Add("na"); // Pin Pressure
-            row.Add("na"); // TouchDown Counts
-            row.Add("na"); // Probing Card SN
+            row.Add(dieViewModel.Pressure); // Pin Pressure
+            row.Add(dieViewModel.TouchDownCounts.ToString()); // TouchDown Counts
+            row.Add(dieViewModel.ProbingCardSN); // Probing Card SN
             row.Add(measurement.Luminance.ToString("F2")); // Lv(cd/m2)
             row.Add(measurement.IP); // IP
             row.Add(measurement.fPur != 0 ? (measurement.fPur * 100).ToString("F2") : "0"); // Excitation Purity(%)
