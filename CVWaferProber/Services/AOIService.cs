@@ -1,4 +1,5 @@
-﻿using CVCommCore;
+﻿using ChipMapping.ViewModels;
+using CVCommCore;
 using CVDB.Services.Algorithm;
 using CVDB.Services.Image;
 using CVWaferProber.Config;
@@ -11,7 +12,9 @@ using log4net;
 using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Application = System.Windows.Application;
@@ -26,6 +29,7 @@ namespace CVWaferProber.Services
         private DieViewModel _currentDieVM;
         public CVCamImagerViewModel CustomImageVM { get; private set; }
         public CVSpectrumViewModel CustomIVLVM { get; private set; }
+        public ChipMappingControlViewModel ChipMappingControlVM { get; private set; }
         public AOIService(MainViewModel mainVM, IFlowService flowService) : base(mainVM, flowService)
         {
             this.CustomImageVM = mainVM.CustomImageVM;
@@ -633,39 +637,452 @@ namespace CVWaferProber.Services
             return supportedExtensions.Contains(extension.ToLower());
         }
 
+
+
+
+        #region 1
+        //public override void AutoExportData(DieViewModel dieViewModel)
+        //{
+        //    string serialNumber = dieViewModel.SerialNumber ?? "Unknown";
+        //    logger.InfoFormat("serialNumber => {0}", serialNumber);
+        //    Application.Current.Dispatcher.Invoke(() =>
+        //    {
+        //        CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
+        //    });
+
+        //    //// 实现自动导出数据逻辑
+        //    var Measurements = CustomIVLVM.Measurements;
+        //    var Wavelengths = CustomIVLVM.Wavelengths;
+        //    //if (Measurements == null || !Measurements.Any() || Wavelengths == null || Wavelengths.Length == 0)
+        //    //{
+        //    //    logger.Info("No valid IVL data available for export");
+        //    //    return;
+        //    //}
+
+        //    // 读取全局配置的IVL导出路径
+        //    string ivlRootPath = ConfigManager.Config.ExportPathSettings?.IvlExportPath ?? @"D:\Project\IVL";
+
+        //    // 确保目录存在
+        //    if (!Directory.Exists(ivlRootPath))
+        //    {
+        //        Directory.CreateDirectory(ivlRootPath);
+        //        logger.Info($"Create IVL export directory：{ivlRootPath}");
+        //    }
+        //    // 构造文件名（包含SerialNumber+时间戳）
+        //    string fileName = $"IVL_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        //    string fullExportPath = Path.Combine(ivlRootPath, fileName);
+        //    // 执行导出
+        //    CustomIVLVM.ExportToCsv(fullExportPath, Measurements, Wavelengths);
+        //    logger.Info($"IVL data exported to：{fullExportPath}");
+        //    #region aoi数据导出
+        //    string aoiRootPath = ConfigManager.Config.ExportPathSettings?.AoiExportPath ?? @"D:\Project\AOI";
+
+        //    // 确保目录存在
+        //    if (!Directory.Exists(aoiRootPath))
+        //    {
+        //        Directory.CreateDirectory(aoiRootPath);
+        //        logger.Info($"Create AOI export directory：{aoiRootPath}");
+        //    }
+
+        //    // 构造文件名（包含SerialNumber+时间戳）- 与AOI-3.csv格式类似
+        //    string fileName1 = $"AOI_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        //    string fullExportPath1 = Path.Combine(aoiRootPath, fileName1);
+
+        //    // 执行导出，格式与AOI-3.csv一致
+        //    ExportAOICSV(fullExportPath1, Measurements, Wavelengths, dieViewModel);
+
+        //    logger.Info($"AOI CSV data exported to：{fullExportPath1}");
+        //    #endregion
+        //}
+        /// <summary>
+        /// 导出AOI格式的CSV文件，与AOI-3.csv格式完全一致
+        /// </summary>
+        //private void ExportAOICSV(string filePath, ObservableCollection<SpectrumMeasurement> measurements, float[] wavelengths, DieViewModel dieViewModel)
+        //{
+        //    try
+        //    {
+        //        //if (measurements == null || !measurements.Any())
+        //        //{
+        //        //    logger.Warn("No measurement data to export");
+        //        //    return;
+        //        //}
+
+        //        var csv = new StringBuilder();
+
+        //        // ========== 1. 构建表头 - 与AOI-3.csv完全一致 ==========
+        //        var headers = new List<string>
+        //        {
+        //            "No", "Die_x", "Die_y", "LightOnStatus", "RegisterPixels", "Final Class",
+        //            "Pixel Logic", "AOI GradeLevel", "Defect Density(%)", "Black Pattern",
+        //            "Uniformity", "Luminance(nit)", "Voltage(v)", "Current(mA)", "Temperature(℃)",
+        //            "Measurement Time", "Pin Pressure", "TouchDown Counts", "Probing Card SN",
+        //            "Lv(cd/m2)", "IP", "Excitation Purity(%)", "BlueLight", "cx", "cy",
+        //            "u'", "v'", "CCT(K)", "Dominant Wavelength(nm)", "Saturation(%)",
+        //            "Peak Wavelength(nm)", "FWHM", "Temperature(℃)"
+        //        };
+
+        //        // 添加波长表头 (380-780nm，每1nm一列)
+        //        for (int wl = 380; wl <= 780; wl++)
+        //        {
+        //            headers.Add(wl.ToString());
+        //        }
+
+        //        csv.AppendLine(string.Join(",", headers));
+
+
+        //        // ========== 2. 填充数据行 ==========
+        //        int rowIndex = 1;
+        //        foreach (var measurement in measurements)
+        //        {
+        //            var row = new List<string>();
+
+        //            // 基本字段
+        //            row.Add(rowIndex.ToString()); // No
+        //            row.Add(dieViewModel.MapX.ToString()); // Die_x (使用当前Die的列)
+        //            row.Add(dieViewModel.MapY.ToString()); // Die_y (使用当前Die的行)
+        //            row.Add("OK"); // LightOnStatus (默认值)
+        //            row.Add("OK"); // RegisterPixels (默认值)  
+        //            row.Add("na"); // Final Class (根据测量结果判断)
+        //            row.Add("OK"); // Pixel Logic (默认值)
+        //            row.Add(string.IsNullOrEmpty(dieViewModel.AOIGradeLevel) ? "na" : dieViewModel.AOIGradeLevel); // AOI GradeLevel
+        //            row.Add("2"); // Defect Density(%) (默认值)
+        //            row.Add(string.IsNullOrEmpty(dieViewModel.AOIGradeLevel) ? "na" : dieViewModel.AOIGradeLevel); // Black Pattern
+        //            row.Add("0"); // Uniformity measurement.Uniformity.ToString("F2")
+        //            row.Add(measurement.Luminance.ToString("F0")); // Luminance(nit)
+        //            row.Add(measurement.Voltage.ToString("F2")); // Voltage(v)
+        //            row.Add(measurement.Current.ToString("F2")); // Current(mA)
+        //            row.Add(DateTime.Now.ToString("yyyy/MM/dd")); // Measurement Time
+        //            row.Add("na"); // Pin Pressure
+        //            row.Add("na"); // TouchDown Counts
+        //            row.Add("na"); // Probing Card SN
+        //            row.Add(measurement.Luminance.ToString("F2")); // Lv(cd/m2)
+        //            row.Add(measurement.IP); // IP
+        //            row.Add(measurement.fPur != 0 ? (measurement.fPur * 100).ToString("F2") : "0"); // Excitation Purity(%)
+        //            row.Add(measurement.Blue.ToString("F2")); // BlueLight
+        //            row.Add(measurement.CIE_x.ToString("F6")); // cx
+        //            row.Add(measurement.CIE_y.ToString("F6")); // cy
+        //            row.Add(measurement.CIE_u.ToString("F6")); // u'
+        //            row.Add(measurement.CIE_v.ToString("F6")); // v'
+        //            row.Add(measurement.CCT.ToString("F1")); // CCT(K)
+        //            row.Add(measurement.PeakWavelength.ToString("F2")); // Dominant Wavelength(nm)
+        //            row.Add(measurement.fPur.ToString("F6")); // Saturation(%)
+        //            row.Add(measurement.PeakWavelength.ToString("F1")); // Peak Wavelength(nm)
+        //            row.Add(measurement.FHW.ToString("F1")); // FWHM
+        //            row.Add($"{ChipMappingControlVM?.Temperatures:F1}"); // Temperature(℃)
+
+        //            // ========== 3. 添加光谱数据 (380-780nm) ==========
+        //            // 创建波长到强度值的映射字典
+        //            Dictionary<int, double> spectralMap = new Dictionary<int, double>();
+
+        //            if (measurement.Intensities != null && wavelengths != null)
+        //            {
+        //                // 将强度值映射到对应的波长
+        //                for (int i = 0; i < Math.Min(wavelengths.Length, measurement.Intensities.Length); i++)
+        //                {
+        //                    int wl = (int)Math.Round(wavelengths[i]);
+        //                    if (wl >= 380 && wl <= 780)
+        //                    {
+        //                        spectralMap[wl] = measurement.Intensities[i];
+        //                    }
+        //                }
+        //            }
+
+        //            // 填充380-780nm的光谱数据，每1nm一个值
+        //            for (int wl = 380; wl <= 780; wl++)
+        //            {
+        //                if (spectralMap.ContainsKey(wl))
+        //                {
+        //                    double value = spectralMap[wl];
+        //                    // 使用科学计数法格式化，与AOI-3.csv一致
+        //                    row.Add(FormatScientific(value));
+        //                }
+        //                else
+        //                {
+        //                    row.Add("0");
+        //                }
+        //            }
+
+        //            csv.AppendLine(string.Join(",", row));
+        //            rowIndex++;
+        //        }
+
+        //        // 写入文件
+        //        File.WriteAllText(filePath, csv.ToString(), Encoding.UTF8);
+        //        logger.Info($"Successfully exported {measurements.Count} rows of AOI data to {filePath}");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        logger.Error($"Failed to export AOI CSV: {ex.Message}", ex);
+        //    }
+        //}
+        #endregion
+
+        #region 2
         public override void AutoExportData(DieViewModel dieViewModel)
         {
             string serialNumber = dieViewModel.SerialNumber ?? "Unknown";
             logger.InfoFormat("serialNumber => {0}", serialNumber);
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
-            });
 
-            //// 实现自动导出数据逻辑
-            var Measurements = CustomIVLVM.Measurements;
-            var Wavelengths = CustomIVLVM.Wavelengths;
-            if (Measurements == null || !Measurements.Any() || Wavelengths == null || Wavelengths.Length == 0)
+            // 尝试加载光谱数据，但不强制要求
+            ObservableCollection<SpectrumMeasurement> measurements = null;
+            float[] wavelengths = null;
+
+            try
             {
-                logger.Info("No valid IVL data available for export");
-                return;
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    if (CustomIVLVM != null)
+                    {
+                        CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
+                        measurements = CustomIVLVM.Measurements;
+                        wavelengths = CustomIVLVM.Wavelengths;
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                logger.Warn($"Failed to load spectrum data, continuing with basic AOI data: {ex.Message}");
+                // 继续执行，使用空的光谱数据
             }
 
-            // 读取全局配置的IVL导出路径（核心修改点2）
+            // 读取全局配置的IVL导出路径
             string ivlRootPath = ConfigManager.Config.ExportPathSettings?.IvlExportPath ?? @"D:\Project\IVL";
-            // 确保目录存在
             if (!Directory.Exists(ivlRootPath))
             {
                 Directory.CreateDirectory(ivlRootPath);
                 logger.Info($"Create IVL export directory：{ivlRootPath}");
             }
-            // 构造文件名（包含SerialNumber+时间戳）
-            string fileName = $"IVL_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-            string fullExportPath = Path.Combine(ivlRootPath, fileName);
-            // 执行导出
-            CustomIVLVM.ExportToCsv(fullExportPath, Measurements, Wavelengths);
-            logger.Info($"IVL data exported to：{fullExportPath}");
 
+            // 导出IVL数据（如果有）
+            if (measurements != null && measurements.Any() && wavelengths != null && wavelengths.Length > 0)
+            {
+                string ivlFileName = $"IVL_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+                string ivlFullExportPath = Path.Combine(ivlRootPath, ivlFileName);
+                CustomIVLVM.ExportToCsv(ivlFullExportPath, measurements, wavelengths);
+                logger.Info($"IVL data exported to：{ivlFullExportPath}");
+            }
+
+            #region aoi数据导出
+            string aoiRootPath = ConfigManager.Config.ExportPathSettings?.AoiExportPath ?? @"D:\Project\AOI";
+            if (!Directory.Exists(aoiRootPath))
+            {
+                Directory.CreateDirectory(aoiRootPath);
+                logger.Info($"Create AOI export directory：{aoiRootPath}");
+            }
+
+            string aoiFileName = $"AOI_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            string aoiFullExportPath = Path.Combine(aoiRootPath, aoiFileName);
+
+            // 执行导出，兼容有无光谱数据的情况
+            ExportAOICSV(aoiFullExportPath, measurements, wavelengths, dieViewModel);
+            logger.Info($"AOI CSV data exported to：{aoiFullExportPath}");
+            #endregion
+        }
+        /// <summary>
+        /// 导出AOI格式的CSV文件，兼容有无光谱数据的情况
+        /// </summary>
+        private void ExportAOICSV(string filePath, ObservableCollection<SpectrumMeasurement> measurements,
+            float[] wavelengths, DieViewModel dieViewModel)
+        {
+            try
+            {
+                var csv = new StringBuilder();
+
+                // ========== 1. 构建表头 - 与AOI-3.csv完全一致 ==========
+                var headers = new List<string>
+                {
+                    "No", "Die_x", "Die_y", "LightOnStatus", "RegisterPixels", "Final Class",
+                    "Pixel Logic", "AOI GradeLevel", "Defect Density(%)", "Black Pattern",
+                    "Uniformity", "Luminance(nit)", "Voltage(v)", "Current(mA)", "Temperature(℃)",
+                    "Measurement Time", "Pin Pressure", "TouchDown Counts", "Probing Card SN",
+                    "Lv(cd/m2)", "IP", "Excitation Purity(%)", "BlueLight", "cx", "cy",
+                    "u'", "v'", "CCT(K)", "Dominant Wavelength(nm)", "Saturation(%)",
+                    "Peak Wavelength(nm)", "FWHM", "Temperature(℃)"
+                };
+
+                // 添加波长表头 (380-780nm，每1nm一列)
+                for (int wl = 380; wl <= 780; wl++)
+                {
+                    headers.Add(wl.ToString());
+                }
+
+                csv.AppendLine(string.Join(",", headers));
+
+                // ========== 2. 判断是否有光谱数据 ==========
+                bool hasSpectrumData = measurements != null && measurements.Any() && wavelengths != null && wavelengths.Length > 0;
+
+                if (hasSpectrumData)
+                {
+                    logger.Info($"Exporting AOI data with spectrum data, {measurements.Count} measurements");
+                    // 有光谱数据：为每个测量点生成一行
+                    int rowIndex = 1;
+                    foreach (var measurement in measurements)
+                    {
+                        var row = GenerateDataRowWithSpectrum(measurement, dieViewModel, rowIndex++, wavelengths);
+                        csv.AppendLine(string.Join(",", row));
+                    }
+                }
+                else
+                {
+                    logger.Info("Exporting AOI data without spectrum data");
+                    // 无光谱数据：只生成一行基本数据
+                    var row = GenerateDataRowWithoutSpectrum(dieViewModel, 1);
+                    csv.AppendLine(string.Join(",", row));
+                }
+
+                // 写入文件
+                File.WriteAllText(filePath, csv.ToString(), Encoding.UTF8);
+
+                string dataType = hasSpectrumData ? "with spectrum" : "without spectrum";
+                logger.Info($"Successfully exported AOI data {dataType} to {filePath}");
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Failed to export AOI CSV: {ex.Message}", ex);
+            }
+        }
+        /// <summary>
+        /// 生成包含光谱数据的行
+        /// </summary>
+        private List<string> GenerateDataRowWithSpectrum(SpectrumMeasurement measurement,
+            DieViewModel dieViewModel, int rowIndex, float[] wavelengths)
+        {
+            var row = new List<string>();
+
+            // 基本字段
+            row.Add(rowIndex.ToString()); // No
+            row.Add(dieViewModel.MapX.ToString()); // Die_x
+            row.Add(dieViewModel.MapY.ToString()); // Die_y
+            row.Add("OK"); // LightOnStatus
+            row.Add("OK"); // RegisterPixels (默认值)
+            row.Add("0"); // Final Class
+            row.Add("OK"); // Pixel Logic (默认值)
+            row.Add(string.IsNullOrEmpty(dieViewModel.AOIGradeLevel) ? "na" : dieViewModel.AOIGradeLevel); // AOI GradeLevel
+            row.Add("2"); // Defect Density(%) (默认值)
+            row.Add(string.IsNullOrEmpty(dieViewModel.AOIGradeLevel) ? "na" : dieViewModel.AOIGradeLevel); // Black Pattern
+            row.Add("0"); // Uniformity
+            row.Add(measurement.Luminance.ToString("F0")); // Luminance(nit)
+            row.Add(measurement.Voltage.ToString("F2")); // Voltage(v)
+            row.Add(measurement.Current.ToString("F2")); // Current(mA)
+            row.Add(DateTime.Now.ToString("yyyy/MM/dd")); // Measurement Time
+            row.Add("na"); // Pin Pressure
+            row.Add("na"); // TouchDown Counts
+            row.Add("na"); // Probing Card SN
+            row.Add(measurement.Luminance.ToString("F2")); // Lv(cd/m2)
+            row.Add(measurement.IP); // IP
+            row.Add(measurement.fPur != 0 ? (measurement.fPur * 100).ToString("F2") : "0"); // Excitation Purity(%)
+            row.Add(measurement.Blue.ToString("F2")); // BlueLight
+            row.Add(measurement.CIE_x.ToString("F6")); // cx
+            row.Add(measurement.CIE_y.ToString("F6")); // cy
+            row.Add(measurement.CIE_u.ToString("F6")); // u'
+            row.Add(measurement.CIE_v.ToString("F6")); // v'
+            row.Add(measurement.CCT.ToString("F1")); // CCT(K)
+            row.Add(measurement.PeakWavelength.ToString("F2")); // Dominant Wavelength(nm)
+            row.Add(measurement.fPur.ToString("F6")); // Saturation(%)
+            row.Add(measurement.PeakWavelength.ToString("F1")); // Peak Wavelength(nm)
+            row.Add(measurement.FHW.ToString("F1")); // FWHM
+            row.Add($"{ChipMappingControlVM?.Temperatures:F1}"); // Temperature(℃)
+
+            // 添加光谱数据
+            AddSpectralData(row, measurement, wavelengths);
+
+            return row;
+        }
+        /// <summary>
+        /// 生成不包含光谱数据的行（只有基本字段）
+        /// </summary>
+        private List<string> GenerateDataRowWithoutSpectrum(DieViewModel dieViewModel, int rowIndex)
+        {
+            var row = new List<string>();
+
+            // 基本字段 - 使用DieViewModel中的可用数据或默认值
+            row.Add(rowIndex.ToString()); // No
+            row.Add(dieViewModel.MapX.ToString()); // Die_x
+            row.Add(dieViewModel.MapY.ToString()); // Die_y
+            row.Add("OK"); // LightOnStatus
+            row.Add("OK"); // RegisterPixels
+            row.Add(dieViewModel.FinalClass ?? "na"); // Final Class
+            row.Add("OK"); // Pixel Logic
+            row.Add(string.IsNullOrEmpty(dieViewModel.AOIGradeLevel) ? "na" : dieViewModel.AOIGradeLevel); // AOI GradeLevel
+            row.Add("na"); // Defect Density(%) - 默认值
+            row.Add(string.IsNullOrEmpty(dieViewModel.BlackPattern) ? "na" : dieViewModel.BlackPattern); // Black Pattern
+            row.Add("na"); // Uniformity - 默认值
+            row.Add("na"); // Luminance(nit) - 默认值
+            row.Add("na"); // Voltage(v)
+            row.Add("na"); // Current(mA)
+            row.Add(DateTime.Now.ToString("yyyy/MM/dd")); // Measurement Time
+            row.Add("na"); // Pin Pressure
+            row.Add("na"); // TouchDown Counts
+            row.Add("na"); // Probing Card SN
+            row.Add("na"); // Lv(cd/m2) - 默认值
+            row.Add("na"); // IP - 默认值
+            row.Add("99"); // Excitation Purity(%) - 默认值 兴奋纯度
+            row.Add("na"); // BlueLight - 默认值
+            row.Add("na"); // cx - 默认值
+            row.Add("na"); // cy - 默认值
+            row.Add("na"); // u' - 默认值
+            row.Add("na"); // v' - 默认值
+            row.Add("na"); // CCT(K) - 默认值
+            row.Add("na"); // Dominant Wavelength(nm) - 默认值
+            row.Add("na"); // Saturation(%) - 默认值
+            row.Add("na"); // Peak Wavelength(nm) - 默认值
+            row.Add("na"); // FWHM - 默认值
+            row.Add($"{ChipMappingControlVM?.Temperatures:F1}"); // Temperature(℃)
+
+            // 添加空的光谱数据 (380-780nm 全部为0)
+            for (int wl = 380; wl <= 780; wl++)
+            {
+                row.Add("0");
+            }
+
+            return row;
+        }
+        /// <summary>
+        /// 添加光谱数据到行
+        /// </summary>
+        private void AddSpectralData(List<string> row, SpectrumMeasurement measurement, float[] wavelengths)
+        {
+            // 创建波长到强度值的映射字典
+            Dictionary<int, double> spectralMap = new Dictionary<int, double>();
+
+            if (measurement.Intensities != null && wavelengths != null)
+            {
+                // 将强度值映射到对应的波长
+                for (int i = 0; i < Math.Min(wavelengths.Length, measurement.Intensities.Length); i++)
+                {
+                    int wl = (int)Math.Round(wavelengths[i]);
+                    if (wl >= 380 && wl <= 780)
+                    {
+                        spectralMap[wl] = measurement.Intensities[i];
+                    }
+                }
+            }
+
+            // 填充380-780nm的光谱数据，每1nm一个值
+            for (int wl = 380; wl <= 780; wl++)
+            {
+                if (spectralMap.ContainsKey(wl))
+                {
+                    double value = spectralMap[wl];
+                    row.Add(FormatScientific(value));
+                }
+                else
+                {
+                    row.Add("0");
+                }
+            }
+        }
+        #endregion
+        private string FormatScientific(double value)
+        {
+            if (Math.Abs(value) < 1e-6)
+            {
+                return value.ToString("E2", System.Globalization.CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                return value.ToString("0.######", System.Globalization.CultureInfo.InvariantCulture);
+            }
         }
 
         // DTO类

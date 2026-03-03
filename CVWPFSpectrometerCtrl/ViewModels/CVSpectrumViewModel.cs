@@ -39,7 +39,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         // 总览图光谱X轴固定范围（350~800nm）
         private readonly double _overviewSpectralXMin = 360;
         private readonly double _overviewSpectralXMax = 800;
-
+        public ChipMappingControlViewModel chipMappingControlViewModel { get; private set; }
         public void NotifyPropertyChanged(string propertyName)
         {
             OnPropertyChanged(propertyName);
@@ -1943,7 +1943,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         item.fPur.ToString(),
                         item.PeakIntensity.ToString("F2"),
                         item.FHW.ToString("F2"),
-                        //$"{_chipMappingControlViewModel?.Temperatures:F1}"
+                        $"{chipMappingControlViewModel?.Temperatures:F1}"
                      };
 
                     // 5. 强度值处理（与之前逻辑一致）
