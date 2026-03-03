@@ -3332,64 +3332,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         public CVEQEViewModel CustomEQEVM { get; private set; }
         #endregion
      
-        //追加数据
-        public void AppendSpectrumData(string serialNumber)
-        {
-            if (string.IsNullOrWhiteSpace(serialNumber))
-            {
-                ClearAllDisplays();
-                return;
-            }
-
-            var results = SpectrumResultService.LoadResultByBatchCode(serialNumber);
-            if (results == null || results.Count == 0) return;
-
-            int currentMaxNo = Measurements.Any() ? Measurements.Max(m => m.No) : 0;
-
-            foreach (var result in results)
-            {
-                // 检查是否已存在相同 Meas_Id 的数据
-                if (Measurements.Any(m => m.Meas_Id == result.BatchCode))
-                    continue;
-
-                var measurement = new SpectrumMeasurement(++currentMaxNo)
-                {
-                    Timestamp = result.CreateDate,
-                    Meas_Id = result.BatchCode,
-                    Voltage = (float)result.VResult,
-                    Current = (float)result.IResult,
-                    Luminance = (float)result.FPh / 1,
-                    IP = Math.Round((decimal)(result.FIp / 65535 * 100), 2).ToString() + "%",
-                    Blue = (float)result.FBR,
-                    CIE_x = (float)result.Fx,
-                    CIE_y = (float)result.Fy,
-                    CIE_u = (float)result.Fu,
-                    CIE_v = (float)result.Fv,
-                    CCT = (float)result.FCCT,
-                    PeakWavelength = (float)result.FLd,
-                    fPur = (float)result.FPur,
-                    PeakIntensity = (float)result.FLp,
-                    FHW = (float)result.FHW,
-                    Intensities = GetIntensitiesFromFileOrOriginal(result),
-                    Wavelengths = Wavelengths,
-                    fPlambda = (float)result.FPlambda,
-                    RowLineColor = ConvertToOxyColor(SpectralLineColor)
-                };
-
-                double sum1 = 0, sum2 = 0;
-                for (int i = 35; i <= 75; i++)
-                    sum1 += measurement.Intensities[i * 10];
-                for (int i = 20; i <= 120; i++)
-                    sum2 += measurement.Intensities[i * 10];
-                measurement.Blue = (float)Math.Round(sum1 / sum2 * 100, 2);
-
-                Measurements.Add(measurement);
-            }
-
-            // 更新图表和总览图
-            UpdateChartByShowAllState();
-            InitializeOverviewSeries();
-        }
+      
     }
 }
 
