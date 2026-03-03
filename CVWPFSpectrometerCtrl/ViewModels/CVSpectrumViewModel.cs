@@ -1955,7 +1955,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         {
                             float intensity = item.Intensities[idx];
                             // 目标代码逻辑：负强度转为0
-                            intensity = intensity > 0 ? intensity : 0;
+                            //intensity = intensity > 0 ? intensity : 0;
                             // 可选：导出相对强度（SpectralData.RelativeSpectrum）或绝对强度（SpectralData.AbsoluteSpectrum）
                             // 相对强度：直接用处理后的intensity；绝对强度：intensity * fPlambda
                             double targetIntensity = intensity * item.fPlambda; // 相对强度（要绝对强度则改为 intensity * fPlambda）
@@ -2851,82 +2851,91 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
         public void LoadSpectrumData(string serialNumber)
         {
-            if (string.IsNullOrWhiteSpace(serialNumber))
+            try
             {
-                ClearAllDisplays();
-                return;
-            }
-            IV_viewModel.LoadData(serialNumber);
-            VI_viewModel.LoadData(serialNumber);
-
-            var results = SpectrumResultService.LoadResultByBatchCode(serialNumber);
-            if (results == null || results.Count == 0) return;
-
-            IL_viewModel.LoadData(results);
-            VL_viewModel.LoadData(results);
-            Power_L_viewModel.LoadData(results);
-            //
-            int n = 1;
-            foreach (var result in results)
-            {
-
-                var measurement = new SpectrumMeasurement(n++)
+                if (string.IsNullOrWhiteSpace(serialNumber))
                 {
-                    Timestamp = result.CreateDate,
-                    Meas_Id = result.BatchCode,
-                    Voltage = (float)result.VResult,
-                    Current = (float)result.IResult,
-                    Luminance = (float)result.FPh / 1,
+                    ClearAllDisplays();
+                    return;
+                }
+                IV_viewModel.LoadData(serialNumber);
+                VI_viewModel.LoadData(serialNumber);
 
-                    IP = Math.Round((decimal)(result.FIp / 65535 * 100), 2).ToString() + "%",
+                var results = SpectrumResultService.LoadResultByBatchCode(serialNumber);
+                if (results == null || results.Count == 0) return;
 
-                    Blue = (float)result.FBR,
-                    CIE_x = (float)result.Fx,
-                    CIE_y = (float)result.Fy,
-                    CIE_u = (float)result.Fu,
-                    CIE_v = (float)result.Fv,
-                    CCT = (float)result.FCCT,
-                    PeakWavelength = (float)result.FLd,
-                    fPur = (float)result.FPur,
-                    //fPuPercent = $"{Math.Round((decimal)(result.FPur * 100), 2)}%",
-                    PeakIntensity = (float)result.FLp,
-                    FHW = (float)result.FHW,
-                    //Intensities = JsonConvert.DeserializeObject<float[]>(result.FPL),
-                    Intensities = GetIntensitiesFromFileOrOriginal(result),
-                    Wavelengths = Wavelengths,
-                    fPlambda = (float)result.FPlambda,
-                    RowLineColor = ConvertToOxyColor(SpectralLineColor)
-                };
-                double sum1 = 0, sum2 = 0;
-                for (int i = 35; i <= 75; i++)
-                    sum1 += measurement.Intensities[i * 10];
-                for (int i = 20; i <= 120; i++)
-                    sum2 += measurement.Intensities[i * 10];
-                measurement.Blue = (float)Math.Round(sum1 / sum2 * 100, 2);
-                Measurements.Add(measurement);
+                IL_viewModel.LoadData(results);
+                VL_viewModel.LoadData(results);
+                Power_L_viewModel.LoadData(results);
+                //
+                int n = 1;
+                foreach (var result in results)
+                {
+
+                    var measurement = new SpectrumMeasurement(n++)
+                    {
+                        Timestamp = result.CreateDate,
+                        Meas_Id = result.BatchCode,
+                        Voltage = (float)result.VResult,
+                        Current = (float)result.IResult,
+                        Luminance = (float)result.FPh / 1,
+
+                        IP = Math.Round((decimal)(result.FIp / 65535 * 100), 2).ToString() + "%",
+
+                        Blue = (float)result.FBR,
+                        CIE_x = (float)result.Fx,
+                        CIE_y = (float)result.Fy,
+                        CIE_u = (float)result.Fu,
+                        CIE_v = (float)result.Fv,
+                        CCT = (float)result.FCCT,
+                        PeakWavelength = (float)result.FLd,
+                        fPur = (float)result.FPur,
+                        //fPuPercent = $"{Math.Round((decimal)(result.FPur * 100), 2)}%",
+                        PeakIntensity = (float)result.FLp,
+                        FHW = (float)result.FHW,
+                        //Intensities = JsonConvert.DeserializeObject<float[]>(result.FPL),
+                        Intensities = GetIntensitiesFromFileOrOriginal(result),
+                        Wavelengths = Wavelengths,
+                        fPlambda = (float)result.FPlambda,
+                        RowLineColor = ConvertToOxyColor(SpectralLineColor)
+                    };
+                    double sum1 = 0, sum2 = 0;
+                    for (int i = 35; i <= 75; i++)
+                        sum1 += measurement.Intensities[i * 10];
+                    for (int i = 20; i <= 120; i++)
+                        sum2 += measurement.Intensities[i * 10];
+                    measurement.Blue = (float)Math.Round(sum1 / sum2 * 100, 2);
+                    Measurements.Add(measurement);
 
 
+                }
+
+                if (Measurements.Any())
+                {
+                    SelectedMeasurement = Measurements.First();
+                    //if (_spectralCtrl != null)
+                    //{
+                    //    _spectralCtrl.SpectralData.SetData(Wavelengths, SelectedMeasurement.Intensities);
+                    //    _spectralCtrl.InvalidateVisual();
+                    //}
+                    // 新增：加载EQE数据
+                    // UpdateEQEChartFromSelectedMeasurement();
+                }
+                // 数据加载后，根据“显示所有”状态更新图表
+                UpdateChartByShowAllState();
+                // 新增：同步更新EQE图表
+                //UpdateEQEChartByShowAllState();
+                // 子Tab数据加载完成后，重新初始化总览图Series
+                InitializeOverviewSeries();
+                // 触发自动导出
+                //AutoExportData();
             }
-
-            if (Measurements.Any())
-            {
-                SelectedMeasurement = Measurements.First();
-                //if (_spectralCtrl != null)
-                //{
-                //    _spectralCtrl.SpectralData.SetData(Wavelengths, SelectedMeasurement.Intensities);
-                //    _spectralCtrl.InvalidateVisual();
-                //}
-                // 新增：加载EQE数据
-               // UpdateEQEChartFromSelectedMeasurement();
-            }
-            // 数据加载后，根据“显示所有”状态更新图表
-            UpdateChartByShowAllState();
-            // 新增：同步更新EQE图表
-            //UpdateEQEChartByShowAllState();
-            // 子Tab数据加载完成后，重新初始化总览图Series
-            InitializeOverviewSeries();
-            // 触发自动导出
-            //AutoExportData();
+            catch (Exception ex)
+                {
+                    MessageBox.Show("未加载到数据"); // 调试用
+                    return;
+                }
+            
         }
         public SpectrumMeasurement GetSpectrumData(string serialNumber)
         {
