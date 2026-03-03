@@ -1955,11 +1955,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         {
                             float intensity = item.Intensities[idx];
                             // 目标代码逻辑：负强度转为0
-                            intensity = intensity > 0 ? intensity : 0;
+                            //intensity = intensity > 0 ? intensity : 0;
                             // 可选：导出相对强度（SpectralData.RelativeSpectrum）或绝对强度（SpectralData.AbsoluteSpectrum）
                             // 相对强度：直接用处理后的intensity；绝对强度：intensity * fPlambda
                             double targetIntensity = intensity * item.fPlambda; // 相对强度（要绝对强度则改为 intensity * fPlambda）
-                                                                                // 格式化（与目标代码数据精度一致）
+                                                                          // 格式化（与目标代码数据精度一致）
                             string value = targetIntensity < 0.0001f ? targetIntensity.ToString() : targetIntensity.ToString();
                             waveValues.Add(EscapeCsvValue(value));
                         }
