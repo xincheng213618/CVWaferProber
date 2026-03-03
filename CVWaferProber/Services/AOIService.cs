@@ -29,11 +29,12 @@ namespace CVWaferProber.Services
         private DieViewModel _currentDieVM;
         public CVCamImagerViewModel CustomImageVM { get; private set; }
         public CVSpectrumViewModel CustomIVLVM { get; private set; }
-        public ChipMappingControlViewModel ChipMappingControlVM { get; private set; }
+        public ChipMappingControlViewModel CustomMappingVM { get; private set; }
         public AOIService(MainViewModel mainVM, IFlowService flowService) : base(mainVM, flowService)
         {
             this.CustomImageVM = mainVM.CustomImageVM;
             this.CustomIVLVM = mainVM.CustomIVLVM;
+            this.CustomMappingVM = mainVM.CustomMappingVM;
         }
 
         protected override ChipStatus GetResultStatus(string serialNumber)
@@ -987,7 +988,7 @@ namespace CVWaferProber.Services
             row.Add(measurement.fPur.ToString("F6")); // Saturation(%)
             row.Add(measurement.PeakWavelength.ToString("F1")); // Peak Wavelength(nm)
             row.Add(measurement.FHW.ToString("F1")); // FWHM
-            row.Add($"{ChipMappingControlVM?.Temperatures:F1}"); // Temperature(℃)
+            row.Add($"{CustomMappingVM?.Temperatures:F1}"); // Temperature(℃)
 
             // 添加光谱数据
             AddSpectralData(row, measurement, wavelengths);
@@ -1033,7 +1034,7 @@ namespace CVWaferProber.Services
             row.Add("na"); // Saturation(%) - 默认值
             row.Add("na"); // Peak Wavelength(nm) - 默认值
             row.Add("na"); // FWHM - 默认值
-            row.Add($"{ChipMappingControlVM?.Temperatures:F1}"); // Temperature(℃)
+            row.Add($"{CustomMappingVM?.Temperatures:F1}"); // Temperature(℃)
 
             // 添加空的光谱数据 (380-780nm 全部为0)
             for (int wl = 380; wl <= 780; wl++)

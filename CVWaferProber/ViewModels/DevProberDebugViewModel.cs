@@ -200,9 +200,7 @@ namespace CVWaferProber.ViewModels
                 // 先调用接口获取温度
                 await _client.GetCurrentTemperatureAsync();
 
-                // ========== 关键：获取到温度后更新本地属性 + 发送事件 ==========
-               
-
+              
                 // 发送温度更新事件（不管是否有返回值，都可以用本地Temperature属性）
                 TemperatureManager.UpdateTemperature(Convert.ToDouble(Temperature));
             }
