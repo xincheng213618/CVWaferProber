@@ -14,6 +14,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,6 +22,16 @@ using Application = System.Windows.Application;
 
 namespace CVWaferProber.Services
 {
+    public static class CVAlgorithmNative
+    {
+        // 定义返回值枚举（根据CV_algorithm.dll实际定义调整）
+        public enum AliResult
+        {
+            Success = 0,
+            Error_InvalidHandle = -1,
+            Error_InvalidJson = -2,
+            Error_CalcFailed = -3
+        }
 
         // 导入CV_algorithm.dll的核心接口
         [DllImport("CV_algorithm.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
@@ -332,7 +343,7 @@ namespace CVWaferProber.Services
                     return;
                 }
 
-             
+
                 int addedCount = 0;
 
                 foreach (var result in cameraResults)
@@ -930,7 +941,7 @@ namespace CVWaferProber.Services
                 {
                     "No", "Die_x", "Die_y", "LightOnStatus", "RegisterPixels", "Final Class",
                     "Pixel Logic", "AOI GradeLevel", "Defect Density(%)", "Black Pattern",
-                    "Uniformity", "Luminance(nit)", "Voltage(v)", "Current(mA)", 
+                    "Uniformity", "Luminance(nit)", "Voltage(v)", "Current(mA)",
                     "Measurement Time", "Pin Pressure", "TouchDown Counts", "Probing Card SN",
                     "Lv(cd/m2)", "IP", "Excitation Purity(%)", "BlueLight", "cx", "cy",
                     "u'", "v'", "CCT(K)", "Dominant Wavelength(nm)", "Saturation(%)",
@@ -1000,7 +1011,7 @@ namespace CVWaferProber.Services
             row.Add(measurement.Voltage.ToString("F2")); // 13. Voltage(v)
             row.Add(measurement.Current.ToString("F2")); // 14. Current(mA)
             row.Add(DateTime.Now.ToString("yyyy/MM/dd")); // 15. Measurement Time
-                                                         
+
             string pinPressure = dieViewModel.Pressure ?? "0,0,0,0"; // 16. Pin Pressure - 关键修改：用引号括起来
             // 如果值包含逗号，需要用引号括起来
             if (pinPressure.Contains(","))
@@ -1135,7 +1146,7 @@ namespace CVWaferProber.Services
                     row.Add(FormatScientific(value));
                 }
                 else
-                {   
+                {
                     row.Add("0");
                 }
             }
