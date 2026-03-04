@@ -1039,9 +1039,18 @@ namespace CVWaferProber.Services
             row.Add("na"); // Voltage(v)
             row.Add("na"); // Current(mA)
             row.Add(DateTime.Now.ToString("yyyy/MM/dd")); // Measurement Time
-            row.Add("na"); // Pin Pressure
-            row.Add("na"); // TouchDown Counts
-            row.Add("na"); // Probing Card SN
+            string pinPressure = dieViewModel.Pressure ?? "0,0,0,0"; // 16. Pin Pressure - 关键修改：用引号括起来
+            // 如果值包含逗号，需要用引号括起来
+            if (pinPressure.Contains(","))
+            {
+                row.Add($"\"{pinPressure}\"");
+            }
+            else
+            {
+                row.Add(pinPressure);
+            }
+            row.Add(dieViewModel.TouchDownCounts.ToString() ?? "0"); // 17. TouchDown Counts（空值处理）
+            row.Add(dieViewModel.ProbingCardSN ?? "0"); // 18. Probing Card SN（空值处理）
             row.Add("na"); // Lv(cd/m2) - 默认值
             row.Add("na"); // IP - 默认值
             row.Add("99"); // Excitation Purity(%) - 默认值 兴奋纯度
