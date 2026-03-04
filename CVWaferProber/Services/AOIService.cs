@@ -830,6 +830,18 @@ namespace CVWaferProber.Services
             string serialNumber = dieViewModel.SerialNumber ?? "Unknown";
             logger.InfoFormat("serialNumber => {0}", serialNumber);
 
+            // ========== 核心修改：导出前先清空原有光谱数据 ==========
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                if (CustomIVLVM != null)
+                {
+                    // 清空Measurements和Wavelengths，确保数据隔离
+                    CustomIVLVM.ClearResult();
+                    // 重新加载当前die的光谱数据（仅加载当前die）
+                    CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
+                }
+            });
+
             // 尝试加载光谱数据，但不强制要求
             ObservableCollection<SpectrumMeasurement> measurements = null;
             float[] wavelengths = null;
@@ -840,7 +852,6 @@ namespace CVWaferProber.Services
                 {
                     if (CustomIVLVM != null)
                     {
-                        CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
                         measurements = CustomIVLVM.Measurements;
                         wavelengths = CustomIVLVM.Wavelengths;
                     }
@@ -877,7 +888,7 @@ namespace CVWaferProber.Services
                 logger.Info($"Create AOI export directory：{aoiRootPath}");
             }
 
-            string aoiFileName = $"AOI_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            string aoiFileName = $"AOI_Data_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
             string aoiFullExportPath = Path.Combine(aoiRootPath, aoiFileName);
 
             // 执行导出，兼容有无光谱数据的情况
@@ -1074,7 +1085,7 @@ namespace CVWaferProber.Services
                     row.Add(FormatScientific(value));
                 }
                 else
-                {
+                {   
                     row.Add("0");
                 }
             }
