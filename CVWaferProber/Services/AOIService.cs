@@ -962,46 +962,56 @@ namespace CVWaferProber.Services
         /// <summary>
         /// 生成包含光谱数据的行
         /// </summary>
-        private List<string> GenerateDataRowWithSpectrum(SpectrumMeasurement measurement,
-            DieViewModel dieViewModel, int rowIndex, float[] wavelengths)
+        private List<string> GenerateDataRowWithSpectrum(SpectrumMeasurement measurement, DieViewModel dieViewModel, int rowIndex, float[] wavelengths)
         {
             var row = new List<string>();
+            // 基础字段（严格32个，与表头顺序完全一致）
+            row.Add(rowIndex.ToString()); // 1. No
+            row.Add(dieViewModel.MapX.ToString()); // 2. Die_x
+            row.Add(dieViewModel.MapY.ToString()); // 3. Die_y
+            row.Add("OK"); // 4. LightOnStatus
+            row.Add("OK"); // 5. RegisterPixels
+            row.Add(dieViewModel.FinalClass ?? "na"); // 6. Final Class（修复：从dieViewModel获取，而非硬编码）
+            row.Add("OK"); // 7. Pixel Logic
+            row.Add(string.IsNullOrEmpty(dieViewModel.AOIGradeLevel) ? "na" : dieViewModel.AOIGradeLevel); // 8. AOI GradeLevel
+            row.Add("2"); // 9. Defect Density(%)
+            row.Add(string.IsNullOrEmpty(dieViewModel.AOIGradeLevel) ? "na" : dieViewModel.AOIGradeLevel); // 10. Black Pattern
+            row.Add("na"); // 11. Uniformity
+            row.Add(measurement.Luminance.ToString("F0")); // 12. Luminance(nit)
+            row.Add(measurement.Voltage.ToString("F2")); // 13. Voltage(v)
+            row.Add(measurement.Current.ToString("F2")); // 14. Current(mA)
+            row.Add(DateTime.Now.ToString("yyyy/MM/dd")); // 15. Measurement Time
+                                                         
+            string pinPressure = dieViewModel.Pressure ?? "0,0,0,0"; // 16. Pin Pressure - 关键修改：用引号括起来
+            // 如果值包含逗号，需要用引号括起来
+            if (pinPressure.Contains(","))
+            {
+                row.Add($"\"{pinPressure}\"");
+            }
+            else
+            {
+                row.Add(pinPressure);
+            }
+            row.Add(dieViewModel.TouchDownCounts.ToString() ?? "0"); // 17. TouchDown Counts（空值处理）
+            row.Add(dieViewModel.ProbingCardSN ?? "0"); // 18. Probing Card SN（空值处理）
+            row.Add(measurement.Luminance.ToString("F2")); // 19. Lv(cd/m2)（修复：与无光谱数据格式统一）
 
-            // 基本字段
-            row.Add(rowIndex.ToString()); // No
-            row.Add(dieViewModel.MapX.ToString()); // Die_x
-            row.Add(dieViewModel.MapY.ToString()); // Die_y
-            row.Add("OK"); // LightOnStatus
-            row.Add("OK"); // RegisterPixels (默认值)
-            row.Add("OK"); // Final Class
-            row.Add("OK"); // Pixel Logic (默认值)
-            row.Add(string.IsNullOrEmpty(dieViewModel.AOIGradeLevel) ? "na" : dieViewModel.AOIGradeLevel); // AOI GradeLevel
-            row.Add("2"); // Defect Density(%) (默认值)
-            row.Add(string.IsNullOrEmpty(dieViewModel.AOIGradeLevel) ? "na" : dieViewModel.AOIGradeLevel); // Black Pattern
-            row.Add("na"); // Uniformity
-            row.Add(measurement.Luminance.ToString("F0")); // Luminance(nit)
-            row.Add(measurement.Voltage.ToString("F2")); // Voltage(v)
-            row.Add(measurement.Current.ToString("F2")); // Current(mA)
-            row.Add(DateTime.Now.ToString("yyyy/MM/dd")); // Measurement Time
-            row.Add(dieViewModel.Pressure); // Pin Pressure
-            row.Add(dieViewModel.TouchDownCounts.ToString()); // TouchDown Counts
-            row.Add(dieViewModel.ProbingCardSN); // Probing Card SN
-            row.Add(measurement.Luminance.ToString()); // Lv(cd/m2)
-            row.Add(measurement.IP); // IP
-            row.Add(measurement.fPur != 0 ? (measurement.fPur * 100).ToString("F2") : "0"); // Excitation Purity(%)
-            row.Add(measurement.Blue.ToString("F2")); // BlueLight
-            row.Add(measurement.CIE_x.ToString("F6")); // cx
-            row.Add(measurement.CIE_y.ToString("F6")); // cy
-            row.Add(measurement.CIE_u.ToString("F6")); // u'
-            row.Add(measurement.CIE_v.ToString("F6")); // v'
-            row.Add(measurement.CCT.ToString("F1")); // CCT(K)
-            row.Add(measurement.PeakWavelength.ToString("F2")); // Dominant Wavelength(nm)
-            row.Add(measurement.fPur.ToString("F6")); // Saturation(%)
-            row.Add(measurement.PeakWavelength.ToString("F1")); // Peak Wavelength(nm)
-            row.Add(measurement.FHW.ToString("F1")); // FWHM
-            row.Add($"{CustomMappingVM?.Temperatures:F1}"); // Temperature(℃)
+            // 修复：处理可能包含逗号的字段，移除逗号并格式化
+            row.Add(measurement.IP?.Replace(",", "") ?? "na"); // 20. IP（移除逗号）
+            row.Add(measurement.fPur != 0 ? (measurement.fPur * 100).ToString("F2") : "0"); // 21. Excitation Purity(%)
+            row.Add(measurement.Blue.ToString("F2").Replace(",", "")); // 22. BlueLight（移除逗号+固定格式）
+            row.Add(measurement.CIE_x.ToString("F6")); // 23. cx
+            row.Add(measurement.CIE_y.ToString("F6")); // 24. cy
+            row.Add(measurement.CIE_u.ToString("F6")); // 25. u'
+            row.Add(measurement.CIE_v.ToString("F6")); // 26. v'
+            row.Add(measurement.CCT.ToString("F1")); // 27. CCT(K)
+            row.Add(measurement.PeakWavelength.ToString("F2")); // 28. Dominant Wavelength(nm)
+            row.Add(measurement.fPur.ToString("F6")); // 29. Saturation(%)
+            row.Add(measurement.PeakIntensity.ToString("F1")); // 30. Peak PeakIntensity(nm)
+            row.Add(measurement.FHW.ToString("F1")); // 31. FWHM
+            row.Add($"{CustomMappingVM?.Temperatures:F1}"); // 32. Temperature(℃)
 
-            // 添加光谱数据
+            // 添加光谱数据（401个字段，与表头一致）
             AddSpectralData(row, measurement, wavelengths);
 
             return row;
@@ -1036,10 +1046,10 @@ namespace CVWaferProber.Services
             row.Add("na"); // IP - 默认值
             row.Add("99"); // Excitation Purity(%) - 默认值 兴奋纯度
             row.Add("na"); // BlueLight - 默认值
-            row.Add("na"); // cx - 默认值
-            row.Add("na"); // cy - 默认值
-            row.Add("na"); // u' - 默认值
-            row.Add("na"); // v' - 默认值
+            row.Add("0"); // cx - 默认值
+            row.Add("0"); // cy - 默认值
+            row.Add("0"); // u' - 默认值
+            row.Add("0"); // v' - 默认值
             row.Add("na"); // CCT(K) - 默认值
             row.Add("na"); // Dominant Wavelength(nm) - 默认值
             row.Add("na"); // Saturation(%) - 默认值
