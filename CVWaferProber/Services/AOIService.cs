@@ -986,7 +986,7 @@ namespace CVWaferProber.Services
             row.Add(dieViewModel.Pressure); // Pin Pressure
             row.Add(dieViewModel.TouchDownCounts.ToString()); // TouchDown Counts
             row.Add(dieViewModel.ProbingCardSN); // Probing Card SN
-            row.Add(measurement.Luminance.ToString("F2")); // Lv(cd/m2)
+            row.Add(measurement.Luminance.ToString()); // Lv(cd/m2)
             row.Add(measurement.IP); // IP
             row.Add(measurement.fPur != 0 ? (measurement.fPur * 100).ToString("F2") : "0"); // Excitation Purity(%)
             row.Add(measurement.Blue.ToString("F2")); // BlueLight
