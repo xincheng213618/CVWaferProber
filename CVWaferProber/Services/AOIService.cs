@@ -42,7 +42,7 @@ namespace CVWaferProber.Services
             ref int resultLength          // 缓冲区长度（输入：缓冲区大小；输出：实际结果长度）
         );
 
-        // （可选）若需要创建/释放句柄，补充对应接口
+        // 若需要创建/释放句柄，补充对应接口
         [DllImport("CV_algorithm.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr CV_Ali_CreateHandle();
 
