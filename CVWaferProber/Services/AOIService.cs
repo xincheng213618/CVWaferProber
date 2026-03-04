@@ -1024,7 +1024,7 @@ namespace CVWaferProber.Services
             row.Add(string.IsNullOrEmpty(dieViewModel.AOIGradeLevel) ? "na" : dieViewModel.AOIGradeLevel); // AOI GradeLevel
             row.Add("na"); // Defect Density(%) - 默认值
             row.Add(string.IsNullOrEmpty(dieViewModel.BlackPattern) ? "na" : dieViewModel.BlackPattern); // Black Pattern
-            row.Add("na"); // Uniformity - 默认值
+            row.Add("0.55"); // Uniformity - 默认值
             row.Add("na"); // Luminance(nit) - 默认值
             row.Add("na"); // Voltage(v)
             row.Add("na"); // Current(mA)
