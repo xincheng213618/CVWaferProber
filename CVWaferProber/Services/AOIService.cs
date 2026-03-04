@@ -22,6 +22,24 @@ using Application = System.Windows.Application;
 namespace CVWaferProber.Services
 {
 
+        // 导入CV_algorithm.dll的核心接口
+        [DllImport("CV_algorithm.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        public static extern AliResult CV_Ali_calcSingle(
+            IntPtr handle,                // 句柄（若无需句柄可传IntPtr.Zero，需确认dll要求）
+            [MarshalAs(UnmanagedType.LPStr)] string staticJson,  // 输入JSON字符串
+            [MarshalAs(UnmanagedType.LPStr)] StringBuilder result, // 输出结果缓冲区
+            ref int resultLength          // 缓冲区长度（输入：缓冲区大小；输出：实际结果长度）
+        );
+
+        // 若需要创建/释放句柄，补充对应接口
+        [DllImport("CV_algorithm.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern IntPtr CV_Ali_CreateHandle();
+
+        [DllImport("CV_algorithm.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void CV_Ali_ReleaseHandle(IntPtr handle);
+
+    }
+
     public class AOIService : BaseSerivce
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(AOIService));
@@ -314,7 +332,7 @@ namespace CVWaferProber.Services
                     return;
                 }
 
-
+             
                 int addedCount = 0;
 
                 foreach (var result in cameraResults)
@@ -912,7 +930,7 @@ namespace CVWaferProber.Services
                 {
                     "No", "Die_x", "Die_y", "LightOnStatus", "RegisterPixels", "Final Class",
                     "Pixel Logic", "AOI GradeLevel", "Defect Density(%)", "Black Pattern",
-                    "Uniformity", "Luminance(nit)", "Voltage(v)", "Current(mA)",
+                    "Uniformity", "Luminance(nit)", "Voltage(v)", "Current(mA)", 
                     "Measurement Time", "Pin Pressure", "TouchDown Counts", "Probing Card SN",
                     "Lv(cd/m2)", "IP", "Excitation Purity(%)", "BlueLight", "cx", "cy",
                     "u'", "v'", "CCT(K)", "Dominant Wavelength(nm)", "Saturation(%)",
@@ -976,13 +994,13 @@ namespace CVWaferProber.Services
             row.Add("OK"); // 7. Pixel Logic
             row.Add(string.IsNullOrEmpty(dieViewModel.AOIGradeLevel) ? "na" : dieViewModel.AOIGradeLevel); // 8. AOI GradeLevel
             row.Add("2"); // 9. Defect Density(%)
-            row.Add(string.IsNullOrEmpty(dieViewModel.AOIGradeLevel) ? "na" : dieViewModel.AOIGradeLevel); // 10. Black Pattern
+            row.Add(string.IsNullOrEmpty(dieViewModel.BlackPattern) ? "na" : dieViewModel.BlackPattern); // 10. Black Pattern
             row.Add("na"); // 11. Uniformity
             row.Add(measurement.Luminance.ToString("F0")); // 12. Luminance(nit)
             row.Add(measurement.Voltage.ToString("F2")); // 13. Voltage(v)
             row.Add(measurement.Current.ToString("F2")); // 14. Current(mA)
             row.Add(DateTime.Now.ToString("yyyy/MM/dd")); // 15. Measurement Time
-
+                                                         
             string pinPressure = dieViewModel.Pressure ?? "0,0,0,0"; // 16. Pin Pressure - 关键修改：用引号括起来
             // 如果值包含逗号，需要用引号括起来
             if (pinPressure.Contains(","))
@@ -999,13 +1017,18 @@ namespace CVWaferProber.Services
 
             // 修复：处理可能包含逗号的字段，移除逗号并格式化
             row.Add(measurement.IP?.Replace(",", "") ?? "na"); // 20. IP（移除逗号）
-            /* row.Add(measurement.fPur != 0 ? (measurement.fPur * 100).ToString("F2") : "0");*/ // 21. Excitation Purity(%)
-            double excitationPurity = CVAlgorithmHelper.CalculateExcitationPurity
-            (
-                measurement.CIE_x, // 光谱数据中的cie_x
-                measurement.CIE_y  // 光谱数据中的cie_y
-            );
-            row.Add(excitationPurity.ToString("F2")); // 21. Excitation Purity(%) 兴奋纯度
+
+            #region 兴奋纯度
+            double purityValue = 0;
+            // 从measurement获取CIE色坐标（需确认measurement是否包含cieX/cieY字段，若没有则从其他来源获取）
+            if (measurement.CIE_x > 0 && measurement.CIE_y > 0)
+            {
+                // 调用dll计算兴奋纯度
+                purityValue = CalculateExcitationPurity(measurement.CIE_x, measurement.CIE_y);
+            }
+            // 转为百分比（*100）并格式化
+            row.Add(purityValue > 0 ? (purityValue * 100).ToString("F2") : "0");// 21. Excitation Purity(%) 兴奋纯度
+            #endregion
 
             row.Add(measurement.Blue.ToString("F2").Replace(",", "")); // 22. BlueLight（移除逗号+固定格式）
             row.Add(measurement.CIE_x.ToString("F6")); // 23. cx
@@ -1061,11 +1084,7 @@ namespace CVWaferProber.Services
             row.Add(dieViewModel.ProbingCardSN ?? "0"); // 18. Probing Card SN（空值处理）
             row.Add("na"); // Lv(cd/m2) - 默认值
             row.Add("na"); // IP - 默认值
-            /* row.Add("99"); */// Excitation Purity(%) - 默认值 兴奋纯度
-                                // 原代码中"Excitation Purity(%)"字段行替换为：
-            double defaultExcitationPurity = 99;
-            
-            row.Add(defaultExcitationPurity.ToString("F2")); // 21. Excitation Purity(%) 兴奋纯度
+            row.Add("100"); // Excitation Purity(%) - 默认值 兴奋纯度
             row.Add("na"); // BlueLight - 默认值
             row.Add("0"); // cx - 默认值
             row.Add("0"); // cy - 默认值
@@ -1116,7 +1135,7 @@ namespace CVWaferProber.Services
                     row.Add(FormatScientific(value));
                 }
                 else
-                {
+                {   
                     row.Add("0");
                 }
             }
@@ -1144,5 +1163,99 @@ namespace CVWaferProber.Services
         {
             public string GradeLevel { get; set; } = string.Empty;
         }
+
+        #region 调用CV_algorithm.dll计算光学兴奋纯度
+        /// <summary>
+        /// 调用CV_algorithm.dll计算光学兴奋纯度
+        /// </summary>
+        /// <param name="cieX">CIE色坐标x</param>
+        /// <param name="cieY">CIE色坐标y</param>
+        /// <returns>兴奋纯度（原始值，需*100转为百分比）</returns>
+        private double CalculateExcitationPurity(double cieX, double cieY)
+        {
+            const int RESULT_BUFFER_SIZE = 1024; // 定义足够大的缓冲区
+            double excitationPurity = 0;
+
+            try
+            {
+                // 1. 构建输入JSON参数（匹配接口要求）
+                var inputParams = new
+                {
+                    type = 0,
+                    Optics = new
+                    {
+                        cie_x = cieX,
+                        cie_y = cieY
+                    }
+                };
+                string inputJson = JsonConvert.SerializeObject(inputParams);
+
+                // 2. 初始化句柄（若dll需要）
+                IntPtr handle = CVAlgorithmNative.CV_Ali_CreateHandle();
+                if (handle == IntPtr.Zero)
+                {
+                    logger.Error("创建CV_algorithm句柄失败");
+                    return 0;
+                }
+
+                try
+                {
+                    // 3. 初始化输出缓冲区
+                    StringBuilder resultBuffer = new StringBuilder(RESULT_BUFFER_SIZE);
+                    int resultLength = RESULT_BUFFER_SIZE;
+
+                    // 4. 调用C++接口
+                    CVAlgorithmNative.AliResult result = CVAlgorithmNative.CV_Ali_calcSingle(
+                        handle,
+                        inputJson,
+                        resultBuffer,
+                        ref resultLength);
+
+                    // 5. 处理调用结果
+                    if (result == CVAlgorithmNative.AliResult.Success)
+                    {
+                        // 解析输出JSON
+                        string resultJson = resultBuffer.ToString(0, resultLength);
+                        var purityResult = JsonConvert.DeserializeObject<ExcitationPurityResult>(resultJson);
+                        if (purityResult?.result?.ExcitationPurity != null)
+                        {
+                            excitationPurity = purityResult.result.ExcitationPurity.Value;
+                            logger.Debug($"计算兴奋纯度成功：{excitationPurity}（原始值）");
+                        }
+                        else
+                        {
+                            logger.Warn("解析兴奋纯度结果失败：JSON格式不匹配");
+                        }
+                    }
+                    else
+                    {
+                        logger.Error($"调用CV_algorithm.dll失败，错误码：{result}");
+                    }
+                }
+                finally
+                {
+                    // 释放句柄
+                    CVAlgorithmNative.CV_Ali_ReleaseHandle(handle);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"计算兴奋纯度异常：{ex.Message}", ex);
+            }
+
+            return excitationPurity;
+        }
+
+        // 定义结果解析的DTO
+        private class ExcitationPurityResult
+        {
+            public PurityResultDetail result { get; set; }
+        }
+
+        private class PurityResultDetail
+        {
+            public double? ExcitationPurity { get; set; }
+        }
+        #endregion
     }
 }
