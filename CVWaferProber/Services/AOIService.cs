@@ -30,18 +30,36 @@ namespace CVWaferProber.Services
             Success = 0,
             Error_InvalidHandle = -1,
             Error_InvalidJson = -2,
-            Error_CalcFailed = -3
+            Error_CalcFailed = -3,
+            Error_Length = -4
         }
-
+        private const string LIBRARY_CV_Ali = "CV_algorithm.dll";
         // 导入CV_algorithm.dll的核心接口
-        [DllImport("CV_algorithm.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        [DllImport(LIBRARY_CV_Ali, EntryPoint = "CV_Ali_calcSingle", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
+        
         public static extern AliResult CV_Ali_calcSingle(
             IntPtr handle,                // 句柄（若无需句柄可传IntPtr.Zero，需确认dll要求）
             [MarshalAs(UnmanagedType.LPStr)] string staticJson,  // 输入JSON字符串
             [MarshalAs(UnmanagedType.LPStr)] StringBuilder result, // 输出结果缓冲区
             ref int resultLength          // 缓冲区长度（输入：缓冲区大小；输出：实际结果长度）
         );
+        public static AliResult CV_Ali_calcSingle(string staticJson, out string result)
+        {
+            // 初始缓冲区长度（可根据实际情况调整）
+            int length = 512;
+            StringBuilder bf = new StringBuilder(length);
+            var res = CV_Ali_calcSingle(IntPtr.Zero, staticJson, bf, ref length);
 
+            // 如果返回长度不足错误，扩容后重新调用
+            if (res == AliResult.Error_Length)
+            {
+                bf = new StringBuilder(length);
+                res = CV_Ali_calcSingle(IntPtr.Zero, staticJson, bf, ref length);
+            }
+
+            result = bf.ToString();
+            return res;
+        }
     }
 
     public class AOIService : BaseSerivce
@@ -1297,7 +1315,6 @@ namespace CVWaferProber.Services
         /// <returns>兴奋纯度（原始值，需*100转为百分比）</returns>
         private double CalculateExcitationPurity(double cieX, double cieY)
         {
-            const int RESULT_BUFFER_SIZE = 10240; // 增大缓冲区
             double excitationPurity = 0;
 
             try
@@ -1319,25 +1336,13 @@ namespace CVWaferProber.Services
                 string inputJson = JsonConvert.SerializeObject(inputParams);
                 logger.Debug($"Input JSON: {inputJson}");
 
-                // 2. 使用IntPtr.Zero（根据接口文档，句柄可能不需要）
-                IntPtr handle = IntPtr.Zero;
+                // 2. 使用封装后的方法调用（核心修改）
+                string resultJson;
+                CVAlgorithmNative.AliResult result = CVAlgorithmNative.CV_Ali_calcSingle(inputJson, out resultJson);
 
-                // 3. 初始化输出缓冲区
-                StringBuilder resultBuffer = new StringBuilder(RESULT_BUFFER_SIZE);
-                int resultLength = RESULT_BUFFER_SIZE;
-
-                // 4. 调用C++接口
-                CVAlgorithmNative.AliResult result = CVAlgorithmNative.CV_Ali_calcSingle(
-                    handle,
-                    inputJson,
-                    resultBuffer,
-                    ref resultLength);
-
-                // 5. 处理调用结果
+                // 3. 处理调用结果
                 if (result == CVAlgorithmNative.AliResult.Success)
                 {
-                    // 截取实际返回的长度
-                    string resultJson = resultLength > 0 ? resultBuffer.ToString(0, resultLength) : resultBuffer.ToString();
                     logger.Debug($"Result JSON: {resultJson}");
 
                     // 按照接口文档的格式解析JSON
@@ -1376,6 +1381,9 @@ namespace CVWaferProber.Services
                             break;
                         case CVAlgorithmNative.AliResult.Error_CalcFailed:
                             logger.Error("计算失败");
+                            break;
+                        case CVAlgorithmNative.AliResult.Error_Length:
+                            logger.Error("缓冲区长度不足，扩容后仍失败");
                             break;
                     }
                 }
