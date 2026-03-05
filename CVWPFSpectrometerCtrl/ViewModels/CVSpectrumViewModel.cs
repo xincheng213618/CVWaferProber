@@ -2880,7 +2880,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         Current = (float)(result.IResult ?? 0.0),
                         Luminance = (float)(result.FPh ?? 0.0) / 1,
 
-                        IP = Math.Round((decimal)(result.FIp / 65535 * 100), 2).ToString() + "%",
+                        IP = Math.Round((decimal)((result.FIp ?? 0) / 65535 * 100), 2).ToString() + "%",
 
                         Blue = (float)(result.FBR ?? 0.0),
                         CIE_x = (float)(result.Fx ?? 0.0),
