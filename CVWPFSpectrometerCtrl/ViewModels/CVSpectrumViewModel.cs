@@ -2871,40 +2871,63 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 int n = 1;
                 foreach (var result in results)
                 {
-
+                    float[] intensities = GetIntensitiesFromFileOrOriginal(result);
                     var measurement = new SpectrumMeasurement(n++)
                     {
                         Timestamp = result.CreateDate,
                         Meas_Id = result.BatchCode,
-                        Voltage = (float)result.VResult,
-                        Current = (float)result.IResult,
-                        Luminance = (float)result.FPh / 1,
+                        Voltage = (float)(result.VResult ?? 0.0),
+                        Current = (float)(result.IResult ?? 0.0),
+                        Luminance = (float)(result.FPh ?? 0.0) / 1,
 
-                        IP = Math.Round((decimal)(result.FIp / 65535 * 100), 2).ToString() + "%",
+                        IP = Math.Round((decimal)((result.FIp ?? 0) / 65535 * 100), 2).ToString() + "%",
 
-                        Blue = (float)result.FBR,
-                        CIE_x = (float)result.Fx,
-                        CIE_y = (float)result.Fy,
-                        CIE_u = (float)result.Fu,
-                        CIE_v = (float)result.Fv,
-                        CCT = (float)result.FCCT,
-                        PeakWavelength = (float)result.FLd,
-                        fPur = (float)result.FPur,
+                        Blue = (float)(result.FBR ?? 0.0),
+                        CIE_x = (float)(result.Fx ?? 0.0),
+                        CIE_y = (float)(result.Fy ?? 0.0),
+                        CIE_u = (float)(result.Fu ?? 0.0),
+                        CIE_v = (float)(result.Fv ?? 0.0),
+                        CCT = (float)(result.FCCT ?? 0.0),
+                        PeakWavelength = (float)(result.FLd ?? 0.0),
+                        fPur = (float)(result.FPur ?? 0.0),
                         //fPuPercent = $"{Math.Round((decimal)(result.FPur * 100), 2)}%",
-                        PeakIntensity = (float)result.FLp,
-                        FHW = (float)result.FHW,
+                        PeakIntensity = (float)(result.FLp ?? 0.0),
+                        FHW = (float)(result.FHW ?? 0.0),
                         //Intensities = JsonConvert.DeserializeObject<float[]>(result.FPL),
-                        Intensities = GetIntensitiesFromFileOrOriginal(result),
+                        Intensities = intensities,
                         Wavelengths = Wavelengths,
-                        fPlambda = (float)result.FPlambda,
+                        fPlambda = (float)(result.FPlambda ?? 0.0),
                         RowLineColor = ConvertToOxyColor(SpectralLineColor)
                     };
-                    double sum1 = 0, sum2 = 0;
-                    for (int i = 35; i <= 75; i++)
-                        sum1 += measurement.Intensities[i * 10];
-                    for (int i = 20; i <= 120; i++)
-                        sum2 += measurement.Intensities[i * 10];
-                    measurement.Blue = (float)Math.Round(sum1 / sum2 * 100, 2);
+                    // ===== 修复：添加数组边界检查 =====
+                    if (intensities != null && intensities.Length > 0)
+                    {
+                        double sum1 = 0, sum2 = 0;
+                        int intensitiesLength = intensities.Length;
+
+                        // 计算 sum1 (35-75)
+                        for (int i = 35; i <= 75; i++)
+                        {
+                            int index = i * 10;
+                            if (index < intensitiesLength)
+                                sum1 += intensities[index];
+                        }
+
+                        // 计算 sum2 (20-120)
+                        for (int i = 20; i <= 120; i++)
+                        {
+                            int index = i * 10;
+                            if (index < intensitiesLength)
+                                sum2 += intensities[index];
+                        }
+
+                        measurement.Blue = sum2 > 0 ? (float)Math.Round(sum1 / sum2 * 100, 2) : 0;
+                    }
+                    else
+                    {
+                        measurement.Blue = 0;
+                    }
+
                     Measurements.Add(measurement);
 
 
