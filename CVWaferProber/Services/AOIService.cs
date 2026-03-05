@@ -4,7 +4,7 @@ using CVCommCore;
 using CVDB.Services.Algorithm;
 using CVDB.Services.Image;
 using CVMysql;
-using CVWaferProber.Config;
+using CVWaferProber.Core.Config;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;

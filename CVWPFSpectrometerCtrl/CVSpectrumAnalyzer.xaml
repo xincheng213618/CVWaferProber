@@ -8,7 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:oxy="http://oxyplot.org/wpf"
     xmlns:wpf="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
-    mc:Ignorable="d">
+    mc:Ignorable="d" d:Width="1280" d:Height="720">
     <UserControl.DataContext>
         <local:CVSpectrumViewModel />
     </UserControl.DataContext>
@@ -24,8 +24,6 @@
         BorderThickness="0"
         SelectedIndex="{Binding OuterTabSelectedIndex, Mode=TwoWay}"
         TabStripPlacement="Right">
-
-        <!--  SP选项卡（原内容）  -->
         <TabItem Header="{DynamicResource Dock.Layout.Title.SP1}">
             <Grid x:Name="InnerTabContainer" Visibility="Visible">
                 <Grid.RowDefinitions>
@@ -34,15 +32,9 @@
                 </Grid.RowDefinitions>
 
                 <!--  顶部按钮区域  -->
-                <StackPanel Grid.Row="0" Orientation="Horizontal">
-                    <Button
-                        x:Name="btnExport"
-                        Width="80"
-                        Margin="5,5,5,2"
-                        Command="{Binding ExportCommand}"
-                        CommandParameter="{Binding SelectedTabIndex}"
-                        Content="{DynamicResource Export CSV}"
-                        IsEnabled="True" />
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5,0,5,0" >
+                    <Button x:Name="btnExport" Width="80" Margin="0,0,5,0"  Command="{Binding ExportCommand}" CommandParameter="{Binding SelectedTabIndex}" Content="{DynamicResource Export CSV}" IsEnabled="True" />
+                    <Button Content="OpenExportFloder" Click="OpenEQEFloder_Click" Margin="0,0,5,0" />
                 </StackPanel>
 
                 <!--  原内层TabControl（总览/光谱/IV等）  -->
@@ -1085,149 +1077,145 @@
 
         <!--  EQE选项卡  -->
         <TabItem Header="EQE">
-            <!--  EQE内容区域（绑定共享数据源）  -->
-            <Grid x:Name="EQEGrid">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="16*" />
-                    <ColumnDefinition Width="93*" />
-                    <ColumnDefinition Width="109*" />
-                    <ColumnDefinition Width="109*" />
-                    <ColumnDefinition Width="109*" />
-                    <ColumnDefinition Width="109*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+            <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="6*" />
-                    <RowDefinition Height="4*" />
+                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <!--  顶部按钮区域  -->
-                <StackPanel
-                    Grid.Row="0"
-                    Grid.ColumnSpan="4"
-                    Orientation="Horizontal">
-                    <Button
-                        x:Name="btnExport1"
-                        Width="80"
-                        Margin="5"
-                        Command="{Binding CustomEQEVM.ExportCommand}"
-                        CommandParameter="{Binding CustomEQEVM.SelectedTabIndex}"
-                        Content="{DynamicResource Export CSV}"
-                        IsEnabled="True" />
+                <StackPanel Grid.Row="0"  Orientation="Horizontal" Margin="5,0,5,0" >
+                    <Button  x:Name="btnExport1"   Width="80"  Margin="0,0,5,0"  Command="{Binding CustomEQEVM.ExportCommand}" CommandParameter="{Binding CustomEQEVM.SelectedTabIndex}"   Content="{DynamicResource Export CSV}"  IsEnabled="True" />
+                    <Button Content="OpenExportFloder" Click="OpenIvlFloder_Click" Margin="0,0,5,0" />
                 </StackPanel>
-                <StackPanel
+
+                <Grid x:Name="EQEGrid" Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="16*" />
+                        <ColumnDefinition Width="93*" />
+                        <ColumnDefinition Width="109*" />
+                        <ColumnDefinition Width="109*" />
+                        <ColumnDefinition Width="109*" />
+                        <ColumnDefinition Width="109*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="6*" />
+                        <RowDefinition Height="4*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel
                     Grid.Row="1"
                     Grid.ColumnSpan="6"
                     Margin="5,5,5,2"
                     Orientation="Horizontal">
-                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Chart.LineColor}" />
-                    <ComboBox
+                        <TextBlock VerticalAlignment="Center" Text="{DynamicResource Chart.LineColor}" />
+                        <ComboBox
                         Width="80"
                         Height="20"
                         Margin="2"
                         SelectedValue="{Binding CustomEQEVM.EQELineColor, Mode=TwoWay}">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <!--  显示颜色块  -->
-                                    <Rectangle
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <!--  显示颜色块  -->
+                                        <Rectangle
                                         Width="20"
                                         Height="20"
                                         Fill="{Binding}" />
-                                    <!--  显示颜色名称  -->
-                                    <TextBlock Margin="5,0" Text="{Binding Color.Name}" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                        <!--  红色系  -->
-                        <SolidColorBrush Color="Red" />
-                        <SolidColorBrush Color="Maroon" />
-                        <SolidColorBrush Color="Orange" />
-                        <SolidColorBrush Color="Brown" />
-                        <SolidColorBrush Color="Pink" />
-                        <SolidColorBrush Color="Crimson" />
-                        <SolidColorBrush Color="Tomato" />
-                        <SolidColorBrush Color="Coral" />
-                        <SolidColorBrush Color="Salmon" />
-                        <SolidColorBrush Color="LightCoral" />
-                        <!--  黄色/金色系  -->
-                        <SolidColorBrush Color="Yellow" />
-                        <SolidColorBrush Color="Olive" />
-                        <SolidColorBrush Color="Gold" />
-                        <SolidColorBrush Color="Khaki" />
-                        <SolidColorBrush Color="LightYellow" />
-                        <!--  绿色系  -->
-                        <SolidColorBrush Color="Lime" />
-                        <SolidColorBrush Color="Green" />
-                        <SolidColorBrush Color="ForestGreen" />
-                        <SolidColorBrush Color="LimeGreen" />
-                        <SolidColorBrush Color="SeaGreen" />
-                        <SolidColorBrush Color="MediumSeaGreen" />
-                        <SolidColorBrush Color="SpringGreen" />
-                        <SolidColorBrush Color="LightGreen" />
-                        <!--  青色/蓝绿色系  -->
-                        <SolidColorBrush Color="Aqua" />
-                        <SolidColorBrush Color="Cyan" />
-                        <SolidColorBrush Color="Teal" />
-                        <SolidColorBrush Color="Turquoise" />
-                        <SolidColorBrush Color="MediumTurquoise" />
-                        <SolidColorBrush Color="LightSeaGreen" />
-                        <SolidColorBrush Color="DarkCyan" />
-                        <!--  蓝色系  -->
-                        <SolidColorBrush Color="Blue" />
-                        <SolidColorBrush Color="Navy" />
-                        <SolidColorBrush Color="RoyalBlue" />
-                        <SolidColorBrush Color="DodgerBlue" />
-                        <SolidColorBrush Color="DeepSkyBlue" />
-                        <SolidColorBrush Color="LightBlue" />
-                        <SolidColorBrush Color="SteelBlue" />
-                        <SolidColorBrush Color="CornflowerBlue" />
-                        <!--  紫色系  -->
-                        <SolidColorBrush Color="Purple" />
-                        <SolidColorBrush Color="Magenta" />
-                        <SolidColorBrush Color="DarkMagenta" />
-                        <SolidColorBrush Color="MediumPurple" />
-                        <SolidColorBrush Color="Orchid" />
-                        <SolidColorBrush Color="Violet" />
-                        <SolidColorBrush Color="Plum" />
-                        <!--  中性色/灰度  -->
-                        <SolidColorBrush Color="Black" />
-                        <SolidColorBrush Color="DimGray" />
-                        <SolidColorBrush Color="Gray" />
-                        <SolidColorBrush Color="DarkGray" />
-                        <SolidColorBrush Color="Silver" />
-                        <SolidColorBrush Color="LightGray" />
-                        <SolidColorBrush Color="Gainsboro" />
-                        <SolidColorBrush Color="WhiteSmoke" />
-                        <SolidColorBrush Color="White" />
+                                        <!--  显示颜色名称  -->
+                                        <TextBlock Margin="5,0" Text="{Binding Color.Name}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                            <!--  红色系  -->
+                            <SolidColorBrush Color="Red" />
+                            <SolidColorBrush Color="Maroon" />
+                            <SolidColorBrush Color="Orange" />
+                            <SolidColorBrush Color="Brown" />
+                            <SolidColorBrush Color="Pink" />
+                            <SolidColorBrush Color="Crimson" />
+                            <SolidColorBrush Color="Tomato" />
+                            <SolidColorBrush Color="Coral" />
+                            <SolidColorBrush Color="Salmon" />
+                            <SolidColorBrush Color="LightCoral" />
+                            <!--  黄色/金色系  -->
+                            <SolidColorBrush Color="Yellow" />
+                            <SolidColorBrush Color="Olive" />
+                            <SolidColorBrush Color="Gold" />
+                            <SolidColorBrush Color="Khaki" />
+                            <SolidColorBrush Color="LightYellow" />
+                            <!--  绿色系  -->
+                            <SolidColorBrush Color="Lime" />
+                            <SolidColorBrush Color="Green" />
+                            <SolidColorBrush Color="ForestGreen" />
+                            <SolidColorBrush Color="LimeGreen" />
+                            <SolidColorBrush Color="SeaGreen" />
+                            <SolidColorBrush Color="MediumSeaGreen" />
+                            <SolidColorBrush Color="SpringGreen" />
+                            <SolidColorBrush Color="LightGreen" />
+                            <!--  青色/蓝绿色系  -->
+                            <SolidColorBrush Color="Aqua" />
+                            <SolidColorBrush Color="Cyan" />
+                            <SolidColorBrush Color="Teal" />
+                            <SolidColorBrush Color="Turquoise" />
+                            <SolidColorBrush Color="MediumTurquoise" />
+                            <SolidColorBrush Color="LightSeaGreen" />
+                            <SolidColorBrush Color="DarkCyan" />
+                            <!--  蓝色系  -->
+                            <SolidColorBrush Color="Blue" />
+                            <SolidColorBrush Color="Navy" />
+                            <SolidColorBrush Color="RoyalBlue" />
+                            <SolidColorBrush Color="DodgerBlue" />
+                            <SolidColorBrush Color="DeepSkyBlue" />
+                            <SolidColorBrush Color="LightBlue" />
+                            <SolidColorBrush Color="SteelBlue" />
+                            <SolidColorBrush Color="CornflowerBlue" />
+                            <!--  紫色系  -->
+                            <SolidColorBrush Color="Purple" />
+                            <SolidColorBrush Color="Magenta" />
+                            <SolidColorBrush Color="DarkMagenta" />
+                            <SolidColorBrush Color="MediumPurple" />
+                            <SolidColorBrush Color="Orchid" />
+                            <SolidColorBrush Color="Violet" />
+                            <SolidColorBrush Color="Plum" />
+                            <!--  中性色/灰度  -->
+                            <SolidColorBrush Color="Black" />
+                            <SolidColorBrush Color="DimGray" />
+                            <SolidColorBrush Color="Gray" />
+                            <SolidColorBrush Color="DarkGray" />
+                            <SolidColorBrush Color="Silver" />
+                            <SolidColorBrush Color="LightGray" />
+                            <SolidColorBrush Color="Gainsboro" />
+                            <SolidColorBrush Color="WhiteSmoke" />
+                            <SolidColorBrush Color="White" />
 
 
-                    </ComboBox>
-                    <CheckBox
+                        </ComboBox>
+                        <CheckBox
                         x:Name="chkShowAll1"
                         Margin="5"
                         VerticalAlignment="Center"
                         Content="{DynamicResource Sp.ShowAllData}"
                         IsChecked="{Binding CustomEQEVM.IsShowAllEQEData, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                    <CheckBox
+                        <CheckBox
                         x:Name="chkShowDetails1"
                         Margin="5"
                         VerticalAlignment="Center"
                         Content="{DynamicResource Sp.ShowSpectralDetail}"
                         IsChecked="{Binding CustomEQEVM.IsShowSpectralDetail, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
-                <!--  图表区域  -->
-                <oxy:PlotView
+                    </StackPanel>
+                    <!--  图表区域  -->
+                    <oxy:PlotView
                     Grid.Row="2"
                     Grid.ColumnSpan="6"
                     Margin="5,29,5,0"
                     Loaded="PlotView_Loaded"
                     Model="{Binding CustomEQEVM.EQEPlotModel}" />
-                <!--  Model="{Binding PlotModel}"  -->
-                <!--  EQE的DataGrid（共享SP的Measurements数据源）  -->
-                <!--  DataGrid区域  -->
-                <DataGrid
+                    <!--  Model="{Binding PlotModel}"  -->
+                    <!--  EQE的DataGrid（共享SP的Measurements数据源）  -->
+                    <!--  DataGrid区域  -->
+                    <DataGrid
                     x:Name="eqemeasurementsGrid"
                     Grid.Row="3"
                     Grid.ColumnSpan="6"
@@ -1246,85 +1234,85 @@
                     SelectionMode="Single"
                     SelectionUnit="FullRow">
 
-                    <DataGrid.Columns>
-                        <DataGridTextColumn
+                        <DataGrid.Columns>
+                            <DataGridTextColumn
                             Width="50"
                             Binding="{Binding No}"
                             Header="{DynamicResource GridHeader.No}" />
-                        <!--<DataGridTextColumn
+                            <!--<DataGridTextColumn
                             Width="80"
                             Binding="{Binding Meas_Id}"
                             Header="{DynamicResource Sp.MeasurementBatch}" />-->
-                        <DataGridTextColumn
+                            <DataGridTextColumn
                             Width="130"
                             Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}"
                             Header="{DynamicResource Sp.Time}" />
-                        <DataGridTextColumn
+                            <DataGridTextColumn
                             Width="80"
                             Binding="{Binding Voltage, StringFormat='F4'}"
                             Header="{DynamicResource Sp.Voltage}" />
-                        <DataGridTextColumn
+                            <DataGridTextColumn
                             Width="80"
                             Binding="{Binding Current, StringFormat='F4'}"
                             Header="{DynamicResource Sp.Current}" />
-                        <DataGridTextColumn
+                            <DataGridTextColumn
                             Width="80"
                             Binding="{Binding EQE, StringFormat='F4'}"
                             Header="{DynamicResource EQE.EQE}" />
-                        <DataGridTextColumn
+                            <DataGridTextColumn
                             Width="80"
                             Binding="{Binding LuminousFlux, StringFormat='F4'}"
                             Header="{DynamicResource EQE.LuminousFlux}" />
-                        <DataGridTextColumn
+                            <DataGridTextColumn
                             Width="80"
                             Binding="{Binding RadiantFlux, StringFormat='F4'}"
                             Header="{DynamicResource EQE.RadiantFlux}" />
-                        <DataGridTextColumn
+                            <DataGridTextColumn
                             Width="80"
                             Binding="{Binding LuminousEfficacy, StringFormat='F4'}"
                             Header="{DynamicResource EQE.LuminousEfficacy}" />
-                        <DataGridTextColumn
+                            <DataGridTextColumn
                             Width="80"
                             Binding="{Binding CIE_x, StringFormat='F4'}"
                             Header="{DynamicResource ColorCoordinateX}" />
-                        <DataGridTextColumn
+                            <DataGridTextColumn
                             Width="80"
                             Binding="{Binding CIE_y, StringFormat='F4'}"
                             Header="{DynamicResource ColorCoordinateY}" />
-                        <DataGridTextColumn
+                            <DataGridTextColumn
                             Width="80"
                             Binding="{Binding CIE_u, StringFormat='F4'}"
                             Header="{DynamicResource ColorCoordinateU}" />
-                        <DataGridTextColumn
+                            <DataGridTextColumn
                             Width="80"
                             Binding="{Binding CIE_v, StringFormat='F4'}"
                             Header="{DynamicResource ColorCoordinateV}" />
-                        <DataGridTextColumn
+                            <DataGridTextColumn
                             Width="80"
                             Binding="{Binding CCT, StringFormat='F1'}"
                             Header="{DynamicResource ColorTemperature}" />
-                        <DataGridTextColumn
+                            <DataGridTextColumn
                             Width="80"
                             Binding="{Binding PeakWavelength, StringFormat='F4'}"
                             Header="{DynamicResource DominantWavelength}" />
-                        <DataGridTextColumn
+                            <DataGridTextColumn
                             Width="80"
                             Binding="{Binding PeakIntensity, StringFormat='F4'}"
                             Header="{DynamicResource PeakWavelength}" />
-                    </DataGrid.Columns>
+                        </DataGrid.Columns>
 
-                    <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow">
-                            <Style.Triggers>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="LightBlue" />
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DataGrid.RowStyle>
-                </DataGrid>
-                <!--  右侧：波段数据表格  -->
-                <DataGrid
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="LightBlue" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                    </DataGrid>
+                    <!--  右侧：波段数据表格  -->
+                    <DataGrid
                     x:Name="WavelengthGrid1"
                     Grid.RowSpan="4"
                     Grid.Column="6"
@@ -1347,46 +1335,48 @@
                     SelectionMode="Single"
                     SelectionUnit="FullRow"
                     VerticalScrollBarVisibility="Auto">
-                    <DataGrid.Style>
-                        <Style TargetType="DataGrid">
-                            <Setter Property="Width" Value="0" />
-                            <Setter Property="MinWidth" Value="0" />
-                            <!--  初始宽度0  -->
-                            <Style.Triggers>
-                                <!--  绑定CheckBox的IsChecked，True时宽度变为100（带动画）  -->
-                                <DataTrigger Binding="{Binding ElementName=chkShowDetails1, Path=IsChecked}" Value="True">
-                                    <DataTrigger.EnterActions>
-                                        <BeginStoryboard>
-                                            <Storyboard>
-                                                <DoubleAnimation
+                        <DataGrid.Style>
+                            <Style TargetType="DataGrid">
+                                <Setter Property="Width" Value="0" />
+                                <Setter Property="MinWidth" Value="0" />
+                                <!--  初始宽度0  -->
+                                <Style.Triggers>
+                                    <!--  绑定CheckBox的IsChecked，True时宽度变为100（带动画）  -->
+                                    <DataTrigger Binding="{Binding ElementName=chkShowDetails1, Path=IsChecked}" Value="True">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation
                                                     FillBehavior="HoldEnd"
                                                     Storyboard.TargetProperty="Width"
                                                     To="200"
                                                     Duration="0:0:0.2" />
-                                            </Storyboard>
-                                        </BeginStoryboard>
-                                    </DataTrigger.EnterActions>
-                                    <DataTrigger.ExitActions>
-                                        <BeginStoryboard>
-                                            <Storyboard>
-                                                <DoubleAnimation
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation
                                                     FillBehavior="Stop"
                                                     Storyboard.TargetProperty="Width"
                                                     To="0"
                                                     Duration="0:0:0.2" />
-                                            </Storyboard>
-                                        </BeginStoryboard>
-                                    </DataTrigger.ExitActions>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DataGrid.Style>
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Binding="{Binding Wavelength, StringFormat=F1}" Header="{DynamicResource Sp.Wavelength}" />
-                        <DataGridTextColumn Binding="{Binding RelativeSpectrum, StringFormat=F4}" Header="{DynamicResource Sp.RelativeSpectrum}" />
-                        <DataGridTextColumn Binding="{Binding AbsoluteSpectrum, StringFormat=F4}" Header="{DynamicResource Sp.AbsoluteSpectrum}" />
-                    </DataGrid.Columns>
-                </DataGrid>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.Style>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Binding="{Binding Wavelength, StringFormat=F1}" Header="{DynamicResource Sp.Wavelength}" />
+                            <DataGridTextColumn Binding="{Binding RelativeSpectrum, StringFormat=F4}" Header="{DynamicResource Sp.RelativeSpectrum}" />
+                            <DataGridTextColumn Binding="{Binding AbsoluteSpectrum, StringFormat=F4}" Header="{DynamicResource Sp.AbsoluteSpectrum}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+
             </Grid>
         </TabItem>
 

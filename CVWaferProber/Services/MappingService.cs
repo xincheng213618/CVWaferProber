@@ -1,5 +1,5 @@
 ﻿using ChipMapping.ViewModels;
-using CVWaferProber.Config;
+using CVWaferProber.Core.Config;
 
 namespace CVWaferProber.Services
 {

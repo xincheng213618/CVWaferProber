@@ -1,6 +1,7 @@
 ﻿using CVWaferProber.Core.Config;
 using CVWaferProber.Core.Models;
 using log4net;
+using log4net.Util;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows;
@@ -9,6 +10,7 @@ namespace CVWaferProber.Core.ViewModels
 {
     public class GlobalConfigModel : ViewModelBase
     {
+        private static ILog logger = LogManager.GetLogger(typeof(GlobalConfigModel));
         public ObservableCollection<LogLevelItem> LogLevels { get; set; }
 
         public int BreakOnErrorNum { get; set; } = 2;
@@ -93,11 +95,19 @@ namespace CVWaferProber.Core.ViewModels
         /// </summary>
         private void CreateDirectoryIfNotExists(string path)
         {
-            if (!string.IsNullOrWhiteSpace(path) && !Directory.Exists(path))
+            try
             {
-                Directory.CreateDirectory(path);
-                log4net.LogManager.GetLogger(typeof(GlobalConfigModel)).Info($"{(string)Application.Current.FindResource("Createdexportdirectory")}：{path}");
+                if (!string.IsNullOrWhiteSpace(path) && !Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                    log4net.LogManager.GetLogger(typeof(GlobalConfigModel)).Info($"{(string)Application.Current.FindResource("Createdexportdirectory")}：{path}");
+                }
             }
+            catch(Exception ex)
+            {
+                logger.ErrorExt(ex);
+            }
+
         }
     }
 

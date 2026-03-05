@@ -153,6 +153,7 @@
 
   <ItemGroup>
     <Folder Include="Assets\" />
+    <Folder Include="Config\" />
   </ItemGroup>
 
   <ItemGroup>

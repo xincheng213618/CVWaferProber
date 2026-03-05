@@ -1,5 +1,5 @@
 ﻿using CVCommCore;
-using CVWaferProber.Config;
+using CVWaferProber.Core.Config;
 using CVWaferProber.ViewModels;
 using WaferComm.Client;
 using WaferComm.Core;

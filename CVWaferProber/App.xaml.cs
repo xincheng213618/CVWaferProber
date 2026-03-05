@@ -1,4 +1,4 @@
-﻿using CVWaferProber.Config;
+﻿using CVWaferProber.Core.Config;
 using CVWaferProber.Language;
 using CVWaferProber.Models;
 using CVWaferProber.Services;
