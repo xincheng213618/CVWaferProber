@@ -58,6 +58,7 @@ namespace CVWaferProber.Services
         {
             return await proberClientService.TryConnectAsync();
         }
+
         public void InitializeService(MainViewModel mainVM, CVVAMAnalyzer _cVVAMAnalyzer, CVWPFSpectrometerCtrl.CVSpectrumAnalyzer ivlAnalyzer)
         {
             this._mainVM = mainVM;
@@ -674,10 +675,7 @@ namespace CVWaferProber.Services
                 proberClientService?.ContinuAutoTest();
 
                 // 恢复定时器
-                if (_breakpointSaveTimer != null && !_breakpointSaveTimer.Enabled)
-                {
-                    _breakpointSaveTimer.Start();
-                }
+                SafeStartBreakpointTimer();
                 // 恢复时重新初始化进度状态
                 Application.Current.Dispatcher.Invoke(() =>
                 {
@@ -732,16 +730,31 @@ namespace CVWaferProber.Services
         // 在现有字段后添加
         private System.Timers.Timer _breakpointSaveTimer;
         private DateTime _lastBreakpointSaveTime = DateTime.MinValue;
+        private readonly object _timerLock = new object(); // 新增：线程安全锁
         // 新增方法：初始化断点保存定时器
         private void InitializeBreakpointTimer()
         {
-            _breakpointSaveTimer = new System.Timers.Timer(5000); // 每5秒保存一次
-            _breakpointSaveTimer.Elapsed += async (sender, e) => await SaveBreakpointAsync();
-            _breakpointSaveTimer.AutoReset = true;
-            _breakpointSaveTimer.Start();
-            // 关键：设置定时器为后台线程（程序退出时自动终止，兜底方案）
-            _breakpointSaveTimer.SynchronizingObject = null;
-            _breakpointSaveTimer.Enabled = true;
+            lock (_timerLock) // 确保线程安全，防止重复初始化
+            {
+                // 如果定时器已存在，先安全释放
+                if (_breakpointSaveTimer != null)
+                {
+                    _breakpointSaveTimer.Stop();
+                    _breakpointSaveTimer.Elapsed -= async (sender, e) => await SaveBreakpointAsync();
+                    _breakpointSaveTimer.Dispose();
+                    _breakpointSaveTimer = null;
+                }
+
+                // 创建新的定时器实例
+                _breakpointSaveTimer = new System.Timers.Timer(5000); // 每5秒保存一次
+                _breakpointSaveTimer.Elapsed += async (sender, e) => await SaveBreakpointAsync();
+                _breakpointSaveTimer.AutoReset = true;
+                _breakpointSaveTimer.SynchronizingObject = null; // 设置为后台线程
+                _breakpointSaveTimer.Enabled = true;
+                _breakpointSaveTimer.Start();
+
+                logger.Info("Breakpoint save timer initialized successfully");
+            }
         }
         // ========== 新增：定时器停止的核心方法 ==========
         /// <summary>
@@ -749,19 +762,55 @@ namespace CVWaferProber.Services
         /// </summary>
         private void StopBreakpointTimer()
         {
-            try
+            lock (_timerLock)
             {
-                if (_breakpointSaveTimer != null && _breakpointSaveTimer.Enabled)
+                try
                 {
-                    _breakpointSaveTimer.Stop();
-                    _breakpointSaveTimer.Elapsed -= async (sender, e) => await SaveBreakpointAsync(); // 移除事件绑定（避免内存泄漏）
-                    _breakpointSaveTimer.Dispose(); // 释放资源
-                    logger.Info("Breakpoint save timer stopped and disposed");
+                    if (_breakpointSaveTimer != null)
+                    {
+                        if (_breakpointSaveTimer.Enabled)
+                        {
+                            _breakpointSaveTimer.Stop();
+                        }
+                        // 移除事件绑定，避免内存泄漏
+                        _breakpointSaveTimer.Elapsed -= async (sender, e) => await SaveBreakpointAsync();
+                        // 释放资源
+                        _breakpointSaveTimer.Dispose();
+                        // 关键：将引用置空，防止后续访问已释放对象
+                        _breakpointSaveTimer = null;
+
+                        logger.Info("Breakpoint save timer stopped and disposed");
+                    }
+                }
+                catch (ObjectDisposedException ex)
+                {
+                    // 捕获已释放异常，仅记录日志并强制置空
+                    logger.Warn("Breakpoint timer already disposed", ex);
+                    _breakpointSaveTimer = null;
+                }
+                catch (Exception ex)
+                {
+                    logger.Error("Failed to stop breakpoint save timer", ex);
+                    _breakpointSaveTimer = null;
                 }
             }
-            catch (Exception ex)
+        }
+        // 新增方法：安全启动断点保存定时器（在恢复时调用）
+        private void SafeStartBreakpointTimer()
+        {
+            lock (_timerLock)
             {
-                logger.Warn("Failed to stop breakpoint save timer", ex);
+                // 如果定时器不存在或已释放，重新初始化
+                if (_breakpointSaveTimer == null)
+                {
+                    InitializeBreakpointTimer();
+                }
+                // 如果定时器存在但未启动，则启动它
+                else if (!_breakpointSaveTimer.Enabled)
+                {
+                    _breakpointSaveTimer.Start();
+                    logger.Info("Breakpoint save timer started");
+                }
             }
         }
         // 新增方法：保存断点
