@@ -107,12 +107,13 @@ namespace CVWaferProber.Services
             };
 
             // 测试流程结束后，停止定时器（避免内存泄漏）
-           await task.ContinueWith(t =>
-            {
-                refreshTimer.Enabled = false;
-                refreshTimer.Dispose();
-                logger.Info("Test process completed, stop the refresh timer");// : "测试流程结束，停止刷新定时器"
-            }, TaskScheduler.FromCurrentSynchronizationContext());
+            await task;
+
+            refreshTimer.Enabled = false;
+            refreshTimer.Dispose();
+            logger.Info("Test process completed, stop the refresh timer");
+
+
         }
         public override void ResultDisplay(DieViewModel dieViewModel)
         {
