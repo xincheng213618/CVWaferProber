@@ -1,7 +1,9 @@
 ﻿using ChipMapping.ViewModels;
+using ColorVision.Core.Entities;
 using CVCommCore;
 using CVDB.Services.Algorithm;
 using CVDB.Services.Image;
+using CVMysql;
 using CVWaferProber.Config;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
@@ -13,6 +15,7 @@ using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -946,7 +949,7 @@ namespace CVWaferProber.Services
                     {
                         "No", "Die_x", "Die_y", "LightOnStatus", "RegisterPixels", "Final Class",
                         "Pixel Logic", "AOI GradeLevel", "Defect Density(%)", "Black Pattern",
-                        "Uniformity", "Luminance(nit)", "Voltage(v)", "Current(mA)",
+                        "Uniformity", "Luminance(nit)", "A_Voltage/V", "A_Current/mA","B_Voltage/V", "B_Current/mA",
                         "Measurement Time", "Pin Pressure", "TouchDown Counts", "Probing Card SN",
                         "Lv(cd/m2)", "IP", "Excitation Purity(%)", "BlueLight", "cx", "cy",
                         "u'", "v'", "CCT(K)", "Dominant Wavelength(nm)", "Saturation(%)",
@@ -1128,6 +1131,27 @@ namespace CVWaferProber.Services
             row.Add(measurement.Luminance.ToString("F0")); // 12. Luminance(nit)
             row.Add(measurement.Voltage.ToString("F2")); // 13. Voltage(v)
             row.Add(measurement.Current.ToString("F2")); // 14. Current(mA)
+
+            List<VScgdMeasureResultSmu> lists = MysqlControler.GetInstance().Sql.Select<VScgdMeasureResultSmu>().Where(a => a.BatchId == dieViewModel.Id).ToList();
+
+            string b_v = "Na";
+            string b_i = "Na";
+
+            if (lists.Count == 2)
+            {
+                foreach (var item in lists)
+                {
+                    if (item.Channel == 1)
+                    {
+                        b_v = item.VResult?.ToString();
+                        b_i = item.IResult?.ToString();
+                    }
+                }
+            }
+            row.Add(b_v);
+            row.Add(b_i);
+
+
             row.Add(DateTime.Now.ToString("yyyy/MM/dd")); // 15. Measurement Time
 
             string pinPressure = dieViewModel.Pressure ?? "0,0,0,0"; // 16. Pin Pressure - 关键修改：用引号括起来

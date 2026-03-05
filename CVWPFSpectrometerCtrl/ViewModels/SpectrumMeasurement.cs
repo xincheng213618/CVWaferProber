@@ -88,6 +88,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 SetProperty(ref _i, value);
             }
         }
+        public float? BVoltage { get => _BVoltage; set { _BVoltage = value; OnPropertyChanged(); } }
+        private float? _BVoltage;
+
+        public float? BCurrent { get => _BCurrent; set { _BCurrent = value; OnPropertyChanged(); } }
+        private float? _BCurrent;
+
+
+
         public float Luminance
         {
             get => _luminance;

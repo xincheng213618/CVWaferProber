@@ -1879,7 +1879,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 // 1. 固定表头（与目标代码数据项对齐）
                 var fixedHeaders = new List<string>
                 {
-                    "Time","Meas_Id", "Voltage/V", "Current/mA", "Lv(cd/m²)", "IP",
+                    "Time","Meas_Id", "A_Voltage/V", "A_Current/mA","B_Voltage/V", "B_Current/mA", "Lv(cd/m²)", "IP",
                     "BlueLight", "cx", "cy", "u'", "v'", "CCT(K)",
                     "Dominant Wavelength(nm)", "Saturation(%)", "Peak Wavelength(nm)", "FWHM","Temperature(℃)"
                 };
@@ -1922,6 +1922,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     var item = measurements[rowIndex];
                     // 动态生成Meas_Id：从1开始递增（rowIndex是0-based，+1后为1-based）
                     int measId = rowIndex + 1;
+                    string bBVoltage = item.BVoltage == null ? "Na": item.BVoltage.ToString();
+                    string bCurrent = item.BCurrent == null ? "Na" : item.BCurrent.ToString();
+
 
                     // 4. 固定字段值：第一个值为动态生成的Meas_Id
                     var fixedValues = new List<string>
@@ -1930,6 +1933,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         measId.ToString(), // 替换原固定值36，改为1、2、3...
                         item.Voltage.ToString("F6"),
                         item.Current.ToString(), // A→mA
+                        bBVoltage,
+                        bCurrent,
                         item.Luminance.ToString(),
                         EscapeCsvValue(item.IP ?? ""),
                         item.Blue.ToString(),
@@ -2872,6 +2877,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 foreach (var result in results)
                 {
                     float[] intensities = GetIntensitiesFromFileOrOriginal(result);
+
+
                     var measurement = new SpectrumMeasurement(n++)
                     {
                         Timestamp = result.CreateDate,
@@ -2879,7 +2886,6 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         Voltage = (float)(result.VResult ?? 0.0),
                         Current = (float)(result.IResult ?? 0.0),
                         Luminance = (float)(result.FPh ?? 0.0) / 1,
-
                         IP = Math.Round((decimal)((result.FIp ?? 0) / 65535 * 100), 2).ToString() + "%",
 
                         Blue = (float)(result.FBR ?? 0.0),
@@ -2899,6 +2905,21 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         fPlambda = (float)(result.FPlambda ?? 0.0),
                         RowLineColor = ConvertToOxyColor(SpectralLineColor)
                     };
+
+                    List<VScgdMeasureResultSmu> lists = MysqlControler.GetInstance().Sql.Select<VScgdMeasureResultSmu>().Where(a => a.BatchId == result.BatchId).ToList();
+
+                    if (lists.Count == 2)
+                    {
+                        foreach (var item in lists)
+                        {
+                            if (item.Channel == 1)
+                            {
+                                measurement.BVoltage = item.VResult;
+                                measurement.BCurrent = item.IResult;
+                            }
+                        }
+                    }
+
                     // ===== 修复：添加数组边界检查 =====
                     if (intensities != null && intensities.Length > 0)
                     {

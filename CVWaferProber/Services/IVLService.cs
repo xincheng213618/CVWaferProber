@@ -293,27 +293,6 @@ namespace CVWaferProber.Services
         public override void AutoExportData(DieViewModel dieViewModel)
         {
 
-
-            //if (wpfFlowViewModel.FlowType == CVWaferProberFlowType.IV)
-            //{
-            //    var IVMeasurements = CustomIVLVM.IVMeasurements;
-            //    // 1. 固定导出根路径
-            //    string ivRootPath = @"D:\Project\IV";
-
-            //    // 2. 确保目标目录存在（不存在则自动创建，避免路径不存在异常）
-            //    if (!Directory.Exists(ivRootPath))
-            //    {
-            //        Directory.CreateDirectory(ivRootPath);
-            //        logger.Info($"创建IV导出目录：{ivRootPath}");
-            //    }
-
-            //    // 3. 构造文件名（包含时间戳，避免文件重名覆盖）
-            //    string fileName = $"IVL_Data_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-            //    string fullExportPath = Path.Combine(ivRootPath, fileName);
-            //    CustomIVLVM.ExportToCsv(IVMeasurements, fullExportPath, 1);
-            //}
-            //if (wpfFlowViewModel.FlowType == CVWaferProberFlowType.IVL)
-            //{
             var Measurements = CustomIVLVM.Measurements;
             var Wavelengths = CustomIVLVM.Wavelengths;
             if (Measurements == null || !Measurements.Any() || Wavelengths == null || Wavelengths.Length == 0)
