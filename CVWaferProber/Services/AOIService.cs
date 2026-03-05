@@ -1213,7 +1213,7 @@ namespace CVWaferProber.Services
             row.Add(dieViewModel.ProbingCardSN ?? "0"); // 18. Probing Card SN（空值处理）
             row.Add("na"); // Lv(cd/m2) - 默认值
             row.Add("na"); // IP - 默认值
-            row.Add("100"); // Excitation Purity(%) - 默认值 兴奋纯度
+            row.Add("99"); // Excitation Purity(%) - 默认值 兴奋纯度
             row.Add("na"); // BlueLight - 默认值
             row.Add("0"); // cx - 默认值
             row.Add("0"); // cy - 默认值
