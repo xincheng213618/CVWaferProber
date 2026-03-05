@@ -110,7 +110,7 @@
     </UserControl.Resources>
     <Grid>
         <!--  顶部工具栏  -->
-        <ToolBar Style="{StaticResource IndustrialToolbarStyle}" ToolBarTray.IsLocked="True" Height="60">
+        <ToolBar Style="{StaticResource IndustrialToolbarStyle}" ToolBarTray.IsLocked="True" Height="50">
 
             <!--  操作按钮组（保留你的尺寸设置）  -->
             <Button
