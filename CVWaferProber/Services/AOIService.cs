@@ -943,15 +943,15 @@ namespace CVWaferProber.Services
                 if (writeHeader)
                 {
                     var headers = new List<string>
-            {
-                "No", "Die_x", "Die_y", "LightOnStatus", "RegisterPixels", "Final Class",
-                "Pixel Logic", "AOI GradeLevel", "Defect Density(%)", "Black Pattern",
-                "Uniformity", "Luminance(nit)", "Voltage(v)", "Current(mA)",
-                "Measurement Time", "Pin Pressure", "TouchDown Counts", "Probing Card SN",
-                "Lv(cd/m2)", "IP", "Excitation Purity(%)", "BlueLight", "cx", "cy",
-                "u'", "v'", "CCT(K)", "Dominant Wavelength(nm)", "Saturation(%)",
-                "Peak Wavelength(nm)", "FWHM", "Temperature(℃)"
-            };
+                    {
+                        "No", "Die_x", "Die_y", "LightOnStatus", "RegisterPixels", "Final Class",
+                        "Pixel Logic", "AOI GradeLevel", "Defect Density(%)", "Black Pattern",
+                        "Uniformity", "Luminance(nit)", "Voltage(v)", "Current(mA)",
+                        "Measurement Time", "Pin Pressure", "TouchDown Counts", "Probing Card SN",
+                        "Lv(cd/m2)", "IP", "Excitation Purity(%)", "BlueLight", "cx", "cy",
+                        "u'", "v'", "CCT(K)", "Dominant Wavelength(nm)", "Saturation(%)",
+                        "Peak Wavelength(nm)", "FWHM", "Temperature(℃)"
+                    };
 
                     // 添加波长表头 (380-780nm，每1nm一列)
                     for (int wl = 380; wl <= 780; wl++)
