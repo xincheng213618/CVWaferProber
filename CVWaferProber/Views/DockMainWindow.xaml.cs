@@ -279,29 +279,32 @@ namespace CVWaferProber.Views
                     return;
                 }
 
-                // 2. 获取内层TabControl（innerTabControl）
-                _spInnerTabControl = _spAnalyzer.FindName("innerTabControl") as TabControl;
-                if (_spInnerTabControl == null)
+                // 2. 等待控件完全加载（关键：确保内部子控件初始化完成）
+                _spAnalyzer.Loaded += (s, e) =>
                 {
-                    ShowLocalizedMessageBox(
-                        "spaly内未找到x:Name=innerTabControl的TabControl！",
-                        "Cannot find TabControl with x:Name=innerTabControl in spaly!",
-                        "错误",
-                        "Error",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                    return;
-                }
+                    // 3. 获取内层TabControl（innerTabControl）
+                    _spInnerTabControl = _spAnalyzer.FindName("innerTabControl") as TabControl;
+                    if (_spInnerTabControl == null)
+                    {
+                        ShowLocalizedMessageBox(
+                            "spaly内未找到x:Name=innerTabControl的TabControl！",
+                            "Cannot find TabControl with x:Name=innerTabControl in spaly!",
+                            "错误",
+                            "Error",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error);
+                        return;
+                    }
 
-                // 3. 绑定MainViewModel的切换方法
-                if (DataContext is MainViewModel mainVm)
-                {
-                    //mainVm.SpPanelView = _spAnalyzer;
-                    mainVm.ActivateSpectralInnerTabAction = ActivateSpectralInnerTab;
-                    mainVm.ActivateIVLCameraInnerTabAction = ActivateIVLCameraInnerTab;
-                    mainVm.ActivateEQEOuterTabAction = ActivateEQEOuterTab;
-                    //mainVm.SpPanelViewModel = _spAnalyzer.DataContext as CVWPFSpectrometerCtrl.ViewModels.CVSpectrumViewModel;
-                }
+                    // 4. 绑定MainViewModel的切换方法 + 传递spAnalyzer引用
+                    if (DataContext is MainViewModel mainVm)
+                    {
+                        //mainVm.SpPanelView = _spAnalyzer; // 传递控件引用给MainViewModel
+                        mainVm.ActivateSpectralInnerTabAction = ActivateSpectralInnerTab;
+                        mainVm.ActivateIVLCameraInnerTabAction = ActivateIVLCameraInnerTab;
+                        mainVm.ActivateEQEOuterTabAction = ActivateEQEOuterTab;
+                    }
+                };
             }), DispatcherPriority.Loaded);
         }
         #region 核心切换方法（适配红框3个选项）

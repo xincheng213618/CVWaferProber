@@ -43,28 +43,41 @@ namespace CVWaferProber.Services
 
         public override async Task StartTestingAsync(DieViewModel dieViewModel, WPFlowViewModel _selectedWPFlow, bool hasNext, bool tranStatus = true)
         {
-            // 新增：强制切换到Overview标签页（修复FindName错误）
+            // 新增：强制切换到Overview标签页
+            //Application.Current.Dispatcher.Invoke(() =>
+            //{
+            //    // 2. 双重判空：先判断_spPanelView，再判断FindName返回的outerTab
+            //    if (_spPanelView != null)
+            //    {
+            //        _spInnerTabControl = _spPanelView.FindName("outerTabControl") as TabControl;
+            //        if (_spInnerTabControl != null)
+            //        {
+            //            _spInnerTabControl.SelectedIndex = 0; // 切换到Overview标签页
+            //            logger.Info("Tab page switched to Overview (index 0) successfully!");
+            //        }
+            //        else
+            //        {
+            //            logger.Info("TabControl with x:Name=outerTabControl not found!");
+            //        }
+            //    }
+            //    else
+            //    {
+            //        logger.Info("Cannot switch tab page: _spPanelView is null!");
+            //        // 可选：抛出友好异常，方便定位问题
+            //        // throw new InvalidOperationException("SP面板视图控件未注入，请检查传递链路！");
+            //    }
+            //});
             Application.Current.Dispatcher.Invoke(() =>
             {
-                // 2. 双重判空：先判断_spPanelView，再判断FindName返回的outerTab
-                if (_spPanelView != null)
+                if (mainVM != null)
                 {
-                    _spInnerTabControl = _spPanelView.FindName("innerTabControl") as TabControl;
-                    if (_spInnerTabControl != null)
-                    {
-                        _spInnerTabControl.SelectedIndex = 0; // 切换到Overview标签页
-                        logger.Info("Tab page switched to Overview (index 0) successfully!");
-                    }
-                    else
-                    {
-                        logger.Info("TabControl with x:Name=outerTabControl not found!");
-                    }
+                    // 调用DockMainWindow中封装好的切换方法（确保控件能正确找到）
+                    mainVM.ActivateSpectralInnerTabAction?.Invoke();
+                    logger.Info("Tab page switched to Overview (index 0) successfully!");
                 }
                 else
                 {
-                    logger.Info("Cannot switch tab page: _spPanelView is null!");
-                    // 可选：抛出友好异常，方便定位问题
-                    // throw new InvalidOperationException("SP面板视图控件未注入，请检查传递链路！");
+                    logger.Info("Cannot switch tab page: mainVM is null!");
                 }
             });
             dieViewModel.ChangeStatus(ChipStatus.IVL_TESTING);
@@ -107,12 +120,15 @@ namespace CVWaferProber.Services
             };
 
             // 测试流程结束后，停止定时器（避免内存泄漏）
-           await task.ContinueWith(t =>
+            await task.ContinueWith(t =>
             {
-                refreshTimer.Enabled = false;
-                refreshTimer.Dispose();
-                logger.Info("Test process completed, stop the refresh timer");// : "测试流程结束，停止刷新定时器"
-            }, TaskScheduler.FromCurrentSynchronizationContext());
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    refreshTimer.Enabled = false;
+                    refreshTimer.Dispose();
+                    logger.Info("Test process completed, stop the refresh timer");
+                });
+            });
         }
         public override void ResultDisplay(DieViewModel dieViewModel)
         {
