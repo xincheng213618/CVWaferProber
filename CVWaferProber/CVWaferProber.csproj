@@ -19,9 +19,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Assets\**" />
+    <Compile Remove="Config\**" />
     <Compile Remove="Resources\**" />
+    <EmbeddedResource Remove="Assets\**" />
+    <EmbeddedResource Remove="Config\**" />
     <EmbeddedResource Remove="Resources\**" />
+    <None Remove="Assets\**" />
+    <None Remove="Config\**" />
     <None Remove="Resources\**" />
+    <Page Remove="Assets\**" />
+    <Page Remove="Config\**" />
     <Page Remove="Resources\**" />
   </ItemGroup>
 
@@ -149,11 +157,6 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Assets\" />
-    <Folder Include="Config\" />
   </ItemGroup>
 
   <ItemGroup>
