@@ -1,7 +1,9 @@
 ﻿using ChipMapping.ViewModels;
+using ColorVision.Core.Entities;
 using CVCommCore;
 using CVDB.Services.Algorithm;
 using CVDB.Services.Image;
+using CVMysql;
 using CVWaferProber.Config;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
@@ -13,6 +15,7 @@ using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -25,25 +28,27 @@ namespace CVWaferProber.Services
     public static class CVAlgorithmNative
     {
         //定义返回值枚举（根据CV_algorithm.dll实际定义调整）
-        public enum AliResult
+        public enum CV_AliResType : int
         {
-            Success = 0,
-            Error_InvalidHandle = -1,
-            Error_InvalidJson = -2,
-            Error_CalcFailed = -3,
-            Error_Length = -4
-        }
+            /*        算法整体返回值说明：*/
+            SUCCESS = 1,            //完全成功;
+            FAILED = 0,             //失败;
+            PART_SUCCESS = 2,       //部分成功（如计算不同类型的畸变）;
+            ERR_LENGTH = -1,        //接收的内存长度不够;
+            ERR_FILE = -2,          //结果存文件失败;
+            ERR_JSON = -3           //JSON格式异常
+        };
         private const string LIBRARY_CV_Ali = "CV_algorithm.dll";
         // 导入CV_algorithm.dll的核心接口
         [DllImport(LIBRARY_CV_Ali, EntryPoint = "CV_Ali_calcSingle", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
         
-        public static extern AliResult CV_Ali_calcSingle(
+        public static extern CV_AliResType CV_Ali_calcSingle(
             IntPtr handle,                // 句柄（若无需句柄可传IntPtr.Zero，需确认dll要求）
              string staticJson,  // 输入JSON字符串
              StringBuilder result, // 输出结果缓冲区
             ref int resultLength          // 缓冲区长度（输入：缓冲区大小；输出：实际结果长度）
         );
-        public static AliResult CV_Ali_calcSingle(string staticJson, out string result)
+        public static CV_AliResType CV_Ali_calcSingle(string staticJson, out string result)
         {
             // 初始缓冲区长度（可根据实际情况调整）
             int length = 512;
@@ -957,7 +962,7 @@ namespace CVWaferProber.Services
                     {
                         "No", "Die_x", "Die_y", "LightOnStatus", "RegisterPixels", "Final Class",
                         "Pixel Logic", "AOI GradeLevel", "Defect Density(%)", "Black Pattern",
-                        "Uniformity", "Luminance(nit)", "Voltage(v)", "Current(mA)",
+                        "Uniformity", "Luminance(nit)", "A_Voltage/V", "A_Current/mA","B_Voltage/V", "B_Current/mA",
                         "Measurement Time", "Pin Pressure", "TouchDown Counts", "Probing Card SN",
                         "Lv(cd/m2)", "IP", "Excitation Purity(%)", "BlueLight", "cx", "cy",
                         "u'", "v'", "CCT(K)", "Dominant Wavelength(nm)", "Saturation(%)",
@@ -1139,6 +1144,27 @@ namespace CVWaferProber.Services
             row.Add(measurement.Luminance.ToString("F0")); // 12. Luminance(nit)
             row.Add(measurement.Voltage.ToString("F2")); // 13. Voltage(v)
             row.Add(measurement.Current.ToString("F2")); // 14. Current(mA)
+
+            List<VScgdMeasureResultSmu> lists = MysqlControler.GetInstance().Sql.Select<VScgdMeasureResultSmu>().Where(a => a.BatchId == dieViewModel.Id).ToList();
+
+            string b_v = "Na";
+            string b_i = "Na";
+
+            if (lists.Count == 2)
+            {
+                foreach (var item in lists)
+                {
+                    if (item.Channel == 1)
+                    {
+                        b_v = item.VResult?.ToString();
+                        b_i = item.IResult?.ToString();
+                    }
+                }
+            }
+            row.Add(b_v);
+            row.Add(b_i);
+
+
             row.Add(DateTime.Now.ToString("yyyy/MM/dd")); // 15. Measurement Time
 
             string pinPressure = dieViewModel.Pressure ?? "0,0,0,0"; // 16. Pin Pressure - 关键修改：用引号括起来
@@ -1338,10 +1364,10 @@ namespace CVWaferProber.Services
 
                 // 2. 使用封装后的方法调用（核心修改）
                 string resultJson;
-                CVAlgorithmNative.AliResult result = CVAlgorithmNative.CV_Ali_calcSingle(inputJson, out resultJson);
+                CVAlgorithmNative.CV_AliResType result = CVAlgorithmNative.CV_Ali_calcSingle(inputJson, out resultJson);
 
                 // 3. 处理调用结果
-                if (result == CVAlgorithmNative.AliResult.Success)
+                if (result == CVAlgorithmNative.CV_AliResType.SUCCESS)
                 {
                     logger.Debug($"Result JSON: {resultJson}");
 
@@ -1373,17 +1399,20 @@ namespace CVWaferProber.Services
                     // 根据错误码提供更具体的错误信息
                     switch (result)
                     {
-                        case CVAlgorithmNative.AliResult.Error_InvalidHandle:
-                            logger.Error("无效的句柄");
+                        case CVAlgorithmNative.CV_AliResType.FAILED:
+                            logger.Error("失败");
                             break;
-                        case CVAlgorithmNative.AliResult.Error_InvalidJson:
-                            logger.Error($"无效的JSON格式: {inputJson}");
+                        case CVAlgorithmNative.CV_AliResType.PART_SUCCESS:
+                            logger.Error($"部分成功（如计算不同类型的畸变）");
                             break;
-                        case CVAlgorithmNative.AliResult.Error_CalcFailed:
-                            logger.Error("计算失败");
+                        case CVAlgorithmNative.CV_AliResType.ERR_LENGTH:
+                            logger.Error("接收的内存长度不够");
                             break;
-                        case CVAlgorithmNative.AliResult.Error_Length:
-                            logger.Error("缓冲区长度不足，扩容后仍失败");
+                        case CVAlgorithmNative.CV_AliResType.ERR_FILE:
+                            logger.Error("结果存文件失败，扩容后仍失败");
+                            break;
+                        case CVAlgorithmNative.CV_AliResType.ERR_JSON:
+                            logger.Error("JSON格式异常");
                             break;
                     }
                 }
@@ -1395,6 +1424,7 @@ namespace CVWaferProber.Services
 
             return excitationPurity;
         }
+
         // 定义结果解析的DTO
         private class ExcitationPurityResult
         {
