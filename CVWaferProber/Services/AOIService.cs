@@ -39,8 +39,8 @@ namespace CVWaferProber.Services
         
         public static extern AliResult CV_Ali_calcSingle(
             IntPtr handle,                // 句柄（若无需句柄可传IntPtr.Zero，需确认dll要求）
-            [MarshalAs(UnmanagedType.LPStr)] string staticJson,  // 输入JSON字符串
-            [MarshalAs(UnmanagedType.LPStr)] StringBuilder result, // 输出结果缓冲区
+             string staticJson,  // 输入JSON字符串
+             StringBuilder result, // 输出结果缓冲区
             ref int resultLength          // 缓冲区长度（输入：缓冲区大小；输出：实际结果长度）
         );
         public static AliResult CV_Ali_calcSingle(string staticJson, out string result)

@@ -818,8 +818,13 @@ namespace CVWaferProber.Services
         {
             try
             {
+                if (_mainVM == null)
+                {
+                    logger.Warn("MainVM is null, skipping breakpoint save");
+                    return;
+                } 
                 // 只有测试中才保存断点
-                if (autoTestingItem == null && this.MainVM.DataMappingVM?.IsManualTesting != true)
+                if (autoTestingItem == null && (this.MainVM.DataMappingVM?.IsManualTesting != true))
                     return;
 
                 // 限制保存频率，至少间隔1秒
