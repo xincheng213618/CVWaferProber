@@ -3,6 +3,7 @@ using ColorVision.Core.Entities;
 using CVCommCore;
 using CVDB.Services.Algorithm;
 using CVDB.Services.Spectrum;
+using CVMysql;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.ViewModels;
 using CVWPFSpectrometerCtrl.Models;

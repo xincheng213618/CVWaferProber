@@ -29,6 +29,9 @@
 		<Reference Include="CVCommCore">
 			<HintPath>..\DLL\CVCommCore.dll</HintPath>
 		</Reference>
+		<Reference Include="CVMysqlLib">
+		  <HintPath>..\DLL\CVMysqlLib.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 	<!-- 启用WinForm兼容，引入WindowsFormsIntegration --><!--
 	<PropertyGroup>

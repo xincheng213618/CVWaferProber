@@ -56,7 +56,7 @@ namespace CVWaferProber.Services
             var res = CV_Ali_calcSingle(IntPtr.Zero, staticJson, bf, ref length);
 
             // 如果返回长度不足错误，扩容后重新调用
-            if (res == AliResult.Error_Length)
+            if (res == CV_AliResType.ERR_LENGTH)
             {
                 bf = new StringBuilder(length);
                 res = CV_Ali_calcSingle(IntPtr.Zero, staticJson, bf, ref length);
