@@ -5,7 +5,8 @@
     xmlns:cv="clr-namespace:CVWPFCamImageCtrl.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CVWPFCamImageCtrl"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    mc:Ignorable="d"  d:Width="1280" d:Height="720">
     <UserControl.Resources>
         <cv:ZoomScaleConverter x:Key="ZoomScaleConverter" />
         <cv:BoolToTextConverter
