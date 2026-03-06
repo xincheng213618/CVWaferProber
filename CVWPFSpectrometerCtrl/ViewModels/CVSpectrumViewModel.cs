@@ -598,6 +598,10 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             get => (int)SelectedTab;
             set
             {
+                if (SelectedTab == (TabType)value)
+                {
+                    return;
+                }
                 // 校验值是否在枚举范围内，避免越界
                 if (Enum.IsDefined(typeof(TabType), value))
                 {

@@ -88,7 +88,10 @@ namespace CVWaferProber.Services
             IsIVLCameraEnabled = _selectedWPFlow.FlowType == CVWaferProberFlowType.IVL_Camera;
             dieViewModel.IsIVLCameraEnabled = IsIVLCameraEnabled;
             if (IsIVLCameraEnabled) CustomIVLVM.SelectedTab = CVWPFSpectrometerCtrl.Models.TabType.IVLCamera;
-            else CustomIVLVM.SelectedTab = CVWPFSpectrometerCtrl.Models.TabType.Spectrum;
+
+            else CustomIVLVM.SelectedTab = CVWPFSpectrometerCtrl.Models.TabType.Overview;
+
+
             // 缓存当前DieViewModel（定时器回调中需要用到）
             _currentDieVM = dieViewModel;
             //System.Timers.Timer timer = new System.Timers.Timer(1000);
