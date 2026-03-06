@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using System.Diagnostics;
 using System.IO;
 
-namespace CVWaferProber.Config
+namespace CVWaferProber.Core.Config
 {
     // ConfigManager.cs
     public static class ConfigManager

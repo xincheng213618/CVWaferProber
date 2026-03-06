@@ -4,7 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CVWPFCamImageCtrl"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"  
+    mc:Ignorable="d"  d:Width="1280" d:Height="720">
     <UserControl.Resources>
         <!--  细腻的渐变背景  -->
         <LinearGradientBrush x:Key="ModernBackground" StartPoint="0,0" EndPoint="1,1">

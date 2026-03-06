@@ -8,7 +8,10 @@
     xmlns:local="clr-namespace:CVWaferProber.Components"
     xmlns:map="clr-namespace:ChipMapping.Views;assembly=ChipMapping"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="clr-namespace:CVWaferProber.ViewModels">
+    xmlns:viewmodels="clr-namespace:CVWaferProber.ViewModels"
+    mc:Ignorable="d" 
+    d:Width="700" d:Height="720"
+    >
 
     <UserControl.Resources>
         <cv:StatusToColorConverter x:Key="StatusColorConverter" />

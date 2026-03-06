@@ -1,4 +1,4 @@
-﻿using CVWaferProber.Config;
+﻿using CVWaferProber.Core.Config;
 using CVWaferProber.ViewModels;
 using Newtonsoft.Json;
 using System.Collections.ObjectModel;

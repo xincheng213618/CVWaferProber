@@ -1,4 +1,4 @@
-﻿using CVWaferProber.Config;
+﻿using CVWaferProber.Core.Config;
 using CVWaferProber.Core.ViewModels;
 using CVWaferProber.Services;
 using Mysqlx.Crud;

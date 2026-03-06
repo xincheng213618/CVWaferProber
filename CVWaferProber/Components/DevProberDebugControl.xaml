@@ -4,8 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:CVWaferProber.Components"
+             xmlns:vm ="clr-namespace:CVWaferProber.ViewModels"
              mc:Ignorable="d" 
-             d:DesignHeight="850" d:DesignWidth="1200">
+             d:DataContext="{d:DesignInstance vm:DevProberDebugViewModel}"
+             d:DesignHeight="850" d:DesignWidth="1200" Background="White">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -283,41 +285,38 @@
             <TabControl Grid.Column="0" Margin="0,0,5,0">
                 <TabItem Header="{DynamicResource MotionControl.Title}">
                     <StackPanel Margin="5">
-                        <StackPanel Margin="5">
-                            <StackPanel Margin="5" Orientation="Horizontal">
-                                <Button Width="150" Content="{DynamicResource MotionControl.ZUp}" Margin="5" Tag="Z" 
+                        <UniformGrid Columns="3"  Margin="5">
+                            <Button Width="150" Content="{DynamicResource MotionControl.ZUp}" Margin="5" Tag="Z" 
                                         Command="{Binding SendBasicCommand}"
                                         CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
-                                <Button Width="150" Content="{DynamicResource MotionControl.ZDown}" Margin="5" Tag="D" 
+                            <Button Width="150" Content="{DynamicResource MotionControl.ZDown}" Margin="5" Tag="D" 
                                         Command="{Binding SendBasicCommand}"
                                         CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
-                                <Button Width="150" Content="{DynamicResource MotionControl.LZAllUp}" Margin="5" Tag="gu" 
+                            <Button Width="150" Content="{DynamicResource MotionControl.LZAllUp}" Margin="5" Tag="gu" 
                                         Command="{Binding SendBasicCommand}"
                                         CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
-                            </StackPanel>
-                            <StackPanel Margin="5" Orientation="Horizontal">
-                                    <Button Width="150" Content="{DynamicResource MotionControl.ZPosMainCamera}" Margin="5" Tag="gm" 
-                                        Command="{Binding SendBasicCommand}"
-                                        CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
-                                <Button Width="150" Content="{DynamicResource MotionControl.ZPosAUXCamera}" Margin="5" Tag="ga" 
-                                        Command="{Binding SendBasicCommand}"
-                                        CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
-                                <Button Width="150" Content="{DynamicResource MotionControl.ZPosINT}" Margin="5" Tag="gi" 
-                                        Command="{Binding SendBasicCommand}"
-                                        CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
-                            </StackPanel>
-                            <StackPanel Margin="5" Orientation="Horizontal">
-                                <Button Width="150" Content="{DynamicResource MotionControl.ZPosQ}" Margin="5" Tag="gc" 
-                                        Command="{Binding SendBasicCommand}"
-                                        CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
-                                <Button Width="150" Content="{DynamicResource MotionControl.TestComplete}" Margin="5" Tag="J" 
-                                        Command="{Binding SendBasicCommand}"
-                                        CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
-                                <Button Width="150" Content="{DynamicResource MotionControl.StopCommand}" Margin="5" Tag="K" 
-                                        Command="{Binding SendBasicCommand}" 
-                                        CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
-                            </StackPanel>
-                        </StackPanel>
+                            <Button Width="150" Content="{DynamicResource MotionControl.ZPosMainCamera}" Margin="5" Tag="gm" 
+                                       Command="{Binding SendBasicCommand}"
+                                       CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
+                            <Button Width="150" Content="{DynamicResource MotionControl.ZPosAUXCamera}" Margin="5" Tag="ga" 
+                                       Command="{Binding SendBasicCommand}"
+                                       CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
+                            <Button Width="150" Content="{DynamicResource MotionControl.ZPosINT}" Margin="5" Tag="gi" 
+                                       Command="{Binding SendBasicCommand}"
+                                       CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
+                            <Button Width="150" Content="{DynamicResource MotionControl.ZPosQ}" Margin="5" Tag="gc" 
+                              Command="{Binding SendBasicCommand}"
+                              CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
+                            <Button Width="150" Content="{DynamicResource MotionControl.TestComplete}" Margin="5" Tag="J" 
+                              Command="{Binding SendBasicCommand}"
+                              CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
+                            <Button Width="150" Content="{DynamicResource MotionControl.StopCommand}" Margin="5" Tag="K" 
+                              Command="{Binding SendBasicCommand}" 
+                              CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
+                            <Button Width="150" Content="移动到预扎针位" Margin="5" Tag="H" 
+                              Command="{Binding SendBasicCommand}" 
+                              CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Tag}"/>
+                        </UniformGrid>
                         <StackPanel Margin="5">
                             <GroupBox Header="{DynamicResource MotionControl.AbsoluteMove}" Margin="0,0,0,10">
                                 <StackPanel>

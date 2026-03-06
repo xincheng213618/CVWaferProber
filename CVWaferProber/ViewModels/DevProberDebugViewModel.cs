@@ -115,6 +115,8 @@ namespace CVWaferProber.ViewModels
         public bool CanDisconnect =>
             ConnectionInfo.Status == ConnectionStatus.Connected;
 
+
+
         public DevProberDebugViewModel(IWaferProberClient proberClient, IStateMachine stateMachine, ConnectionInfo connectionInfo)
         {
             this._client = proberClient;

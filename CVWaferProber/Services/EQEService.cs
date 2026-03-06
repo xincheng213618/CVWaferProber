@@ -1,5 +1,5 @@
 ﻿using CVDB.Services.Spectrum;
-using CVWaferProber.Config;
+using CVWaferProber.Core.Config;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
 using CVWPFSpectrometerCtrl.ViewModels;

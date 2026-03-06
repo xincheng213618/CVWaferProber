@@ -1,4 +1,6 @@
-﻿using CVWPFSpectrometerCtrl.Models;
+﻿using CVWaferProber.Core.Config;
+using CVWaferProber.Core.Utils;
+using CVWPFSpectrometerCtrl.Models;
 using CVWPFSpectrometerCtrl.ViewModels;
 using OxyPlot.Wpf;
 using System.Windows;
@@ -11,6 +13,7 @@ namespace CVWPFSpectrometerCtrl
     /// </summary>
     public partial class CVSpectrumAnalyzer : System.Windows.Controls.UserControl
     {
+        
        
         private SpectralData _spectralData;
         public CVSpectrumAnalyzer()
@@ -78,6 +81,16 @@ namespace CVWPFSpectrometerCtrl
                 OverviewVIPlotView.Visibility = Visibility.Visible;
              
             }
+        }
+
+        private void OpenIvlFloder_Click(object sender, RoutedEventArgs e)
+        {
+            PlatformHelper.OpenFolder(ConfigManager.Config.ExportPathSettings.IvlExportPath);
+        }
+
+        private void OpenEQEFloder_Click(object sender, RoutedEventArgs e)
+        {
+            PlatformHelper.OpenFolder(ConfigManager.Config.ExportPathSettings.EqeExportPath);
         }
     }
 }
