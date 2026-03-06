@@ -3,6 +3,7 @@ using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
 using CVWPFSpectrometerCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
+using System.Collections.ObjectModel;
 using System.IO;
 using Application = System.Windows.Application;
 
@@ -308,6 +309,48 @@ namespace CVWaferProber.Services
 
         public override void AutoExportData(DieViewModel dieViewModel)
         {
+            // 检查Die状态，只有OK状态才导出数据吧
+            if (dieViewModel.Status != ChipStatus.IVL_COMPLETED)
+            {
+                logger.Info($"Die {dieViewModel.SerialNumber} status is {dieViewModel.Status}, skip export");
+                return;
+            }
+            string serialNumber = dieViewModel.SerialNumber ?? "Unknown";
+            logger.InfoFormat("serialNumber => {0}", serialNumber);
+
+            // ========== 核心修改：导出前先清空原有光谱数据 ==========
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                if (CustomIVLVM != null)
+                {
+                    // 清空Measurements和Wavelengths，确保数据隔离
+                    CustomIVLVM.ClearResult();
+                    // 重新加载当前die的光谱数据（仅加载当前die）
+                    CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
+                }
+            });
+
+            // 尝试加载光谱数据，但不强制要求
+            ObservableCollection<SpectrumMeasurement> measurements = null;
+            float[] wavelengths = null;
+
+            try
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    if (CustomIVLVM != null)
+                    {
+                        measurements = CustomIVLVM.Measurements;
+                        wavelengths = CustomIVLVM.Wavelengths;
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                logger.Warn($"Failed to load spectrum data, continuing with basic AOI data: {ex.Message}");
+                // 继续执行，使用空的光谱数据
+            }
+
 
             var Measurements = CustomIVLVM.Measurements;
             var Wavelengths = CustomIVLVM.Wavelengths;
@@ -326,7 +369,6 @@ namespace CVWaferProber.Services
                 logger.Info($"Create IVL export directory：{ivlRootPath}");
             }
             // 构造文件名（包含SerialNumber+时间戳）
-            string serialNumber = _currentDieVM?.SerialNumber ?? "Unknown";
             string fileName = $"IVL_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
             string fullExportPath = Path.Combine(ivlRootPath, fileName);
             // 执行导出

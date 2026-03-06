@@ -34,7 +34,7 @@
                 <!--  顶部按钮区域  -->
                 <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5,0,5,0" >
                     <Button x:Name="btnExport" Width="80" Margin="0,0,5,0"  Command="{Binding ExportCommand}" CommandParameter="{Binding SelectedTabIndex}" Content="{DynamicResource Export CSV}" IsEnabled="True" />
-                    <Button Content="OpenExportFloder" Click="OpenEQEFloder_Click" Margin="0,0,5,0" />
+                    <Button Content="OpenExportFloder" Click="OpenIvlFloder_Click" Margin="0,0,5,0" />
                 </StackPanel>
 
                 <!--  原内层TabControl（总览/光谱/IV等）  -->
@@ -1084,7 +1084,7 @@
                 </Grid.RowDefinitions>
                 <StackPanel Grid.Row="0"  Orientation="Horizontal" Margin="5,0,5,0" >
                     <Button  x:Name="btnExport1"   Width="80"  Margin="0,0,5,0"  Command="{Binding CustomEQEVM.ExportCommand}" CommandParameter="{Binding CustomEQEVM.SelectedTabIndex}"   Content="{DynamicResource Export CSV}"  IsEnabled="True" />
-                    <Button Content="OpenExportFloder" Click="OpenIvlFloder_Click" Margin="0,0,5,0" />
+                    <Button Content="OpenExportFloder" Click="OpenEQEFloder_Click" Margin="0,0,5,0" />
                 </StackPanel>
 
                 <Grid x:Name="EQEGrid" Grid.Row="1">

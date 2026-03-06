@@ -40,7 +40,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         // 总览图光谱X轴固定范围（350~800nm）
         private readonly double _overviewSpectralXMin = 360;
         private readonly double _overviewSpectralXMax = 800;
-        public ChipMappingControlViewModel CustomMappingVM { get; private set; }
+        public ChipMappingControlViewModel CustomMappingVM { get; set; }
         public void NotifyPropertyChanged(string propertyName)
         {
             OnPropertyChanged(propertyName);
@@ -616,10 +616,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private SpectraDataViewModel CurrentSpectrum;
         public ScottPlot.IColormap VisibleSpectrumColormap { get; }
         //public object DataCollection { get; private set; }
-        public CVSpectrumViewModel(ChipMappingControlViewModel mappingVM) // 通过构造函数注入
-        {
-            CustomMappingVM = mappingVM; // 注入实例
-        }
+
+
         public CVSpectrumViewModel()
         {
             // 提前初始化波长数组
@@ -1858,7 +1856,6 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
         #region 光谱
         // 导出CSV的方法（参数：保存路径、Measurements数据列表、波长数组）
-        //private ChipMappingControlViewModel _chipMappingControlViewModel;
         public void ExportToCsv(string fileName, ObservableCollection<SpectrumMeasurement> measurements, float[]? wavelengths, float fPlambda = 1.0f)
         {
             if (measurements == null || !measurements.Any() )

@@ -268,7 +268,9 @@ namespace CVWaferProber.ViewModels
 
             CustomMappingVM = DataMappingVM.CustomMappingVM;
             CustomImageVM = new CVCamImagerViewModel();
+            //CustomMappingVM 获取温度
             CustomIVLVM = new CVSpectrumViewModel();
+            CustomIVLVM.CustomMappingVM = CustomMappingVM;
             //CustomIVLVM.CustomEQEVM = mainService.GetEQEVM();
             //
             ToolsVM = new ToolsBarViewModel(this, ProberClientService.Instance.ProberClient, ProberClientService.Instance.StateMachine, EventAggregator);
