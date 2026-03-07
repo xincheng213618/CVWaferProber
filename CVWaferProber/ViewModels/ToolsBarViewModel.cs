@@ -6,6 +6,13 @@ using WaferComm.StateMachine;
 
 namespace CVWaferProber.ViewModels
 {
+    public static class WaferProberData
+    {
+        public static DateTime? RunDateTime { get; set; }
+    }
+
+
+
     public class ToolsBarViewModel : ViewModelBase
     {
         private readonly IWaferProberClient _client;
@@ -19,25 +26,18 @@ namespace CVWaferProber.ViewModels
         public ICommand StartAutoTestCommand { get; }
         public ICommand ContinuAutoTestCommand { get; }
         public ICommand StopAutoTestCommand { get; }
+        public ICommand CloseTestCommand { get; }
         public ICommand PauseAutoTestCommand { get; }
 
-        public bool CanLiftAll => _proberState.CurrentState == ProberState.WaferLoaded ||
-            _proberState.CurrentState == ProberState.Stoped;
-        public bool CanToMainCamera => _proberState.CurrentState == ProberState.WaferLoaded || 
-            _proberState.CurrentState == ProberState.Stoped;
-        public bool CanToAuxCamera => _proberState.CurrentState == ProberState.WaferLoaded ||
-            _proberState.CurrentState == ProberState.Stoped;
-        public bool CanToIntegratingSphere => _proberState.CurrentState == ProberState.WaferLoaded ||
-            _proberState.CurrentState == ProberState.Stoped;
+        public bool CanLiftAll => _proberState.CurrentState == ProberState.WaferLoaded || _proberState.CurrentState == ProberState.Stoped;
+        public bool CanToMainCamera => _proberState.CurrentState == ProberState.WaferLoaded ||  _proberState.CurrentState == ProberState.Stoped;
+        public bool CanToAuxCamera => _proberState.CurrentState == ProberState.WaferLoaded || _proberState.CurrentState == ProberState.Stoped;
+        public bool CanToIntegratingSphere => _proberState.CurrentState == ProberState.WaferLoaded ||  _proberState.CurrentState == ProberState.Stoped;
 
         //private bool _CanContinuAutoTest;
-        public bool CanStartAutoTest => _proberState.CurrentState == ProberState.WaferLoaded ||
-            _proberState.CurrentState == ProberState.Stoped;
-        public bool CanContinuAutoTest => _proberState.CurrentState == ProberState.Paused &&
-            _mainVM.IsNotProcessing;
-        public bool CanStopAutoTest => _mainVM.IsNotProcessing && 
-            (_proberState.CurrentState == ProberState.Testing || _proberState.CurrentState == ProberState.WaferLoaded ||
-            _proberState.CurrentState == ProberState.Paused || _proberState.CurrentState == ProberState.Stoped);
+        public bool CanStartAutoTest => _proberState.CurrentState == ProberState.WaferLoaded ||  _proberState.CurrentState == ProberState.Stoped;
+        public bool CanContinuAutoTest => _proberState.CurrentState == ProberState.Paused && _mainVM.IsNotProcessing;
+        public bool CanStopAutoTest => _mainVM.IsNotProcessing &&   (_proberState.CurrentState == ProberState.Testing || _proberState.CurrentState == ProberState.WaferLoaded || _proberState.CurrentState == ProberState.Paused || _proberState.CurrentState == ProberState.Stoped);
         public bool CanPauseAutoTest => _proberState.CurrentState == ProberState.Testing;
 
         public ToolsBarViewModel(MainViewModel mainVM,IWaferProberClient client, IStateMachine proberState, IEventAggregator? eventAggregator = null)
@@ -47,32 +47,25 @@ namespace CVWaferProber.ViewModels
             _proberState = proberState;
             _client.EventAggregator.Subscribe<ZAxisPosChangedEvent>(OnZAxisPosChanged);
 
-            //_EventAggregator = eventAggregator;
-            LiftAllCommand = new RelayCommand(
-                 _ => LiftAll(),
-                _ => CanLiftAll);
-            ToMainCameraCommand = new RelayCommand(
-                _ => ToMainCamera(),
-                _ => CanToMainCamera);
-            ToAuxCameraCommand = new RelayCommand(
-                _ => ToAuxCamera(),
-                 _ => CanToAuxCamera);
-            ToIntegratingSphereCommand = new RelayCommand(
-                _ => ToIntegratingSphere(),
-                _ => CanToIntegratingSphere);
+            LiftAllCommand = new RelayCommand(_ => LiftAll(),  _ => CanLiftAll);
+            ToMainCameraCommand = new RelayCommand(  _ => ToMainCamera(), _ => CanToMainCamera);
+            ToAuxCameraCommand = new RelayCommand(  _ => ToAuxCamera(),  _ => CanToAuxCamera);
+            ToIntegratingSphereCommand = new RelayCommand(  _ => ToIntegratingSphere(),   _ => CanToIntegratingSphere);
+            StartAutoTestCommand = new RelayCommand(  _ => StartAutoTest(), _ => CanStartAutoTest);
+            ContinuAutoTestCommand = new RelayCommand(  _ => ContinuAutoTest(),  _ => CanContinuAutoTest);
+            StopAutoTestCommand = new RelayCommand(  _ => StopAutoTest(),  _ => CanStopAutoTest);
+            PauseAutoTestCommand = new RelayCommand( _ => PauseAutoTest(),  _ => CanPauseAutoTest);
+            CloseTestCommand = new RelayCommand(a => CloseTest(), a=> CanPauseAutoTest);
+        }
 
-            StartAutoTestCommand = new RelayCommand(
-                _ => StartAutoTest(),
-                _ => CanStartAutoTest);
-            ContinuAutoTestCommand = new RelayCommand(
-                _ => ContinuAutoTest(),
-                _ => CanContinuAutoTest);
-            StopAutoTestCommand = new RelayCommand(
-                _ => StopAutoTest(),
-                _ => CanStopAutoTest);
-            PauseAutoTestCommand = new RelayCommand(
-                _ => PauseAutoTest(),
-                _ => CanPauseAutoTest);
+
+
+
+        public void CloseTest()
+        {
+            _mainVM.PauseAutoFlow();
+            _proberState.CurrentState = ProberState.WaferLoaded;
+
         }
 
         private void PauseAutoTest()
@@ -83,6 +76,7 @@ namespace CVWaferProber.ViewModels
         private void StopAutoTest()
         {
             _mainVM.StopAutoFlow();
+            WaferProberData.RunDateTime = null;
         }
 
         private void ContinuAutoTest()
@@ -92,6 +86,7 @@ namespace CVWaferProber.ViewModels
 
         private void StartAutoTest()
         {
+            WaferProberData.RunDateTime = DateTime.Now;
             _mainVM.StartAutoFlow();
         }
 

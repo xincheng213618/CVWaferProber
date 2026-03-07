@@ -205,11 +205,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             // 填充选中项的波长+强度数据
             for (int i = 0; i < selectedItem.Wavelengths.Length; i++)
             {
-                if (!float.IsNaN(selectedItem.Intensities[i]) && !float.IsInfinity(selectedItem.Intensities[i]))
+                if (!float.IsNaN(selectedItem.fPL[i]) && !float.IsInfinity(selectedItem.fPL[i]))
                 {
                     lineSeries.Points.Add(new DataPoint(
                         selectedItem.Wavelengths[i],
-                        selectedItem.Intensities[i]
+                        selectedItem.fPL[i]
                     ));
                 }
             }
@@ -310,7 +310,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             {
                 lineSeries.Points.Add(new DataPoint(
                     SelectedEQERow.Wavelengths[i],
-                    SelectedEQERow.Intensities[i] // 这里替换为实际EQE计算值（若有独立EQE数据则用对应字段）
+                    SelectedEQERow.fPL[i] // 这里替换为实际EQE计算值（若有独立EQE数据则用对应字段）
                 ));
             }
 

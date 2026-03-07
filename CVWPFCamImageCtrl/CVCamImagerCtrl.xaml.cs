@@ -1014,19 +1014,31 @@ namespace CVWPFCamImageCtrl
                                 imageInfo = (fileInfo.FrameInfo.widthInt, fileInfo.FrameInfo.heightInt, fileInfo.FrameInfo.channelsInt);
 
                                 // 创建 Mat 并转换为8位显示
-                                using (Mat src = Mat.FromPixelData(
+                                using (Mat srcMat = Mat.FromPixelData(
                                     fileInfo.FrameInfo.heightInt,
                                     fileInfo.FrameInfo.widthInt,
                                     OpenCvMatTools.GetMatType(fileInfo.FrameInfo.bppInt, fileInfo.FrameInfo.channelsInt),
                                     fileInfo.data))
                                 {
+                                    var type = srcMat.Type();
+                                    if (type == MatType.CV_16UC3 || type == MatType.CV_16SC3) // PixelFormats.Rgb48
+                                    {
+                                        Cv2.CvtColor(srcMat, srcMat, ColorConversionCodes.BGR2RGB);
+                                    }
+                                    else if (type == MatType.CV_16UC4 || type == MatType.CV_16SC4) // PixelFormats.Rgba64
+                                    {
+                                        Cv2.CvtColor(srcMat, srcMat, ColorConversionCodes.BGRA2RGBA);
+                                    }
+
                                     // 对16位图像进行归一化显示
-                                    using (Mat normalizedMat = OpenCvMatTools.ConvertImage32To8ByNorm(src))
+                                    using (Mat normalizedMat = OpenCvMatTools.ConvertImage32To8ByNorm(srcMat))
                                     {
                                         targetBitmap = OpenCVImageLoader.ConvertMatToBitmap(normalizedMat);
                                     }
                                 }
                             }
+
+
                         }
                         else if (fExt == ".cvcie")
                         {
@@ -1076,7 +1088,15 @@ namespace CVWPFCamImageCtrl
                             // 如果是 Analysis 视图，自动调整缩放以适应
                             if (_currentViewType == "Analysis")
                             {
-                                ImageDisplay.ZoomToFit();
+                                Task.Run(async () =>
+                                {
+                                    await Task.Delay(100);
+                                    Application.Current.Dispatcher.BeginInvoke(() =>
+                                    {
+                                        ImageDisplay.ZoomToOriginal();
+                                    });
+                                });
+
                             }
                         }
                         else

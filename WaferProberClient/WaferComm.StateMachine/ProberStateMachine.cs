@@ -37,6 +37,10 @@ namespace WaferComm.StateMachine
             {
                 lock (_stateLock) return _currentState;
             }
+            set
+            {
+                _currentState = value;
+            }
         }
 
         public ProberStateMachine(IEventAggregator eventAggregator, IWaferProberClient client, int defaultXYMotionTimeout, int defaultZMotionTimeout) : base(eventAggregator)
@@ -672,35 +676,32 @@ namespace WaferComm.StateMachine
 
         public ProberStatus GetStatus()
         {
-            lock (_stateLock)
+            ProberStatus status = new ProberStatus
             {
-                ProberStatus status = new ProberStatus
-                {
-                    CurrentState = _currentStatus.CurrentState,
-                    LastStateChange = _currentStatus.LastStateChange,
-                    CurrentWaferId = _currentStatus.CurrentWaferId,
-                    CurrentLotId = _currentStatus.CurrentLotId,
-                    TestedDies = _currentStatus.TestedDies,
-                    TotalDies = _currentStatus.TotalDies,
-                    //IsHeaterNormal = _currentStatus.IsHeaterNormal,
-                    CurrentTemperature = _currentStatus.CurrentTemperature,
-                    IsNeedleDown = _currentStatus.IsNeedleDown,
-                    IsZUp = _currentStatus.IsZUp,
-                    IsZDown = _currentStatus.IsZDown,
-                    IsMoving = _currentStatus.IsMoving,
-                    LastHeartbeat = _currentStatus.LastHeartbeat,
-                    ErrorMessage = _currentStatus.ErrorMessage,
-                    //
-                    CurrentMotionCommand = _currentStatus.CurrentMotionCommand,
-                    MotionStatus = _currentStatus.MotionStatus,
-                    CurrentPosition = _currentStatus.CurrentPosition,
-                    ZAxisStatus = _currentStatus.ZAxisStatus,
-                    CurrentMappingFile = _currentStatus.CurrentMappingFile,
-                };
-                status.HeaterInfo = _heaterMonitor.GetHeaterInfo();
-                status.LastHeaterCheck = DateTime.Now;
-                return status;
-            }
+                CurrentState = _currentStatus.CurrentState,
+                LastStateChange = _currentStatus.LastStateChange,
+                CurrentWaferId = _currentStatus.CurrentWaferId,
+                CurrentLotId = _currentStatus.CurrentLotId,
+                TestedDies = _currentStatus.TestedDies,
+                TotalDies = _currentStatus.TotalDies,
+                //IsHeaterNormal = _currentStatus.IsHeaterNormal,
+                CurrentTemperature = _currentStatus.CurrentTemperature,
+                IsNeedleDown = _currentStatus.IsNeedleDown,
+                IsZUp = _currentStatus.IsZUp,
+                IsZDown = _currentStatus.IsZDown,
+                IsMoving = _currentStatus.IsMoving,
+                LastHeartbeat = _currentStatus.LastHeartbeat,
+                ErrorMessage = _currentStatus.ErrorMessage,
+                //
+                CurrentMotionCommand = _currentStatus.CurrentMotionCommand,
+                MotionStatus = _currentStatus.MotionStatus,
+                CurrentPosition = _currentStatus.CurrentPosition,
+                ZAxisStatus = _currentStatus.ZAxisStatus,
+                CurrentMappingFile = _currentStatus.CurrentMappingFile,
+            };
+            status.HeaterInfo = _heaterMonitor.GetHeaterInfo();
+            status.LastHeaterCheck = DateTime.Now;
+            return status;
         }
 
         public override void Dispose()

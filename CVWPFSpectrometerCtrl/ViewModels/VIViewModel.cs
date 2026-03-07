@@ -6,9 +6,10 @@ using OxyPlot.Axes;
 using OxyPlot.Series;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Collections.ObjectModel;
+using System.Diagnostics.Metrics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows;
 
@@ -182,7 +183,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         public void UpdateVIData(bool isSourceV)
         {
             // 1. 数据校验：空集合则清空图表
-            if (Measurements == null || Measurements.Count == 0)
+            if (Measurements == null || Measurements.Count <4)
             {
                 PlotModel.Series.Clear();
                 PlotModel.InvalidatePlot(true);

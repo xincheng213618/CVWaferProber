@@ -37,6 +37,17 @@ namespace CVWaferProber.ViewModels
     {
         private static readonly ILog logger = LogManager.GetLogger(typeof(MappingDataViewModel));
 
+        private static MappingDataViewModel _instance;
+        private static readonly object _locker = new();
+        public static MappingDataViewModel GetInstance()
+        {
+            lock (_locker)
+            {
+                _instance ??= new MappingDataViewModel();
+                return _instance;
+            }
+        }
+
         #region DataGrid 行选择
         /*
         private bool? _selectAllAOI = false;
@@ -359,6 +370,7 @@ namespace CVWaferProber.ViewModels
 
         private string _WaferId;
         public string WaferId { get; set; }
+
         private string _Timestamp;
         public string Timestamp
         {
@@ -914,9 +926,20 @@ namespace CVWaferProber.ViewModels
             }
 
             _testQueue = GetSelectedTestItems();
-            if (_testQueue.Count == 0)
+
+            int SelectedFlowRunCout = 0;
+            foreach (var item in _testQueue)
             {
-                MessageBox.Show((string)Application.Current.FindResource("Nodata"), (string)Application.Current.FindResource("Prompt"), MessageBoxButton.OK, MessageBoxImage.Information);
+                if (item.TestType == SelectedWPFlow.FlowType.ToString())
+                {
+                    SelectedFlowRunCout++;
+                }
+            }
+
+
+            if (SelectedFlowRunCout == 0)
+            {
+                MessageBox.Show(SelectedWPFlow.FlowType.ToString() + Environment.NewLine + "Plese select die for testing first!", (string)Application.Current.FindResource("Prompt"), MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -1011,9 +1034,15 @@ namespace CVWaferProber.ViewModels
         {
             if (IsNotProcessing && value is DieViewModel die && selfClick)
             {
-                CustomMappingVM.SetSelectedChip((uint)die.Id);
+                DebounceTimer.AddOrResetTimer("UpdateSelectedChipCount", 30, () =>
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        CustomMappingVM?.UpdateSelectedChipCount();
 
-                CustomMappingVM?.UpdateSelectedChipCount();
+                    });
+                });
+                //CustomMappingVM.SetSelectedChip((uint)die.Id);
                 DieResultDisplay(die);
             }
             else selfClick = true;

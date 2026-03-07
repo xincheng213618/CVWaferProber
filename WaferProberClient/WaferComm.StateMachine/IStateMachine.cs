@@ -11,7 +11,7 @@ namespace WaferComm.StateMachine
         /// <summary>
         /// 当前状态
         /// </summary>
-        ProberState CurrentState { get; }
+        ProberState CurrentState { get; set; }
 
         /// <summary>
         /// 启动状态机
