@@ -24,6 +24,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using static FreeSql.Internal.GlobalFilter;
 
 namespace CVWPFSpectrometerCtrl.ViewModels
 {
@@ -40,7 +41,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         // 总览图光谱X轴固定范围（350~800nm）
         private readonly double _overviewSpectralXMin = 360;
         private readonly double _overviewSpectralXMax = 800;
-        public ChipMappingControlViewModel CustomMappingVM { get; private set; }
+        public ChipMappingControlViewModel CustomMappingVM { get; set; }
         public void NotifyPropertyChanged(string propertyName)
         {
             OnPropertyChanged(propertyName);
@@ -90,8 +91,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             get => _plotModel;
             set => SetProperty(ref _plotModel, value);
         }
-      
-        private bool _isShowAllData;
+
+        private bool _isShowAllData = true;
         public bool IsShowAllData
         {
             get => _isShowAllData;
@@ -476,11 +477,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 // 填充数据点（过滤异常值）
                 for (int i = 0; i < measurement.Wavelengths.Length; i++)
                 {
-                    if (!float.IsNaN(measurement.Intensities[i]) && !float.IsInfinity(measurement.Intensities[i]))
+                    if (!float.IsNaN(measurement.fPL[i]) && !float.IsInfinity(measurement.fPL[i]))
                     {
                         lineSeries.Points.Add(new DataPoint(
                             measurement.Wavelengths[i],
-                            measurement.Intensities[i]));
+                            measurement.fPL[i]));
                     }
                 }
 
@@ -598,6 +599,10 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             get => (int)SelectedTab;
             set
             {
+                if (SelectedTab == (TabType)value)
+                {
+                    return;
+                }
                 // 校验值是否在枚举范围内，避免越界
                 if (Enum.IsDefined(typeof(TabType), value))
                 {
@@ -616,10 +621,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private SpectraDataViewModel CurrentSpectrum;
         public ScottPlot.IColormap VisibleSpectrumColormap { get; }
         //public object DataCollection { get; private set; }
-        public CVSpectrumViewModel(ChipMappingControlViewModel mappingVM) // 通过构造函数注入
-        {
-            CustomMappingVM = mappingVM; // 注入实例
-        }
+
+
         public CVSpectrumViewModel()
         {
             // 提前初始化波长数组
@@ -1041,11 +1044,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     // 填充数据点（过滤异常值）
                     for (int i = 0; i < measurement.Wavelengths.Length; i++)
                     {
-                        if (!float.IsNaN(measurement.Intensities[i]) && !float.IsInfinity(measurement.Intensities[i]))
+                        if (!float.IsNaN(measurement.fPL[i]) && !float.IsInfinity(measurement.fPL[i]))
                         {
                             lineSeries.Points.Add(new DataPoint(
                                 measurement.Wavelengths[i],
-                                measurement.Intensities[i]));
+                                measurement.fPL[i]));
                         }
                     }
 
@@ -1754,12 +1757,12 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         // 辅助方法：将光谱Measurements转换为图表需要的DataPoint（波长-强度）
         private IEnumerable<DataPoint> GetSpectralDataPoints()
         {
-            if (Measurements.Any() && Measurements.First().Wavelengths != null && Measurements.First().Intensities != null)
+            if (Measurements.Any() && Measurements.First().Wavelengths != null && Measurements.First().fPL != null)
             {
                 var firstMeas = Measurements.First();
                 for (int i = 0; i < firstMeas.Wavelengths.Length; i++)
                 {
-                    yield return new DataPoint(firstMeas.Wavelengths[i], firstMeas.Intensities[i]);
+                    yield return new DataPoint(firstMeas.Wavelengths[i], firstMeas.fPL[i]);
                 }
             }
         }
@@ -1858,7 +1861,6 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
         #region 光谱
         // 导出CSV的方法（参数：保存路径、Measurements数据列表、波长数组）
-        //private ChipMappingControlViewModel _chipMappingControlViewModel;
         public void ExportToCsv(string fileName, ObservableCollection<SpectrumMeasurement> measurements, float[]? wavelengths, float fPlambda = 1.0f)
         {
             if (measurements == null || !measurements.Any() )
@@ -1957,12 +1959,12 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
                     // 5. 强度值处理（与之前逻辑一致）
                     var waveValues = new List<string>();
-                    if (item.Intensities != null && item.Intensities.Length == wavelengths.Length)
+                    if (item.fPL != null && item.fPL.Length == wavelengths.Length)
                     {
                         // 遍历目标代码筛选后的索引，取对应强度值
                         foreach (int idx in selectedIndexes)
                         {
-                            float intensity = item.Intensities[idx];
+                            float intensity = item.fPL[idx];
                             // 目标代码逻辑：负强度转为0
                             //intensity = intensity > 0 ? intensity : 0;
                             // 可选：导出相对强度（SpectralData.RelativeSpectrum）或绝对强度（SpectralData.AbsoluteSpectrum）
@@ -2689,7 +2691,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             {
                 lineSeries.Points.Add(new DataPoint(
                     SelectedMeasurement.Wavelengths[i],
-                    SelectedMeasurement.Intensities[i]));
+                    SelectedMeasurement.fPL[i]));
             }
 
             PlotModel.Series.Clear();
@@ -2880,9 +2882,6 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 int n = 1;
                 foreach (var result in results)
                 {
-                    float[] intensities = GetIntensitiesFromFileOrOriginal(result);
-
-
                     var measurement = new SpectrumMeasurement(n++)
                     {
                         Timestamp = result.CreateDate,
@@ -2903,12 +2902,25 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         //fPuPercent = $"{Math.Round((decimal)(result.FPur * 100), 2)}%",
                         PeakIntensity = (float)(result.FLp ?? 0.0),
                         FHW = (float)(result.FHW ?? 0.0),
-                        //Intensities = JsonConvert.DeserializeObject<float[]>(result.FPL),
-                        Intensities = intensities,
                         Wavelengths = Wavelengths,
                         fPlambda = (float)(result.FPlambda ?? 0.0),
                         RowLineColor = ConvertToOxyColor(SpectralLineColor)
                     };
+
+
+                    if (!string.IsNullOrWhiteSpace(result.FPLFileName) && File.Exists(result.FPLFileName))
+                    {
+                        File.ReadAllBytes(result.FPLFileName);
+                        string json = File.ReadAllText(result.FPLFileName);
+                        measurement.fPL = JsonConvert.DeserializeObject<float[]>(json) ?? Array.Empty<float>();
+                    }
+                    else
+                    {
+                        measurement.fPL = JsonConvert.DeserializeObject<float[]>(result.FPL ?? string.Empty) ?? Array.Empty<float>();
+                    }
+
+
+                    var intensities = measurement.fPL;
 
                     List<VScgdMeasureResultSmu> lists = MysqlControler.GetInstance().Sql.Select<VScgdMeasureResultSmu>().Where(a => a.BatchId == result.BatchId).ToList();
 
@@ -2953,6 +2965,16 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         measurement.Blue = 0;
                     }
 
+
+                    //这里后面需要优化掉
+                    if (measurement.fPL != null)
+                    {
+                        for (int i = 0; i < measurement.fPL.Length; i++)
+                        {
+                            measurement.fPL[i] = measurement.fPL[i] * measurement.fPlambda;
+                        }
+                    }
+
                     Measurements.Add(measurement);
 
 
@@ -2960,7 +2982,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
                 if (Measurements.Any())
                 {
-                    SelectedMeasurement = Measurements.First();
+                    SelectedMeasurement = Measurements.Last();
                     //if (_spectralCtrl != null)
                     //{
                     //    _spectralCtrl.SpectralData.SetData(Wavelengths, SelectedMeasurement.Intensities);
@@ -3084,6 +3106,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
 
             PlotModel.InvalidatePlot(true); // 实时刷新图表
+
         }
 
         // 将指定曲线移到顶层（后添加的曲线在OxyPlot中优先级更高）
@@ -3182,7 +3205,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 SpectralGridItems?.Clear();
                 return;
             }
-            if (measurement == null || measurement.Wavelengths == null || measurement.Intensities == null)
+            if (measurement == null || measurement.Wavelengths == null || measurement.fPL == null)
             {
                 SpectralGridItems?.Clear();
                 return;
@@ -3202,7 +3225,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     continue;
 
                 // 相对光谱：负强度转为0，保留4位小数
-                float relative = measurement.Intensities[i] > 0 ? (float)Math.Round(measurement.Intensities[i], 4) : 0f;
+                float relative = measurement.fPL[i] > 0 ? (float)Math.Round(measurement.fPL[i], 4) : 0f;
                 // 绝对光谱：相对强度 × fPlambda，保留4位小数
                 float absolute = (float)Math.Round(relative * measurement.fPlambda, 4);
 

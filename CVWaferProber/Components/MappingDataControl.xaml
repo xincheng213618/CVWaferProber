@@ -156,54 +156,6 @@
             <!--  强制默认前景色  -->
             <Setter Property="Foreground" Value="{StaticResource PrimaryColor}" />
         </Style>
-        <!--  反选图标  -->
-        <!--
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{StaticResource PrimaryColor}" />
-                    <Setter Property="Foreground" Value="White" />
-                    <Setter Property="BorderBrush" Value="{StaticResource PrimaryDarkColor}" />
-                </Trigger>
-                <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="{StaticResource PrimaryDarkColor}" />
-                    <Setter Property="BorderBrush" Value="#FF00479E" />
-                    <Setter Property="Padding" Value="1" />
-        -->
-        <!--  按压微位移  -->
-        <!--
-                </Trigger>
-            </Style.Triggers>
-        </Style>-->
-
-        <!--  定义行样式  -->
-        <!--<Style x:Key="HighlightSelectedRowStyle" TargetType="DataGrid">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="Black" />
-        -->
-        <!--  选中状态高亮（蓝色背景）  -->
-        <!--
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                    <Setter Property="Background" Value="#337AB7" />
-        -->
-        <!--  蓝色高亮（可自定义RGB）  -->
-        <!--
-                    <Setter Property="Foreground" Value="White" />
-        -->
-        <!--  文字白色对比  -->
-        <!--
-                    <Setter Property="BorderBrush" Value="#286090" />
-                    <Setter Property="BorderThickness" Value="1" />
-                </DataTrigger>
-        -->
-        <!--  鼠标悬浮效果（可选）  -->
-        <!--
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#E6F7FF" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>-->
-        <!--  单元格复选框样式（优化选中态）  -->
         <Style x:Key="CellCheckBoxStyle" TargetType="CheckBox">
             <Setter Property="Margin" Value="1,0" />
             <Setter Property="VerticalAlignment" Value="Center" />
@@ -809,18 +761,7 @@
                                         </ProgressBar.Style>
                                     </ProgressBar>
                                     <!--  进度文本  -->
-                                    <!--  总进度文本：手动测试时和总进度条一起隐藏（核心新增Style逻辑）  -->
-                                    <TextBlock
-                                        x:Name="ProgressTextAll"
-                                        Grid.Row="0"
-                                        Grid.Column="1"
-                                        HorizontalAlignment="Right"
-                                        VerticalAlignment="Center"
-                                        FontSize="11"
-                                        Foreground="#666"
-                                        Text="{Binding ProgressTextAll}"
-                                        TextTrimming="CharacterEllipsis">
-                                        <!--  新增：和总进度条完全一致的显示/隐藏逻辑  -->
+                                    <TextBlock x:Name="ProgressTextAll"  Grid.Row="0"  Grid.Column="1"  HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Margin="5,0,5,0"   Text="{Binding ProgressTextAll}"  TextTrimming="CharacterEllipsis">
                                         <TextBlock.Style>
                                             <Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="TextBlock">
                                                 <!--  基础状态：测试中（IsProcessing=true）显示，未开始则隐藏  -->
@@ -855,16 +796,7 @@
                                     </ProgressBar>
 
                                     <!--  进度文本  -->
-                                    <TextBlock
-                                        Grid.Row="1"
-                                        Grid.Column="1"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        FontSize="11"
-                                        Foreground="#666"
-                                        Text="{Binding ProgressText}"
-                                        TextTrimming="CharacterEllipsis"
-                                        Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                    <TextBlock  Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" Margin="5,0,5,0"  VerticalAlignment="Center" FontWeight="Bold" Text="{Binding ProgressText}"  TextTrimming="CharacterEllipsis" Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                 </Grid>
 
                             </StackPanel>
@@ -1088,11 +1020,11 @@
                                         Header="{DynamicResource Maping.GridHeader.Uniformity}"
                                         IsReadOnly="True" />
                                     <DataGridTextColumn
-                                        Binding="{Binding StartTestTime, Mode=OneWay}"
+                                        Binding="{Binding StartTestTime, Mode=OneWay,StringFormat=HH:mm:ss:fff}"
                                         Header="{DynamicResource Maping.GridHeader.StartTestTime}"
                                         IsReadOnly="True" />
                                     <DataGridTextColumn
-                                        Binding="{Binding EndTestTime, Mode=OneWay}"
+                                        Binding="{Binding EndTestTime, Mode=OneWay,StringFormat=HH:mm:ss:fff}"
                                         Header="{DynamicResource Maping.GridHeader.EndTestTime}"
                                         IsReadOnly="True" />
 

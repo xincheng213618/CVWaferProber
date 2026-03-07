@@ -782,4 +782,10 @@
     <sys:String x:Key="SysDev_DeviceClosed">设备已关闭</sys:String>
     <sys:String x:Key="SysDev_DeviceListRefreshed">设备列表已刷新 - 共{0}台，{1}台在线</sys:String>
     <sys:String x:Key="SysDev_NoDeviceSelected">未选择设备</sys:String>
+
+
+
+    <sys:String x:Key="StopTest">停止测试</sys:String>
+
+    
 </ResourceDictionary>

@@ -203,20 +203,13 @@ namespace CVWaferProber.ViewModels
             Version version = Assembly.GetEntryAssembly()?.GetName().Version;
 
             _AppVersion = string.Format("V{0}", version.ToString());
-            //rcService = new RCRestService();
-            //_rcConnectionInfo = rcService.ConnectionInfo;
-            //
             // 初始化重置布局命令
             InitializeVM();
             //
             InitializeServive();
 
             OpenVEyeWindowCommand = new RelayCommand(OpenVEyeWindow);
-            //StartAutoTestCommand = new RelayCommand(_ => StartAutoTest(),
-            //    _ => CanStartAuto);
-            //StopAutoTestCommand = new RelayCommand(StopAutoTest);
 
-            //RCRegCommand = new RelayCommand(_ => RCReg());
             ReconnectDevCommand = new RelayCommand(_ => ReconnectDev());
             ReconnectRcCommand = new RelayCommand(_ => ReconnectRc());
             OpenHelpCommand = new RelayCommand(ExecuteOpenHelp);
@@ -263,12 +256,14 @@ namespace CVWaferProber.ViewModels
         {
             InitializeEvents();
 
-            DataMappingVM = new MappingDataViewModel();
+            DataMappingVM = MappingDataViewModel.GetInstance();
             DataMappingVM.ActivateCorrespondingPanel += DataMappingVM_ActivateCorrespondingPanel;
 
             CustomMappingVM = DataMappingVM.CustomMappingVM;
             CustomImageVM = new CVCamImagerViewModel();
+            //CustomMappingVM 获取温度
             CustomIVLVM = new CVSpectrumViewModel();
+            CustomIVLVM.CustomMappingVM = CustomMappingVM;
             //CustomIVLVM.CustomEQEVM = mainService.GetEQEVM();
             //
             ToolsVM = new ToolsBarViewModel(this, ProberClientService.Instance.ProberClient, ProberClientService.Instance.StateMachine, EventAggregator);

@@ -3,10 +3,11 @@ using ChipMapping.ViewModels;
 using ColorVision.Core.Entities;
 using CVDB.Services.Buz;
 using CVWaferProber.Components;
-using CVWaferProber.Core.Config;
 using CVWaferProber.Core;
+using CVWaferProber.Core.Config;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
+using CVWaferProber.Core.Utils;
 using CVWaferProber.Core.ViewModels;
 using CVWaferProber.Models;
 using CVWaferProber.Services;
@@ -35,6 +36,17 @@ namespace CVWaferProber.ViewModels
     public class MappingDataViewModel : ViewModelBase
     {
         private static readonly ILog logger = LogManager.GetLogger(typeof(MappingDataViewModel));
+
+        private static MappingDataViewModel _instance;
+        private static readonly object _locker = new();
+        public static MappingDataViewModel GetInstance()
+        {
+            lock (_locker)
+            {
+                _instance ??= new MappingDataViewModel();
+                return _instance;
+            }
+        }
 
         #region DataGrid 行选择
         /*
@@ -358,6 +370,7 @@ namespace CVWaferProber.ViewModels
 
         private string _WaferId;
         public string WaferId { get; set; }
+
         private string _Timestamp;
         public string Timestamp
         {
@@ -913,9 +926,20 @@ namespace CVWaferProber.ViewModels
             }
 
             _testQueue = GetSelectedTestItems();
-            if (_testQueue.Count == 0)
+
+            int SelectedFlowRunCout = 0;
+            foreach (var item in _testQueue)
             {
-                MessageBox.Show((string)Application.Current.FindResource("Nodata"), (string)Application.Current.FindResource("Prompt"), MessageBoxButton.OK, MessageBoxImage.Information);
+                if (item.TestType == SelectedWPFlow.FlowType.ToString())
+                {
+                    SelectedFlowRunCout++;
+                }
+            }
+
+
+            if (SelectedFlowRunCout == 0)
+            {
+                MessageBox.Show(SelectedWPFlow.FlowType.ToString() + Environment.NewLine + "Plese select die for testing first!", (string)Application.Current.FindResource("Prompt"), MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -1010,9 +1034,15 @@ namespace CVWaferProber.ViewModels
         {
             if (IsNotProcessing && value is DieViewModel die && selfClick)
             {
-                CustomMappingVM.SetSelectedChip((uint)die.Id);
+                DebounceTimer.AddOrResetTimer("UpdateSelectedChipCount", 30, () =>
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        CustomMappingVM?.UpdateSelectedChipCount();
 
-                CustomMappingVM?.UpdateSelectedChipCount();
+                    });
+                });
+                //CustomMappingVM.SetSelectedChip((uint)die.Id);
                 DieResultDisplay(die);
             }
             else selfClick = true;
@@ -2389,14 +2419,17 @@ namespace CVWaferProber.ViewModels
         e.PropertyName == nameof(DieViewModel.IsEQEEnabled) ||
         e.PropertyName == nameof(DieViewModel.IsVAMEnabled))
             {
-                // 使用 Dispatcher 延迟执行，给批量操作完成的时间
-                Application.Current?.Dispatcher?.BeginInvoke(new Action(() =>
+                DebounceTimer.AddOrResetTimer("UpdateChipMappingSelectedCount", 50, () => 
                 {
-                    if (!_isBatchUpdating)
+                    Application.Current.Dispatcher.Invoke(() =>
                     {
-                        UpdateChipMappingSelectedCount();
-                    }
-                }), DispatcherPriority.Background);
+                        if (!_isBatchUpdating)
+                        {
+                            UpdateChipMappingSelectedCount();
+                        }
+                    });
+                }); 
+              
             }
             else if (e.PropertyName == nameof(DieViewModel.Status) ||
                      e.PropertyName == nameof(DieViewModel.EndTestTime) ||
@@ -2404,44 +2437,48 @@ namespace CVWaferProber.ViewModels
                      e.PropertyName == nameof(DieViewModel.SerialNumber) ||
                      e.PropertyName == nameof(DieViewModel.DataValue))
             {
-                DebouncedSaveLastSession();
+
+                DebounceTimer.AddOrResetTimer("UpdateChipMappingSelectedCount", 50, () =>
+                {
+                    DebouncedSaveLastSession();
+                });
+
             }
         }
+
+
 
 
         // 防抖：在最后一次变更后等待一段时间再保存，避免频繁IO
         private async Task DebouncedSaveLastSession(int debounceMs = 100)
         {
-            lock (_autoSaveLock)
+            if (_autoSaveDebounceTimer == null)
             {
-                if (_autoSaveDebounceTimer == null)
+                _autoSaveDebounceTimer = new System.Timers.Timer(debounceMs) { AutoReset = false };
+                _autoSaveDebounceTimer.Elapsed += async (s, e) =>
                 {
-                    _autoSaveDebounceTimer = new System.Timers.Timer(debounceMs) { AutoReset = false };
-                    _autoSaveDebounceTimer.Elapsed += async (s, e) =>
+                    try
                     {
-                        try
-                        {
-                            await SaveLastSessionIfNeededAsync();
-                        }
-                        catch (Exception ex)
-                        {
-                            logger.Error("Auto save (debounced) failed", ex);
-                        }
-                        finally
-                        {
-                            // 释放定时器资源
-                            ((System.Timers.Timer)s).Dispose();
-                        }
-                    };
-                }
-                else
-                {
-                    _autoSaveDebounceTimer.Interval = debounceMs;
-                }
-
-                _autoSaveDebounceTimer.Stop();
-                _autoSaveDebounceTimer.Start();
+                        await SaveLastSessionIfNeededAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error("Auto save (debounced) failed", ex);
+                    }
+                    finally
+                    {
+                        // 释放定时器资源
+                        ((System.Timers.Timer)s).Dispose();
+                    }
+                };
             }
+            else
+            {
+                _autoSaveDebounceTimer.Interval = debounceMs;
+            }
+
+            _autoSaveDebounceTimer.Stop();
+            _autoSaveDebounceTimer.Start();
 
 
             //lock (_autoSaveLock)

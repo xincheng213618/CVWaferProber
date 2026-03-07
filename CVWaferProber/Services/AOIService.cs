@@ -934,7 +934,18 @@ namespace CVWaferProber.Services
                 logger.Info($"Create AOI export directory：{aoiRootPath}");
             }
 
-            string aoiFileName = $"AOI_Data_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            string WaferId = MappingDataViewModel.GetInstance().WaferId ?? "00001";
+            string aoiFileName;
+            if (WaferProberData.RunDateTime != null)
+            {
+                aoiFileName = $"AOI_Data_{WaferId}_{WaferProberData.RunDateTime:yyyyMMdd_HHmmss}.csv";
+            }
+            else
+            {
+                aoiFileName = $"AOI_Data_{WaferId}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+
+            }
+
             string aoiFullExportPath = Path.Combine(aoiRootPath, aoiFileName);
 
             // 判断文件是否已存在（决定是否写入表头）
@@ -1281,15 +1292,15 @@ namespace CVWaferProber.Services
             // 创建波长到强度值的映射字典
             Dictionary<int, double> spectralMap = new Dictionary<int, double>();
 
-            if (measurement.Intensities != null && wavelengths != null)
+            if (measurement.fPL != null && wavelengths != null)
             {
                 // 将强度值映射到对应的波长
-                for (int i = 0; i < Math.Min(wavelengths.Length, measurement.Intensities.Length); i++)
+                for (int i = 0; i < Math.Min(wavelengths.Length, measurement.fPL.Length); i++)
                 {
                     int wl = (int)Math.Round(wavelengths[i]);
                     if (wl >= 380 && wl <= 780)
                     {
-                        spectralMap[wl] = measurement.Intensities[i];
+                        spectralMap[wl] = measurement.fPL[i];
                     }
                 }
             }

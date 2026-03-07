@@ -2,6 +2,7 @@
 using CVWaferProber.Core.Utils;
 using CVWPFSpectrometerCtrl.Models;
 using CVWPFSpectrometerCtrl.ViewModels;
+using OxyPlot;
 using OxyPlot.Wpf;
 using System.Windows;
 
@@ -43,6 +44,8 @@ namespace CVWPFSpectrometerCtrl
         private void PlotView_Loaded(object sender, RoutedEventArgs e)
         {
             var plotView = sender as PlotView;
+
+
             var vm = DataContext as CVSpectrumViewModel;
             if (plotView != null && vm != null)
             {
@@ -63,7 +66,7 @@ namespace CVWPFSpectrometerCtrl
             int selectedIndex = cboIVVIMode.SelectedIndex;
 
             // 根据索引控制Panel的显示/隐藏
-            if (selectedIndex == 0)
+            if (selectedIndex == 1)
             {
                 // 显示IVPanel，隐藏VIPanel
                 IVPanel.Visibility = Visibility.Visible;
@@ -72,7 +75,7 @@ namespace CVWPFSpectrometerCtrl
                 OverviewVIPlotView.Visibility = Visibility.Collapsed;
               
             }
-            else if (selectedIndex == 1)
+            else if (selectedIndex == 0)
             {
                 // 显示VIPanel，隐藏IVPanel
                 IVPanel.Visibility = Visibility.Collapsed;
