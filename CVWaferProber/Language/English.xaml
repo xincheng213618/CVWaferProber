@@ -769,4 +769,6 @@
     <sys:String x:Key="SysDev_DeviceClosed">Device closed</sys:String>
     <sys:String x:Key="SysDev_DeviceListRefreshed">Device list refreshed - {0} total, {1} online</sys:String>
     <sys:String x:Key="SysDev_NoDeviceSelected">No device selected</sys:String>
+
+    <sys:String x:Key="StopTest">StopTest</sys:String>
 </ResourceDictionary>
