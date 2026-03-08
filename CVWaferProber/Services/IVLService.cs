@@ -395,7 +395,7 @@ namespace CVWaferProber.Services
                 logger.Info($"Full IVL data exported to：{fullExportPath}");
             }
             // 5. 核心判断：仅存在IV数据时导出IV CSV
-            else if (ivMeasurements?.Any() == true && (measurements == null || !measurements.Any()))
+            else if (ivMeasurements?.Any() == true && (wavelengths == null || wavelengths.Length <=0 ))
             {
                 ExportIVDataOnly(serialNumber, ivlRootPath, ivMeasurements);
             }
