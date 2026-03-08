@@ -182,19 +182,39 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         /// <param name="isSourceV">是否为源电压模式</param>
         public void UpdateVIData(bool isSourceV)
         {
-            // 1. 数据校验：空集合则清空图表
-            if (Measurements == null || Measurements.Count <4)
+            // 1. 数据校验：空集合则清空图表（改回 Count == 0）
+            if (Measurements == null || Measurements.Count == 0)
             {
                 PlotModel.Series.Clear();
                 PlotModel.InvalidatePlot(true);
                 return;
             }
 
-            // 2. 动态计算电压（X轴）和电流（Y轴）的极值（扩1%留边距）
-            double maxVoltage = Measurements.Max(m => m.Voltage) * 1.01;
-            double minVoltage = Measurements.Min(m => m.Voltage) * 0.99;
-            double maxCurrent = Measurements.Max(m => m.Current) * 1.01;
-            double minCurrent = Measurements.Min(m => m.Current) * 0.99;
+            // 2. 获取基础极值
+            double maxVoltage = Measurements.Max(m => m.Voltage);
+            double minVoltage = Measurements.Min(m => m.Voltage);
+            double maxCurrent = Measurements.Max(m => m.Current);
+            double minCurrent = Measurements.Min(m => m.Current);
+
+            // 防止最大值和最小值相等导致 OxyPlot 报错（给定一个默认最小跨度，比如0.1）
+            if (Math.Abs(maxVoltage - minVoltage) < 1e-6)
+            {
+                maxVoltage += 0.1;
+                minVoltage -= 0.1;
+            }
+            if (Math.Abs(maxCurrent - minCurrent) < 1e-6)
+            {
+                maxCurrent += 0.1;
+                minCurrent -= 0.1;
+            }
+
+            // 扩1%留边距（注意对于0和负数的处理）
+            maxVoltage = maxVoltage > 0 ? maxVoltage * 1.01 : maxVoltage * 0.99;
+            minVoltage = minVoltage > 0 ? minVoltage * 0.99 : minVoltage * 1.01;
+            maxCurrent = maxCurrent > 0 ? maxCurrent * 1.01 : maxCurrent * 0.99;
+            minCurrent = minCurrent > 0 ? minCurrent * 0.99 : minCurrent * 1.01;
+
+         
 
             // 3. 获取X/Y轴
             var xAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Bottom);
