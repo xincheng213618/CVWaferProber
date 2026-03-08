@@ -9,7 +9,7 @@
     Width="700"
     Height="450"
     WindowStartupLocation="CenterOwner"
-    mc:Ignorable="d"> 
+    mc:Ignorable="d">
     <Grid Margin="10">
         <!--  主布局：TabControl + 底部保存按钮  -->
         <Grid.RowDefinitions>
@@ -116,7 +116,42 @@
                                 </StackPanel>
                             </Grid>
                         </GroupBox>
+                        <!--  IVL路径配置  -->
+                        <GroupBox Margin="0,0,0,10" Header="IV">
+                            <Grid Margin="5">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
+                                <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Margin="0,0,10,0"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource GlobalConfig.ExportPath}" />
+                                <StackPanel
+                                    Grid.Row="0"
+                                    Grid.Column="1"
+                                    Orientation="Horizontal">
+                                    <TextBox
+                                        x:Name="txtIvExportPath"
+                                        Width="300"
+                                        Margin="0,0,10,0"
+                                        VerticalAlignment="Center"
+                                        IsReadOnly="True"
+                                        Text="{Binding IvExportPath}" />
+                                    <Button
+                                        x:Name="btnIvBrowse"
+                                        Padding="20,0"
+                                        Click="BtnIvBrowse_Click"
+                                        Content="{DynamicResource GlobalConfig.Browse}" />
+                                </StackPanel>
+                            </Grid>
+                        </GroupBox>
                         <!--  AOI路径配置  -->
                         <GroupBox Margin="0,0,0,10" Header="AOI">
                             <Grid Margin="5">

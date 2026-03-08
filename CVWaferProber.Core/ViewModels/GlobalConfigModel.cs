@@ -39,6 +39,10 @@ namespace CVWaferProber.Core.ViewModels
         /// </summary>
         public string IvlExportPath { get; set; } = @"D:\Project\IVL";
         /// <summary>
+        /// IV导出路径
+        /// </summary>
+        public string IvExportPath { get; set; } = @"D:\Project\IV";
+        /// <summary>
         /// Summary导出路径
         /// </summary>
         public string SummaryExportPath { get; set; } = @"D:\Project\Summary";
@@ -74,6 +78,7 @@ namespace CVWaferProber.Core.ViewModels
                    !string.IsNullOrWhiteSpace(AoiExportPath) &&
                    !string.IsNullOrWhiteSpace(EqeExportPath) &&
                    !string.IsNullOrWhiteSpace(IvlExportPath) &&
+                   !string.IsNullOrWhiteSpace(IvExportPath) &&
                    !string.IsNullOrWhiteSpace(SummaryExportPath);
         }
 
@@ -86,6 +91,7 @@ namespace CVWaferProber.Core.ViewModels
             CreateDirectoryIfNotExists(AoiExportPath);
             CreateDirectoryIfNotExists(EqeExportPath);
             CreateDirectoryIfNotExists(IvlExportPath);
+            CreateDirectoryIfNotExists(IvExportPath);
             CreateDirectoryIfNotExists(SummaryExportPath);
 
         }

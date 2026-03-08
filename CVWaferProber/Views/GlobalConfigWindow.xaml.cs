@@ -91,6 +91,12 @@ namespace CVWaferProber.Views
             BrowseFolder("Select IVL Auto Export Folder", ref tempPath, txtIvlExportPath);
             ConfigModel.IvlExportPath = tempPath;
         }
+        private void BtnIvBrowse_Click(object sender, RoutedEventArgs e)
+        {
+            string tempPath = ConfigModel.IvExportPath;
+            BrowseFolder("Select IV Auto Export Folder", ref tempPath, txtIvExportPath);
+            ConfigModel.IvExportPath = tempPath;
+        }
         private void BtnSummaryBrowse_Click(object sender, RoutedEventArgs e)
         {
             string tempPath = ConfigModel.SummaryExportPath;
