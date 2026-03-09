@@ -949,6 +949,8 @@ namespace CVWaferProber.ViewModels
             TestingReady(_testQueue);
             EnableBtnGUI(false);
             // 2. 启动自动测试
+
+            WaferProberData.SelectedWPFlow = _selectedWPFlow;
             MainService.Instance.StartAutoTesting(_selectedWPFlow, selectedDice);
         }
 

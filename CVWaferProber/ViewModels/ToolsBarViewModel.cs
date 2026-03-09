@@ -8,6 +8,7 @@ namespace CVWaferProber.ViewModels
 {
     public static class WaferProberData
     {
+        public static WPFlowViewModel? SelectedWPFlow { get; set; }
         public static DateTime? RunDateTime { get; set; }
     }
 
