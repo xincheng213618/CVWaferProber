@@ -359,11 +359,11 @@ namespace CVWaferProber.Services
             var Measurements = CustomIVLVM.Measurements;
             var Wavelengths = CustomIVLVM.Wavelengths;
             var ivMeasurements = CustomIVLVM?.IVMeasurements;
-            if (Measurements == null || !Measurements.Any() || Wavelengths == null || Wavelengths.Length == 0)
-            {
-                logger.Info("No valid IVL data available for export");
-                return;
-            }
+            //if (Measurements == null || !Measurements.Any() || Wavelengths == null || Wavelengths.Length == 0)
+            //{
+            //    logger.Info("No valid IVL data available for export");
+            //    return;
+            //}
 
             // 读取全局配置的IVL导出路径（核心修改点2）
             string ivlRootPath = ConfigManager.Config.ExportPathSettings?.IvlExportPath ?? @"D:\Project\IVL";
@@ -377,14 +377,6 @@ namespace CVWaferProber.Services
            
             //}
             #region 导出iv数据
-            // 读取全局配置的IVL导出路径（核心修改点2）
-            string ivRootPath = ConfigManager.Config.ExportPathSettings?.IvlExportPath ?? @"D:\Project\IV";
-            // 确保目录存在
-            if (!Directory.Exists(ivRootPath))
-            {
-                Directory.CreateDirectory(ivRootPath);
-                logger.Info($"Create IV export directory：{ivRootPath}");
-            }
 
             // 6. 常规IVL数据导出（原有逻辑） // 构造文件名（包含SerialNumber+时间戳）
             if (measurements?.Any() == true && wavelengths != null && wavelengths.Length > 0)
@@ -410,6 +402,16 @@ namespace CVWaferProber.Services
         {
             try
             {
+                // 读取全局配置的IVL导出路径（核心修改点2）
+                string ivRootPath = ConfigManager.Config.ExportPathSettings?.IvlExportPath ?? @"D:\Project\IV";
+                // 确保目录存在
+                if (!Directory.Exists(ivRootPath))
+                {
+                    Directory.CreateDirectory(ivRootPath);
+                    logger.Info($"Create IV export directory：{ivRootPath}");
+                }
+
+
                 // 构造IV专用文件名
                 string fileName = $"IV_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
                 string fullPath = Path.Combine(exportPath, fileName);

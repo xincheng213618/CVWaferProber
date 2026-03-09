@@ -170,12 +170,29 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 PlotModel.InvalidatePlot(true);
                 return;
             }
+            // 2. 获取基础极值
+            double maxVoltage = Measurements.Max(m => m.Voltage);
+            double minVoltage = Measurements.Min(m => m.Voltage);
+            double maxCurrent = Measurements.Max(m => m.Current);
+            double minCurrent = Measurements.Min(m => m.Current);
 
-            // 2. 动态计算X轴（电流）和Y轴（电压）的最大值（核心）
-            double maxCurrent = Measurements.Max(m => m.Current) * 1.01; // 电流最大值（X轴）
-            double minCurrent = Measurements.Min(m => m.Current) * 0.99; //电流最小值（X轴）
-            double maxVoltage = Measurements.Max(m => m.Voltage) * 1.01; // 电压最大值（Y轴）
-            double minVoltage = Measurements.Min(m => m.Voltage) * 0.99; // 电压最小值（Y轴）
+            // 防止最大值和最小值相等导致 OxyPlot 报错（给定一个默认最小跨度，比如0.1）
+            if (Math.Abs(maxVoltage - minVoltage) < 1e-6)
+            {
+                maxVoltage += 0.1;
+                minVoltage -= 0.1;
+            }
+            if (Math.Abs(maxCurrent - minCurrent) < 1e-6)
+            {
+                maxCurrent += 0.1;
+                minCurrent -= 0.1;
+            }
+
+            // 2. 动态计算X轴（电流）和Y轴（电压）的最大值（核心）// 扩1%留边距（注意对于0和负数的处理）
+            maxVoltage = maxVoltage > 0 ? maxVoltage * 1.01 : maxVoltage * 0.99;
+            minVoltage = minVoltage > 0 ? minVoltage * 0.99 : minVoltage * 1.01;
+            maxCurrent = maxCurrent > 0 ? maxCurrent * 1.01 : maxCurrent * 0.99;
+            minCurrent = minCurrent > 0 ? minCurrent * 0.99 : minCurrent * 1.01;
 
             // 3. 获取X轴和Y轴（通过位置匹配，兼容两种模式）
             var xAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Bottom);
