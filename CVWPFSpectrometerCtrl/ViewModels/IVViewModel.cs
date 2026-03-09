@@ -247,6 +247,17 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             PlotModel.Series.Clear();
             PlotModel.Series.Add(lineSeries);
             PlotModel.InvalidatePlot(true); // 强制刷新，应用新轴范围
+
+
+            Task.Run(async () =>
+            {
+                await Task.Delay(300);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    CVSpectrumAnalyzerRefresh.RefreshIVDataGrid();
+                });
+            });
+
         }
         
         public void btnResetZoom()

@@ -1,4 +1,5 @@
-﻿using CVAVMControl;
+﻿using ColorVision.UI;
+using CVAVMControl;
 using CVCommCore.CVImage;
 using CVVAMControl;
 using CVWaferProber.Core;
@@ -34,6 +35,20 @@ using Rect = System.Windows.Rect;
 
 namespace CVAVMControl
 {
+
+    public class VAMConfig:ViewModelBase ,IConfig
+    {
+
+        public static VAMConfig Instance => ConfigService.Instance.GetRequiredService<VAMConfig>();
+
+        public double ConoscopeCoefficient { get => _ConoscopeCoefficient; set { _ConoscopeCoefficient = value; OnPropertyChanged(); } }
+        private double _ConoscopeCoefficient = 0.028735632183908;
+
+
+    }
+
+
+
     /// <summary>
     /// CVVAMAnalyzer.xaml 的交互逻辑
     /// </summary>
@@ -55,7 +70,7 @@ namespace CVAVMControl
         private double MaxAngle = 60; // Default max angle
 
         /********************************************给出标定文件之后要从标定文件中去读取该值********************************************/
-        private double ConoscopeCoefficient = 0.028735632183908;// 0.01935; // Pixels per degree   0.01935 0.02645  
+        private double ConoscopeCoefficient = VAMConfig.Instance.ConoscopeCoefficient ;// 0.01935; // Pixels per degree   0.01935 0.02645  
         /*******************************************************************************************************************************/
         private int displayAngle = 120; // Default display angle
         private ExportChannel displayChannel = ExportChannel.Y; // Default display channel
@@ -1263,6 +1278,22 @@ namespace CVAVMControl
             Cv2.Normalize(selectedMat, normalizedMat, 0, 255, NormTypes.MinMax);
             Mat mat8U = new Mat();
             normalizedMat.ConvertTo(mat8U, MatType.CV_8UC1);
+            float imageActualRadius = Math.Min(mat8U.Width, mat8U.Height) / 2f;
+
+            double r2 = imageActualRadius * imageActualRadius;
+
+            for (int i = 0; i < mat8U.Cols; i++)
+            {
+                for (int j = 0; j < mat8U.Rows; j++)
+                {
+                    if ((Math.Pow(i- imageActualRadius,2)+Math.Pow(j- imageActualRadius,2))> r2)
+                    {
+                        mat8U.At<char>(i, j) = (char)0;
+                    }
+                }
+            }
+
+
             Cv2.ApplyColorMap(mat8U, colorMat, ColormapTypes.Jet);
             normalizedMat.Dispose();
             mat8U.Dispose();
@@ -1273,7 +1304,6 @@ namespace CVAVMControl
                 colorMat.Height / 2  // 图像中心Y（动态取图像高度的一半）
             );
             // 动态计算“图像实际有效半径”：取图像宽/高的较小值的一半（确保圆环在图像内）
-            float imageActualRadius = Math.Min(colorMat.Width, colorMat.Height) / 2f;
             // 动态计算“角度系数”：让最大圆环的半径刚好等于图像实际有效半径
             double dynamicConoscopeCoefficient = imageActualRadius / MaxAngle;
 
@@ -1283,7 +1313,7 @@ namespace CVAVMControl
             int bgCircleLineWidth = 10;
             int circleCount = 6; // 固定6条圆环
                                  // 均匀分布：最大半径 = 图像实际有效半径，按6条均分
-            float bgCircleInterval = imageActualRadius / circleCount;
+            float bgCircleInterval = (imageActualRadius)/ circleCount;
 
             for (int i = 1; i <= circleCount; i++)
             {

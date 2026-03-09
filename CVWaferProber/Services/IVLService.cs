@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows;
 using Application = System.Windows.Application;
+using MessageBox = System.Windows.MessageBox;
 
 namespace CVWaferProber.Services
 {
@@ -385,8 +386,8 @@ namespace CVWaferProber.Services
                 Directory.CreateDirectory(ivlRootPath);
                 logger.Info($"Create IVL export directory：{ivlRootPath}");
             }
-           
-            #region 导出iv数据
+
+            logger.Info($"ivl measurements Count {measurements.Count}");
 
             // 6. 常规IVL数据导出（原有逻辑） // 构造文件名（包含SerialNumber+时间戳）
             if (measurements?.Any() == true && wavelengths != null && wavelengths.Length > 0)
@@ -400,7 +401,6 @@ namespace CVWaferProber.Services
             {
                 logger.Info("No valid IV/IVL data available for export");
             }
-            #endregion
         }
 
         private void ExportIVDataOnly(string serialNumber, string exportPath, ObservableCollection<IVMeasurement> ivMeasurements)

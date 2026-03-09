@@ -614,7 +614,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         #endregion Tab
         // 默认轴范围
         private PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = 350, DefaultMax = 800, DefaultMaxRange = 500 };
-        private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = 1.0f, DefaultMaxRange = 1.1f };
+        private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = float.NaN, DefaultMaxRange = float.NaN };
         // public ICommand EQEExportCommand { get; }
         public string DeviceCode { get; set; }
 

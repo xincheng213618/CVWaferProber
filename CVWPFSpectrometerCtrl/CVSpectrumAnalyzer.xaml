@@ -246,6 +246,8 @@
                                 ItemsSource="{Binding Measurements}"
                                 RowHeight="25"
                                 SelectedItem="{Binding SelectedMeasurement}"
+                                
+                                SelectionChanged="measurementsGrid_SelectionChanged"
                                 SelectionMode="Single"
                                 SelectionUnit="FullRow">
 
@@ -522,7 +524,7 @@
 
 
                             <!--  IV DataGrid区域  -->
-                            <DataGrid
+                            <DataGrid x:Name="IVDataGrid"
                                 Grid.Row="2"
                                 Margin="5,5,5,5"
                                 AutoGenerateColumns="False"
@@ -534,6 +536,8 @@
                                 GridLinesVisibility="All"
                                 IsReadOnly="True"
                                 ItemsSource="{Binding IVMeasurements}"
+                                
+                                SelectionChanged="DataGrid_SelectionChanged"
                                 RowHeight="25"
                                 SelectionMode="Single"
                                 SelectionUnit="FullRow" Grid.ColumnSpan="2">

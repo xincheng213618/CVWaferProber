@@ -1,6 +1,7 @@
 ﻿using ChipMapping.Models;
 using ChipMapping.ViewModels;
 using ColorVision.Core.Entities;
+using ColorVision.UI;
 using CVDB.Services.Buz;
 using CVWaferProber.Components;
 using CVWaferProber.Core;
@@ -33,6 +34,18 @@ using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 
 namespace CVWaferProber.ViewModels
 {
+
+    public class MappingDataViewModelConfig : ViewModelBase, IConfig
+    {
+        public static MappingDataViewModelConfig Instance => ConfigService.Instance.GetRequiredService<MappingDataViewModelConfig>();
+
+        public int SelectedIndex { get => _SelectedIndex; set { _SelectedIndex = value; OnPropertyChanged(); } }
+        private int _SelectedIndex = 0;
+
+    }
+
+
+
     public class MappingDataViewModel : ViewModelBase
     {
         private static readonly ILog logger = LogManager.GetLogger(typeof(MappingDataViewModel));
@@ -146,6 +159,8 @@ namespace CVWaferProber.ViewModels
         public ObservableCollection<DieViewModel> TestResults { get; } = new ObservableCollection<DieViewModel>();
         //public RangeEnabledObservableCollection<FlowViewModel> FlowItems { get; } = new RangeEnabledObservableCollection<FlowViewModel>();
         public ObservableCollection<WPFlowViewModel> WPFlows { get; } = new ObservableCollection<WPFlowViewModel>();
+
+        public MappingDataViewModelConfig Config => MappingDataViewModelConfig.Instance;
 
         private WPFlowViewModel? _selectedWPFlow;
         public WPFlowViewModel? SelectedWPFlow
@@ -349,7 +364,16 @@ namespace CVWaferProber.ViewModels
                         // 刷新DataGrid
                         Application.Current.Dispatcher.Invoke(() =>
                         {
-                            _dataGrid?.Items.Refresh();
+                            try
+                            {
+                                _dataGrid?.Items.Refresh();
+
+                            }
+                            catch (Exception ex)
+                            {
+
+                            }
+
                         });
 
                         // 更新ChipMapping中的选中数量
@@ -1064,7 +1088,19 @@ namespace CVWaferProber.ViewModels
             if (flows != null && flows.Count > 0)
             {
                 foreach (var flow in flows) WPFlows.Add(new WPFlowViewModel(flow));
-                if (WPFlows.Count > 0) SelectedWPFlow = WPFlows[0];
+                if (WPFlows.Count > 0)
+                {
+                    if (Config.SelectedIndex >=0 && Config.SelectedIndex < WPFlows.Count)
+                    {
+                        SelectedWPFlow = WPFlows[Config.SelectedIndex];
+                    }
+                    else
+                    {
+                        SelectedWPFlow = WPFlows[0];
+
+                    }
+
+                }
             }
         }
 

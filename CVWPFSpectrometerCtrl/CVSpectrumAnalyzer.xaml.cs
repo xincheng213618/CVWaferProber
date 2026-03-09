@@ -4,11 +4,25 @@ using CVWPFSpectrometerCtrl.Models;
 using CVWPFSpectrometerCtrl.ViewModels;
 using OxyPlot;
 using OxyPlot.Wpf;
+using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Controls;
 
 
 namespace CVWPFSpectrometerCtrl
 {
+
+    public static class CVSpectrumAnalyzerRefresh
+    {
+        public static event EventHandler IVDataGrid;
+
+        public static void RefreshIVDataGrid()
+        {
+            IVDataGrid?.Invoke(new object(), new EventArgs());
+        }
+    }
+
+
     /// <summary>
     /// CVSpectrumAnalyzer.xaml 的交互逻辑
     /// </summary>
@@ -38,7 +52,23 @@ namespace CVWPFSpectrometerCtrl
                     //viewModel.SetSpectrumCtrl(SpectralDisplay);
                 }
             };
-           
+            CVSpectrumAnalyzerRefresh.IVDataGrid += (s, e) =>
+            {
+                if (IVDataGrid.ItemsSource is ObservableCollection<IVMeasurement> iVMeasurements)
+                {
+                    if (iVMeasurements.Count > 0)
+                    {
+                        IVMeasurement iVMeasurement = iVMeasurements.Last();
+                        if (iVMeasurement != null)
+                        {
+                            //IVDataGrid.SelectedItem = iVMeasurement;    
+                            IVDataGrid.ScrollIntoView(iVMeasurement);
+
+                        }
+
+                    }
+                }
+            };
         }
        
         private void PlotView_Loaded(object sender, RoutedEventArgs e)
@@ -94,6 +124,15 @@ namespace CVWPFSpectrometerCtrl
         private void OpenEQEFloder_Click(object sender, RoutedEventArgs e)
         {
             PlatformHelper.OpenFolder(ConfigManager.Config.ExportPathSettings.EqeExportPath);
+        }
+
+        private void measurementsGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+        }
+
+        private void DataGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+
         }
     }
 }
