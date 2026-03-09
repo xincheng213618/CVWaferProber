@@ -16,6 +16,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows;
@@ -78,9 +79,6 @@ namespace CVAVMControl
         private int displayRadius = 40; // Default display radius angle
                                         // CVVAMAnalyzer.cs 中新增定时器
         private DispatcherTimer? _resourceCleanTimer;
-        // 自定义悬浮面板（用于显示格式信息）
-        private Border? _hoverInfoPanel;
-        private TextBlock? _hoverInfoText;
         // 移除动态位置相关变量，新增固定面板配置
         private bool _isHovering = false; // 仅标记是否悬浮，不跟踪坐标
         private readonly object _lockObj = new object(); // 线程锁，避免并发更新
@@ -266,7 +264,6 @@ namespace CVAVMControl
             txtAzimuthInterval.TextChanged += (s, e) => UpdateAzimuthIntervalText();
 
             // 初始化悬浮信息面板（样式匹配目标图）
-            InitializeHoverInfoPanel();
             // 初始化定时器：5分钟未使用VAM则释放资源
             _resourceCleanTimer = new DispatcherTimer
             {
@@ -709,6 +706,25 @@ namespace CVAVMControl
 
                         XMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedX);
                         YMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedY);
+
+                        
+                        float imageActualRadius = Math.Min(YMat.Width, YMat.Height) / 2f;
+                        double r2 = imageActualRadius * imageActualRadius;
+
+                        for (int i = 0; i < YMat.Cols; i++)
+                        {
+                            for (int j = 0; j < YMat.Rows; j++)
+                            {
+                                if ((Math.Pow(i - imageActualRadius, 2) + Math.Pow(j - imageActualRadius, 2)) > r2)
+                                {
+                                    YMat.At<float>(i, j) = 0;
+                                }
+                            }
+                        }
+
+
+
+
                         ZMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedZ);
                     }
                     else
@@ -1266,6 +1282,10 @@ namespace CVAVMControl
             UpdateDisplay();
         }
         #endregion
+
+
+
+
         private void UpdateDisplay()
         {
             Mat? selectedMat = GetSelectedChannelMat(displayChannel);
@@ -1282,16 +1302,16 @@ namespace CVAVMControl
 
             double r2 = imageActualRadius * imageActualRadius;
 
-            for (int i = 0; i < mat8U.Cols; i++)
-            {
-                for (int j = 0; j < mat8U.Rows; j++)
-                {
-                    if ((Math.Pow(i- imageActualRadius,2)+Math.Pow(j- imageActualRadius,2))> r2)
-                    {
-                        mat8U.At<char>(i, j) = (char)0;
-                    }
-                }
-            }
+            //for (int i = 0; i < mat8U.Cols; i++)
+            //{
+            //    for (int j = 0; j < mat8U.Rows; j++)
+            //    {
+            //        if ((Math.Pow(i- imageActualRadius,2)+Math.Pow(j- imageActualRadius,2))> r2)
+            //        {
+            //            mat8U.At<char>(i, j) = (char)0;
+            //        }
+            //    }
+            //}
 
 
             Cv2.ApplyColorMap(mat8U, colorMat, ColormapTypes.Jet);
@@ -2317,49 +2337,17 @@ namespace CVAVMControl
         private void CbDisplayAngle_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // 1. 新增：如果数据还没加载完成，直接返回
-            if (!_isDataValid)
+            if (!IsInitialized) return;
+
+            if (cbDisplayAngle.SelectedItem is ComboBoxItem item)
             {
-                return;
+                SelectAngle(item);
             }
-            if (cbDisplayAngle.SelectedItem is ComboBoxItem item) SelectAngle(item);
-
-            // 步骤1：首次加载（启动时）直接标记为非首次，不执行后续逻辑
-            //if (_isDeletingAngle) return; // 删除过程中跳过
-            ////if (_isFirstLoad)
-            ////{
-            ////    _isFirstLoad = false;
-            ////    return;
-            ////}
-
-            //if (cbDisplayAngle.SelectedItem is ComboBoxItem item && item.Tag is string angleStr)
-            //{
-            //    if (int.TryParse(angleStr, out int angle))
-            //    {
-            //        displayAngle = angle;
-            //        _selectedAngle = angle;
-            //        _selectedRadius = -1;
-
-            //        if (IsMatSafe(YMat))
-            //        {
-            //            bool dllCallSuccess = CallVamDllForDiameterLine(angle);
-            //            if (dllCallSuccess)
-            //            {
-            //                UpdateDisplay();
-            //            }
-            //            else
-            //            {
-            //                MessageBox.Show($"{FindResource("Interfacecallfailed")}", $"{FindResource("Prompt")}");
-            //                UpdateDisplay();
-            //            }
-            //        }
-            //        else
-            //        {
-            //            MessageBox.Show($"{FindResource("Reopen")}", $"{FindResource("Prompt")}");
-            //        }
-            //    }
-            //}
         }
 
+
+
+        
         private void SelectAngle(ComboBoxItem item)
         {
             // 2. 原有逻辑（去掉了_isFirstLoad的判断）
@@ -3901,79 +3889,19 @@ namespace CVAVMControl
         }
 
         #region  自定义悬浮面板
-        /// <summary>
-        /// 初始化悬浮信息面板（黑色背景、白色文字，匹配目标图样式）
-        /// </summary>
-        private void InitializeHoverInfoPanel()
-        {
-            if (_hoverInfoPanel != null) return;
-
-            _hoverInfoPanel = new Border
-            {
-                Background = new SolidColorBrush(Color.FromArgb(128, 0, 0, 0)),
-                BorderBrush = Brushes.White,
-                BorderThickness = new Thickness(1),
-                Padding = new Thickness(8),
-                Visibility = Visibility.Collapsed,
-                CornerRadius = new CornerRadius(3),
-                CacheMode = new BitmapCache(192), // 保留硬件加速
-                IsHitTestVisible = false,
-                SnapsToDevicePixels = true,
-                UseLayoutRounding = true
-            };
-
-            // 渲染优化（静态方法设置）
-            RenderOptions.SetBitmapScalingMode(_hoverInfoPanel, BitmapScalingMode.NearestNeighbor);
-            RenderOptions.SetEdgeMode(_hoverInfoPanel, EdgeMode.Aliased);
-            RenderOptions.SetClearTypeHint(_hoverInfoPanel, ClearTypeHint.Enabled);
-
-            _hoverInfoText = new TextBlock
-            {
-                Foreground = Brushes.White,
-                FontFamily = new FontFamily("Consolas"),
-                FontSize = 11,
-                LineHeight = 15,
-                TextWrapping = TextWrapping.NoWrap,
-                SnapsToDevicePixels = true,
-                UseLayoutRounding = true,
-
-            };
-            // 禁用文本渲染优化，避免文字抖动
-            // 移到外部，用静态方法设置RenderOptions属性
-            RenderOptions.SetBitmapScalingMode(_hoverInfoPanel, BitmapScalingMode.HighQuality);
-            RenderOptions.SetEdgeMode(_hoverInfoPanel, EdgeMode.Aliased);
-            _hoverInfoPanel.Child = _hoverInfoText;
-
-            // 固定面板位置：图像控件的右下角（绝对定位，不随鼠标移动）
-            Canvas.SetZIndex(_hoverInfoPanel, 999); // 置顶显示
-            Canvas.SetLeft(_hoverInfoPanel, 20); // 固定X坐标
-            Canvas.SetTop(_hoverInfoPanel, 20);  // 固定Y坐标（也可设为imgDisplay.ActualHeight - 100）
-
-            // 添加到Canvas容器（若当前布局不是Canvas，需先包裹）
-            if (this.Parent is Canvas canvas)
-            {
-                canvas.Children.Add(_hoverInfoPanel);
-            }
-            else
-            {
-                // 若没有Canvas，创建一个覆盖层
-                var overlayCanvas = new Canvas { Width = double.NaN, Height = double.NaN };
-                this.LayoutRoot.Children.Add(overlayCanvas);
-                overlayCanvas.Children.Add(_hoverInfoPanel);
-            }
-        }
 
         /// <summary>
         /// 鼠标在图像上移动时，显示悬浮信息
         /// </summary>
         private void ImgDisplay_MouseMove(object sender, MouseEventArgs e)
         {
+            GridInfo.Visibility = Visibility.Visible;
+
             lock (_lockObj) // 加锁，避免并发更新
             {
                 if (!_isHovering)
                 {
                     _isHovering = true;
-                    _hoverInfoPanel?.SetValue(VisibilityProperty, Visibility.Visible);
                 }
 
                 if (XMat == null || YMat == null || ZMat == null || pseudoColorMat == null || _hoverInfoText == null)
@@ -4024,10 +3952,10 @@ namespace CVAVMControl
         /// </summary>
         private void ImgDisplay_MouseLeave(object sender, MouseEventArgs e)
         {
+            GridInfo.Visibility = Visibility.Collapsed;
             lock (_lockObj)
             {
                 _isHovering = false;
-                _hoverInfoPanel?.SetValue(VisibilityProperty, Visibility.Collapsed);
                 // 清空文本（可选，避免残留）
                 _hoverInfoText.Text = string.Empty;
             }
