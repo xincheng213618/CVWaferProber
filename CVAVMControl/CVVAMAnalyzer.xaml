@@ -8,30 +8,20 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:oxy="http://oxyplot.org/wpf"
     xmlns:wpf="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
-    mc:Ignorable="d">
+    mc:Ignorable="d" d:Width="900" d:Height="600">
     <Grid Margin="5">
         <!--  总体布局：3行2列     Background="#FF2D2D30"  -->
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <!--  第1行：打开文件按钮  -->
             <RowDefinition Height="1.15*" />
             <RowDefinition Height="Auto" />
-            <!--  第2行：伪彩图  -->
             <RowDefinition Height="*" />
-            <!--  第3行：图表区  -->
-
-            <!--  新增：进度条行  -->
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
-            <!--  第1列：伪彩图 + 图表区  -->
             <ColumnDefinition Width="Auto" />
-            <!--  第2列：切换按钮 + 参数区  -->
         </Grid.ColumnDefinitions>
-
-        <!--  ========== 新增：导出进度条区域（合并行列，放在最底部） ==========  -->
-
 
         <!--  第1行：合并列 - 打开CVCIE文件按钮  -->
         <Button
@@ -106,14 +96,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <TextBlock
-                    x:Name="tbImageTitle"
-                    Grid.Row="0"
-                    Margin="5"
-                    HorizontalAlignment="Center"
-                    FontSize="14"
-                    Text="{DynamicResource VAM.PseudocolorImage}" />
-
+                <TextBlock  x:Name="tbImageTitle" Grid.Row="0"  Margin="5" HorizontalAlignment="Center" FontSize="14" Text="{DynamicResource VAM.PseudocolorImage}" />
                 <Grid
                     x:Name="imgGrid"
                     Grid.Row="1"
@@ -138,6 +121,14 @@
                             </TransformGroup>
                         </Image.RenderTransform>
                     </Image>
+
+
+                </Grid>
+                <Grid x:Name="GridInfo" Grid.Row="1" HorizontalAlignment="Left" Visibility="Collapsed" VerticalAlignment="Top" Height="100" Width="200" Margin="10,0,0,0" >
+                    <Border  Background="Black" Opacity="0.5" CornerRadius="10">
+
+                    </Border>
+                    <TextBlock x:Name="_hoverInfoText" Text="" Foreground="White" TextWrapping ="NoWrap" Margin="10"/>
                 </Grid>
 
             </Grid>

@@ -298,7 +298,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
         // 原始光谱数据（不显示在DataGrid中）
         public float[] Wavelengths { get; set; }
-        public float[] Intensities { get; set; }
+        public float[] fPL { get; set; }
         public float RelativeSpectrum { get; set; }
         public float AbsoluteSpectrum { get;  set; }
     }

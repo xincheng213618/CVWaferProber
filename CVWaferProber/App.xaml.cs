@@ -1,4 +1,5 @@
-﻿using CVWaferProber.Core.Config;
+﻿using ColorVision.UI;
+using CVWaferProber.Core.Config;
 using CVWaferProber.Language;
 using CVWaferProber.Models;
 using CVWaferProber.Services;
@@ -69,6 +70,10 @@ namespace CVWaferProber
             System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
 
             LogManagerService.ConfigureLog4Net();
+
+
+            ConfigHandler.GetInstance();
+
             // 初始化 log4net
             //var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
 
@@ -125,8 +130,6 @@ namespace CVWaferProber
             _splash.InitializeStartupTasks();
             _splash.StartupCompleted += OnStartupCompleted;
             _splash.Show();
-
-            _mainWindow = new DockMainWindow();
 
         }
         private DockMainWindow _mainWindow;

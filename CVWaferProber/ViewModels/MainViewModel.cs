@@ -311,14 +311,19 @@ namespace CVWaferProber.ViewModels
                 window.ShowDialog();
             });
         }
+
+        bool IsInitializeServiveVM = false;
+
         public void InitializeServiveVM(CVVAMAnalyzer vam, CVSpectrumAnalyzer ivl)
         {
+            if (IsInitializeServiveVM) return;
             mainService.InitializeService(this, vam, ivl);
 
             if (DataMappingVM != null)
             {
                 DataMappingVM.LoadBuzWPFlows();
             }
+            IsInitializeServiveVM = true;
         }
         private void InitializeServive()
         {

@@ -1,5 +1,6 @@
 ﻿using ColorVision.Core.Entities;
 using CVMysql;
+using CVWaferProber.ViewModels;
 using log4net;
 using System;
 using System.Collections.Generic;
