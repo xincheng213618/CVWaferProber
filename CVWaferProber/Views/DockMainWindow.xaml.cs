@@ -608,5 +608,12 @@ namespace CVWaferProber.Views
                 viewModel.ReconnectRcCommand?.Execute(null);
             }
         }
+
+        private void Test_click(object sender, RoutedEventArgs e)
+        {
+
+
+
+        }
     }
 }

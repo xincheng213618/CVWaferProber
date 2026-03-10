@@ -142,6 +142,9 @@
     <None Update="cfg\MySql.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="cvOled.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Img\LOG.ico">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
