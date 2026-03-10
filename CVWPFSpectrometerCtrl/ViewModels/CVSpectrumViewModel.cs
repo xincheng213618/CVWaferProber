@@ -894,8 +894,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             string Title = (string)System.Windows.Application.Current.FindResource("Sp.Spectral");
             // 1. 克隆子Tab的图表配置（轴、样式）
             OverviewSpectralPlotModel = ClonePlotModel(PlotModel, Title); // 克隆光谱子Tab配置
-            OverviewIVPlotModel = ClonePlotModel(IVPlotModel, "IV");       // 克隆IV子Tab配置
             OverviewVIPlotModel = ClonePlotModel(VIPlotModel, "VI");
+            OverviewIVPlotModel = ClonePlotModel(IVPlotModel, "IV");       // 克隆IV子Tab配置
             OverviewILPlotModel = ClonePlotModel(ILPlotModel, "IL");       // 克隆IL子Tab配置
                                                                            // OverviewVLPlotModel = ClonePlotModel(VLPlotModel, "VL");       // 克隆VL子Tab配置
             OverviewPower_LPlotModel = ClonePlotModel(PLPlotModel, "Power-L");

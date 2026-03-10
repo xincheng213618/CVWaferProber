@@ -78,10 +78,11 @@ namespace CVWPFSpectrometerCtrl
             else if (selectedIndex == 0)
             {
                 // 显示VIPanel，隐藏IVPanel
-                IVPanel.Visibility = Visibility.Collapsed;
-                OverviewIVPlotView.Visibility = Visibility.Collapsed;
                 VIPanel.Visibility = Visibility.Visible;
                 OverviewVIPlotView.Visibility = Visibility.Visible;
+                IVPanel.Visibility = Visibility.Collapsed;
+                OverviewIVPlotView.Visibility = Visibility.Collapsed;
+               
              
             }
         }
