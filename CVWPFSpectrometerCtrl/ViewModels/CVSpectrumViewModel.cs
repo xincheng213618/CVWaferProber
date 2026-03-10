@@ -58,6 +58,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private ObservableCollection<SpectrumMeasurement> _measurements;
         private ObservableCollection<ILMeasurement> _ILMeasurements;
         private ObservableCollection<IVMeasurement> _IVMeasurements;
+        private ObservableCollection<IVMeasurement> _VIMeasurements;
         private ObservableCollection<VLMeasurement> _VLMeasurements;
         private ObservableCollection<Power_LMeasurement> _Power_LMeasurements;
         //private ObservableCollection<IVLMeasurement> _IVLMeasurements;
@@ -74,7 +75,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         private Power_LViewModel Power_L_viewModel;
         private IVLCameraViewModel IVLCamera_viewModel;
 
-       // private SpectrumControl _spectralCtrl;
+        // private SpectrumControl _spectralCtrl;
 
         private WpfPlot _plotControl;
         // 新增：EQE曲线缓存
@@ -105,7 +106,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             }
         }
-        
+
         public SpectrumMeasurement SelectedMeasurement
         {
             get => _selectedMeasurement;
@@ -376,6 +377,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             get => _IVMeasurements;
             set => SetProperty(ref _IVMeasurements, value);
+        }
+        public ObservableCollection<IVMeasurement> VIMeasurements
+        {
+            get => _VIMeasurements;
+            set => SetProperty(ref _VIMeasurements, value);
         }
         public ObservableCollection<ILMeasurement> ILMeasurements
         {
@@ -863,7 +869,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         //#endregion
         //public void AutoExportData()
         //{
-            
+
         //        // 1. 固定导出根路径
         //        string ivlRootPath = @"D:\Project\IVL";
 
@@ -878,7 +884,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         //        string fileName = $"IVL_Data_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
         //        string fullExportPath = Path.Combine(ivlRootPath, fileName);
         //        ExportToCsv(fullExportPath, Measurements, Wavelengths);
- 
+
         //}
         private void IVResetStatus(object obj)
         {
@@ -1008,7 +1014,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             OverviewIVPlotModel.Series.Clear();
             OverviewVIPlotModel.Series.Clear();
             OverviewILPlotModel.Series.Clear();
-            
+
             OverviewVLPlotModel.Series.Clear();
             OverviewPower_LPlotModel.Series.Clear();
             // 2. 绑定光谱数据
@@ -1092,11 +1098,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 RefreshAxisRange(OverviewIVPlotModel);
             }
             // 3. 绑定VI数据（修正轴顺序：电流Y，电压X）
-            if (IVMeasurements.Any())
+            if (VIMeasurements.Any())
             {
                 var viSeries = new LineSeries
                 {
-                    ItemsSource = IVMeasurements.Select(m => new DataPoint(m.Voltage,m.Current )),
+                    ItemsSource = VIMeasurements.Select(m => new DataPoint(m.Voltage, m.Current)),
                     Color = OxyColors.Red,
                     StrokeThickness = 1.5,
                     MarkerType = MarkerType.Circle,
@@ -1131,7 +1137,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 var powerLSeries = new LineSeries
                 {
                     // 映射Power-L数据（根据Power_LMeasurement的实际字段调整X/Y轴）
-                    ItemsSource = Power_LMeasurements.Select(m => new DataPoint(m.Power, m.Luminance)), 
+                    ItemsSource = Power_LMeasurements.Select(m => new DataPoint(m.Power, m.Luminance)),
                     Color = OxyColors.Orange, // 自定义Power-L曲线颜色，与其他图表区分
                     StrokeThickness = 1.5,
                     MarkerType = MarkerType.Circle,
@@ -1182,7 +1188,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         // 辅助方法：将光谱Measurements转换为图表需要的DataPoint（波长-强度）
         private IEnumerable<DataPoint> GetSpectralDataPoints()
         {
-            if (Measurements.Any() && Measurements.First().Wavelengths != null && Measurements.First().fPL  != null)
+            if (Measurements.Any() && Measurements.First().Wavelengths != null && Measurements.First().fPL != null)
             {
                 var firstMeas = Measurements.First();
                 for (int i = 0; i < firstMeas.Wavelengths.Length; i++)
@@ -1279,7 +1285,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
             catch (Exception ex)
             {
-               MessageBox.Show($"{(string)Application.Current.FindResource("Exportfailed")}: {ex.Message}");
+                MessageBox.Show($"{(string)Application.Current.FindResource("Exportfailed")}: {ex.Message}");
             }
         }
         #endregion
@@ -1288,11 +1294,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         // 导出CSV的方法（参数：保存路径、Measurements数据列表、波长数组）
         public void ExportToCsv(string fileName, ObservableCollection<SpectrumMeasurement> measurements, float[]? wavelengths, float fPlambda = 1.0f)
         {
-            if (measurements == null || !measurements.Any() )
+            if (measurements == null || !measurements.Any())
             {
                 log.Info((string)Application.Current.FindResource("Nodata"));
                 return;
-               
+
             }
             if (wavelengths == null || wavelengths.Length == 0)
             {
@@ -1353,7 +1359,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     var item = measurements[rowIndex];
                     // 动态生成Meas_Id：从1开始递增（rowIndex是0-based，+1后为1-based）
                     int measId = rowIndex + 1;
-                    string bBVoltage = item.BVoltage == null ? "Na": item.BVoltage.ToString();
+                    string bBVoltage = item.BVoltage == null ? "Na" : item.BVoltage.ToString();
                     string bCurrent = item.BCurrent == null ? "Na" : item.BCurrent.ToString();
 
 
@@ -1395,7 +1401,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                             // 可选：导出相对强度（SpectralData.RelativeSpectrum）或绝对强度（SpectralData.AbsoluteSpectrum）
                             // 相对强度：直接用处理后的intensity；绝对强度：intensity * fPlambda
                             double targetIntensity = intensity * item.fPlambda; // 相对强度（要绝对强度则改为 intensity * fPlambda）
-                                                                          // 格式化（与目标代码数据精度一致）
+                                                                                // 格式化（与目标代码数据精度一致）
                             string value = targetIntensity < 0.0001f ? targetIntensity.ToString() : targetIntensity.ToString();
                             waveValues.Add(EscapeCsvValue(value));
                         }
@@ -1956,7 +1962,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             VIViewModel viewModel = new VIViewModel();
             VI_viewModel = viewModel;
             VIPlotModel = viewModel.PlotModel;
-            IVMeasurements = viewModel.Measurements;
+            VIMeasurements = viewModel.Measurements;
 
         }
         //电流/亮度
@@ -2208,7 +2214,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             VL_viewModel.Clear();
             Power_L_viewModel.Clear();
             IVLCamera_viewModel.Clear();
-          
+
 
             // 清空选中状态
             SelectedMeasurement = null;
@@ -2426,11 +2432,11 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 //AutoExportData();
             }
             catch (Exception ex)
-                {
-                    MessageBox.Show("未加载到数据"); // 调试用
-                    return;
-                }
-            
+            {
+                MessageBox.Show("未加载到数据"); // 调试用
+                return;
+            }
+
         }
         public SpectrumMeasurement GetSpectrumData(string serialNumber)
         {
@@ -2836,8 +2842,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
         public CVEQEViewModel CustomEQEVM { get; private set; }
         #endregion
-     
-      
+
+
     }
 }
 
