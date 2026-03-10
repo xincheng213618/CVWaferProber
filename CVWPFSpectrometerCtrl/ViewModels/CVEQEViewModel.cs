@@ -701,6 +701,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             // 自动调整轴范围（适配所有数据）
             //AutoAdjustAxisRange();
+
             PlotModel.InvalidatePlot(true); // 刷新图表
         }
 
@@ -1402,11 +1403,13 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             EQEPlotModel.Axes.Add(xAxis);
             EQEPlotModel.Axes.Add(yAxis);
+            RefreshAxisRange(EQEPlotModel);
             Wavelengths = new float[4001];
             for (int i = 0; i < 4001; i++)
             {
                 Wavelengths[i] = 380 + i / 10.0f;
             }
+
         }
 
         // 新增：更新EQE图表线条颜色
@@ -1529,9 +1532,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             {
                 BringEQESeriesToFront(SelectedMeasurement.No);
             }
-
+            RefreshAxisRange(EQEPlotModel);
             EQEPlotModel.InvalidatePlot(true);
-
             // ========== 批量EQE测量完成，标记并触发导出 ==========
             IsEQEMeasured = true;
         }
@@ -1585,6 +1587,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             EQEPlotModel.Series.Clear();
             EQEPlotModel.Series.Add(lineSeries);
+            //RefreshAxisRange(EQEPlotModel);
             EQEPlotModel.InvalidatePlot(true);
             // ========== EQE测量完成，标记并触发导出 ==========
             IsEQEMeasured = true;
@@ -2785,6 +2788,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             PlotModel.Series.Clear();
             PlotModel.Series.Add(lineSeries);
+            RefreshAxisRange(EQEPlotModel);
             PlotModel.InvalidatePlot(true);
             //
             //if (_spectralCtrl != null)
