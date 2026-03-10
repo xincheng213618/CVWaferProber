@@ -709,20 +709,18 @@ namespace CVAVMControl
 
                         
                         float imageActualRadius = Math.Min(YMat.Width, YMat.Height) / 2f;
-                        double r2 = imageActualRadius * imageActualRadius;
+                        var circleCenter = new OpenCvSharp.Point(YMat.Width / 2, YMat.Height / 2);
+                        int radius = (int)Math.Floor(imageActualRadius);
 
-                        for (int i = 0; i < YMat.Cols; i++)
-                        {
-                            for (int j = 0; j < YMat.Rows; j++)
-                            {
-                                if ((Math.Pow(i - imageActualRadius, 2) + Math.Pow(j - imageActualRadius, 2)) > r2)
-                                {
-                                    YMat.At<float>(i, j) = 0;
-                                }
-                            }
-                        }
+                        // 创建圆形 mask
+                        using var mask = new Mat(new OpenCvSharp.Size(YMat.Width, YMat.Height), MatType.CV_8UC1, Scalar.Black);
+                        Cv2.Circle(mask, circleCenter, radius, Scalar.White, -1, LineTypes.AntiAlias);
 
-
+                        // 将圆外区域置零
+                        using var yMasked = new Mat();
+                        YMat.CopyTo(yMasked, mask);
+                        YMat.Dispose();
+                        YMat = yMasked.Clone();
 
 
                         ZMat = Mat.FromPixelData(dstW, dstH, singleChannelTypeFinal, croppedZ);
@@ -2318,12 +2316,6 @@ namespace CVAVMControl
                 }
             }
         }
-        // 辅助方法：获取当前选中的半径（替换为你原有业务逻辑，仅作占位）
-        //private int GetCurrentSelectedRadius()
-        //{
-        //    // 此处替换为你原有获取currentRadius的逻辑，示例返回字典中第一个有效半径
-        //    return DllAllCircleData.Select(kv => kv.Key.polar).FirstOrDefault();
-        //}
         private class RadiusDataItem
         {
             public double Azimuth { get; set; } // 方位角
