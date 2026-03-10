@@ -507,6 +507,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 BringSeriesToFront(SelectedMeasurement.No);
             }
 
+            // 自动调整 Y 轴（保底 0，边距 5%）
+            AutoAdjustYAxis(PlotModel, 0.05, clampBottomToZero: false);
             // 自动调整轴范围（适配所有数据）
             //AutoAdjustAxisRange();
             PlotModel.InvalidatePlot(true); // 刷新图表
@@ -2071,6 +2073,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             PlotModel.Series.Clear();
             PlotModel.Series.Add(lineSeries);
+
+            // 自动缩放 Y 轴
+            AutoAdjustYAxis(PlotModel, 0.05, clampBottomToZero: false);
             PlotModel.InvalidatePlot(true);
         }
         private void ResetAndUpdateChart()
@@ -2125,6 +2130,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             PlotModel.Series.Clear();
             PlotModel.Series.Add(lineSeries);
+            // 自动调整 Y 轴（保底 0，边距 5%）
+            AutoAdjustYAxis(PlotModel, 0.05, clampBottomToZero: false );
             PlotModel.InvalidatePlot(true);
             ////
             //if (_spectralCtrl != null)
@@ -2768,30 +2775,6 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
         #endregion
 
-        #region IV/VI模式切换
-        //public ICommand SwitchModeCommand { get; private set; }
-        //private bool _isIVMode = true;
-        //public bool IsIVMode
-        //{
-        //    get => _isIVMode;
-        //    set
-        //    {
-        //        if (SetProperty(ref _isIVMode, value))
-        //        {
-        //            OnPropertyChanged(nameof(IsIVMode));
-        //            OnPropertyChanged(nameof(IsVIMode));
-        //            OnPropertyChanged(nameof(IVPanelVisibility));
-        //            OnPropertyChanged(nameof(VIPanelVisibility));
-        //        }
-        //    }
-        //}
-
-        //public bool IsVIMode => !_isIVMode;
-
-        //public Visibility IVPanelVisibility => IsIVMode ? Visibility.Visible : Visibility.Collapsed;
-        //public Visibility VIPanelVisibility => IsVIMode ? Visibility.Visible : Visibility.Collapsed;
-
-        #endregion
         #region EQE 激活方法
         //外层TabControl的选中索引（绑定XAML的外层TabControl.SelectedIndex）
         private int _outerTabSelectedIndex;
@@ -2838,6 +2821,52 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         public CVEQEViewModel CustomEQEVM { get; private set; }
         #endregion
 
+        #region 光谱图自动缩放
+        // 新增：根据 PlotModel 中所有 LineSeries 的 Y 值自动调整 Y 轴范围（带边距与单点保护）
+        private void AutoAdjustYAxis(PlotModel plotModel, double marginRatio = 0.05, bool clampBottomToZero = true)
+        {
+            if (plotModel == null) return;
+
+            var yValues = plotModel.Series
+                .OfType<LineSeries>()
+                .SelectMany(s => s.Points)
+                .Select(p => p.Y)
+                .Where(y => !double.IsNaN(y) && !double.IsInfinity(y))
+                .ToList();
+
+            if (!yValues.Any()) return;
+
+            double minY = yValues.Min();
+            double maxY = yValues.Max();
+
+            // 处理 min==max 的情况，避免轴范围为单点
+            if (Math.Abs(maxY - minY) < 1e-12)
+            {
+                double delta = Math.Max(1.0, Math.Abs(maxY) * 0.1);
+                minY -= delta;
+                maxY += delta;
+            }
+
+            double range = maxY - minY;
+            double margin = Math.Max(range * marginRatio, Math.Abs(range) * 0.01);
+
+            double desiredMin = minY - margin;
+            double desiredMax = maxY + margin;
+
+            if (clampBottomToZero)
+                desiredMin = Math.Max(0.0, desiredMin);
+
+            var yAxis = plotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Left) as LinearAxis
+                        ?? plotModel.Axes.OfType<LinearAxis>().FirstOrDefault();
+
+            if (yAxis != null)
+            {
+                yAxis.Minimum = desiredMin;
+                yAxis.Maximum = desiredMax;
+                plotModel.InvalidatePlot(false); // 细粒度刷新，不重建整个控件
+            }
+        }
+        #endregion
 
     }
 }
