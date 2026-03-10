@@ -506,9 +506,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             {
                 BringSeriesToFront(SelectedMeasurement.No);
             }
-
+            RefreshAxisRange(PlotModel);
             // 自动调整 Y 轴（保底 0，边距 5%）
-            AutoAdjustYAxis(PlotModel, 0.05, clampBottomToZero: false);
+            // AutoAdjustYAxis(PlotModel, 0.05, clampBottomToZero: false);
             // 自动调整轴范围（适配所有数据）
             //AutoAdjustAxisRange();
             PlotModel.InvalidatePlot(true); // 刷新图表
@@ -1097,6 +1097,30 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     TrackerFormatString = "{0}\n {1}: {2:0.00}\n {3}: {4:0.00}"
                 };
                 OverviewIVPlotModel.Series.Add(ivSeries);
+
+                //// 手动根据数据设置轴范围（避免依赖一次自动计算失败）
+                //var xs = IVMeasurements.Select(m => m.Current).Where(v => !double.IsNaN(v) && !double.IsInfinity(v)).ToList();
+                //var ys = IVMeasurements.Select(m => m.Voltage).Where(v => !double.IsNaN(v) && !double.IsInfinity(v)).ToList();
+                //var xAxis = OverviewIVPlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Bottom) as LinearAxis;
+                //var yAxis = OverviewIVPlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Left) as LinearAxis;
+                //if (xs.Any() && xAxis != null)
+                //{
+                //    double minX = xs.Min(), maxX = xs.Max();
+                //    if (Math.Abs(maxX - minX) < 1e-9) { minX -= 0.1; maxX += 0.1; }
+                //    double margin = (maxX - minX) * 0.05;
+                //    xAxis.Minimum = minX - margin;
+                //    xAxis.Maximum = maxX + margin;
+                //}
+                //if (ys.Any() && yAxis != null)
+                //{
+                //    double minY = ys.Min(), maxY = ys.Max();
+                //    if (Math.Abs(maxY - minY) < 1e-9) { minY -= 0.1; maxY += 0.1; }
+                //    double margin = (maxY - minY) * 0.05;
+                //    yAxis.Minimum = minY - margin;
+                //    yAxis.Maximum = maxY + margin;
+                //}
+
+                //OverviewIVPlotModel.InvalidatePlot(true);
                 RefreshAxisRange(OverviewIVPlotModel);
             }
             // 3. 绑定VI数据（修正轴顺序：电流Y，电压X）
@@ -1114,6 +1138,30 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     TrackerFormatString = "{0}\n {1}: {2:0.00}\n {3}: {4:0.00}"
                 };
                 OverviewVIPlotModel.Series.Add(viSeries);
+
+                //// 手动根据数据设置轴范围
+                //var xs = VIMeasurements.Select(m => m.Voltage).Where(v => !double.IsNaN(v) && !double.IsInfinity(v)).ToList();
+                //var ys = VIMeasurements.Select(m => m.Current).Where(v => !double.IsNaN(v) && !double.IsInfinity(v)).ToList();
+                //var xAxis = OverviewVIPlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Bottom) as LinearAxis;
+                //var yAxis = OverviewVIPlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Left) as LinearAxis;
+                //if (xs.Any() && xAxis != null)
+                //{
+                //    double minX = xs.Min(), maxX = xs.Max();
+                //    if (Math.Abs(maxX - minX) < 1e-9) { minX -= 0.1; maxX += 0.1; }
+                //    double margin = (maxX - minX) * 0.05;
+                //    xAxis.Minimum = minX - margin;
+                //    xAxis.Maximum = maxX + margin;
+                //}
+                //if (ys.Any() && yAxis != null)
+                //{
+                //    double minY = ys.Min(), maxY = ys.Max();
+                //    if (Math.Abs(maxY - minY) < 1e-9) { minY -= 0.1; maxY += 0.1; }
+                //    double margin = (maxY - minY) * 0.05;
+                //    yAxis.Minimum = minY - margin;
+                //    yAxis.Maximum = maxY + margin;
+                //}
+
+                //OverviewVIPlotModel.InvalidatePlot(true);
                 RefreshAxisRange(OverviewVIPlotModel);
             }
             // 4. 绑定IL数据
@@ -2073,9 +2121,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             PlotModel.Series.Clear();
             PlotModel.Series.Add(lineSeries);
-
+            RefreshAxisRange(PlotModel);
             // 自动缩放 Y 轴
-            AutoAdjustYAxis(PlotModel, 0.05, clampBottomToZero: false);
+           // AutoAdjustYAxis(PlotModel, 0.05, clampBottomToZero: false);
             PlotModel.InvalidatePlot(true);
         }
         private void ResetAndUpdateChart()
@@ -2130,8 +2178,9 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             PlotModel.Series.Clear();
             PlotModel.Series.Add(lineSeries);
+            RefreshAxisRange(PlotModel);
             // 自动调整 Y 轴（保底 0，边距 5%）
-            AutoAdjustYAxis(PlotModel, 0.05, clampBottomToZero: false );
+            //AutoAdjustYAxis(PlotModel, 0.05, clampBottomToZero: false );
             PlotModel.InvalidatePlot(true);
             ////
             //if (_spectralCtrl != null)
