@@ -2417,17 +2417,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                     //    _spectralCtrl.SpectralData.SetData(Wavelengths, SelectedMeasurement.Intensities);
                     //    _spectralCtrl.InvalidateVisual();
                     //}
-                    // 新增：加载EQE数据
-                    // UpdateEQEChartFromSelectedMeasurement();
+                 
                 }
                 // 数据加载后，根据“显示所有”状态更新图表
                 UpdateChartByShowAllState();
-                // 新增：同步更新EQE图表
-                //UpdateEQEChartByShowAllState();
+              
                 // 子Tab数据加载完成后，重新初始化总览图Series
                 InitializeOverviewSeries();
-                // 触发自动导出
-                //AutoExportData();
+              
             }
             catch (Exception ex)
             {
