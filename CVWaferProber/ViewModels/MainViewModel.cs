@@ -1,6 +1,7 @@
 ﻿using AvalonDock;
 using AvalonDock.Layout;
 using ChipMapping.ViewModels;
+using ColorVision.UI;
 using CVAVMControl;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.ViewModels;
@@ -96,6 +97,7 @@ namespace CVWaferProber.ViewModels
                 SetProperty(ref _AppVersion, value);
             }
         }
+        public ToolsBarConfig ToolsBarConfig => ConfigService.Instance.GetRequiredService<ToolsBarConfig>();
 
         #region 面板显示状态属性
         // 1. 面板显示状态属性（右上角相机面板默认隐藏）

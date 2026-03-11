@@ -362,7 +362,6 @@
             ShowsPreview="True" />
         <Grid Grid.Row="1" Grid.Column="2">
             <Border
-                Margin="0,2,5,2"
                 Background="White"
                 BorderBrush="#FFCCCCCC"
                 BorderThickness="1"

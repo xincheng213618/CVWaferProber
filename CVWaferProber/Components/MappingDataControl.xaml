@@ -210,14 +210,14 @@
 
             <Grid Grid.Row="0">
                 <Border
-                    Margin="5"
+                    Margin="2"
                     BorderBrush="Gray"
-                    BorderThickness="1">
+                    BorderThickness="0">
                     <map:ChipMappingControl x:Name="MyChipMappingControl" DataContext="{Binding CustomMappingVM}" />
                 </Border>
 
             </Grid>
-            <!--  添加GridSplitter  -->
+            
             <GridSplitter
                 Grid.Row="1"
                 Height="2"
@@ -227,9 +227,9 @@
                 ShowsPreview="True" />
             <Grid Grid.Row="2">
                 <Border
-                    Margin="5"
+                   
                     BorderBrush="Gray"
-                    BorderThickness="1">
+                    BorderThickness="0">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -250,18 +250,8 @@
                             </Border.Resources>
 
                             <StackPanel Orientation="Vertical">
-                                <!--  设置统一的边距来模拟间距  -->
-                                <StackPanel.Resources>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Margin" Value="0,0,0,10" />
-                                    </Style>
-                                </StackPanel.Resources>
 
-                                <!--  文件操作区域  -->
-                                <Border
-                                    Padding="5"
-                                    Background="#FFFFFFFF"
-                                    CornerRadius="6">
+                                <Border Padding="2"  Background="#FFFFFFFF" CornerRadius="6" Margin="0,0,0,5">
                                     <DockPanel LastChildFill="True">
                                         <Button
                                             x:Name="BtnOpenFile"
@@ -299,15 +289,11 @@
                                         </DockPanel>
                                     </DockPanel>
                                 </Border>
-
-                                <!--  测量操作区域  -->
-                                <!--  测量操作区域（红框区域）- 两行布局，每行占满整行  -->
                                 <Border
                                     Height="70"
                                     Margin="0,0,0,0"
                                     Background="#FFFFFFFF"
                                     CornerRadius="6">
-                                    <!--  外层StackPanel垂直排列两行  -->
                                     <StackPanel
                                         Margin="5"
                                         HorizontalAlignment="Stretch"
@@ -348,7 +334,7 @@
                                                 
                                                 
                                                 >
-                                                
+
                                                 <ComboBox.ItemTemplate>
                                                     <DataTemplate>
                                                         <StackPanel Orientation="Horizontal">
@@ -530,138 +516,11 @@
                                         </Grid>
                                     </StackPanel>
                                 </Border>
-                                <!--<Border
-                                    Height="90"
-                                    Margin="0,0,0,0"
-                                    Background="#FFFFFFFF"
-                                    CornerRadius="6">
-                                    <StackPanel>
-                                        <StackPanel
-                                            Height="30"
-                                            Margin="5,5"
-                                            Orientation="Horizontal">
-                                            <ComboBox
-                                                x:Name="cbLeftSelector"
-                                                Width="250"
-                                                Height="30"
-                                                VerticalAlignment="Center"
-                                                IsEnabled="{Binding IsNotProcessing}"
-                                                ItemsSource="{Binding WPFlows}"
-                                                SelectedItem="{Binding SelectedWPFlow}">
-                                                <ComboBox.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <TextBlock Width="100" Text="{Binding Name}" />
-                                                            <TextBlock Foreground="Blue" Text=" (Type: " />
-                                                            <TextBlock Foreground="Blue" Text="{Binding FlowType}" />
-                                                            <TextBlock Foreground="Blue" Text=")" />
-                                                        </StackPanel>
-                                                    </DataTemplate>
-                                                </ComboBox.ItemTemplate>
-                                            </ComboBox>
-                                            <Button
-                                                Width="120"
-                                                Margin="10,0,0,0"
-                                                Command="{Binding FlowLoadCommand}"
-                                                Content="{DynamicResource BtnFlowLoad}"
-                                                IsEnabled="{Binding IsNotProcessing}" />
-
-                                            <StackPanel Margin="5" Orientation="Horizontal">
-                                                <TextBlock VerticalAlignment="Center" Text="PN" />
-                                                <TextBox
-                                                    Width="100"
-                                                    Margin="5,0,0,0"
-                                                    IsEnabled="{Binding IsNotProcessing}"
-                                                    Text="{Binding WaferId}" />
-                                                <TextBlock VerticalAlignment="Center" Text="SN" />
-                                                <TextBox
-                                                    Width="150"
-                                                    Margin="5,0"
-                                                    IsEnabled="{Binding IsNotProcessing}"
-                                                    IsReadOnly="{Binding IsAutoSN}"
-                                                    Text="{Binding SearchSN, UpdateSourceTrigger=PropertyChanged}" />
-                                -->
-                                <!--<CheckBox
-                                                Text="{Binding Timestamp}"
-                                                    x:Name="ChkIsAutoSN"
-                                                    Content="{DynamicResource Auto SN}"
-                                                    IsChecked="{Binding IsAutoSN}"
-                                                    IsEnabled="{Binding IsNotProcessing}" RenderTransformOrigin="0.572,0.675" />-->
-                                <!--
-                                                <Button
-                                                    Width="110"
-                                                    Margin="0,0,10,0"
-                                                    BorderThickness="0"
-                                                    Command="{Binding SearchCommand}"
-                                                    Content="{DynamicResource BtnSearch}" />
-
-                                            </StackPanel>
-                                        </StackPanel>
-                                        <DockPanel Height="30" Margin="5,5">
-                                -->
-                                <!--  使用Margin来设置间距  -->
-                                <!--
-                                            <Button
-                                                Width="100"
-                                                Margin="0,0,10,0"
-                                                BorderThickness="0"
-                                                Command="{Binding StartAutoTestCommand}"
-                                                Content="{DynamicResource BtnStartAutoTest}"
-                                                IsEnabled="{Binding IsNotProcessing}" />
-
-                                            <Button
-                                                Width="100"
-                                                Margin="0,0,10,0"
-                                                BorderThickness="0"
-                                                Command="{Binding StopAutoTestCommand}"
-                                                Content="{DynamicResource BtnStopAutoTest}" />
-
-                                            <Button
-                                                Width="110"
-                                                Margin="0,0,0,0"
-                                                BorderThickness="0"
-                                                Command="{Binding RefreshStatusCommand}"
-                                                Content="{DynamicResource BtnRefreshStatus}" />
-
-                                            <CheckBox
-                                                Margin="10,5,10,0"
-                                                Content="{DynamicResource ChkColorStatus}"
-                                                IsChecked="{Binding IsColorEnabled}" />
-
-                                            <Button
-                                                Width="100"
-                                                Margin="0,0,10,0"
-                                                BorderThickness="0"
-                                                Command="{Binding StartManTestCommand}"
-                                                Content="{DynamicResource BtnStartManTest}"
-                                                IsEnabled="{Binding IsNotProcessing}" />
-                                -->
-                                <!--<Button Content="{DynamicResource BtnOpenVEyeWindow}" Width="110" Command="{Binding OpenVEyeWindowCommand}" Margin="0,0,10,0" BorderThickness="0"/>-->
-                                <!--
-
-                                            <DockPanel Width="230" HorizontalAlignment="Right">
-                                                <Button
-                                                    Width="110"
-                                                    Margin="0,0,10,0"
-                                                    BorderThickness="0"
-                                                    Command="{Binding SaveTestResultCommand}"
-                                                    Content="{DynamicResource BtnSaveTestResult}"
-                                                    IsEnabled="{Binding IsNotProcessing}" />
-                                                <Button
-                                                    Width="110"
-                                                    BorderThickness="0"
-                                                    Command="{Binding LoadTestResultCommand}"
-                                                    Content="{DynamicResource BtnLoadTestResult}"
-                                                    IsEnabled="{Binding IsNotProcessing}" />
-                                            </DockPanel>
-                                        </DockPanel>
-                                    </StackPanel>
-                                </Border>-->
 
                                 <!--  状态指示  -->
                                 <Border
                                     Background="#FFFFFFFF"
-                                    CornerRadius="6"
+                                    CornerRadius="6"  Margin="0,0,0,5"
                                     Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <StackPanel Orientation="Horizontal">
                                         <Ellipse

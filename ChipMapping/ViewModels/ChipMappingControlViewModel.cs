@@ -606,7 +606,7 @@ namespace ChipMapping.ViewModels
         /// </summary>
        
         // 计算画布大小
-        public double CanvasWidth { get; private set; } = 1000;
+        public double CanvasWidth { get; private set; } = 1100;
         public double CanvasHeight { get; private set; } = 1000;
 
         private void UpdateCanvasSize()

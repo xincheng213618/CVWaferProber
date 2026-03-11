@@ -48,7 +48,7 @@
             <Setter Property="BorderBrush" Value="{DynamicResource Industrial.Button.Border}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Margin" Value="4,0" />
-            <Setter Property="Padding" Value="10,2" />
+            <Setter Property="Padding" Value="5,2" />
             <!--  适配30高度按钮的内边距  -->
             <Setter Property="FontSize" Value="13" />
             <!--  核心修改：字体加粗为Bold  -->
@@ -104,22 +104,21 @@
     </UserControl.Resources>
     <Grid>
         <!--  顶部工具栏  -->
-        <ToolBar Style="{StaticResource IndustrialToolbarStyle}" ToolBarTray.IsLocked="True" Height="60">
+        <ToolBar Style="{StaticResource IndustrialToolbarStyle}" ToolBarTray.IsLocked="True" Height="50">
             <Button   x:Name="btnLiftAll" Height="30" Command="{Binding LiftAllCommand}"  Content="{DynamicResource Toolbar.LiftAll}" Style="{StaticResource IndustrialToolbarButtonStyle}" />
 
-            <Separator Margin="10,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+            <Separator Margin="5,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
             
-            <Button  x:Name="btnToMainCamera"    Width="120"  Height="30"  Command="{Binding ToMainCameraCommand}" Content="{DynamicResource Toolbar.ToMainCamera}" Style="{StaticResource IndustrialToolbarButtonStyle}" />
-            <Button  x:Name="btnToAuxCamera"  Width="130" Height="30" Command="{Binding ToAuxCameraCommand}"  Content="{DynamicResource Toolbar.ToAuxCamera}"    Style="{StaticResource IndustrialToolbarButtonStyle}" />
-            <Button  x:Name="btnToIntegratingSphere" Width="180" Height="30" Command="{Binding ToIntegratingSphereCommand}" Content="{DynamicResource Toolbar.ToIntegratingSphere}" Style="{StaticResource IndustrialToolbarButtonStyle}" />
+            <Button x:Name="btnToMainCamera"   Height="30"  Command="{Binding ToMainCameraCommand}" Content="{DynamicResource Toolbar.ToMainCamera}" Style="{StaticResource IndustrialToolbarButtonStyle}" />
+            <Button x:Name="btnToAuxCamera"   Height="30" Command="{Binding ToAuxCameraCommand}"  Content="{DynamicResource Toolbar.ToAuxCamera}"    Style="{StaticResource IndustrialToolbarButtonStyle}" />
+            <Button x:Name="btnToIntegratingSphere" Height="30" Command="{Binding ToIntegratingSphereCommand}" Content="{DynamicResource Toolbar.ToIntegratingSphere}" Style="{StaticResource IndustrialToolbarButtonStyle}" />
 
-            <Separator Margin="10,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
-            <Button  Width="150"  Height="30"  Command="{Binding StartAutoTestCommand}" Content="{DynamicResource BtnStartAutoTest}"  Style="{StaticResource IndustrialToolbarButtonStyle}" />
-            <Button  Width="150" Height="30" Command="{Binding ContinuAutoTestCommand}"   Content="{DynamicResource BtnContinuAutoTest}"   Style="{StaticResource IndustrialToolbarButtonStyle}" />
-            <Button Width="150" Height="30" Command="{Binding PauseAutoTestCommand}" Content="{DynamicResource BtnPauseAutoTest}" Style="{StaticResource IndustrialToolbarButtonStyle}" />
-            <Button Width="200" Height="30" Command="{Binding CloseTestCommand}" Content="{DynamicResource StopTest }" Style="{StaticResource IndustrialToolbarButtonStyle}"  />
-            <Button Width="200" Height="30" Command="{Binding StopAutoTestCommand}" Content="{DynamicResource BtnStopAutoTest}" Style="{StaticResource IndustrialToolbarButtonStyle}" />
-            <TextBlock Text="{Binding Config.CameraPosition}"/>
+            <Separator Margin="5,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+            <Button Height="30"  Command="{Binding StartAutoTestCommand}" Content="{DynamicResource BtnStartAutoTest}"  Style="{StaticResource IndustrialToolbarButtonStyle}" />
+            <Button Height="30" Command="{Binding ContinuAutoTestCommand}"   Content="{DynamicResource BtnContinuAutoTest}"   Style="{StaticResource IndustrialToolbarButtonStyle}" />
+            <Button Height="30" Command="{Binding PauseAutoTestCommand}" Content="{DynamicResource BtnPauseAutoTest}" Style="{StaticResource IndustrialToolbarButtonStyle}" />
+            <Button Height="30" Command="{Binding CloseTestCommand}" Content="{DynamicResource StopTest }" Style="{StaticResource IndustrialToolbarButtonStyle}"  />
+            <Button Height="30" Command="{Binding StopAutoTestCommand}" Content="{DynamicResource BtnStopAutoTest}" Style="{StaticResource IndustrialToolbarButtonStyle}" />
         </ToolBar>
     </Grid>
 </UserControl>

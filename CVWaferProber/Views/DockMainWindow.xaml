@@ -297,24 +297,21 @@
             </avalon:LayoutRoot>
         </avalon:DockingManager>
 
-        <StatusBar Grid.Row="3">
-            <StatusBarItem Width="150">
-                <TextBlock Text="{Binding AppVersion}" />
-            </StatusBarItem>
-            <!--<Separator/>-->
-            <!--  右边区域：连接状态图标和信息  -->
+        <StatusBar Grid.Row="3" Height="26">
+            <StatusBarItem  Content="{Binding AppVersion}" />
+            <StatusBarItem  Content="{Binding ToolsBarConfig.CameraPosition}"/>
+
+
             <StatusBarItem HorizontalAlignment="Right">
-                <StackPanel Margin="0,0,10,0" Orientation="Horizontal">
-                    <!--  连接状态指示器  -->
-                    <!--  Command="{Binding ShowRCConnectionSettingsCommand}"  -->
+                <StackPanel  Orientation="Horizontal">
                     <Button
                         Padding="5,0"
                         MouseDoubleClick="Button_Rc_MouseDoubleClick"
                         Style="{StaticResource StatusButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse
-                                Width="12"
-                                Height="12"
+                                Width="18"
+                                Height="18"
                                 Margin="0,0,8,0"
                                 Stroke="Gray"
                                 StrokeThickness="1">
@@ -325,23 +322,21 @@
                             <TextBlock VerticalAlignment="Center" Text="{Binding RcConnectionInfo.StatusMessage}" />
                         </StackPanel>
                     </Button>
-                    <!--  分隔线  -->
+
                     <Separator
                         Width="2"
                         Height="15"
                         Margin="0,0,15,0"
                         Background="#CCCCCC" />
 
-                    <!--  连接状态指示器  -->
-                    <!--  Command="{Binding ReconnectDevCommand}"  -->
                     <Button
                         Padding="0,0"
                         MouseDoubleClick="Button_DoubleClick"
                         Style="{StaticResource StatusButtonStyle}">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse
-                                Width="12"
-                                Height="12"
+                                Width="18"
+                                Height="18"
                                 Margin="0,0,8,0"
                                 Stroke="Gray"
                                 StrokeThickness="1">
