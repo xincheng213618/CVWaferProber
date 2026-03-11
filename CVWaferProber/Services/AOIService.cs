@@ -7,6 +7,7 @@ using CVMysql;
 using CVWaferProber.Core.Config;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
+using CVWaferProber.Core.Recipes;
 using CVWaferProber.ViewModels;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
@@ -20,6 +21,7 @@ using System.Diagnostics.Metrics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -76,6 +78,7 @@ namespace CVWaferProber.Services
         // 标记当前是否已经完成测试（完成后切换Die一律批量加载）
         private bool _testCompletedForCurrentDie;
         private DieViewModel _currentDieVM;
+
         public CVCamImagerViewModel CustomImageVM { get; private set; }
         public CVSpectrumViewModel CustomIVLVM { get; private set; }
         public ChipMappingControlViewModel CustomMappingVM { get; private set; }
@@ -86,6 +89,56 @@ namespace CVWaferProber.Services
             this.CustomMappingVM = mainVM.CustomMappingVM;
         }
 
+        /// <summary>
+        /// 获取AOI Recipe中Luminance的阈值设置（用户设置的最小值和最大值）
+        /// </summary>
+        /// <returns>返回(Min, Max)元组，如果获取失败返回(null, null)</returns>
+        private (double? Min, double? Max) GetLuminanceThresholds()
+        {
+            try
+            {
+                // 获取AOI Recipes实例（单例）
+                var aoiRecipe = AOIRecipes.Instance;
+
+                // 获取AOIRecipes类型的所有属性
+                var properties = aoiRecipe.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+                // 查找名称为"Luminance"的属性
+                var luminanceProperty = properties.FirstOrDefault(p => p.Name == "Luminance");
+
+                if (luminanceProperty != null)
+                {
+                    // 获取属性值，应该为RecipeBase类型
+                    if (luminanceProperty.GetValue(aoiRecipe) is RecipeBase recipeBase)
+                    {
+                        logger.Debug($"Successfully got Luminance thresholds - Min: {recipeBase.Min}, Max: {recipeBase.Max}");
+                        return (recipeBase.Min, recipeBase.Max);
+                    }
+                }
+
+                // 如果没有找到Luminance属性，尝试查找包含Luminance的其他属性
+                var alternativeProperty = properties.FirstOrDefault(p =>
+                    p.Name.Contains("Luminance", StringComparison.OrdinalIgnoreCase) &&
+                    p.PropertyType == typeof(RecipeBase));
+
+                if (alternativeProperty != null)
+                {
+                    if (alternativeProperty.GetValue(aoiRecipe) is RecipeBase recipeBase)
+                    {
+                        logger.Debug($"Found alternative Luminance property '{alternativeProperty.Name}' - Min: {recipeBase.Min}, Max: {recipeBase.Max}");
+                        return (recipeBase.Min, recipeBase.Max);
+                    }
+                }
+
+                logger.Warn("Luminance threshold property not found in AOI Recipe");
+                return (null, null);
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Failed to get Luminance thresholds from Recipe", ex);
+                return (null, null);
+            }
+        }
         protected override ChipStatus GetResultStatus(string serialNumber)
         {
             return GetDieResultStatus(serialNumber);
@@ -173,8 +226,67 @@ namespace CVWaferProber.Services
             dieViewModel.ChangeStatus(ChipStatus.TESTING);
             ClearResult();
             await RunFlowAsync(selectedWPFlow, dieViewModel, hasNext, tranStatus);
+            // 测试完成后，检查Luminance阈值并更新状态
+            await CheckLuminanceThresholdAndUpdateStatus(dieViewModel);
         }
 
+        /// <summary>
+        /// 检查Luminance阈值并更新状态
+        /// </summary>
+        private async Task CheckLuminanceThresholdAndUpdateStatus(DieViewModel dieViewModel)
+        {
+            try
+            {
+                // 等待一小段时间确保数据加载完成
+                await Task.Delay(500);
+
+                double? actualLuminance = null;
+
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    if (CustomIVLVM != null)
+                    {
+                        // 重新加载当前die的光谱数据以确保获取最新值
+                        CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
+                        var measurements = CustomIVLVM.Measurements;
+                        if (measurements != null && measurements.Count > 0)
+                        {
+                            actualLuminance = measurements[0].Luminance;
+                        }
+                    }
+                });
+
+                if (actualLuminance.HasValue)
+                {
+                    var (minThreshold, maxThreshold) = GetLuminanceThresholds();
+
+                    if (minThreshold.HasValue && maxThreshold.HasValue)
+                    {
+                        if (actualLuminance.Value < minThreshold.Value || actualLuminance.Value > maxThreshold.Value)
+                        {
+                            await Application.Current.Dispatcher.InvokeAsync(() =>
+                            {
+                                dieViewModel.ChangeStatus(ChipStatus.AOI_NG);
+                                logger.Info($"Luminance out of range ({actualLuminance}) -> Updated status to AOI_NG for Die {dieViewModel.SerialNumber}");
+                            });
+                        }
+                        else
+                        {
+                            await Application.Current.Dispatcher.InvokeAsync(() =>
+                            {
+                                dieViewModel.ChangeStatus(ChipStatus.OK);
+                                logger.Info($"Luminance within range ({actualLuminance}) -> Updated status to OK for Die {dieViewModel.SerialNumber}");
+                            });
+                        }
+                        // 如果已经在其他地方设置为OK，这里可以保持不变
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Failed to check Luminance threshold", ex);
+            }
+        }
         private void ClearResult()
         {
             Application.Current?.Dispatcher?.Invoke(() =>
@@ -936,21 +1048,21 @@ namespace CVWaferProber.Services
             }
 
             // 读取全局配置的IVL导出路径
-            string ivlRootPath = ConfigManager.Config.ExportPathSettings?.AoiExportPath ?? @"D:\Project\AOI";
-            if (!Directory.Exists(ivlRootPath))
-            {
-                Directory.CreateDirectory(ivlRootPath);
-                logger.Info($"Create IVL export directory：{ivlRootPath}");
-            }
+            //string ivlRootPath = ConfigManager.Config.ExportPathSettings?.AoiExportPath ?? @"D:\Project\AOI";
+            //if (!Directory.Exists(ivlRootPath))
+            //{
+            //    Directory.CreateDirectory(ivlRootPath);
+            //    logger.Info($"Create IVL export directory：{ivlRootPath}");
+            //}
 
-            // 导出IVL数据（如果有）
-            if (measurements != null && measurements.Any() && wavelengths != null && wavelengths.Length > 0)
-            {
-                string ivlFileName = $"IVL_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-                string ivlFullExportPath = Path.Combine(ivlRootPath, ivlFileName);
-                CustomIVLVM.ExportToCsv(ivlFullExportPath, measurements, wavelengths);
-                logger.Info($"IVL data exported to：{ivlFullExportPath}");
-            }
+            //// 导出IVL数据（如果有）
+            //if (measurements != null && measurements.Any() && wavelengths != null && wavelengths.Length > 0)
+            //{
+            //    string ivlFileName = $"IVL_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            //    string ivlFullExportPath = Path.Combine(ivlRootPath, ivlFileName);
+            //    CustomIVLVM.ExportToCsv(ivlFullExportPath, measurements, wavelengths);
+            //    logger.Info($"IVL data exported to：{ivlFullExportPath}");
+            //}
 
             #region aoi数据导出
             string aoiRootPath = ConfigManager.Config.ExportPathSettings?.AoiExportPath ?? @"D:\Project\AOI";
