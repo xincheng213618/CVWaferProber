@@ -1207,14 +1207,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             OverviewPower_LPlotModel.InvalidatePlot(true);
         }
         #region EQE
-        // 新增：EQE值计算方法（可根据实际公式调整）
-        //private double CalculateEQEValue(float wavelength, float intensity)
-        //{
-        //    // 示例计算逻辑：EQE = 光谱强度 × 波长系数（可根据实际需求修改）
-        //    double wavelengthFactor = wavelength / 1000; // 波长归一化
-        //    double eqe = intensity * wavelengthFactor * 100; // 转换为百分比
-        //    return Math.Max(0, eqe); // 确保非负
-        //}
+      
 
         // EQE测量完成标记（确保仅测量后导出）
         private bool _isEQEMeasured = false;
