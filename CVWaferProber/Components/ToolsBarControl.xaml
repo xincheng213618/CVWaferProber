@@ -119,6 +119,7 @@
             <Button Width="150" Height="30" Command="{Binding PauseAutoTestCommand}" Content="{DynamicResource BtnPauseAutoTest}" Style="{StaticResource IndustrialToolbarButtonStyle}" />
             <Button Width="200" Height="30" Command="{Binding CloseTestCommand}" Content="{DynamicResource StopTest }" Style="{StaticResource IndustrialToolbarButtonStyle}"  />
             <Button Width="200" Height="30" Command="{Binding StopAutoTestCommand}" Content="{DynamicResource BtnStopAutoTest}" Style="{StaticResource IndustrialToolbarButtonStyle}" />
+            <TextBlock Text="{Binding Config.CameraPosition}"/>
         </ToolBar>
     </Grid>
 </UserControl>

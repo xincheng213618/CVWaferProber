@@ -1,4 +1,5 @@
-﻿using CVWaferProber.Core.ViewModels;
+﻿using ColorVision.UI;
+using CVWaferProber.Core.ViewModels;
 using System.Windows.Input;
 using WaferComm.Client;
 using WaferComm.Core;
@@ -12,10 +13,19 @@ namespace CVWaferProber.ViewModels
         public static DateTime? RunDateTime { get; set; }
     }
 
+    public class ToolsBarConfig : ViewModelBase, IConfig
+    {
+
+        public string CameraPosition { get => _CameraPosition; set { _CameraPosition = value;OnPropertyChanged(); } }
+        private string _CameraPosition = "MainCamera";
+    }
 
 
     public class ToolsBarViewModel : ViewModelBase
     {
+
+        public ToolsBarConfig Config =>ConfigService.Instance.GetRequiredService<ToolsBarConfig>(); 
+
         private readonly IWaferProberClient _client;
         private readonly IStateMachine _proberState;
         private readonly MainViewModel _mainVM;
@@ -99,18 +109,23 @@ namespace CVWaferProber.ViewModels
         {
             await _client?.ZToIntegratingSphereAsync();
             _mainVM?.ToIntegratingSphere();
+            Config.CameraPosition = "IntegratingSphere";
         }
 
         private async void ToAuxCamera()
         {
             await _client?.ZToAuxCameraAsync();
             _mainVM?.ToAuxCamera();
+            Config.CameraPosition = "AuxCamera";
+
         }
 
         private async void ToMainCamera()
         {
             await _client?.ZToMainCameraAsync();
             _mainVM?.ToMainCamera();
+            Config.CameraPosition = "MainCamera";
+
         }
 
         private async void LiftAll()

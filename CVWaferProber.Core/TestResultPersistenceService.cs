@@ -38,20 +38,6 @@ namespace CVWaferProber.Core
             }
         }
 
-        //public static List<TestResultDto> Load()
-        //{
-        //    try
-        //    {
-        //        if (!File.Exists(FilePath)) return new List<TestResultDto>();
-        //        var json = File.ReadAllText(FilePath);
-        //        var list = JsonConvert.DeserializeObject<List<TestResultDto>>(json);
-        //        return list ?? new List<TestResultDto>();
-        //    }
-        //    catch
-        //    {
-        //        return new List<TestResultDto>();
-        //    }
-        //}
 
         public static async Task<List<TestResultDto>> LoadAsync()
         {
