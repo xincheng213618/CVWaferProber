@@ -333,7 +333,9 @@ namespace CVWaferProber.Services
                     // 清空Measurements和Wavelengths，确保数据隔离
                     CustomIVLVM.ClearResult();
                     // 重新加载当前die的光谱数据（仅加载当前die）
-                    CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
+                   // CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
+                    // 加载当前die的数据（这会更新所有数据集合和总览图）
+                    CustomIVLVM.LoadData(dieViewModel.SerialNumber, dieViewModel.IsIVLCameraEnabled);
                 }
             });
             // 尝试加载光谱数据，但不强制要求
@@ -407,8 +409,6 @@ namespace CVWaferProber.Services
         {
             try
             {
-
-
 
                 // 构造IV专用文件名
                 string fileName = $"IV_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";

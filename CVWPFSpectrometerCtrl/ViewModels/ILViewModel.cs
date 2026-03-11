@@ -160,6 +160,24 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             double maxLuminance = Measurements.Max(m => m.Luminance); // 亮度最大值
             double minLuminance = Measurements.Min(m => m.Luminance);// 亮度最小值
 
+            // 防止最大值和最小值相等导致 OxyPlot 报错（给定一个默认最小跨度，比如0.1）
+            if (Math.Abs(maxCurrent - minCurrent) < 1e-6)
+            {
+                maxCurrent += 0.1;
+                minCurrent -= 0.1;
+            }
+            if (Math.Abs(maxLuminance - minLuminance) < 1e-6)
+            {
+                maxLuminance += 0.1;
+                minLuminance -= 0.1;
+            }
+
+            // 扩1%留边距（注意对于0和负数的处理）
+            maxCurrent = maxCurrent > 0 ? maxCurrent * 1.01 : maxCurrent * 0.99;
+            minCurrent = minCurrent > 0 ? minCurrent * 0.99 : minCurrent * 1.01;
+            maxLuminance = maxLuminance > 0 ? maxLuminance * 1.01 : maxLuminance * 0.99;
+            minLuminance = minLuminance > 0 ? minLuminance * 0.99 : minLuminance * 1.01;
+           
 
             // 3. 修复轴匹配：用完整标题（含单位）匹配，或用Position匹配（更稳定）
             var xAxis = PlotModel.Axes.OfType<LinearAxis>().FirstOrDefault(a => a.Position == AxisPosition.Bottom);
