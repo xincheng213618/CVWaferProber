@@ -170,6 +170,7 @@
                     Command="{Binding OpenAboutCommand}"
                     Header="{DynamicResource Menu.About}"
                     InputGestureText="Alt+T" />
+                <MenuItem Header="Test"  Click="Test_click"/>
             </MenuItem>
             <!--<MenuItem
                 Command="{Binding OpenCommand}"

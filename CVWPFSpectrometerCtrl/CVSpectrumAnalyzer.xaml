@@ -8,7 +8,9 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:oxy="http://oxyplot.org/wpf"
     xmlns:wpf="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
-    mc:Ignorable="d" d:Width="1280" d:Height="720">
+    d:Height="720"
+    d:Width="1280"
+    mc:Ignorable="d">
     <UserControl.DataContext>
         <local:CVSpectrumViewModel />
     </UserControl.DataContext>
@@ -32,9 +34,22 @@
                 </Grid.RowDefinitions>
 
                 <!--  顶部按钮区域  -->
-                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5,0,5,0" >
-                    <Button x:Name="btnExport" Width="80" Margin="0,0,5,0"  Command="{Binding ExportCommand}" CommandParameter="{Binding SelectedTabIndex}" Content="{DynamicResource Export CSV}" IsEnabled="True" />
-                    <Button Content="OpenExportFloder" Click="OpenIvlFloder_Click" Margin="0,0,5,0" />
+                <StackPanel
+                    Grid.Row="0"
+                    Margin="5,0,5,0"
+                    Orientation="Horizontal">
+                    <Button
+                        x:Name="btnExport"
+                        Width="80"
+                        Margin="0,0,5,0"
+                        Command="{Binding ExportCommand}"
+                        CommandParameter="{Binding SelectedTabIndex}"
+                        Content="{DynamicResource Export CSV}"
+                        IsEnabled="True" />
+                    <Button
+                        Margin="0,0,5,0"
+                        Click="OpenIvlFloder_Click"
+                        Content="OpenExportFloder" />
                 </StackPanel>
 
                 <!--  原内层TabControl（总览/光谱/IV等）  -->
@@ -246,7 +261,6 @@
                                 ItemsSource="{Binding Measurements}"
                                 RowHeight="25"
                                 SelectedItem="{Binding SelectedMeasurement}"
-                                
                                 SelectionChanged="measurementsGrid_SelectionChanged"
                                 SelectionMode="Single"
                                 SelectionUnit="FullRow">
@@ -388,8 +402,8 @@
                     <TabItem Header="IV">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="33*"/>
-                                <ColumnDefinition Width="581*"/>
+                                <ColumnDefinition Width="33*" />
+                                <ColumnDefinition Width="581*" />
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -399,8 +413,9 @@
                             <!--  第一行  -->
                             <StackPanel
                                 Grid.Row="0"
+                                Grid.ColumnSpan="2"
                                 Margin="5,5,5,2"
-                                Orientation="Horizontal" Grid.ColumnSpan="2">
+                                Orientation="Horizontal">
                                 <TextBlock VerticalAlignment="Center" Text="{DynamicResource Chart.LineColor}" />
                                 <ComboBox
                                     Width="80"
@@ -508,24 +523,28 @@
                             <oxy:PlotView
                                 x:Name="IVPanel"
                                 Grid.Row="1"
+                                Grid.ColumnSpan="2"
                                 Margin="5,5,5,5"
                                 Loaded="PlotView_Loaded"
-                                Model="{Binding IVPlotModel}" Grid.ColumnSpan="2" />
+                                Model="{Binding IVPlotModel}" />
 
                             <oxy:PlotView
                                 x:Name="VIPanel"
                                 Grid.Row="1"
+                                Grid.ColumnSpan="2"
                                 Margin="5,5,5,5"
                                 Loaded="PlotView_Loaded"
-                                Model="{Binding VIPlotModel}" Grid.ColumnSpan="2" />
+                                Model="{Binding VIPlotModel}" />
 
 
 
 
 
                             <!--  IV DataGrid区域  -->
-                            <DataGrid x:Name="IVDataGrid"
+                            <DataGrid
+                                x:Name="IVDataGrid"
                                 Grid.Row="2"
+                                Grid.ColumnSpan="2"
                                 Margin="5,5,5,5"
                                 AutoGenerateColumns="False"
                                 CanUserAddRows="False"
@@ -536,11 +555,10 @@
                                 GridLinesVisibility="All"
                                 IsReadOnly="True"
                                 ItemsSource="{Binding IVMeasurements}"
-                                
-                                SelectionChanged="DataGrid_SelectionChanged"
                                 RowHeight="25"
+                                SelectionChanged="DataGrid_SelectionChanged"
                                 SelectionMode="Single"
-                                SelectionUnit="FullRow" Grid.ColumnSpan="2">
+                                SelectionUnit="FullRow">
 
                                 <DataGrid.Columns>
                                     <DataGridTextColumn
@@ -1090,9 +1108,22 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <StackPanel Grid.Row="0"  Orientation="Horizontal" Margin="5,0,5,0" >
-                    <Button  x:Name="btnExport1"   Width="80"  Margin="0,0,5,0"  Command="{Binding CustomEQEVM.ExportCommand}" CommandParameter="{Binding CustomEQEVM.SelectedTabIndex}"   Content="{DynamicResource Export CSV}"  IsEnabled="True" />
-                    <Button Content="OpenExportFloder" Click="OpenEQEFloder_Click" Margin="0,0,5,0" />
+                <StackPanel
+                    Grid.Row="0"
+                    Margin="5,0,5,0"
+                    Orientation="Horizontal">
+                    <Button
+                        x:Name="btnExport1"
+                        Width="80"
+                        Margin="0,0,5,0"
+                        Command="{Binding CustomEQEVM.ExportCommand}"
+                        CommandParameter="{Binding CustomEQEVM.SelectedTabIndex}"
+                        Content="{DynamicResource Export CSV}"
+                        IsEnabled="True" />
+                    <Button
+                        Margin="0,0,5,0"
+                        Click="OpenEQEFloder_Click"
+                        Content="OpenExportFloder" />
                 </StackPanel>
 
                 <Grid x:Name="EQEGrid" Grid.Row="1">
@@ -1113,24 +1144,24 @@
                     </Grid.RowDefinitions>
 
                     <StackPanel
-                    Grid.Row="1"
-                    Grid.ColumnSpan="6"
-                    Margin="5,5,5,2"
-                    Orientation="Horizontal">
+                        Grid.Row="1"
+                        Grid.ColumnSpan="6"
+                        Margin="5,5,5,2"
+                        Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center" Text="{DynamicResource Chart.LineColor}" />
                         <ComboBox
-                        Width="80"
-                        Height="20"
-                        Margin="2"
-                        SelectedValue="{Binding CustomEQEVM.EQELineColor, Mode=TwoWay}">
+                            Width="80"
+                            Height="20"
+                            Margin="2"
+                            SelectedValue="{Binding CustomEQEVM.EQELineColor, Mode=TwoWay}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
                                         <!--  显示颜色块  -->
                                         <Rectangle
-                                        Width="20"
-                                        Height="20"
-                                        Fill="{Binding}" />
+                                            Width="20"
+                                            Height="20"
+                                            Fill="{Binding}" />
                                         <!--  显示颜色名称  -->
                                         <TextBlock Margin="5,0" Text="{Binding Color.Name}" />
                                     </StackPanel>
@@ -1201,112 +1232,112 @@
 
                         </ComboBox>
                         <CheckBox
-                        x:Name="chkShowAll1"
-                        Margin="5"
-                        VerticalAlignment="Center"
-                        Content="{DynamicResource Sp.ShowAllData}"
-                        IsChecked="{Binding CustomEQEVM.IsShowAllEQEData, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            x:Name="chkShowAll1"
+                            Margin="5"
+                            VerticalAlignment="Center"
+                            Content="{DynamicResource Sp.ShowAllData}"
+                            IsChecked="{Binding CustomEQEVM.IsShowAllEQEData, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         <CheckBox
-                        x:Name="chkShowDetails1"
-                        Margin="5"
-                        VerticalAlignment="Center"
-                        Content="{DynamicResource Sp.ShowSpectralDetail}"
-                        IsChecked="{Binding CustomEQEVM.IsShowSpectralDetail, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            x:Name="chkShowDetails1"
+                            Margin="5"
+                            VerticalAlignment="Center"
+                            Content="{DynamicResource Sp.ShowSpectralDetail}"
+                            IsChecked="{Binding CustomEQEVM.IsShowSpectralDetail, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
                     <!--  图表区域  -->
                     <oxy:PlotView
-                    Grid.Row="2"
-                    Grid.ColumnSpan="6"
-                    Margin="5,29,5,0"
-                    Loaded="PlotView_Loaded"
-                    Model="{Binding CustomEQEVM.EQEPlotModel}" />
+                        Grid.Row="2"
+                        Grid.ColumnSpan="6"
+                        Margin="5,29,5,0"
+                        Loaded="PlotView_Loaded"
+                        Model="{Binding CustomEQEVM.EQEPlotModel}" />
                     <!--  Model="{Binding PlotModel}"  -->
                     <!--  EQE的DataGrid（共享SP的Measurements数据源）  -->
                     <!--  DataGrid区域  -->
                     <DataGrid
-                    x:Name="eqemeasurementsGrid"
-                    Grid.Row="3"
-                    Grid.ColumnSpan="6"
-                    Margin="5,2,5,2"
-                    AutoGenerateColumns="False"
-                    CanUserAddRows="False"
-                    CanUserDeleteRows="False"
-                    CanUserReorderColumns="False"
-                    CanUserResizeRows="False"
-                    CanUserSortColumns="True"
-                    GridLinesVisibility="All"
-                    IsReadOnly="True"
-                    ItemsSource="{Binding CustomEQEVM.Measurements}"
-                    RowHeight="25"
-                    SelectedItem="{Binding CustomEQEVM.SelectedEQERow, Mode=TwoWay}"
-                    SelectionMode="Single"
-                    SelectionUnit="FullRow">
+                        x:Name="eqemeasurementsGrid"
+                        Grid.Row="3"
+                        Grid.ColumnSpan="6"
+                        Margin="5,2,5,2"
+                        AutoGenerateColumns="False"
+                        CanUserAddRows="False"
+                        CanUserDeleteRows="False"
+                        CanUserReorderColumns="False"
+                        CanUserResizeRows="False"
+                        CanUserSortColumns="True"
+                        GridLinesVisibility="All"
+                        IsReadOnly="True"
+                        ItemsSource="{Binding CustomEQEVM.Measurements}"
+                        RowHeight="25"
+                        SelectedItem="{Binding CustomEQEVM.SelectedEQERow, Mode=TwoWay}"
+                        SelectionMode="Single"
+                        SelectionUnit="FullRow">
 
                         <DataGrid.Columns>
                             <DataGridTextColumn
-                            Width="50"
-                            Binding="{Binding No}"
-                            Header="{DynamicResource GridHeader.No}" />
+                                Width="50"
+                                Binding="{Binding No}"
+                                Header="{DynamicResource GridHeader.No}" />
                             <!--<DataGridTextColumn
                             Width="80"
                             Binding="{Binding Meas_Id}"
                             Header="{DynamicResource Sp.MeasurementBatch}" />-->
                             <DataGridTextColumn
-                            Width="130"
-                            Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}"
-                            Header="{DynamicResource Sp.Time}" />
+                                Width="130"
+                                Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss'}"
+                                Header="{DynamicResource Sp.Time}" />
                             <DataGridTextColumn
-                            Width="80"
-                            Binding="{Binding Voltage, StringFormat='F4'}"
-                            Header="{DynamicResource Sp.Voltage}" />
+                                Width="80"
+                                Binding="{Binding Voltage, StringFormat='F4'}"
+                                Header="{DynamicResource Sp.Voltage}" />
                             <DataGridTextColumn
-                            Width="80"
-                            Binding="{Binding Current, StringFormat='F4'}"
-                            Header="{DynamicResource Sp.Current}" />
+                                Width="80"
+                                Binding="{Binding Current, StringFormat='F4'}"
+                                Header="{DynamicResource Sp.Current}" />
                             <DataGridTextColumn
-                            Width="80"
-                            Binding="{Binding EQE, StringFormat='F4'}"
-                            Header="{DynamicResource EQE.EQE}" />
+                                Width="80"
+                                Binding="{Binding EQE, StringFormat='F4'}"
+                                Header="{DynamicResource EQE.EQE}" />
                             <DataGridTextColumn
-                            Width="80"
-                            Binding="{Binding LuminousFlux, StringFormat='F4'}"
-                            Header="{DynamicResource EQE.LuminousFlux}" />
+                                Width="80"
+                                Binding="{Binding LuminousFlux, StringFormat='F4'}"
+                                Header="{DynamicResource EQE.LuminousFlux}" />
                             <DataGridTextColumn
-                            Width="80"
-                            Binding="{Binding RadiantFlux, StringFormat='F4'}"
-                            Header="{DynamicResource EQE.RadiantFlux}" />
+                                Width="80"
+                                Binding="{Binding RadiantFlux, StringFormat='F4'}"
+                                Header="{DynamicResource EQE.RadiantFlux}" />
                             <DataGridTextColumn
-                            Width="80"
-                            Binding="{Binding LuminousEfficacy, StringFormat='F4'}"
-                            Header="{DynamicResource EQE.LuminousEfficacy}" />
+                                Width="80"
+                                Binding="{Binding LuminousEfficacy, StringFormat='F4'}"
+                                Header="{DynamicResource EQE.LuminousEfficacy}" />
                             <DataGridTextColumn
-                            Width="80"
-                            Binding="{Binding CIE_x, StringFormat='F4'}"
-                            Header="{DynamicResource ColorCoordinateX}" />
+                                Width="80"
+                                Binding="{Binding CIE_x, StringFormat='F4'}"
+                                Header="{DynamicResource ColorCoordinateX}" />
                             <DataGridTextColumn
-                            Width="80"
-                            Binding="{Binding CIE_y, StringFormat='F4'}"
-                            Header="{DynamicResource ColorCoordinateY}" />
+                                Width="80"
+                                Binding="{Binding CIE_y, StringFormat='F4'}"
+                                Header="{DynamicResource ColorCoordinateY}" />
                             <DataGridTextColumn
-                            Width="80"
-                            Binding="{Binding CIE_u, StringFormat='F4'}"
-                            Header="{DynamicResource ColorCoordinateU}" />
+                                Width="80"
+                                Binding="{Binding CIE_u, StringFormat='F4'}"
+                                Header="{DynamicResource ColorCoordinateU}" />
                             <DataGridTextColumn
-                            Width="80"
-                            Binding="{Binding CIE_v, StringFormat='F4'}"
-                            Header="{DynamicResource ColorCoordinateV}" />
+                                Width="80"
+                                Binding="{Binding CIE_v, StringFormat='F4'}"
+                                Header="{DynamicResource ColorCoordinateV}" />
                             <DataGridTextColumn
-                            Width="80"
-                            Binding="{Binding CCT, StringFormat='F1'}"
-                            Header="{DynamicResource ColorTemperature}" />
+                                Width="80"
+                                Binding="{Binding CCT, StringFormat='F1'}"
+                                Header="{DynamicResource ColorTemperature}" />
                             <DataGridTextColumn
-                            Width="80"
-                            Binding="{Binding PeakWavelength, StringFormat='F4'}"
-                            Header="{DynamicResource DominantWavelength}" />
+                                Width="80"
+                                Binding="{Binding PeakWavelength, StringFormat='F4'}"
+                                Header="{DynamicResource DominantWavelength}" />
                             <DataGridTextColumn
-                            Width="80"
-                            Binding="{Binding PeakIntensity, StringFormat='F4'}"
-                            Header="{DynamicResource PeakWavelength}" />
+                                Width="80"
+                                Binding="{Binding PeakIntensity, StringFormat='F4'}"
+                                Header="{DynamicResource PeakWavelength}" />
                         </DataGrid.Columns>
 
                         <DataGrid.RowStyle>
@@ -1321,28 +1352,28 @@
                     </DataGrid>
                     <!--  右侧：波段数据表格  -->
                     <DataGrid
-                    x:Name="WavelengthGrid1"
-                    Grid.RowSpan="4"
-                    Grid.Column="6"
-                    Margin="2,2,2,2"
-                    AutoGenerateColumns="False"
-                    Background="#FFFFFF"
-                    BorderBrush="#DEE2E6"
-                    BorderThickness="1"
-                    CanUserAddRows="False"
-                    CanUserDeleteRows="False"
-                    CanUserReorderColumns="False"
-                    CanUserResizeRows="False"
-                    CanUserSortColumns="True"
-                    ColumnWidth="Auto"
-                    GridLinesVisibility="Horizontal"
-                    IsReadOnly="True"
-                    ItemsSource="{Binding CustomEQEVM.SpectralGridItems}"
-                    RowHeight="22"
-                    SelectedItem="{Binding CustomEQEVM.SelectedMeasurement}"
-                    SelectionMode="Single"
-                    SelectionUnit="FullRow"
-                    VerticalScrollBarVisibility="Auto">
+                        x:Name="WavelengthGrid1"
+                        Grid.RowSpan="4"
+                        Grid.Column="6"
+                        Margin="2,2,2,2"
+                        AutoGenerateColumns="False"
+                        Background="#FFFFFF"
+                        BorderBrush="#DEE2E6"
+                        BorderThickness="1"
+                        CanUserAddRows="False"
+                        CanUserDeleteRows="False"
+                        CanUserReorderColumns="False"
+                        CanUserResizeRows="False"
+                        CanUserSortColumns="True"
+                        ColumnWidth="Auto"
+                        GridLinesVisibility="Horizontal"
+                        IsReadOnly="True"
+                        ItemsSource="{Binding CustomEQEVM.SpectralGridItems}"
+                        RowHeight="22"
+                        SelectedItem="{Binding CustomEQEVM.SelectedMeasurement}"
+                        SelectionMode="Single"
+                        SelectionUnit="FullRow"
+                        VerticalScrollBarVisibility="Auto">
                         <DataGrid.Style>
                             <Style TargetType="DataGrid">
                                 <Setter Property="Width" Value="0" />
@@ -1355,10 +1386,10 @@
                                             <BeginStoryboard>
                                                 <Storyboard>
                                                     <DoubleAnimation
-                                                    FillBehavior="HoldEnd"
-                                                    Storyboard.TargetProperty="Width"
-                                                    To="200"
-                                                    Duration="0:0:0.2" />
+                                                        FillBehavior="HoldEnd"
+                                                        Storyboard.TargetProperty="Width"
+                                                        To="200"
+                                                        Duration="0:0:0.2" />
                                                 </Storyboard>
                                             </BeginStoryboard>
                                         </DataTrigger.EnterActions>
@@ -1366,10 +1397,10 @@
                                             <BeginStoryboard>
                                                 <Storyboard>
                                                     <DoubleAnimation
-                                                    FillBehavior="Stop"
-                                                    Storyboard.TargetProperty="Width"
-                                                    To="0"
-                                                    Duration="0:0:0.2" />
+                                                        FillBehavior="Stop"
+                                                        Storyboard.TargetProperty="Width"
+                                                        To="0"
+                                                        Duration="0:0:0.2" />
                                                 </Storyboard>
                                             </BeginStoryboard>
                                         </DataTrigger.ExitActions>

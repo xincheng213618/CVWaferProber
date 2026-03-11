@@ -701,6 +701,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             // 自动调整轴范围（适配所有数据）
             //AutoAdjustAxisRange();
+
             PlotModel.InvalidatePlot(true); // 刷新图表
         }
 
@@ -985,117 +986,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         }
 
 
-        //#region 自动导出CSV
-        //// CVSpectrumViewModel类内新增
-        //private static readonly ILog logger = LogManager.GetLogger(typeof(CVSpectrumViewModel));
-
-        //// 新增：存储当前测试的序号、行、列
-        //public string CurrentDieIndex { get; set; }
-        //public string CurrentDieRow { get; set; }
-        //public string CurrentDieCol { get; set; }
-
-
-        //// 存储当前测试的SerialNumber（用于自动导出）
-        //public string CurrentSerialNumber { get; set; }
-
-        ///*****************自动导出**********************/
-        //private void AutoExportData()
-        //{
-        //    try
-        //    {
-        //        if (string.IsNullOrWhiteSpace(CurrentSerialNumber))
-        //        {
-        //            logger.Warn("自动导出失败：SerialNumber为空");
-        //            return;
-        //        }
-
-        //        // 1. 构造导出路径（与截图目录结构完全一致）
-        //        DateTime now = DateTime.Now;
-        //        string dateFolder = now.ToString("yyyy-MM-dd");
-        //        // 根路径
-        //        string basePath = Path.Combine("F:", "Projects", "Micro LED", "星钥", "software", dateFolder, "WaferID", "IVL");
-        //        string basePath1 = Path.Combine("F:", "Projects", "Micro LED", "星钥", "software", dateFolder, "WaferID");
-        //        // 确保基础目录存在
-        //        if (!Directory.Exists(basePath))
-        //        {
-        //            Directory.CreateDirectory(basePath);
-        //            logger.Info($"创建基础目录：{basePath}");
-        //        }
-
-        //        // 2. 创建die_Location文件夹（格式：die_Location_yyyyMMddHHmmss）
-        //        string dieLocationFolder = $"die_Location_{now.ToString("yyyyMMddHHmmss")}";
-        //        string dieLocationPath = Path.Combine(basePath, dieLocationFolder);
-        //        if (!Directory.Exists(dieLocationPath))
-        //        {
-        //            Directory.CreateDirectory(dieLocationPath);
-        //            logger.Info($"创建DieLocation目录：{dieLocationPath}");
-        //        }
-
-        //        // 3. 导出各类型数据（光谱/IV/IL/VL）
-        //        List<string> exportedFiles = new List<string>();
-
-        //        // 3.1 导出光谱数据
-        //        if (Measurements.Any())
-        //        {
-        //            string spectrumFile = $"Spectrum_{CurrentSerialNumber}_{now:HHmmss}.csv";
-        //            string spectrumPath = Path.Combine(dieLocationPath, spectrumFile);
-        //            ExportToCsv(spectrumPath, Measurements, Wavelengths, Measurements.First().fPlambda);
-        //            exportedFiles.Add(spectrumFile);
-        //            logger.Info($"已导出光谱数据：{spectrumPath}");
-        //        }
-
-        //        // 3.2 导出IV数据
-        //        if (IVMeasurements.Any())
-        //        {
-        //            string ivFile = $"IV_{CurrentSerialNumber}_{now:HHmmss}.csv";
-        //            string ivPath = Path.Combine(dieLocationPath, ivFile);
-        //            ExportToCsv(IVMeasurements, ivPath, 1); // startIndex=1对应IV
-        //            exportedFiles.Add(ivFile);
-        //            logger.Info($"已导出IV数据：{ivPath}");
-        //        }
-
-        //        // 3.3 导出IL数据
-        //        if (ILMeasurements.Any())
-        //        {
-        //            string ilFile = $"IL_{CurrentSerialNumber}_{now:HHmmss}.csv";
-        //            string ilPath = Path.Combine(dieLocationPath, ilFile);
-        //            ExportToCsv(ILMeasurements, ilPath, 2); // startIndex=2对应IL
-        //            exportedFiles.Add(ilFile);
-        //            logger.Info($"已导出IL数据：{ilPath}");
-        //        }
-
-        //        // 3.4 导出VL数据
-        //        if (VLMeasurements.Any())
-        //        {
-        //            string vlFile = $"VL_{CurrentSerialNumber}_{now:HHmmss}.csv";
-        //            string vlPath = Path.Combine(dieLocationPath, vlFile);
-        //            ExportToCsv(VLMeasurements, vlPath, 0); // startIndex=0对应VL
-        //            exportedFiles.Add(vlFile);
-        //            logger.Info($"已导出VL数据：{vlPath}");
-        //        }
-
-        //        // 4. 更新Summary.csv（汇总记录，追加模式）
-        //        string summaryPath = Path.Combine(basePath1, "Summary.csv");
-        //        bool isNewSummary = !File.Exists(summaryPath);
-        //        using (StreamWriter sw = new StreamWriter(summaryPath, true, Encoding.UTF8))
-        //        {
-        //            // 首次创建时写入表头
-        //            if (isNewSummary)
-        //            {
-        //                sw.WriteLine("导出时间,SerialNumber,DieLocation文件夹,导出文件列表");
-        //            }
-        //            // 写入当前导出记录
-        //            sw.WriteLine($"{now:yyyy-MM-dd HH:mm:ss},{CurrentSerialNumber},{dieLocationFolder},{string.Join(";", exportedFiles)}");
-        //        }
-        //        logger.Info($"已更新汇总文件：{summaryPath}");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        logger.Error("自动导出失败", ex);
-        //        MessageBox.Show($"自动导出错误：{ex.Message}", "提示", MessageBoxButton.OK, MessageBoxImage.Error);
-        //    }
-        //}
-        //#endregion
+   
         private void IVResetStatus(object obj)
         {
             //OverviewIVPlotModel?.InvalidatePlot(true);
@@ -1512,11 +1403,13 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             EQEPlotModel.Axes.Add(xAxis);
             EQEPlotModel.Axes.Add(yAxis);
+            RefreshAxisRange(EQEPlotModel);
             Wavelengths = new float[4001];
             for (int i = 0; i < 4001; i++)
             {
                 Wavelengths[i] = 380 + i / 10.0f;
             }
+
         }
 
         // 新增：更新EQE图表线条颜色
@@ -1639,9 +1532,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             {
                 BringEQESeriesToFront(SelectedMeasurement.No);
             }
-
+            RefreshAxisRange(EQEPlotModel);
             EQEPlotModel.InvalidatePlot(true);
-
             // ========== 批量EQE测量完成，标记并触发导出 ==========
             IsEQEMeasured = true;
         }
@@ -1695,6 +1587,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             EQEPlotModel.Series.Clear();
             EQEPlotModel.Series.Add(lineSeries);
+            //RefreshAxisRange(EQEPlotModel);
             EQEPlotModel.InvalidatePlot(true);
             // ========== EQE测量完成，标记并触发导出 ==========
             IsEQEMeasured = true;
@@ -2895,6 +2788,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
 
             PlotModel.Series.Clear();
             PlotModel.Series.Add(lineSeries);
+            RefreshAxisRange(EQEPlotModel);
             PlotModel.InvalidatePlot(true);
             //
             //if (_spectralCtrl != null)

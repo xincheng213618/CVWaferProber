@@ -122,8 +122,6 @@ namespace CVWaferProber.Services
             {
                 AutoExportData(dieViewModel);
             }
-
-
         }
         public abstract void AutoExportData(DieViewModel dieViewModel);
         public abstract void ResultDisplay(DieViewModel dieViewModel);
