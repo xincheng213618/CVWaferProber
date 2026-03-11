@@ -47,8 +47,8 @@
             <Setter Property="Foreground" Value="{DynamicResource Industrial.Button.Foreground}" />
             <Setter Property="BorderBrush" Value="{DynamicResource Industrial.Button.Border}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Margin" Value="4,0" />
-            <Setter Property="Padding" Value="5,2" />
+            <Setter Property="Margin" Value="10,0" />
+            <Setter Property="Padding" Value="15,2" />
             <!--  适配30高度按钮的内边距  -->
             <Setter Property="FontSize" Value="13" />
             <!--  核心修改：字体加粗为Bold  -->

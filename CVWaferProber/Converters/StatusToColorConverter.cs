@@ -1,6 +1,7 @@
 ﻿using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Services;
+using System;
 using System.Globalization;
 using System.Windows.Data;
 using Brushes = System.Windows.Media.Brushes;

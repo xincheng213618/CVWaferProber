@@ -1,5 +1,6 @@
 ﻿using ColorVision.UI;
 using CVWaferProber.Core.ViewModels;
+using System;
 using System.Windows.Input;
 using WaferComm.Client;
 using WaferComm.Core;

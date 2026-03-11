@@ -1,8 +1,10 @@
 ﻿using CVWaferProber.ViewModels;
+using System;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media;
+using System.Linq;
 
 namespace CVWaferProber.Converters
 {

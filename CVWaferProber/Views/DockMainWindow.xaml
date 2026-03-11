@@ -97,6 +97,8 @@
                     InputGestureText="Alt+M"
                     IsCheckable="True"
                     IsChecked="{Binding ElementName=AnchorableMapping, Path=IsVisible, Mode=TwoWay}" />
+                <MenuItem Header="判定参数"  Click="Recipe_Click"/>
+                <MenuItem Header="点检窗口"  Click="MenuItem_Click"/>
                 <MenuItem
                     x:Name="MenuCameraPanel"
                     Header="{DynamicResource Menu.Layout.Title.AOI}"

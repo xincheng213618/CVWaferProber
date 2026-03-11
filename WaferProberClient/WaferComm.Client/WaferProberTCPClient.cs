@@ -443,6 +443,12 @@ namespace WaferComm.Client
         public Task ZAllUpAsync() => SendCommandAsync("gu");
         public Task ZToMainCameraAsync() => SendCommandAsync("gm");
         public Task ZToAuxCameraAsync() => SendCommandAsync("ga");
+
+
+        public Task ZToMainCameraCheckAsync() => SendCommandAsync("gmc");
+        public Task ZToAuxCameraCheckAsync() => SendCommandAsync("gac");
+
+
         public Task ZToIntegratingSphereAsync() => SendCommandAsync("gi");
         public Task GetCurrentDieAxisAsync() => SendCommandAsync("raxis");
 
@@ -455,5 +461,7 @@ namespace WaferComm.Client
             _tcpClient?.Dispose();
             _receiveCts?.Dispose();
         }
+
+
     }
 }

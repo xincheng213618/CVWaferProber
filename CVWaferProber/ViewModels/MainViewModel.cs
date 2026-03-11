@@ -12,9 +12,11 @@ using CVWaferProber.Views;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
+using System;
 using System.ComponentModel;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using WaferComm.Core;
@@ -410,28 +412,17 @@ namespace CVWaferProber.ViewModels
         #region 原有方法
         private void OpenProberDeviceDebug(object obj)
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            var window = new DevProberDebugWindow
             {
-                var window = new DevProberDebugWindow
-                {
-                    DataContext = new DevProberDebugViewModel(
-                        ProberClientService.Instance.ProberClient,
-                        ProberClientService.Instance.StateMachine,
-                        _connectionInfo
-                    )
-                };
+                DataContext = new DevProberDebugViewModel(
+                    ProberClientService.Instance.ProberClient,
+                    ProberClientService.Instance.StateMachine,
+                    _connectionInfo
+                ),
+                Owner = Application.Current.GetActiveWindow()
+            };
 
-                // 在子窗口加载完成后设置 Owner
-                window.Loaded += (s, e) =>
-                {
-                    if (Application.Current.MainWindow != null && Application.Current.MainWindow.IsVisible)
-                    {
-                        window.Owner = Application.Current.MainWindow;
-                    }
-                };
-
-                window.ShowDialog();
-            });
+            window.ShowDialog();
         }
 
         public void OpenDeviceManager(object obj)

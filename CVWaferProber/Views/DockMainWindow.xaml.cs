@@ -1,11 +1,14 @@
 ﻿using CVAVMControl;
 using CVWaferProber.Log;
+using CVWaferProber.Recipes;
 using CVWaferProber.Services;
 using CVWaferProber.ViewModels;
 using CVWPFSpectrometerCtrl;
 using log4net;
 using log4net.Config;
+using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
@@ -614,6 +617,18 @@ namespace CVWaferProber.Views
 
 
 
+        }
+
+        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            WindowCheck windowCheck = new WindowCheck() { WindowStartupLocation =WindowStartupLocation.CenterOwner, Owner = System.Windows.Application.Current.GetActiveWindow() };
+            windowCheck.Show();
+        }
+
+        private void Recipe_Click(object sender, RoutedEventArgs e)
+        {
+            WindowRecipe windowRecipe = new WindowRecipe() { WindowStartupLocation = WindowStartupLocation.CenterOwner, Owner = System.Windows.Application.Current.GetActiveWindow() };
+            windowRecipe.Show();
         }
     }
 }

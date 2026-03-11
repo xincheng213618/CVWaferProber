@@ -1,5 +1,6 @@
 ﻿using ColorVision.Services.Proxy;
 using CVWaferProber.Core.ViewModels;
+using System;
 
 namespace CVWaferProber.ViewModels
 {

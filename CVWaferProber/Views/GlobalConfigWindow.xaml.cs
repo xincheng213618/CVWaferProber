@@ -108,7 +108,7 @@ namespace CVWaferProber.Views
         /// </summary>
         private void BrowseFolder(string description, ref string targetPath, TextBox targetTextBox)
         {
-            var folderDialog = new FolderBrowserDialog
+            var folderDialog = new System.Windows.Forms.FolderBrowserDialog
             {
                 Description = description,
                 SelectedPath = targetPath,

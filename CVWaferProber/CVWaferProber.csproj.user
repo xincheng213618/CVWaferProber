@@ -54,6 +54,12 @@
     <Compile Update="Views\TestWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Views\WindowCheck.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Recipes\WindowRecipe.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Components\DevProberDebugControl.xaml">

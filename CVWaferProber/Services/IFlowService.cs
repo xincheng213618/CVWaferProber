@@ -1,4 +1,6 @@
 ﻿using ColorVision.Core.Message.Response;
+using System;
+using System.Threading.Tasks;
 
 namespace CVWaferProber.Services
 {

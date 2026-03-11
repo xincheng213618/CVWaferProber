@@ -5,6 +5,9 @@ using CVWaferProber.Core.Events;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.ViewModels;
 using Newtonsoft.Json;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Threading;
 using DieViewModel = CVWaferProber.ViewModels.DieViewModel; // WPF用这个，WinForm替换为 System.Windows.Forms
 

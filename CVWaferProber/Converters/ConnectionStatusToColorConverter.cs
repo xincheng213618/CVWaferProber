@@ -1,4 +1,5 @@
 ﻿using CVWaferProber.Models;
+using System;
 using System.Globalization;
 using System.Windows.Data;
 using Brushes = System.Windows.Media.Brushes;

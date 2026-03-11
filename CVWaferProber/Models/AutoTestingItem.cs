@@ -1,4 +1,5 @@
 ﻿using CVWaferProber.ViewModels;
+using System.Collections.Generic;
 using WaferComm.StateMachine;
 
 namespace CVWaferProber.Models

@@ -1,4 +1,5 @@
 ﻿using CVWaferProber.External;
+using System;
 using System.Windows;
 using System.Windows.Threading;
 using MessageBox = System.Windows.MessageBox;

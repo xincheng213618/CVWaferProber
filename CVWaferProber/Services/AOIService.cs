@@ -12,11 +12,14 @@ using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
 using log4net;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -107,14 +110,31 @@ namespace CVWaferProber.Services
                                 var detailResult = JsonConvert.DeserializeObject<DetailResult_CommFile_V2>(resultJson);
                                 if (detailResult != null && !string.IsNullOrEmpty(detailResult.ResultFileName) && File.Exists(detailResult.ResultFileName))
                                 {
-                                    string darkResultJson = File.ReadAllText(detailResult.ResultFileName);
-                                    var darkResult = JsonConvert.DeserializeObject<DarkResultDto>(darkResultJson);
-
-                                    Application.Current.Dispatcher.Invoke(() =>
+                                    if (result.ImgFileType == -13)
                                     {
-                                        dieViewModel.AOIGradeLevel = darkResult?.GradeLevel ?? "na";
-                                        dieViewModel.BlackPattern = darkResult?.GradeLevel ?? "na";
-                                    });
+                                        string FindPixelDefectsForRebuildPicGradingV2Str = File.ReadAllText(detailResult.ResultFileName);
+                                        var FindPixelDefectsForRebuildPicGradingV2 = JsonConvert.DeserializeObject<FindPixelDefectsForRebuildPicGradingV2>(FindPixelDefectsForRebuildPicGradingV2Str);
+                                        if (FindPixelDefectsForRebuildPicGradingV2 != null)
+                                        {
+                                            Application.Current.Dispatcher.Invoke(() =>
+                                            {
+                                                dieViewModel.AOIGradeLevel = FindPixelDefectsForRebuildPicGradingV2?.GradeLevel ?? "na";
+                                            });
+                                        }
+                                    }
+                                    if (result.ImgFileType == 49)
+                                    {
+
+                                        string darkResultJson = File.ReadAllText(detailResult.ResultFileName);
+                                        var darkResult = JsonConvert.DeserializeObject<DarkResultDto>(darkResultJson);
+
+                                        Application.Current.Dispatcher.Invoke(() =>
+                                        {
+                                            dieViewModel.BlackPattern = darkResult?.GradeLevel ?? "na";
+                                        });
+                                    }
+
+
                                 }
                             }
                             break;
@@ -870,6 +890,9 @@ namespace CVWaferProber.Services
         #region 2
         public override void AutoExportData(DieViewModel dieViewModel)
         {
+
+
+
             // 检查Die状态，只有OK状态才导出数据吧
             if (dieViewModel.Status != ChipStatus.OK)
             {
@@ -1349,9 +1372,22 @@ namespace CVWaferProber.Services
             public string ResultFileName { get; set; } = string.Empty;
         }
 
-        public class DarkResultDto
+        public class FindPixelDefectsForRebuildPicGradingV2
         {
             public string GradeLevel { get; set; } = string.Empty;
+
+            public double MaxDefectDensity { get; set; }
+
+            public string TimeStamp { get; set; }
+
+        }
+
+        public class DarkResultDto
+        {
+            public int BrightCount { get; set; } = 0;
+            public string GradeLevel { get; set; } = string.Empty;
+            public string TimeStamp { get; set; }
+
         }
 
         #region 调用CV_algorithm.dll计算光学兴奋纯度

@@ -8,6 +8,8 @@ using RichTextBox = System.Windows.Controls.RichTextBox;
 using TextBox = System.Windows.Controls.TextBox;
 using System.Windows.Media;
 using Brushes = System.Windows.Media.Brushes;
+using System;
+using System.Linq;
 
 namespace CVWaferProber.Log
 {
