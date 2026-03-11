@@ -1205,10 +1205,18 @@ namespace CVWaferProber.Services
             {
                 // 调用dll计算兴奋纯度
                 purityValue = CalculateExcitationPurity(measurement.CIE_x, measurement.CIE_y);
+                
                 logger.Debug($"CIE({measurement.CIE_x}, {measurement.CIE_y}) => Purity: {purityValue}");
             }
+            double a = purityValue * 100;
+            if (a > 100)
+            {
+                a = 100;
+                logger.Warn($"Excitation Purity is greater than 100, set to 100");
+            }
             // 转为百分比（*100）并格式化，保留2位小数
-            string purityPercent = purityValue > 0 ? (purityValue * 100).ToString("F2") : "0";
+            string purityPercent = purityValue > 0 ? a.ToString("F2") : "0";
+            
             row.Add(purityPercent); // 21. Excitation Purity(%) 兴奋纯度
             #endregion
             // row.Add(measurement.fPur != 0 ? (measurement.fPur * 100).ToString("F2") : "0"); // 21. Excitation Purity(%)
@@ -1391,49 +1399,49 @@ namespace CVWaferProber.Services
                     if (purityResult?.result?.ExcitationPurity != null)
                     {
                         excitationPurity = purityResult.result.ExcitationPurity.Value;
-                        logger.Info($"计算兴奋纯度成功：{excitationPurity}（原始值）= {excitationPurity * 100:F2}%");
+                        logger.Info($"Calculation of excitation purity successful.：{excitationPurity}（Original value）= {excitationPurity * 100:F2}%");
                     }
                     else
                     {
-                        logger.Warn($"解析兴奋纯度结果失败：JSON格式不匹配。原始JSON：{resultJson}");
+                        logger.Warn($"Parse excitation purity result failed: JSON format mismatch. Original JSON: {resultJson}");
 
                         // 尝试直接解析为数值（作为备选方案）
                         if (double.TryParse(resultJson, System.Globalization.NumberStyles.Any,
                             System.Globalization.CultureInfo.InvariantCulture, out double directValue))
                         {
                             excitationPurity = directValue;
-                            logger.Info($"使用直接数值解析成功：{excitationPurity}");
+                            logger.Info($"Direct numerical parsing successful.：{excitationPurity}");
                         }
                     }
                 }
                 else
                 {
-                    logger.Error($"调用CV_algorithm.dll失败，错误码：{result}");
+                    logger.Error($"Failed to call CV_algorithm.dll, error code：{result}");
 
                     // 根据错误码提供更具体的错误信息
                     switch (result)
                     {
                         case CVAlgorithmNative.CV_AliResType.FAILED:
-                            logger.Error("失败");
+                            logger.Error("Failed");
                             break;
                         case CVAlgorithmNative.CV_AliResType.PART_SUCCESS:
-                            logger.Error($"部分成功（如计算不同类型的畸变）");
+                            logger.Error($" Partially successful");
                             break;
                         case CVAlgorithmNative.CV_AliResType.ERR_LENGTH:
-                            logger.Error("接收的内存长度不够");
+                            logger.Error("Insufficient received memory length.");
                             break;
                         case CVAlgorithmNative.CV_AliResType.ERR_FILE:
-                            logger.Error("结果存文件失败，扩容后仍失败");
+                            logger.Error("Result file saving failed; still failed after capacity expansion.");
                             break;
                         case CVAlgorithmNative.CV_AliResType.ERR_JSON:
-                            logger.Error("JSON格式异常");
+                            logger.Error("JSON format exception");
                             break;
                     }
                 }
             }
             catch (Exception ex)
             {
-                logger.Error($"计算兴奋纯度异常：{ex.Message}", ex);
+                logger.Error($"Calculation of excitation purity abnormal.：{ex.Message}", ex);
             }
 
             return excitationPurity;
