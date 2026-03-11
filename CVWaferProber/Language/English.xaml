@@ -187,6 +187,10 @@
     <sys:String x:Key="Menu.UserManual">User Manual</sys:String>
     <sys:String x:Key="Menu.About">About</sys:String>
     <sys:String x:Key="Menu.Exit">Exit(Alt+F4)</sys:String>
+
+    <sys:String x:Key="Menu.EvaluationParameters">Evaluation Parameters</sys:String>
+    <sys:String x:Key="Menu.InspectionWindow">Inspection Window</sys:String>
+
     <!--  设备调试相关  -->
     <sys:String x:Key="Menu.DeviceDebug">Device(D)</sys:String>
     <sys:String x:Key="Menu.ProberDeviceDebug">ProberDebug</sys:String>

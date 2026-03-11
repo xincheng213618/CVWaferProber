@@ -13,10 +13,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:CVWaferProber.ViewModels"
     Title="{DynamicResource AppTitle}"
+    d:Height="720"
+    d:Width="1280"
     Icon="/Img/LOG.ico"
     WindowStartupLocation="CenterScreen"
     WindowState="Maximized"
-    mc:Ignorable="d" d:Width="1280" d:Height="720">
+    mc:Ignorable="d">
 
     <Window.DataContext>
         <vm:MainViewModel />
@@ -97,8 +99,8 @@
                     InputGestureText="Alt+M"
                     IsCheckable="True"
                     IsChecked="{Binding ElementName=AnchorableMapping, Path=IsVisible, Mode=TwoWay}" />
-                <MenuItem Header="判定参数"  Click="Recipe_Click"/>
-                <MenuItem Header="点检窗口"  Click="MenuItem_Click"/>
+                <MenuItem Click="Recipe_Click" Header="{DynamicResource Menu.EvaluationParameters}" />
+                <MenuItem Click="MenuItem_Click" Header="{DynamicResource Menu.InspectionWindow}" />
                 <MenuItem
                     x:Name="MenuCameraPanel"
                     Header="{DynamicResource Menu.Layout.Title.AOI}"
@@ -172,7 +174,7 @@
                     Command="{Binding OpenAboutCommand}"
                     Header="{DynamicResource Menu.About}"
                     InputGestureText="Alt+T" />
-                <MenuItem Header="Test"  Click="Test_click"/>
+                <MenuItem Click="Test_click" Header="Test" />
             </MenuItem>
             <!--<MenuItem
                 Command="{Binding OpenCommand}"
@@ -300,12 +302,12 @@
         </avalon:DockingManager>
 
         <StatusBar Grid.Row="3" Height="26">
-            <StatusBarItem  Content="{Binding AppVersion}" />
-            <StatusBarItem  Content="{Binding ToolsBarConfig.CameraPosition}"/>
+            <StatusBarItem Content="{Binding AppVersion}" />
+            <StatusBarItem Content="{Binding ToolsBarConfig.CameraPosition}" />
 
 
             <StatusBarItem HorizontalAlignment="Right">
-                <StackPanel  Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal">
                     <Button
                         Padding="5,0"
                         MouseDoubleClick="Button_Rc_MouseDoubleClick"

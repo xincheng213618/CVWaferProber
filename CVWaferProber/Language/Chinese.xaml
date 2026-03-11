@@ -186,6 +186,8 @@
     <sys:String x:Key="Menu.Language">语言(L)</sys:String>
     <sys:String x:Key="Menu.Language.Chinese">中文</sys:String>
     <sys:String x:Key="Menu.Language.English">英文</sys:String>
+    <sys:String x:Key="Menu.EvaluationParameters">判定参数</sys:String>
+    <sys:String x:Key="Menu.InspectionWindow">点检窗口</sys:String>
 
     <sys:String x:Key="GlobalConfig.ExportPath">自动导出默认路径:</sys:String>
     <sys:String x:Key="GlobalConfig.Browse">浏览</sys:String>
@@ -744,14 +746,14 @@
     <sys:String x:Key="TestStep_Completed">测试完成</sys:String>
     <sys:String x:Key="TestStep_Failed">测试失败</sys:String>
 
-    <!-- 以下是系统设备管理 -->
+    <!--  以下是系统设备管理  -->
     <sys:String x:Key="SysDev_Refresh">刷新</sys:String>
     <sys:String x:Key="SysDev_Open">打开</sys:String>
     <sys:String x:Key="SysDev_Close">关闭</sys:String>
     <sys:String x:Key="SysDev_ShowOnlineOnly">只显示在线设备</sys:String>
     <sys:String x:Key="SysDev_SearchPlaceholder">搜索...</sys:String>
 
-    <!-- 列标题 -->
+    <!--  列标题  -->
     <sys:String x:Key="SysDev_Status">注册状态</sys:String>
     <sys:String x:Key="SysDev_DeviceCode">设备编码</sys:String>
     <sys:String x:Key="SysDev_DeviceName">设备名称</sys:String>
@@ -759,14 +761,14 @@
     <sys:String x:Key="SysDev_LastActivity">最后活动</sys:String>
     <sys:String x:Key="SysDev_Actions">操作</sys:String>
 
-    <!-- 状态文本 -->
+    <!--  状态文本  -->
     <sys:String x:Key="SysDev_Online">已注册</sys:String>
     <sys:String x:Key="SysDev_Offline">未注册</sys:String>
     <sys:String x:Key="SysDev_Running">运行中</sys:String>
     <sys:String x:Key="SysDev_Standby">待机</sys:String>
     <sys:String x:Key="SysDev_Maintenance">维护中</sys:String>
 
-    <!-- 状态栏 -->
+    <!--  状态栏  -->
     <sys:String x:Key="SysDev_TotalDevices">设备总数:</sys:String>
     <sys:String x:Key="SysDev_OnlineCount">已注册:</sys:String>
     <sys:String x:Key="SysDev_OfflineCount">未注册:</sys:String>
@@ -777,7 +779,7 @@
     <sys:String x:Key="SysDev_Of">/</sys:String>
     <sys:String x:Key="SysDev_Devices">台设备</sys:String>
 
-    <!-- 消息 -->
+    <!--  消息  -->
     <sys:String x:Key="SysDev_DeviceOpened">设备已打开</sys:String>
     <sys:String x:Key="SysDev_DeviceClosed">设备已关闭</sys:String>
     <sys:String x:Key="SysDev_DeviceListRefreshed">设备列表已刷新 - 共{0}台，{1}台在线</sys:String>
@@ -787,5 +789,5 @@
 
     <sys:String x:Key="StopTest">停止测试</sys:String>
 
-    
+
 </ResourceDictionary>
