@@ -8,6 +8,7 @@
     xmlns:fa6="http://schemas.fontawesome.com/icons/fonts"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:ChipMapping.ViewModels"
+    xmlns:properties ="clr-namespace:ChipMapping.Properties"
     Background="White"
     mc:Ignorable="d">
 
@@ -175,7 +176,7 @@
             <TextBlock
                 Margin="5,0"
                 VerticalAlignment="Center"
-                Text="Zoom:" />
+                Text="{x:Static properties:Resources.Zoom}" />
             <Slider
                 Width="60"
                 Maximum="5"
@@ -208,7 +209,7 @@
             <TextBlock
                 Margin="5,0"
                 VerticalAlignment="Center"
-                Text="Temperature:" />
+                Text="{x:Static properties:Resources.Temperature}" />
             <TextBox IsEnabled="False" Text="{Binding Temperatures, StringFormat='{}{0}℃'}" />
             <Separator />
             <TextBlock

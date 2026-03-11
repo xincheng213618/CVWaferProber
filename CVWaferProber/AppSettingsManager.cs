@@ -51,7 +51,7 @@ namespace CVWaferProber
             }
             else
             {
-                Lang.SetLanguage("en-US");
+                Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("en");
             }
         }
 

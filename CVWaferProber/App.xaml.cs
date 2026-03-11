@@ -100,13 +100,15 @@ namespace CVWaferProber
             // 设置未处理异常捕获
             DispatcherUnhandledException += App_DispatcherUnhandledException;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-            
+
+            AppSettingsManager.InitializeLanguage();
+            // 初始化语言（读取Settings中的默认语言）
+            RegisterGlobalStyles();
+
             _mainWindow = new DockMainWindow();
             Application.Current.MainWindow = _mainWindow;
 
-            // 初始化语言（读取Settings中的默认语言）
-            AppSettingsManager.InitializeLanguage();
-            RegisterGlobalStyles();
+
            
 
             
