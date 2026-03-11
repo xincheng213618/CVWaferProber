@@ -179,6 +179,9 @@ namespace CVWaferProber.Services
                             OLED_AOI_Result_E eResult = JsonConvert.DeserializeObject<OLED_AOI_Result_E>(aoi[0].Result);
                             status = ChipStatusTool.GetStatusFromErrCode(eResult.ResultCode);
                             if (logger.IsInfoEnabled) logger.InfoFormat("AOI Result => {0}", status.ToString());
+
+
+
                             break;
                         }
                     }
