@@ -76,6 +76,19 @@ namespace CVWPFCamImageCtrl
         {
             if (mat.Empty()) return null;
 
+            // 【新增】处理 32位浮点单通道 (CV_32FC1) 图像，防止显示全白
+            if (mat.Type() == MatType.CV_32FC1)
+            {
+                using (Mat normalizedMat = new Mat())
+                {
+                    // 使用 MinMax 归一化，找出最大最小值，并等比例映射到 0~65535 范围内
+                    // 目标类型设置为 CV_16UC1 (16位无符号整数单通道)，对应 WPF 的 Gray16
+                    Cv2.Normalize(mat, normalizedMat, 0, 65535, NormTypes.MinMax, (int)MatType.CV_16UC1);
+
+                    return normalizedMat.ToBitmapSource();
+                }
+            }
+
             // 根据通道数进行颜色转换
             if (mat.Channels() == 3)
             {
@@ -89,6 +102,8 @@ namespace CVWPFCamImageCtrl
 
             return mat.ToBitmapSource();
         }
+
+
         /// <summary>
         /// 读取图像原始字节数据（无UI依赖，可在后台线程执行）
         /// </summary>
