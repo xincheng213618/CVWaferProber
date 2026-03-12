@@ -1,17 +1,11 @@
 ﻿using ColorVision.UI;
 using CVWaferProber.Core.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CVWaferProber.Core.Recipes
 {
-    public class AOIRecipes:ViewModelBase,IConfig
+    public class IVLRecipes : ViewModelBase, IConfig
     {
-        public static AOIRecipes Instance => ConfigService.Instance.GetRequiredService<AOIRecipes>();
+        public static IVLRecipes Instance => ConfigService.Instance.GetRequiredService<IVLRecipes>();
 
         public RecipeBase Luminance { get => _Luminance; set { _Luminance = value; OnPropertyChanged(); } }
         private RecipeBase _Luminance = new RecipeBase();

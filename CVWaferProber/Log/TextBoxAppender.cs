@@ -1,15 +1,12 @@
 ﻿using log4net.Appender;
 using log4net.Core;
+using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
-using System.Windows.Threading;
-using RichTextBox = System.Windows.Controls.RichTextBox;
-using TextBox = System.Windows.Controls.TextBox;
 using System.Windows.Media;
-using Brushes = System.Windows.Media.Brushes;
-using System;
-using System.Linq;
+using System.Windows.Threading;
 
 namespace CVWaferProber.Log
 {

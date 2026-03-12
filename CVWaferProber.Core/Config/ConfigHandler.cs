@@ -100,57 +100,21 @@ namespace ColorVision.UI
 
         public Dictionary<Type, IConfig> Configs { get; set; }
 
-        public IConfig GetRequiredService(Type type)
+        private IConfig GetOrCreateConfig(Type type)
         {
             ArgumentNullException.ThrowIfNull(type);
+
             if (!typeof(IConfig).IsAssignableFrom(type))
                 throw new ArgumentException("Type must implement IConfig.", nameof(type));
 
-            if (Configs.TryGetValue(type, out var service))
+            if (Configs.TryGetValue(type, out var existing))
             {
-                return (IConfig)service;
+                return existing;
             }
 
+            IConfig instance = null;
             var configName = type.Name;
-            try
-            {
-                if (jsonObject.TryGetValue(configName, out JToken configToken))
-                {
-                    var config = configToken.ToObject(type, new JsonSerializer { Formatting = Formatting.Indented });
-                    if (config is IConfig configInstance)
-                    {
-                        Configs[type] = configInstance;
-                    }
-                }
-                else
-                {
-                    if (Activator.CreateInstance(type) is IConfig defaultConfig)
-                    {
-                        Configs[type] = defaultConfig;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                log.Warn(ex);
-                if (Activator.CreateInstance(type) is IConfig defaultConfig)
-                {
-                    Configs[type] = defaultConfig;
-                }
-            }
-            // 此处递归调用是为了确保缓存和异常处理逻辑一致
-            return GetRequiredService(type);
-        }
 
-        public T1 GetRequiredService<T1>() where T1 : IConfig
-        {
-            var type = typeof(T1);
-            if (Configs.TryGetValue(type, out var service))
-            {
-                return (T1)service;
-            }
-
-            var configName = type.Name;
             try
             {
                 if (jsonObject.TryGetValue(configName, out JToken configToken))
@@ -158,27 +122,40 @@ namespace ColorVision.UI
                     var config = configToken.ToObject(type, JsonSerializer.Create(JsonSerializerSettings));
                     if (config is IConfig configInstance)
                     {
-                        Configs[type] = configInstance;
+                        instance = configInstance;
                     }
                 }
-                else
+
+                if (instance == null)
                 {
-                    if (Activator.CreateInstance(type) is IConfig defaultConfig)
-                    {
-                        Configs[type] = defaultConfig;
-                    }
+                    instance = Activator.CreateInstance(type) as IConfig;
                 }
             }
             catch (Exception ex)
             {
                 log.Warn(ex);
-                if (Activator.CreateInstance(type) is IConfig defaultConfig)
-                {
-                    Configs[type] = defaultConfig;
-                }
+                instance = Activator.CreateInstance(type) as IConfig;
             }
-            return GetRequiredService<T1>();
+
+            if (instance == null)
+            {
+                throw new InvalidOperationException($"无法创建配置实例: {type.FullName}");
+            }
+
+            Configs[type] = instance;
+            return instance;
         }
+
+        public T1 GetRequiredService<T1>() where T1 : IConfig
+        {
+            return (T1)GetOrCreateConfig(typeof(T1));
+        }
+
+        public IConfig GetRequiredService(Type type)
+        {
+            return GetOrCreateConfig(type);
+        }
+
 
         public void SaveConfigs(string fileName)
         {
