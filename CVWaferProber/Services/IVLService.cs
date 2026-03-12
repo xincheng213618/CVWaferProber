@@ -345,6 +345,7 @@ namespace CVWaferProber.Services
             });
             // 尝试加载光谱数据，但不强制要求
             ObservableCollection<SpectrumMeasurement> measurements = null;
+            ObservableCollection<IVMeasurement> ivMeasurements = null;
             float[] wavelengths = null;
 
             try
@@ -354,6 +355,7 @@ namespace CVWaferProber.Services
                     if (CustomIVLVM != null)
                     {
                         measurements = CustomIVLVM.Measurements;
+                        ivMeasurements = CustomIVLVM.IVMeasurements;
                         wavelengths = CustomIVLVM.Wavelengths;
                     }
                 });
@@ -364,14 +366,14 @@ namespace CVWaferProber.Services
                 // 继续执行，使用空的光谱数据
             }
 
-            var Measurements = CustomIVLVM.Measurements;
+           /* var Measurements = CustomIVLVM.Measurements;
             var Wavelengths = CustomIVLVM.Wavelengths;
             var ivMeasurements = CustomIVLVM?.IVMeasurements;
 
 
-            // 这里如果配置的时IV 就走IV的解析
+            //这里如果配置的时IV 就走IV的解析
             if (WaferProberData.SelectedWPFlow.Name == "IV-Sweep")
-            {       
+            {
                 // 读取全局配置的IVL导出路径（核心修改点2）
                 string ivRootPath = ConfigManager.Config.ExportPathSettings?.IvExportPath ?? @"D:\Project\IV";
                 // 确保目录存在
@@ -382,32 +384,67 @@ namespace CVWaferProber.Services
                 }
                 ExportIVDataOnly(serialNumber, ivRootPath, ivMeasurements);
                 return;
-            }
+            }*/
+            // ========== 核心判断逻辑：基于数据特征而非流程类型 ==========
+            bool hasSpectrumData = measurements?.Any() == true && wavelengths != null && wavelengths.Length > 0;
+            bool hasIVDataOnly = ivMeasurements?.Any() == true && !hasSpectrumData;
 
-            // 读取全局配置的IVL导出路径（核心修改点2）
-            string ivlRootPath = ConfigManager.Config.ExportPathSettings?.IvlExportPath ?? @"D:\Project\IVL";
-          
-            // 确保目录存在
-            if (!Directory.Exists(ivlRootPath))
+            // 1. 只有IV数据 → 导出IV表格
+            if (hasIVDataOnly)
             {
-                Directory.CreateDirectory(ivlRootPath);
-                logger.Info($"Create IVL export directory：{ivlRootPath}");
+                string ivRootPath = ConfigManager.Config.ExportPathSettings?.IvExportPath ?? @"D:\Project\IV";
+                if (!Directory.Exists(ivRootPath))
+                {
+                    Directory.CreateDirectory(ivRootPath);
+                    logger.Info($"Create IV export directory：{ivRootPath}");
+                }
+                ExportIVDataOnly(serialNumber, ivRootPath, ivMeasurements);
+                logger.Info($"Export IV data only for {serialNumber} (no spectrum data)");
+                return;
             }
-
-            logger.Info($"ivl measurements Count {measurements.Count}");
-
-            // 6. 常规IVL数据导出（原有逻辑） // 构造文件名（包含SerialNumber+时间戳）
-            if (measurements?.Any() == true && wavelengths != null && wavelengths.Length > 0)
+            // 2. 有光谱数据 → 导出IVL表格
+            if (hasSpectrumData)
             {
+                string ivlRootPath = ConfigManager.Config.ExportPathSettings?.IvlExportPath ?? @"D:\Project\IVL";
+                if (!Directory.Exists(ivlRootPath))
+                {
+                    Directory.CreateDirectory(ivlRootPath);
+                    logger.Info($"Create IVL export directory：{ivlRootPath}");
+                }
+
                 string fileName = $"IVL_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
                 string fullExportPath = Path.Combine(ivlRootPath, fileName);
                 CustomIVLVM?.ExportToCsv(fullExportPath, measurements, wavelengths);
                 logger.Info($"Full IVL data exported to：{fullExportPath}");
+                return;
             }
-            else
-            {
-                logger.Info("No valid IV/IVL data available for export");
-            }
+
+            // 3. 无有效数据 → 跳过导出
+            logger.Info($"No valid IV/IVL data for {serialNumber}, skip export");
+            //// 读取全局配置的IVL导出路径（核心修改点2）
+            //string ivlRootPath = ConfigManager.Config.ExportPathSettings?.IvlExportPath ?? @"D:\Project\IVL";
+
+            //// 确保目录存在
+            //if (!Directory.Exists(ivlRootPath))
+            //{
+            //    Directory.CreateDirectory(ivlRootPath);
+            //    logger.Info($"Create IVL export directory：{ivlRootPath}");
+            //}
+
+            //logger.Info($"ivl measurements Count {measurements.Count}");
+
+            //// 6. 常规IVL数据导出（原有逻辑） // 构造文件名（包含SerialNumber+时间戳）
+            //if (measurements?.Any() == true && wavelengths != null && wavelengths.Length > 0)
+            //{
+            //    string fileName = $"IVL_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            //    string fullExportPath = Path.Combine(ivlRootPath, fileName);
+            //    CustomIVLVM?.ExportToCsv(fullExportPath, measurements, wavelengths);
+            //    logger.Info($"Full IVL data exported to：{fullExportPath}");
+            //}
+            //else
+            //{
+            //    logger.Info("No valid IV/IVL data available for export");
+            //}
         }
 
         private void ExportIVDataOnly(string serialNumber, string exportPath, ObservableCollection<IVMeasurement> ivMeasurements)
