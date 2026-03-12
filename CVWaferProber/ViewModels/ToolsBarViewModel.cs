@@ -65,25 +65,25 @@ namespace CVWaferProber.ViewModels
                 if (e == "i")
                 {
                     Config.CameraPosition = "EQE";
-                    logger.Info("机台位置 EQE");
+                    logger.Info("Machine position EQE");
 
                 }
                 else if (e == "m")
                 {
                     Config.CameraPosition = "AOI";
-                    logger.Info("机台位置 AOI");
+                    logger.Info("Machine position AOI");
 
                 }
                 else if (e == "a")
                 {
                     Config.CameraPosition = "VAM";
-                    logger.Info("机台位置 VAM");
+                    logger.Info("Machine position VAM");
 
                 }
                 else if (e == "e")
                 {
                     Config.CameraPosition = "e";
-                    logger.Info("机台位置 不在标准位置");
+                    logger.Info("Machine position Out of position");
                 }
             };
 
@@ -145,21 +145,21 @@ namespace CVWaferProber.ViewModels
         {
             if (IsMove)
             {
-                MessageBox.Show("机台正在移动");
+                MessageBox.Show($"{(string)Application.Current.FindResource("Axismoving")}");
                 return;
             }
             IsMove = true;
-            logger.Info("切换机台模式到EQE");
+            logger.Info("Switch to EQE mode.");
 
             await _client?.ZToIntegratingSphereAsync();
             _mainVM?.ToIntegratingSphere();
-            logger.Info("EQE移动完成，查询设备状态");
+            logger.Info("EQE movement completed, checking device status");
 
             Application.Current.Dispatcher.BeginInvoke(async () =>
             {
                 await Task.Delay(100);
                 await _client?.SendCommandAsync("gc");
-                logger.Info("状态查询完成");
+                logger.Info("Status query completed.");
                 IsMove = false;
             });
 
@@ -171,21 +171,21 @@ namespace CVWaferProber.ViewModels
         {
             if (IsMove)
             {
-                MessageBox.Show("机台正在移动");
+                MessageBox.Show($"{(string)Application.Current.FindResource("Axismoving")}");
                 return;
             }
             IsMove = true;
 
-            logger.Info("切换机台模式到VAM");
+            logger.Info("Switch to VAM mode.");
 
             await _client?.ZToAuxCameraAsync();
             _mainVM?.ToAuxCamera();
-            logger.Info("VAM移动完成，查询设备状态");
+            logger.Info("VAM movement completed, checking device status");
             Application.Current.Dispatcher.BeginInvoke(async () =>
             {
                 await Task.Delay(100);
                 await _client?.SendCommandAsync("gc");
-                logger.Info("状态查询完成");
+                logger.Info("Status query completed.");
                 IsMove = false;
             });
 
@@ -195,12 +195,12 @@ namespace CVWaferProber.ViewModels
         {
             if (IsMove)
             {
-                MessageBox.Show("机台正在移动");
+                MessageBox.Show($"{(string)Application.Current.FindResource("Axismoving")}");
                 return;
             }
             IsMove = true;
 
-            logger.Info("切换机台模式到AOI");
+            logger.Info("Switch to AOI mode.");
 
             await _client?.ZToMainCameraAsync();
             _mainVM?.ToMainCamera();
@@ -209,7 +209,7 @@ namespace CVWaferProber.ViewModels
             {
                 await Task.Delay(100);
                 await _client?.SendCommandAsync("gc");
-                logger.Info("状态查询完成");
+                logger.Info("Status query completed.");
                 IsMove = false;
             });
 
@@ -220,11 +220,11 @@ namespace CVWaferProber.ViewModels
         {
             if (IsMove)
             {
-                MessageBox.Show("机台正在移动");
+                MessageBox.Show($"{(string)Application.Current.FindResource("Axismoving")}");
                 return;
             }
             IsMove = true;
-            logger.Info("抬起设备");
+            logger.Info("Raise the equipment");
 
             await _client?.ZAllUpAsync();
 
@@ -232,7 +232,7 @@ namespace CVWaferProber.ViewModels
             {
                 await Task.Delay(100);
                 await _client?.SendCommandAsync("gc");
-                logger.Info("状态查询完成");
+                logger.Info("Status query completed.");
                 IsMove = false;
             });
 

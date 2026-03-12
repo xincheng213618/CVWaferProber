@@ -775,4 +775,5 @@
     <sys:String x:Key="SysDev_NoDeviceSelected">No device selected</sys:String>
 
     <sys:String x:Key="StopTest">StopTest</sys:String>
+    <sys:String x:Key="Axismoving">Axis Moving</sys:String>
 </ResourceDictionary>
