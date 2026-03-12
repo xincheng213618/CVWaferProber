@@ -60,7 +60,7 @@
             <Separator />
 
             <!--  缩放信息显示组  -->
-            <StackPanel Margin="10,0" Orientation="Horizontal">
+            <StackPanel Margin="10,0" Orientation="Horizontal" VerticalAlignment="Center">
                 <!--  缩放滑块  -->
                 <TextBlock FontWeight="Bold" Text="{DynamicResource Zoom level}" />
                 <Slider
