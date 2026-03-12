@@ -148,7 +148,7 @@ namespace CVWaferProber.Services
 
             // 加载图像结果（改为await，确保异步执行）
             await LoadImageResultAsync(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
-
+            var finalStatus = ChipStatus.OK;
             try
             {
                 // 使用Dispatcher确保在UI线程访问ViewModel
