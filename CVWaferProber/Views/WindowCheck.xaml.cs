@@ -1,4 +1,6 @@
-﻿using CVWaferProber.Services;
+﻿using ColorVision.UI;
+using CVWaferProber.Services;
+using CVWaferProber.ViewModels;
 using MySqlX.XDevAPI;
 using System;
 using System.Collections.Generic;
@@ -14,6 +16,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using WaferComm.Client;
+using static OpenTK.Graphics.OpenGL.GL;
 
 namespace CVWaferProber.Views
 {
@@ -30,24 +33,42 @@ namespace CVWaferProber.Views
         {
             InitializeComponent();
         }
+        bool IsRun = false;
 
         private void AOI_Check(object sender, RoutedEventArgs e)
         {
+            if (IsRun)
+            {
+                MessageBox.Show("Is Move");
+                return;
+            }
+
+            IsRun = true;
             Task.Run(async () =>
             {
                 await Client.ZToMainCameraCheckAsync();
+                ConfigService.Instance.GetRequiredService<ToolsBarConfig>().CameraPosition = "AOICheck";
                 logger.Info("ZToMainCameraCheckAsync");
+                IsRun = false;
             });
-
-
         }
 
         private void VAM_Check(object sender, RoutedEventArgs e)
         {
+            if (IsRun)
+            {
+                MessageBox.Show("Is Move");
+                return;
+            }
+
+            IsRun = true;
             Task.Run(async () =>
             {
                 await Client.ZToAuxCameraCheckAsync();
+
+                ConfigService.Instance.GetRequiredService<ToolsBarConfig>().CameraPosition ="VAMCheck";
                 logger.Info("ZToAuxCameraCheckAsync");
+                IsRun = false;
             });
         }
 

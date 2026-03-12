@@ -1,6 +1,7 @@
 ﻿using CVWaferProber.Core.Events;
 using log4net.Repository.Hierarchy;
 using System.Timers;
+using System.Windows;
 using WaferComm.Client;
 using WaferComm.Core;
 using WaferComm.Processors;
@@ -8,6 +9,20 @@ using WaferComm.StateMachine;
 
 namespace WaferComm.StateMachine
 {
+    public static class ProberStateMachineLocation
+    {
+        public static event EventHandler<string> LocationChanged;
+
+        public static void LocationChange(string command)
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                LocationChanged?.Invoke(command, command);
+            });
+        }
+
+    }
+
     /// <summary>
     /// 探针台状态机
     /// </summary>
@@ -42,6 +57,7 @@ namespace WaferComm.StateMachine
                 _currentState = value;
             }
         }
+
 
         public ProberStateMachine(IEventAggregator eventAggregator, IWaferProberClient client, int defaultXYMotionTimeout, int defaultZMotionTimeout) : base(eventAggregator)
         {
@@ -206,8 +222,8 @@ namespace WaferComm.StateMachine
             {
                 // 根据运动类型更新状态
                 if (@event.Command.CommandType.StartsWith("J"))
-                    //@event.Command.CommandType.StartsWith("S") ||
-                    //@event.Command.CommandType.StartsWith("A"))
+                //@event.Command.CommandType.StartsWith("S") ||
+                //@event.Command.CommandType.StartsWith("A"))
                 {
                     // 坐标运动完成，保持当前状态
                     //UpdateMotionStatusInProberStatus();
@@ -446,7 +462,7 @@ namespace WaferComm.StateMachine
             if (!@event.IsValid) return;
 
             string command = @event.Command;
-            if(logger.IsDebugEnabled) logger.DebugFormat("RECV => {0}", command);
+            if (logger.IsDebugEnabled) logger.DebugFormat("RECV => {0}", command);
             // 更新状态信息
             UpdateStatusFromCommand(command);
 
@@ -530,11 +546,20 @@ namespace WaferComm.StateMachine
             else if (command.StartsWith("V") && command.Length > 1)
             {
                 _currentStatus.CurrentLotId = command.Substring(1);
-            }else if (command.StartsWith("rr") && command.Length > 1)
+            } else if (command.StartsWith("rr") && command.Length > 1)
             {
                 _currentStatus.CurrentMappingFile = command.Substring(2);
                 EventAggregator.Publish(new MappingFileLoadEvent(_currentStatus.CurrentMappingFile));
             }
+
+            ///查询状态位置； e 是错误的
+            if (command == "i" || command == "m" || command == "a" || command =="e")
+            {
+                ProberStateMachineLocation.LocationChange(command);
+            }
+
+
+
         }
 
         private ProberMotionAxisStatus GetXYZAxis()

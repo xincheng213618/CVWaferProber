@@ -1,6 +1,10 @@
 ﻿using ColorVision.UI;
 using CVWaferProber.Core.ViewModels;
+using CVWaferProber.Services;
+using Org.BouncyCastle.Utilities.Collections;
 using System;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using WaferComm.Client;
 using WaferComm.Core;
@@ -18,14 +22,16 @@ namespace CVWaferProber.ViewModels
     {
 
         public string CameraPosition { get => _CameraPosition; set { _CameraPosition = value;OnPropertyChanged(); } }
-        private string _CameraPosition = "MainCamera";
+        private string _CameraPosition = "Null";
     }
 
 
     public class ToolsBarViewModel : ViewModelBase
     {
+        private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(VAMService));
 
-        public ToolsBarConfig Config =>ConfigService.Instance.GetRequiredService<ToolsBarConfig>(); 
+
+        public ToolsBarConfig Config => ConfigService.Instance.GetRequiredService<ToolsBarConfig>(); 
 
         private readonly IWaferProberClient _client;
         private readonly IStateMachine _proberState;
@@ -54,6 +60,33 @@ namespace CVWaferProber.ViewModels
 
         public ToolsBarViewModel(MainViewModel mainVM,IWaferProberClient client, IStateMachine proberState, IEventAggregator? eventAggregator = null)
         {
+            ProberStateMachineLocation.LocationChanged += (s, e) =>
+            {
+                if (e == "i")
+                {
+                    Config.CameraPosition = "EQE";
+                    logger.Info("机台位置 EQE");
+
+                }
+                else if (e == "m")
+                {
+                    Config.CameraPosition = "AOI";
+                    logger.Info("机台位置 AOI");
+
+                }
+                else if (e == "a")
+                {
+                    Config.CameraPosition = "VAM";
+                    logger.Info("机台位置 VAM");
+
+                }
+                else if (e == "e")
+                {
+                    Config.CameraPosition = "e";
+                    logger.Info("机台位置 不在标准位置");
+                }
+            };
+
             _mainVM = mainVM;
             _client = client;
             _proberState = proberState;
@@ -106,32 +139,103 @@ namespace CVWaferProber.ViewModels
         {
         }
 
+        bool IsMove = false;
+
         private async void ToIntegratingSphere()
         {
+            if (IsMove)
+            {
+                MessageBox.Show("机台正在移动");
+                return;
+            }
+            IsMove = true;
+            logger.Info("切换机台模式到EQE");
+
             await _client?.ZToIntegratingSphereAsync();
             _mainVM?.ToIntegratingSphere();
-            Config.CameraPosition = "IntegratingSphere";
+            logger.Info("EQE移动完成，查询设备状态");
+
+            Application.Current.Dispatcher.BeginInvoke(async () =>
+            {
+                await Task.Delay(100);
+                await _client?.SendCommandAsync("gc");
+                logger.Info("状态查询完成");
+                IsMove = false;
+            });
+
+
+
         }
 
         private async void ToAuxCamera()
         {
+            if (IsMove)
+            {
+                MessageBox.Show("机台正在移动");
+                return;
+            }
+            IsMove = true;
+
+            logger.Info("切换机台模式到VAM");
+
             await _client?.ZToAuxCameraAsync();
             _mainVM?.ToAuxCamera();
-            Config.CameraPosition = "AuxCamera";
+            logger.Info("VAM移动完成，查询设备状态");
+            Application.Current.Dispatcher.BeginInvoke(async () =>
+            {
+                await Task.Delay(100);
+                await _client?.SendCommandAsync("gc");
+                logger.Info("状态查询完成");
+                IsMove = false;
+            });
 
         }
 
         private async void ToMainCamera()
         {
+            if (IsMove)
+            {
+                MessageBox.Show("机台正在移动");
+                return;
+            }
+            IsMove = true;
+
+            logger.Info("切换机台模式到AOI");
+
             await _client?.ZToMainCameraAsync();
             _mainVM?.ToMainCamera();
-            Config.CameraPosition = "MainCamera";
+
+            Application.Current.Dispatcher.BeginInvoke(async () =>
+            {
+                await Task.Delay(100);
+                await _client?.SendCommandAsync("gc");
+                logger.Info("状态查询完成");
+                IsMove = false;
+            });
+
 
         }
 
         private async void LiftAll()
         {
-           await _client?.ZAllUpAsync();
+            if (IsMove)
+            {
+                MessageBox.Show("机台正在移动");
+                return;
+            }
+            IsMove = true;
+            logger.Info("抬起设备");
+
+            await _client?.ZAllUpAsync();
+
+            Application.Current.Dispatcher.BeginInvoke(async () =>
+            {
+                await Task.Delay(100);
+                await _client?.SendCommandAsync("gc");
+                logger.Info("状态查询完成");
+                IsMove = false;
+            });
+
         }
 
         public void FireUI()
