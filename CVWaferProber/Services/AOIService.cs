@@ -436,10 +436,12 @@ namespace CVWaferProber.Services
                 if (CustomImageVM.IsRealTimePreviewEnabled && !_testCompletedForCurrentDie)
                 {
                     logger.Info($"Real-time preview enabled, loading images one by one during test for {serialNumber}");
-                    // 实时模式：逐张加载Analysis Image（带500ms间隔）
-                    await LoadAnalysisImagesRealTimeAsync(serialNumber);
-                    // 实时模式：逐张加载Camera Measurement（带500ms间隔）
-                    await LoadCameraMeasurementsRealTimeAsync(serialNumber);
+                    // 并行执行两个加载任务
+                    var analysisTask = LoadAnalysisImagesRealTimeAsync(serialNumber);
+                    var cameraTask = LoadCameraMeasurementsRealTimeAsync(serialNumber);
+
+                    // 等待两个任务完成
+                    await Task.WhenAll(analysisTask, cameraTask);
                 }
                 else
                 {
@@ -448,7 +450,7 @@ namespace CVWaferProber.Services
                     await LoadCameraMeasurementsAsync(serialNumber);
                 }
 
-                // 加载POI分析数据（通用逻辑）
+                // 加载POI分析数据
                 await Task.Run(() => LoadPoiAnalysisData(serialNumber, chipData));
 
                 logger.Info($"Serial number {serialNumber} image loading completed");
