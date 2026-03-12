@@ -2040,7 +2040,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         item.Voltage.ToString("F6"),
                         item.Current.ToString(), // A→mA
                         item.LuminousFlux.ToString(),
-                        item.EQE.ToString(),
+                        (item.EQE * 100).ToString(),
                         item.LuminousEfficacy.ToString(),
                         EscapeCsvValue(item.IP ?? ""),
                         item.Blue.ToString(),
