@@ -366,25 +366,25 @@ namespace CVWaferProber.Services
                 // 继续执行，使用空的光谱数据
             }
 
-            //var Measurements = CustomIVLVM.Measurements;
-            //var Wavelengths = CustomIVLVM.Wavelengths;
-            //var ivMeasurements = CustomIVLVM?.IVMeasurements;
+           /* var Measurements = CustomIVLVM.Measurements;
+            var Wavelengths = CustomIVLVM.Wavelengths;
+            var ivMeasurements = CustomIVLVM?.IVMeasurements;
 
 
-            // 这里如果配置的时IV 就走IV的解析
-            //if (WaferProberData.SelectedWPFlow.Name == "IV-Sweep")
-            //{       
-            //    // 读取全局配置的IVL导出路径（核心修改点2）
-            //    string ivRootPath = ConfigManager.Config.ExportPathSettings?.IvExportPath ?? @"D:\Project\IV";
-            //    // 确保目录存在
-            //    if (!Directory.Exists(ivRootPath))
-            //    {
-            //        Directory.CreateDirectory(ivRootPath);
-            //        logger.Info($"Create IV export directory：{ivRootPath}");
-            //    }
-            //    ExportIVDataOnly(serialNumber, ivRootPath, ivMeasurements);
-            //    return;
-            //}
+            //这里如果配置的时IV 就走IV的解析
+            if (WaferProberData.SelectedWPFlow.Name == "IV-Sweep")
+            {
+                // 读取全局配置的IVL导出路径（核心修改点2）
+                string ivRootPath = ConfigManager.Config.ExportPathSettings?.IvExportPath ?? @"D:\Project\IV";
+                // 确保目录存在
+                if (!Directory.Exists(ivRootPath))
+                {
+                    Directory.CreateDirectory(ivRootPath);
+                    logger.Info($"Create IV export directory：{ivRootPath}");
+                }
+                ExportIVDataOnly(serialNumber, ivRootPath, ivMeasurements);
+                return;
+            }*/
             // ========== 核心判断逻辑：基于数据特征而非流程类型 ==========
             bool hasSpectrumData = measurements?.Any() == true && wavelengths != null && wavelengths.Length > 0;
             bool hasIVDataOnly = ivMeasurements?.Any() == true && !hasSpectrumData;
