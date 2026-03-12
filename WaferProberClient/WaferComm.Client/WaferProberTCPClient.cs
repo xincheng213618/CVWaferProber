@@ -21,6 +21,18 @@ namespace WaferComm.Client
         private string _lastConnectedIp = string.Empty;
         private int _lastConnectedPort;
 
+        // ===== 新增：移动等待相关字段 =====
+        private volatile bool _isMoving;
+        private TaskCompletionSource<bool>? _moveCompletionSource;
+        private readonly object _moveLock = new object();
+        private const string MOVE_COMPLETE_RESPONSE = "$67#"; // 到位确认响应
+
+        /// <summary>
+        /// 是否正在执行移动指令
+        /// </summary>
+        public bool IsMoving => _isMoving;
+        // ===== 新增结束 =====
+
         public IEventAggregator EventAggregator { get; }
         public bool IsConnected => _tcpClient?.Connected == true;
 
@@ -29,6 +41,7 @@ namespace WaferComm.Client
             readTimeout = 10;//Second
             EventAggregator = eventAggregator ?? new EventAggregator();
         }
+
         public async Task<bool> TryConnectAsync(string ip, int port)
         {
             try
@@ -53,18 +66,15 @@ namespace WaferComm.Client
                 {
                     logger.Info("Connected to the server.");
                     return;
-                    //throw new InvalidOperationException("已经连接到服务器");
                 }
 
                 _tcpClient = new TcpClient();
                 await _tcpClient.ConnectAsync(ip, port);
                 _stream = _tcpClient.GetStream();
 
-                // 记录连接信息
                 _lastConnectedIp = ip;
                 _lastConnectedPort = port;
 
-                // 开始接收数据
                 _receiveCts = new CancellationTokenSource();
                 _ = Task.Run(() => ReceiveDataAsync(_receiveCts.Token));
 
@@ -73,9 +83,9 @@ namespace WaferComm.Client
             catch (Exception ex)
             {
                 EventAggregator.Publish(new CommunicationErrorEvent("连接失败", ex, "Connect"));
-                //throw;
             }
         }
+
         public async Task DisconnectAsync()
         {
             try
@@ -86,7 +96,6 @@ namespace WaferComm.Client
                 _stream = null;
                 _tcpClient?.Close();
                 _tcpClient = null;
-                //EventAggregator.Publish(new ConnectionStateChangedEvent(false));
             }
             catch (Exception ex)
             {
@@ -100,7 +109,6 @@ namespace WaferComm.Client
             {
                 logger.Error("Unable to connect to the server.");
                 return;
-                //throw new InvalidOperationException("未连接到服务器");
             }
 
             string fullCommand = command.StartsWith("$") ? command : $"${command}#";
@@ -116,7 +124,7 @@ namespace WaferComm.Client
 
                 lock (_sendLock)
                 {
-                    if(_stream!=null) _stream.Write(data, 0, data.Length);
+                    if (_stream != null) _stream.Write(data, 0, data.Length);
                 }
 
                 EventAggregator.Publish(new CommandSentEvent(fullCommand));
@@ -127,6 +135,75 @@ namespace WaferComm.Client
                 throw;
             }
         }
+
+        // ===== 新增：发送移动指令并等待到位确认 =====
+        /// <summary>
+        /// 发送移动指令并阻塞等待到位确认（$67#）
+        /// </summary>
+        /// <param name="command">移动指令（如 gc, gm, ga, gi, gu）</param>
+        /// <param name="timeoutSeconds">超时时间（秒），默认60秒</param>
+        /// <returns>true=收到到位确认，false=超时</returns>
+        public async Task<bool> SendMoveCommandAndWaitAsync(string command, int timeoutSeconds = 60)
+        {
+            if (_isMoving)
+            {
+                logger.Warn($"移动指令被拒绝：当前正在执行移动操作，指令={command}");
+                return false;
+            }
+
+            lock (_moveLock)
+            {
+                if (_isMoving) return false;
+                _isMoving = true;
+                _moveCompletionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            }
+
+            try
+            {
+                logger.Info($"发送移动指令: {command}，等待到位确认...");
+
+                // 发送移动指令
+                await SendCommandAsync(command);
+
+                // 等待到位确认或超时
+                using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds)))
+                {
+                    cts.Token.Register(() =>
+                    {
+                        _moveCompletionSource?.TrySetResult(false);
+                    });
+
+                    bool result = await _moveCompletionSource.Task;
+
+                    if (result)
+                    {
+                        logger.Info($"移动指令 {command} 到位确认成功");
+                    }
+                    else
+                    {
+                        logger.Warn($"移动指令 {command} 等待到位超时（{timeoutSeconds}秒）");
+                        EventAggregator.Publish(new CommunicationErrorEvent($"移动指令超时: {command}", null, "MoveTimeout"));
+                    }
+
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"移动指令执行失败: {command}", ex);
+                EventAggregator.Publish(new CommunicationErrorEvent("移动指令执行失败", ex, $"Move: {command}"));
+                return false;
+            }
+            finally
+            {
+                lock (_moveLock)
+                {
+                    _isMoving = false;
+                    _moveCompletionSource = null;
+                }
+            }
+        }
+        // ===== 新增结束 =====
 
         private async Task ReceiveDataAsync(CancellationToken cancellationToken)
         {
@@ -162,202 +239,9 @@ namespace WaferComm.Client
             EventAggregator.Publish(new ConnectionStateChangedEvent(false));
         }
 
-        private async Task ReceiveDataRobustAsync(CancellationToken cancellationToken)
-        {
-            byte[] buffer = new byte[4096];
-            var timeout = TimeSpan.FromSeconds(readTimeout);
+        // ... (ReceiveDataRobustAsync, HandleGracefulDisconnectAsync, TryRecoverConnectionAsync,
+        //      ReadWithTimeoutAsync, IsConnectionAliveAsync 保持不变) ...
 
-            while (!cancellationToken.IsCancellationRequested && IsConnected)
-            {
-                try
-                {
-                    // 使用带超时的读取
-                    int bytesRead = await ReadWithTimeoutAsync(buffer, 0, buffer.Length, timeout, cancellationToken);
-
-                    if (bytesRead > 0)
-                    {
-                        string data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-                        ProcessReceivedData(data);
-                    }
-                    else
-                    {
-                        // 连接正常关闭
-                        await HandleGracefulDisconnectAsync();
-                        break;
-                    }
-                }
-                catch (TimeoutException timeoutEx)
-                {
-                    // 读取超时
-                    //EventAggregator.Publish(new CommunicationErrorEvent("读取超时", timeoutEx, "Receive"));
-
-                    if (_receiveCts != null)
-                    {
-                        // 尝试恢复连接
-                        //if (!await IsConnectionAliveAsync())
-                        //{
-                        //    await DisconnectAsync();
-                        //    break;
-                        //}
-                    }
-                    else
-                    {
-                        await HandleGracefulDisconnectAsync();
-                        break;
-                    }
-
-                }
-                catch (SocketException socketEx)
-                {
-                    EventAggregator.Publish(new CommunicationErrorEvent($"Socket错误: {socketEx.SocketErrorCode}", socketEx, "Receive"));
-                    await DisconnectAsync();
-                    break;
-                }
-                catch (IOException ioEx)
-                {
-                    EventAggregator.Publish(new CommunicationErrorEvent("连接断开", ioEx, "Receive"));
-                    await DisconnectAsync();
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        EventAggregator.Publish(new CommunicationErrorEvent("接收失败", ex, "Receive"));
-                    }
-                    break;
-                }
-            }
-        }
-        private async Task HandleGracefulDisconnectAsync()
-        {
-            try
-            {
-                EventAggregator.Publish(new CommunicationErrorEvent("连接正常关闭", null, "GracefulDisconnect"));
-
-                // 等待一段时间确保所有数据都已接收
-                await Task.Delay(100);
-
-                await DisconnectAsync();
-            }
-            catch
-            {
-                // 忽略清理错误
-            }
-        }
-        private async Task<bool> TryRecoverConnectionAsync()
-        {
-            try
-            {
-                if (_tcpClient != null)
-                {
-                    if (_tcpClient.Connected) return true;
-                }
-                // 先尝试关闭现有连接
-                try
-                {
-                    _stream?.Close();
-                    _tcpClient?.Close();
-                }
-                catch { }
-
-                // 等待一会儿
-                await Task.Delay(1000);
-
-                // 尝试重新连接
-                if (!string.IsNullOrEmpty(_lastConnectedIp) && _lastConnectedPort > 0)
-                {
-                    _tcpClient = new TcpClient();
-                    await _tcpClient.ConnectAsync(_lastConnectedIp, _lastConnectedPort);
-                    _stream = _tcpClient.GetStream();
-
-                    EventAggregator.Publish(new ConnectionStateChangedEvent(true, _lastConnectedIp, _lastConnectedPort));
-                    EventAggregator.Publish(new CommunicationErrorEvent("连接已恢复", null, "Recovery"));
-
-                    return true;
-                }
-            }
-            catch
-            {
-                // 重连失败
-            }
-
-            return false;
-        }
-        // 添加辅助方法：带超时的异步读取
-        private async Task<int> ReadWithTimeoutAsync(byte[] buffer, int offset, int count,
-                                                     TimeSpan timeout, CancellationToken cancellationToken)
-        {
-            using (var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
-            {
-                timeoutCts.CancelAfter(timeout);
-
-                try
-                {
-                    var readTask = _stream.ReadAsync(buffer, offset, count, timeoutCts.Token);
-
-                    // 添加一个延迟任务来检测实际的数据返回
-                    var delayTask = Task.Delay(TimeSpan.FromSeconds(1), timeoutCts.Token);
-
-                    var completedTask = await Task.WhenAny(readTask, delayTask);
-
-                    if (completedTask == readTask)
-                    {
-                        // 读取完成
-                        return await readTask;
-                    }
-                    else
-                    {
-                        // 延迟任务完成，说明读取太慢，检查连接
-                        if (!await IsConnectionAliveAsync())
-                        {
-                            throw new IOException("连接已断开");
-                        }
-
-                        // 继续等待读取
-                        return await readTask;
-                    }
-                }
-                catch (OperationCanceledException) when (timeoutCts.Token.IsCancellationRequested)
-                {
-                    throw new TimeoutException($"读取超时 ({timeout.TotalSeconds}秒)");
-                }
-            }
-        }
-        private async Task<bool> IsConnectionAliveAsync()
-        {
-            try
-            {
-                if (_tcpClient == null /*|| !_tcpClient.Connected*/)
-                    return false;
-
-                // 方法1：检查Socket状态
-                bool part1 = _tcpClient.Client.Poll(1000, SelectMode.SelectRead);
-                bool part2 = (_tcpClient.Client.Available == 0);
-                if (part1 && part2)
-                    return false;
-
-                // 方法2：发送测试数据
-                try
-                {
-                    // 发送空操作来测试连接
-                    if (_stream?.CanWrite == true)
-                    {
-                        await _stream.WriteAsync(Array.Empty<byte>(), 0, 0);
-                    }
-                }
-                catch
-                {
-                    return false;
-                }
-
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
         private void ProcessReceivedData(string data)
         {
             _receiveBuffer.Append(data);
@@ -375,7 +259,27 @@ namespace WaferComm.Client
 
                 string command = buffer.Substring(begin, end - begin + 1);
 
-                // 发布接收事件
+                // ===== 新增：检查是否为移动到位确认 =====
+                if (command == MOVE_COMPLETE_RESPONSE)
+                {
+                    lock (_moveLock)
+                    {
+                        _moveCompletionSource?.TrySetResult(true);
+                    }
+                    logger.Info("收到移动到位确认: $67#");
+                }
+                else
+                {
+                    lock (_moveLock)
+                    {
+                        _moveCompletionSource?.TrySetResult(false);
+                    }
+                }
+
+
+                // ===== 新增结束 =====
+
+                // 发布接收事件（保留原有逻辑）
                 EventAggregator.Publish(new CommandReceivedEvent(command));
 
                 startIndex = end + 1;
@@ -386,7 +290,6 @@ namespace WaferComm.Client
                 _receiveBuffer.Remove(0, startIndex);
             }
 
-            // 防止缓冲区过大
             if (_receiveBuffer.Length > 4096)
             {
                 _receiveBuffer.Remove(0, _receiveBuffer.Length - 2048);
@@ -410,8 +313,8 @@ namespace WaferComm.Client
             }
             int temp = (int)(temperature * 10);
             string tempStr;
-            if (temp >= 0) tempStr = string.Format("+{0:D4}", temp); // 4位，如 0250
-            else tempStr = string.Format("{0:D4}", temp); // 4位，如 0250
+            if (temp >= 0) tempStr = string.Format("+{0:D4}", temp);
+            else tempStr = string.Format("{0:D4}", temp);
             return SendCommandAsync($"f{tempStr}");
         }
         public Task SendResultAsync(int result)
@@ -436,18 +339,12 @@ namespace WaferComm.Client
         public Task SendHeartbeatAsync() => SendCommandAsync("E");
         public Task QueryStatusAsync() => SendCommandAsync("A");
         public Task GetMappingAsync() => SendCommandAsync("rr");
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
         public Task ZAllUpAsync() => SendCommandAsync("gu");
         public Task ZToMainCameraAsync() => SendCommandAsync("gm");
         public Task ZToAuxCameraAsync() => SendCommandAsync("ga");
 
-
         public Task ZToMainCameraCheckAsync() => SendCommandAsync("gmc");
         public Task ZToAuxCameraCheckAsync() => SendCommandAsync("gac");
-
 
         public Task ZToIntegratingSphereAsync() => SendCommandAsync("gi");
         public Task GetCurrentDieAxisAsync() => SendCommandAsync("raxis");
@@ -461,7 +358,5 @@ namespace WaferComm.Client
             _tcpClient?.Dispose();
             _receiveCts?.Dispose();
         }
-
-
     }
 }

@@ -303,7 +303,7 @@
 
         <StatusBar Grid.Row="3" Height="26">
             <StatusBarItem Content="{Binding AppVersion}" />
-            <StatusBarItem Content="{Binding ToolsBarConfig.CameraPosition}" />
+            <StatusBarItem Content="{Binding ToolsBarConfig.CameraPosition}" MouseDoubleClick="Position_Click" />
 
 
             <StatusBarItem HorizontalAlignment="Right">

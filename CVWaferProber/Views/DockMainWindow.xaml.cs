@@ -6,6 +6,7 @@ using CVWaferProber.ViewModels;
 using CVWPFSpectrometerCtrl;
 using log4net;
 using log4net.Config;
+using MySqlX.XDevAPI;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -629,6 +630,31 @@ namespace CVWaferProber.Views
         {
             WindowRecipe windowRecipe = new WindowRecipe() { WindowStartupLocation = WindowStartupLocation.CenterOwner, Owner = System.Windows.Application.Current.GetActiveWindow() };
             windowRecipe.Show();
+        }
+        private bool CheckAndWarnIfMoving()
+        {
+            if (ProberClientService.Instance.ProberClient.IsMoving)
+            {
+                MessageBox.Show(
+                    (string)Application.Current.FindResource("Axismoving"),
+                    "提示",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return true;
+            }
+            return false;
+        }
+
+        private async void Position_Click(object sender, MouseButtonEventArgs e)
+        {
+            if(ProberClientService.Instance.ProberClient != null)
+            {
+                if (CheckAndWarnIfMoving()) return;
+
+                await ProberClientService.Instance.ProberClient.SendCommandAsync("gc");
+                logger.Info("Position query completed.");
+            }
+
         }
     }
 }

@@ -27,54 +27,62 @@ namespace CVWaferProber.Views
     {
         private static readonly log4net.ILog logger = log4net.LogManager.GetLogger(typeof(WindowCheck));
 
-        IWaferProberClient Client { get; set; }
+        IWaferProberClient _client { get; set; }
 
         public WindowCheck()
         {
             InitializeComponent();
         }
-        bool IsRun = false;
-
-        private void AOI_Check(object sender, RoutedEventArgs e)
+        private bool CheckAndWarnIfMoving()
         {
-            if (IsRun)
+            if (_client.IsMoving)
             {
-                MessageBox.Show("Is Move");
-                return;
+                MessageBox.Show(
+                    (string)Application.Current.FindResource("Axismoving"),
+                    "提示",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return true;
             }
-
-            IsRun = true;
-            Task.Run(async () =>
-            {
-                await Client.ZToMainCameraCheckAsync();
-                ConfigService.Instance.GetRequiredService<ToolsBarConfig>().CameraPosition = "AOICheck";
-                logger.Info("ZToMainCameraCheckAsync");
-                IsRun = false;
-            });
+            return false;
         }
 
-        private void VAM_Check(object sender, RoutedEventArgs e)
+        private async void AOI_Check(object sender, RoutedEventArgs e)
         {
-            if (IsRun)
+            if (CheckAndWarnIfMoving()) return;
+
+            logger.Info("Raise the equipment");
+
+            //await _client.ZAllUpAsync();
+            bool arrived = await _client.SendMoveCommandAndWaitAsync("gmc", 120);
+            if (!arrived)
             {
-                MessageBox.Show("Is Move");
-                return;
+                MessageBox.Show(Application.Current.GetActiveWindow(), "LiftAll移动超时，未收到到位确认！", "超时警告",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
             }
+            ConfigService.Instance.GetRequiredService<ToolsBarConfig>().CameraPosition = "AOICheck";
+        }
 
-            IsRun = true;
-            Task.Run(async () =>
+        private async void VAM_Check(object sender, RoutedEventArgs e)
+        {
+            if (CheckAndWarnIfMoving()) return;
+
+            logger.Info("Raise the equipment");
+
+            //await _client.ZAllUpAsync();
+            bool arrived = await _client.SendMoveCommandAndWaitAsync("gac", 120);
+            if (!arrived)
             {
-                await Client.ZToAuxCameraCheckAsync();
+                MessageBox.Show(Application.Current.GetActiveWindow(), "LiftAll移动超时，未收到到位确认！", "超时警告",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            ConfigService.Instance.GetRequiredService<ToolsBarConfig>().CameraPosition = "VAMCheck";
 
-                ConfigService.Instance.GetRequiredService<ToolsBarConfig>().CameraPosition ="VAMCheck";
-                logger.Info("ZToAuxCameraCheckAsync");
-                IsRun = false;
-            });
         }
 
         private void Window_Initialized(object sender, EventArgs e)
         {
-            Client = ProberClientService.Instance.ProberClient;
+            _client = ProberClientService.Instance.ProberClient;
         }
     }
 }
