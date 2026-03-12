@@ -198,9 +198,92 @@ namespace CVWaferProber.Services
 
             // 加载图像结果（改为await，确保异步执行）
             await LoadImageResultAsync(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
-            // 新增：标记当前Die测试完成
+            //// 新增：标记当前Die测试完成
+            //_testCompletedForCurrentDie = true;
+            //return ChipStatus.OK;
+            // ========== 新增：获取Luminance值并与Recipe阈值比较 ==========
+            ChipStatus finalStatus = ChipStatus.OK; // 默认OK
+
+            try
+            {
+                // 从CustomIVLVM获取当前Die的Luminance值
+                double? actualLuminance = null;
+
+                // 使用Dispatcher确保在UI线程访问ViewModel
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    // 确保加载了当前Die的光谱数据
+                    if (CustomIVLVM != null)
+                    {
+                        // 加载当前die的光谱数据
+                        CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
+
+                        // 获取最新的Measurement
+                        var measurements = CustomIVLVM.Measurements;
+                        if (measurements != null && measurements.Count > 0)
+                        {
+                            // 通常取第一个测量值，如果有多个可能需要选择特定的
+                            actualLuminance = measurements[0].Luminance;
+                            logger.Info($"Actual Luminance for Die {dieViewModel.SerialNumber}: {actualLuminance}");
+                        }
+                        else
+                        {
+                            logger.Warn($"No measurements found for Die {dieViewModel.SerialNumber}");
+                        }
+                    }
+                });
+
+                if (actualLuminance.HasValue)
+                {
+                    // 获取Recipe中用户设置的阈值
+                    var (minThreshold, maxThreshold) = GetLuminanceThresholds();
+
+                    if (minThreshold.HasValue && maxThreshold.HasValue)
+                    {
+                        logger.Info($"Luminance comparison - Min: {minThreshold}, Max: {maxThreshold}, Actual: {actualLuminance}");
+
+                        // 执行阈值比较
+                        if (actualLuminance.Value < minThreshold.Value || actualLuminance.Value > maxThreshold.Value)
+                        {
+                            finalStatus = ChipStatus.AOI_NG;
+                            logger.Info($"Luminance out of range ({actualLuminance}) -> Setting status to AOI_NG");
+                        }
+                        else
+                        {
+                            finalStatus = ChipStatus.OK;
+                            logger.Info($"Luminance within range ({actualLuminance}) -> Setting status to OK");
+                        }
+                    }
+                    else
+                    {
+                        logger.Warn("Luminance thresholds not available in Recipe, using default status from algorithm");
+                        // 如果没有阈值设置，使用算法返回的状态
+                        finalStatus = GetDieResultStatus(dieViewModel.SerialNumber!);
+                    }
+                }
+                else
+                {
+                    logger.Warn($"No Luminance data available for Die {dieViewModel.SerialNumber}");
+                    // 如果没有亮度数据，使用算法返回的状态
+                    finalStatus = GetDieResultStatus(dieViewModel.SerialNumber!);
+                }
+
+                // 更新Die状态（使用Dispatcher确保UI线程安全）
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    dieViewModel.ChangeStatus(finalStatus);
+                });
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Error during Luminance threshold comparison", ex);
+                // 发生异常时，使用算法返回的状态
+                finalStatus = GetDieResultStatus(dieViewModel.SerialNumber!);
+            }
+            // ========== 新增结束 ==========
+
             _testCompletedForCurrentDie = true;
-            return ChipStatus.OK;
+            return finalStatus;
         }
 
         /// <summary>
@@ -227,66 +310,66 @@ namespace CVWaferProber.Services
             ClearResult();
             await RunFlowAsync(selectedWPFlow, dieViewModel, hasNext, tranStatus);
             // 测试完成后，检查Luminance阈值并更新状态
-            await CheckLuminanceThresholdAndUpdateStatus(dieViewModel);
+            //await CheckLuminanceThresholdAndUpdateStatus(dieViewModel);
         }
 
         /// <summary>
         /// 检查Luminance阈值并更新状态
         /// </summary>
-        private async Task CheckLuminanceThresholdAndUpdateStatus(DieViewModel dieViewModel)
-        {
-            try
-            {
-                // 等待一小段时间确保数据加载完成
-                await Task.Delay(500);
+        //private async Task CheckLuminanceThresholdAndUpdateStatus(DieViewModel dieViewModel)
+        //{
+        //    try
+        //    {
+        //        // 等待一小段时间确保数据加载完成
+        //        await Task.Delay(500);
 
-                double? actualLuminance = null;
+        //        double? actualLuminance = null;
 
-                await Application.Current.Dispatcher.InvokeAsync(() =>
-                {
-                    if (CustomIVLVM != null)
-                    {
-                        // 重新加载当前die的光谱数据以确保获取最新值
-                        CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
-                        var measurements = CustomIVLVM.Measurements;
-                        if (measurements != null && measurements.Count > 0)
-                        {
-                            actualLuminance = measurements[0].Luminance;
-                        }
-                    }
-                });
+        //        await Application.Current.Dispatcher.InvokeAsync(() =>
+        //        {
+        //            if (CustomIVLVM != null)
+        //            {
+        //                // 重新加载当前die的光谱数据以确保获取最新值
+        //                CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
+        //                var measurements = CustomIVLVM.Measurements;
+        //                if (measurements != null && measurements.Count > 0)
+        //                {
+        //                    actualLuminance = measurements[0].Luminance;
+        //                }
+        //            }
+        //        });
 
-                if (actualLuminance.HasValue)
-                {
-                    var (minThreshold, maxThreshold) = GetLuminanceThresholds();
+        //        if (actualLuminance.HasValue)
+        //        {
+        //            var (minThreshold, maxThreshold) = GetLuminanceThresholds();
 
-                    if (minThreshold.HasValue && maxThreshold.HasValue)
-                    {
-                        if (actualLuminance.Value < minThreshold.Value || actualLuminance.Value > maxThreshold.Value)
-                        {
-                            await Application.Current.Dispatcher.InvokeAsync(() =>
-                            {
-                                dieViewModel.ChangeStatus(ChipStatus.AOI_NG);
-                                logger.Info($"Luminance out of range ({actualLuminance}) -> Updated status to AOI_NG for Die {dieViewModel.SerialNumber}");
-                            });
-                        }
-                        else
-                        {
-                            await Application.Current.Dispatcher.InvokeAsync(() =>
-                            {
-                                dieViewModel.ChangeStatus(ChipStatus.OK);
-                                logger.Info($"Luminance within range ({actualLuminance}) -> Updated status to OK for Die {dieViewModel.SerialNumber}");
-                            });
-                        }
-                        // 如果已经在其他地方设置为OK，这里可以保持不变
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.Error($"Failed to check Luminance threshold", ex);
-            }
-        }
+        //            if (minThreshold.HasValue && maxThreshold.HasValue)
+        //            {
+        //                if (actualLuminance.Value < minThreshold.Value || actualLuminance.Value > maxThreshold.Value)
+        //                {
+        //                    await Application.Current.Dispatcher.InvokeAsync(() =>
+        //                    {
+        //                        dieViewModel.ChangeStatus(ChipStatus.AOI_NG);
+        //                        logger.Info($"Luminance out of range ({actualLuminance}) -> Updated status to AOI_NG for Die {dieViewModel.SerialNumber}");
+        //                    });
+        //                }
+        //                else
+        //                {
+        //                    await Application.Current.Dispatcher.InvokeAsync(() =>
+        //                    {
+        //                        dieViewModel.ChangeStatus(ChipStatus.OK);
+        //                        logger.Info($"Luminance within range ({actualLuminance}) -> Updated status to OK for Die {dieViewModel.SerialNumber}");
+        //                    });
+        //                }
+        //                // 如果已经在其他地方设置为OK，这里可以保持不变
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        logger.Error($"Failed to check Luminance threshold", ex);
+        //    }
+        //}
         private void ClearResult()
         {
             Application.Current?.Dispatcher?.Invoke(() =>
@@ -311,8 +394,6 @@ namespace CVWaferProber.Services
                             OLED_AOI_Result_E eResult = JsonConvert.DeserializeObject<OLED_AOI_Result_E>(aoi[0].Result);
                             status = ChipStatusTool.GetStatusFromErrCode(eResult.ResultCode);
                             if (logger.IsInfoEnabled) logger.InfoFormat("AOI Result => {0}", status.ToString());
-
-
 
                             break;
                         }
