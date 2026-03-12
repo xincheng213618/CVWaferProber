@@ -2376,7 +2376,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         CIE_v = (float)(result.Fv ?? 0.0),
                         CCT = (float)(result.FCCT ?? 0.0),
                         PeakWavelength = (float)(result.FLd ?? 0.0),
-                        fPur = (float)(result.FPur ?? 0.0),
+                        fPur = (float)(result.FPur * 100 ?? 0.0),
                         //fPuPercent = $"{Math.Round((decimal)(result.FPur * 100), 2)}%",
                         PeakIntensity = (float)(result.FLp ?? 0.0),
                         FHW = (float)(result.FHW ?? 0.0),
