@@ -89,56 +89,6 @@ namespace CVWaferProber.Services
             this.CustomMappingVM = mainVM.CustomMappingVM;
         }
 
-        /// <summary>
-        /// 获取AOI Recipe中Luminance的阈值设置（用户设置的最小值和最大值）
-        /// </summary>
-        /// <returns>返回(Min, Max)元组，如果获取失败返回(null, null)</returns>
-        private (double? Min, double? Max) GetLuminanceThresholds()
-        {
-            try
-            {
-                // 获取AOI Recipes实例（单例）
-                var aoiRecipe = AOIRecipes.Instance;
-
-                // 获取AOIRecipes类型的所有属性
-                var properties = aoiRecipe.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-                // 查找名称为"Luminance"的属性
-                var luminanceProperty = properties.FirstOrDefault(p => p.Name == "Luminance");
-
-                if (luminanceProperty != null)
-                {
-                    // 获取属性值，应该为RecipeBase类型
-                    if (luminanceProperty.GetValue(aoiRecipe) is RecipeBase recipeBase)
-                    {
-                        logger.Debug($"Successfully got Luminance thresholds - Min: {recipeBase.Min}, Max: {recipeBase.Max}");
-                        return (recipeBase.Min, recipeBase.Max);
-                    }
-                }
-
-                // 如果没有找到Luminance属性，尝试查找包含Luminance的其他属性
-                var alternativeProperty = properties.FirstOrDefault(p =>
-                    p.Name.Contains("Luminance", StringComparison.OrdinalIgnoreCase) &&
-                    p.PropertyType == typeof(RecipeBase));
-
-                if (alternativeProperty != null)
-                {
-                    if (alternativeProperty.GetValue(aoiRecipe) is RecipeBase recipeBase)
-                    {
-                        logger.Debug($"Found alternative Luminance property '{alternativeProperty.Name}' - Min: {recipeBase.Min}, Max: {recipeBase.Max}");
-                        return (recipeBase.Min, recipeBase.Max);
-                    }
-                }
-
-                logger.Warn("Luminance threshold property not found in AOI Recipe");
-                return (null, null);
-            }
-            catch (Exception ex)
-            {
-                logger.Error($"Failed to get Luminance thresholds from Recipe", ex);
-                return (null, null);
-            }
-        }
         protected override ChipStatus GetResultStatus(string serialNumber)
         {
             return GetDieResultStatus(serialNumber);
@@ -198,17 +148,9 @@ namespace CVWaferProber.Services
 
             // 加载图像结果（改为await，确保异步执行）
             await LoadImageResultAsync(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
-            //// 新增：标记当前Die测试完成
-            //_testCompletedForCurrentDie = true;
-            //return ChipStatus.OK;
-            // ========== 新增：获取Luminance值并与Recipe阈值比较 ==========
-            ChipStatus finalStatus = ChipStatus.OK; // 默认OK
 
             try
             {
-                // 从CustomIVLVM获取当前Die的Luminance值
-                double? actualLuminance = null;
-
                 // 使用Dispatcher确保在UI线程访问ViewModel
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
@@ -223,7 +165,30 @@ namespace CVWaferProber.Services
                         if (measurements != null && measurements.Count > 0)
                         {
                             // 通常取第一个测量值，如果有多个可能需要选择特定的
-                            actualLuminance = measurements[0].Luminance;
+
+                            var actualLuminance = measurements[0].Luminance;
+                            var LuminanceRecipe = AOIRecipes.Instance.Luminance;
+   
+                            logger.Info($"Luminance comparison - Min: {LuminanceRecipe.Min}, Max: {LuminanceRecipe.Max}, Actual: {actualLuminance}");
+
+                            if (LuminanceRecipe.IsUse)
+                            {
+                                // 执行阈值比较
+                                if (actualLuminance < LuminanceRecipe.Min || actualLuminance > LuminanceRecipe.Max)
+                                {
+                                    var finalStatus = ChipStatus.AOI_NG;
+                                    dieViewModel.ChangeStatus(finalStatus);
+                                    logger.Info($"Luminance out of range ({actualLuminance}) -> Setting status to AOI_NG");
+                                }
+                                else
+                                {
+                                    var finalStatus = ChipStatus.OK;
+                                    dieViewModel.ChangeStatus(finalStatus);
+                                    logger.Info($"Luminance within range ({actualLuminance}) -> Setting status to OK");
+                                }
+                            }
+
+
                             logger.Info($"Actual Luminance for Die {dieViewModel.SerialNumber}: {actualLuminance}");
                         }
                         else
@@ -231,47 +196,6 @@ namespace CVWaferProber.Services
                             logger.Warn($"No measurements found for Die {dieViewModel.SerialNumber}");
                         }
                     }
-                });
-
-                if (actualLuminance.HasValue)
-                {
-                    // 获取Recipe中用户设置的阈值
-                    var (minThreshold, maxThreshold) = GetLuminanceThresholds();
-
-                    if (minThreshold.HasValue && maxThreshold.HasValue)
-                    {
-                        logger.Info($"Luminance comparison - Min: {minThreshold}, Max: {maxThreshold}, Actual: {actualLuminance}");
-
-                        // 执行阈值比较
-                        if (actualLuminance.Value < minThreshold.Value || actualLuminance.Value > maxThreshold.Value)
-                        {
-                            finalStatus = ChipStatus.AOI_NG;
-                            logger.Info($"Luminance out of range ({actualLuminance}) -> Setting status to AOI_NG");
-                        }
-                        else
-                        {
-                            finalStatus = ChipStatus.OK;
-                            logger.Info($"Luminance within range ({actualLuminance}) -> Setting status to OK");
-                        }
-                    }
-                    else
-                    {
-                        logger.Warn("Luminance thresholds not available in Recipe, using default status from algorithm");
-                        // 如果没有阈值设置，使用算法返回的状态
-                        finalStatus = GetDieResultStatus(dieViewModel.SerialNumber!);
-                    }
-                }
-                else
-                {
-                    logger.Warn($"No Luminance data available for Die {dieViewModel.SerialNumber}");
-                    // 如果没有亮度数据，使用算法返回的状态
-                    finalStatus = GetDieResultStatus(dieViewModel.SerialNumber!);
-                }
-
-                // 更新Die状态（使用Dispatcher确保UI线程安全）
-                await Application.Current.Dispatcher.InvokeAsync(() =>
-                {
-                    dieViewModel.ChangeStatus(finalStatus);
                 });
             }
             catch (Exception ex)
