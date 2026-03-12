@@ -26,10 +26,10 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Application = System.Windows.Application;
 
 namespace CVWaferProber.Services
 {
+
     public static class CVAlgorithmNative
     {
         //定义返回值枚举（根据CV_algorithm.dll实际定义调整）
