@@ -154,48 +154,63 @@ namespace CVWaferProber.Services
                 // 使用Dispatcher确保在UI线程访问ViewModel
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    // 确保加载了当前Die的光谱数据
-                    if (CustomIVLVM != null)
+                    var measurements = CustomIVLVM?.Measurements?.FirstOrDefault();
+                    if (measurements == null) return;
+
+                    var actualLuminance = measurements.Luminance;
+                    var recipe = AOIRecipes.Instance.Luminance;
+
+                    // 仅在配方启用时执行阈值判断，否则保持当前状态不变或按需处理
+                    if (recipe.IsUse)
                     {
-                        // 加载当前die的光谱数据
-                        CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
-
-                        // 获取最新的Measurement
-                        var measurements = CustomIVLVM.Measurements;
-                        if (measurements != null && measurements.Count > 0)
-                        {
-                            // 通常取第一个测量值，如果有多个可能需要选择特定的
-
-                            var actualLuminance = measurements[0].Luminance;
-                            var LuminanceRecipe = AOIRecipes.Instance.Luminance;
-   
-                            logger.Info($"Luminance comparison - Min: {LuminanceRecipe.Min}, Max: {LuminanceRecipe.Max}, Actual: {actualLuminance}");
-
-                            if (LuminanceRecipe.IsUse)
-                            {
-                                // 执行阈值比较
-                                if (actualLuminance < LuminanceRecipe.Min || actualLuminance > LuminanceRecipe.Max)
-                                {
-                                    var finalStatus = ChipStatus.AOI_NG;
-                                    dieViewModel.ChangeStatus(finalStatus);
-                                    logger.Info($"Luminance out of range ({actualLuminance}) -> Setting status to AOI_NG");
-                                }
-                                else
-                                {
-                                    var finalStatus = ChipStatus.OK;
-                                    dieViewModel.ChangeStatus(finalStatus);
-                                    logger.Info($"Luminance within range ({actualLuminance}) -> Setting status to OK");
-                                }
-                            }
-
-
-                            logger.Info($"Actual Luminance for Die {dieViewModel.SerialNumber}: {actualLuminance}");
-                        }
-                        else
-                        {
-                            logger.Warn($"No measurements found for Die {dieViewModel.SerialNumber}");
-                        }
+                        dieViewModel.ChangeStatus(
+                            actualLuminance < recipe.Min || actualLuminance > recipe.Max
+                                ? ChipStatus.AOI_NG
+                                : ChipStatus.OK);
                     }
+                    //// 确保加载了当前Die的光谱数据
+                    //if (CustomIVLVM != null)
+                    //{
+                    //    // 加载当前die的光谱数据
+                    //    CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
+
+                    //    // 获取最新的Measurement
+                    //    var measurements = CustomIVLVM.Measurements;
+                    //    if (measurements != null && measurements.Count > 0)
+                    //    {
+                    //        // 通常取第一个测量值，如果有多个可能需要选择特定的
+
+                    //        var actualLuminance = measurements[0].Luminance;
+                    //        var LuminanceRecipe = AOIRecipes.Instance.Luminance;
+
+                    //        logger.Info($"Luminance comparison - Min: {LuminanceRecipe.Min}, Max: {LuminanceRecipe.Max}, Actual: {actualLuminance}");
+
+                    //        if (LuminanceRecipe.IsUse)
+                    //        {
+                    //            // 执行阈值比较
+                    //            if (actualLuminance < LuminanceRecipe.Min || actualLuminance > LuminanceRecipe.Max)
+                    //            {
+                    //                var finalStatus = ChipStatus.AOI_NG;
+                    //                dieViewModel.ChangeStatus(finalStatus);
+                    //                logger.Info($"Luminance out of range ({actualLuminance}) -> Setting status to AOI_NG");
+                    //            }
+                    //            else
+                    //            {
+                    //                var finalStatus = ChipStatus.OK;
+                    //                dieViewModel.ChangeStatus(finalStatus);
+                    //                logger.Info($"Luminance within range ({actualLuminance}) -> Setting status to OK");
+                    //            }
+                    //        }
+
+
+                    //        logger.Info($"Actual Luminance for Die {dieViewModel.SerialNumber}: {actualLuminance}");
+                    //    }
+                    //    else
+                    //    {
+                    //        logger.Warn($"No measurements found for Die {dieViewModel.SerialNumber}");
+                    //    }
+                    //}
+                    //else return;
                 });
             }
             catch (Exception ex)
@@ -1291,15 +1306,15 @@ namespace CVWaferProber.Services
             row.Add(dieViewModel.MapY.ToString()); // 3. Die_y
             row.Add("OK"); // 4. LightOnStatus
             row.Add("OK"); // 5. RegisterPixels
-            row.Add(dieViewModel.FinalClass ?? "na"); // 6. Final Class（修复：从dieViewModel获取，而非硬编码）
+            row.Add(dieViewModel.FinalClass ?? "Na"); // 6. Final Class（修复：从dieViewModel获取，而非硬编码）
             row.Add("OK"); // 7. Pixel Logic
-            row.Add(string.IsNullOrEmpty(dieViewModel.AOIGradeLevel) ? "na" : dieViewModel.AOIGradeLevel); // 8. AOI GradeLevel
+            row.Add(string.IsNullOrEmpty(dieViewModel.AOIGradeLevel) ? "Na" : dieViewModel.AOIGradeLevel); // 8. AOI GradeLevel
             row.Add("2"); // 9. Defect Density(%)
-            row.Add(string.IsNullOrEmpty(dieViewModel.BlackPattern) ? "na" : dieViewModel.BlackPattern); // 10. Black Pattern
-            row.Add("na"); // 11. Uniformity
-            row.Add(measurement.Luminance.ToString("F0")); // 12. Luminance(nit)
-            row.Add(measurement.Voltage.ToString("F2")); // 13. Voltage(v)
-            row.Add(measurement.Current.ToString("F2")); // 14. Current(mA)
+            row.Add(string.IsNullOrEmpty(dieViewModel.BlackPattern) ? "Na" : dieViewModel.BlackPattern); // 10. Black Pattern
+            row.Add("Na"); // 11. Uniformity
+            row.Add(string.IsNullOrEmpty(measurement.Luminance.ToString("F0")) ? "Na" : measurement.Luminance.ToString("F0")); // 12. Luminance(nit)
+            row.Add(string.IsNullOrEmpty(measurement.Voltage.ToString("F2")) ? "Na" : measurement.Voltage.ToString("F2")); // 13. Voltage(v)
+            row.Add(string.IsNullOrEmpty(measurement.Current.ToString("F2")) ? "Na" : measurement.Current.ToString("F2")); // 14. Current(mA)
 
             List<VScgdMeasureResultSmu> lists = MysqlControler.GetInstance().Sql.Select<VScgdMeasureResultSmu>().Where(a => a.BatchId == dieViewModel.Id).ToList();
 
@@ -1333,12 +1348,12 @@ namespace CVWaferProber.Services
             {
                 row.Add(pinPressure);
             }
-            row.Add(dieViewModel.TouchDownCounts.ToString() ?? "0"); // 17. TouchDown Counts（空值处理）
-            row.Add(dieViewModel.ProbingCardSN ?? "0"); // 18. Probing Card SN（空值处理）
+            row.Add(dieViewModel.TouchDownCounts.ToString() ?? "Na"); // 17. TouchDown Counts（空值处理）
+            row.Add(dieViewModel.ProbingCardSN ?? "Na"); // 18. Probing Card SN（空值处理）
             row.Add(measurement.Luminance.ToString("F2")); // 19. Lv(cd/m2)（修复：与无光谱数据格式统一）
 
             // 修复：处理可能包含逗号的字段，移除逗号并格式化
-            row.Add(measurement.IP?.Replace(",", "") ?? "na"); // 20. IP（移除逗号）
+            row.Add(measurement.IP?.Replace(",", "") ?? "Na"); // 20. IP（移除逗号）
 
             #region 兴奋纯度
             double purityValue = 0;
@@ -1357,7 +1372,7 @@ namespace CVWaferProber.Services
                 logger.Warn($"Excitation Purity is greater than 100, set to 100");
             }
             // 转为百分比（*100）并格式化，保留2位小数
-            string purityPercent = purityValue > 0 ? a.ToString("F2") : "0";
+            string purityPercent = purityValue > 0 ? a.ToString("F2") : "Na";
             
             row.Add(purityPercent); // 21. Excitation Purity(%) 兴奋纯度
             #endregion
@@ -1392,15 +1407,15 @@ namespace CVWaferProber.Services
             row.Add(dieViewModel.MapY.ToString()); // Die_y
             row.Add("OK"); // LightOnStatus
             row.Add("OK"); // RegisterPixels
-            row.Add(dieViewModel.FinalClass ?? "na"); // Final Class
+            row.Add(dieViewModel.FinalClass ?? "Na"); // Final Class
             row.Add("OK"); // Pixel Logic
-            row.Add(string.IsNullOrEmpty(dieViewModel.AOIGradeLevel) ? "na" : dieViewModel.AOIGradeLevel); // AOI GradeLevel
-            row.Add("na"); // Defect Density(%) - 默认值
-            row.Add(string.IsNullOrEmpty(dieViewModel.BlackPattern) ? "na" : dieViewModel.BlackPattern); // Black Pattern
+            row.Add(string.IsNullOrEmpty(dieViewModel.AOIGradeLevel) ? "Na" : dieViewModel.AOIGradeLevel); // AOI GradeLevel
+            row.Add("Na"); // Defect Density(%) - 默认值
+            row.Add(string.IsNullOrEmpty(dieViewModel.BlackPattern) ? "Na" : dieViewModel.BlackPattern); // Black Pattern
             row.Add("0.55"); // Uniformity - 默认值
-            row.Add("na"); // Luminance(nit) - 默认值
-            row.Add("na"); // Voltage(v)
-            row.Add("na"); // Current(mA)
+            row.Add("Na"); // Luminance(nit) - 默认值
+            row.Add("Na"); // Voltage(v)
+            row.Add("Na"); // Current(mA)
             row.Add(DateTime.Now.ToString("yyyy/MM/dd")); // Measurement Time
             string pinPressure = dieViewModel.Pressure ?? "0,0,0,0"; // 16. Pin Pressure - 关键修改：用引号括起来
                                                                      // 如果值包含逗号，需要用引号括起来
@@ -1412,8 +1427,8 @@ namespace CVWaferProber.Services
             {
                 row.Add(pinPressure);
             }
-            row.Add(dieViewModel.TouchDownCounts.ToString() ?? "0"); // 17. TouchDown Counts（空值处理）
-            row.Add(dieViewModel.ProbingCardSN ?? "0"); // 18. Probing Card SN（空值处理）
+            row.Add(dieViewModel.TouchDownCounts.ToString() ?? "Na"); // 17. TouchDown Counts（空值处理）
+            row.Add(dieViewModel.ProbingCardSN ?? "Na"); // 18. Probing Card SN（空值处理）
             row.Add("na"); // Lv(cd/m2) - 默认值
             row.Add("na"); // IP - 默认值
             row.Add("99"); // Excitation Purity(%) - 默认值 兴奋纯度
