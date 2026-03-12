@@ -11,21 +11,16 @@ using CVWaferProber.Core.Recipes;
 using CVWaferProber.ViewModels;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
-using log4net;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Diagnostics.Metrics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace CVWaferProber.Services
 {
