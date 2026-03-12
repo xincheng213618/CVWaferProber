@@ -3067,7 +3067,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         CIE_v = (float)result.Fv,
                         CCT = (float)result.FCCT,
                         PeakWavelength = (float)result.FLd,
-                        fPur = (float)result.FPur*100,
+                        fPur = (float)result.FPur * 100,
                         PeakIntensity = (float)result.FLp,
                         FHW = (float)result.FHW,
                        //Intensities = intensities,
