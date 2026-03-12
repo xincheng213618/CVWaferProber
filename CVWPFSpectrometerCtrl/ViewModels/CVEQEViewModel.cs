@@ -2039,6 +2039,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                         measId.ToString(), // 替换原固定值36，改为1、2、3...
                         item.Voltage.ToString("F6"),
                         item.Current.ToString(), // A→mA
+                        item.LuminousFlux.ToString(),
                         item.EQE.ToString(),
                         item.LuminousEfficacy.ToString(),
                         EscapeCsvValue(item.IP ?? ""),
