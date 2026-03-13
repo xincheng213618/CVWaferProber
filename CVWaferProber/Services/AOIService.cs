@@ -25,6 +25,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using WaferComm.StateMachine;
 
 namespace CVWaferProber.Services
 {
@@ -1101,8 +1102,7 @@ namespace CVWaferProber.Services
                 Directory.CreateDirectory(aoiRootPath);
                 logger.Info($"Create AOI export directory：{aoiRootPath}");
             }
-
-            string WaferId = MappingDataViewModel.GetInstance().WaferId ?? "00001";
+            string WaferId = ProberStateStatus.Instance.CurrentWaferId ?? "00001";
             string aoiFileName;
             if (WaferProberData.RunDateTime != null)
             {

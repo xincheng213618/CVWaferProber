@@ -285,7 +285,8 @@ namespace CVWaferProber.Components
                 tbCurrentState.Foreground = new SolidColorBrush(stateColor);
 
                 // 更新晶圆信息
-                tbWaferInfo.Text = $"{waferText} {status.CurrentWaferId ?? GetLocalizedString("Common.None")} | " +
+
+                tbWaferInfo.Text = $"{waferText} {ProberStateStatus.Instance.CurrentWaferId ?? GetLocalizedString("Common.None")} | " +
                                  $"{batchText} {status.CurrentLotId ?? GetLocalizedString("Common.None")}";
             });
         }

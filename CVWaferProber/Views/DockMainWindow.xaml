@@ -304,7 +304,14 @@
         <StatusBar Grid.Row="3" Height="26">
             <StatusBarItem Content="{Binding AppVersion}" />
             <StatusBarItem Content="{Binding ToolsBarConfig.CameraPosition}" MouseDoubleClick="Position_Click" />
-
+            <StatusBarItem MouseDoubleClick="Position_Click">
+                <StatusBarItem.Content>
+                    <TextBlock >
+                        <Run Text="WaferId:"/>
+                        <Run Text="{Binding ProberStateStatus.CurrentWaferId}"/>
+                    </TextBlock>
+                </StatusBarItem.Content>
+            </StatusBarItem>
 
             <StatusBarItem HorizontalAlignment="Right">
                 <StackPanel Orientation="Horizontal">

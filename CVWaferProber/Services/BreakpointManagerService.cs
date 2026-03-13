@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using WaferComm.StateMachine;
 using Application = System.Windows.Application;
 
 namespace CVWaferProber.Services
@@ -32,7 +33,7 @@ namespace CVWaferProber.Services
         public class BreakpointData
         {
             public DateTime Timestamp { get; set; }
-            public string ProberId { get; set; }
+            public string ProberId { get => ProberStateStatus.Instance.CurrentWaferId; }
             public string TestFlowType { get; set; }
             public string TestFlowName { get; set; }
 
@@ -98,7 +99,6 @@ namespace CVWaferProber.Services
                 var data = new BreakpointData
                 {
                     Timestamp = DateTime.Now,
-                    ProberId = mappingVM.WaferId,
                     TestFlowType = selectedFlow?.FlowType.ToString(),
                     TestFlowName = selectedFlow?.Name,
 

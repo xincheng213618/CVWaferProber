@@ -28,6 +28,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Threading;
+using WaferComm.StateMachine;
 using Application = System.Windows.Application;
 using Binding = System.Windows.Data.Binding;
 using CheckBox = System.Windows.Controls.CheckBox;
@@ -398,8 +399,6 @@ namespace CVWaferProber.ViewModels
 
         public bool IsColorEnabled { get; set; }
 
-        private string _WaferId;
-        public string WaferId { get; set; }
 
         private string _Timestamp;
         public string Timestamp
@@ -574,7 +573,6 @@ namespace CVWaferProber.ViewModels
             CustomMappingVM = new ChipMappingControlViewModel();
 
             _Timestamp = string.Empty;
-            _WaferId = string.Empty;
             _MappingCsvFilePath = string.Empty;
             // 初始化进度属性
             SingleDieTestProgress = 0;
@@ -616,7 +614,6 @@ namespace CVWaferProber.ViewModels
             // 新增：订阅每个 Die 的 PropertyChanged，用于触发自动保存（防抖）
             SubscribeToSaveEvents();
 
-            WaferId = "CVProber01";
             ProberClientService.Instance.InitializeMapVM(this);
             InitColumnConfigs();
             InitAutoSave();
@@ -989,7 +986,7 @@ namespace CVWaferProber.ViewModels
         private void ManTestingReady(DieViewModel die)
         {
             string timestamp = DateTime.Now.ToString("yyyyMMdd'T'HHmmss.fff");
-            die.TestingReady(WaferId, timestamp);
+            die.TestingReady(ProberStateStatus.Instance.CurrentWaferId, timestamp);
             if (_isAutoSN) Timestamp = timestamp;
         }
 
@@ -1000,9 +997,21 @@ namespace CVWaferProber.ViewModels
             if (_isAutoSN) Timestamp = timestamp;
             foreach (var itemT in testItems)
             {
-                itemT.Die.TestingReady(WaferId, timestamp);
+                itemT.Die.TestingReady(SanitizeFileName(ProberStateStatus.Instance.CurrentWaferId), timestamp);
             }
         }
+        public static string SanitizeFileName(string fileName)
+        {
+            // 定义非法字符
+            char[] invalidChars = Path.GetInvalidFileNameChars();
+            foreach (char c in invalidChars)
+            {
+                fileName = fileName.Replace(c, '_'); // 将非法字符替换为下划线或其他合法字符
+            }
+            return fileName;
+        }
+
+
 
         public void StopAutoFlow()
         {
@@ -1876,7 +1885,7 @@ namespace CVWaferProber.ViewModels
             {
                 Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*",
                 DefaultExt = ".csv",
-                FileName = string.Format("{0}_{1}_result.csv", WaferId, _Timestamp),
+                FileName = string.Format("{0}_{1}_result.csv", ProberStateStatus.Instance.CurrentWaferId, _Timestamp),
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
             };
             if (saveFileDialog.ShowDialog() == true)

@@ -4175,7 +4175,7 @@ namespace CVAVMControl
                 {
                     if (YMat == null || YMat.Empty())
                     {
-                        MessageBox.Show($"{FindResource("Nodata")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show($"{FindResource("Nodata")}", $"VAM Export", MessageBoxButton.OK, MessageBoxImage.Information);
                         return;
                     }
 

@@ -1,4 +1,5 @@
 ﻿using CVWaferProber.Core.ViewModels;
+using CVWaferProber.Services;
 using WaferComm.StateMachine;
 
 namespace CVWaferProber.Models
@@ -52,7 +53,17 @@ namespace CVWaferProber.Models
         {
             get => _devCurrentState;
             set {
+
+                if (value != _devCurrentState && value == ProberState.WaferLoaded)
+                {
+                    //查询
+                    ProberClientService.Instance.ProberClient.SendCommandAsync("rr");
+                }
+
                 SetProperty(ref _devCurrentState, value);
+
+
+
                 DevStatusMessage = value.ToString();
             }
         }

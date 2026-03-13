@@ -186,7 +186,7 @@ namespace CVWaferProber.ViewModels
             // 发送 gi 指令（普通发送，不等待）
             //await _client.ZToIntegratingSphereAsync();
             // 发送 gc 并等待 $67# 到位确认
-            bool arrived = await _client.SendMoveCommandAndWaitAsync("gi", 120);
+            bool arrived = await _client.SendMoveCommandAndWaitAsync("gi", 240);
             if (!arrived)
             {
                 MessageBox.Show(Application.Current.GetActiveWindow(), "EQE移动超时，未收到到位确认！", "超时警告",
@@ -211,7 +211,7 @@ namespace CVWaferProber.ViewModels
 
             //await _client.ZToAuxCameraAsync();
 
-            bool arrived = await _client.SendMoveCommandAndWaitAsync("ga", 120);
+            bool arrived = await _client.SendMoveCommandAndWaitAsync("ga", 240);
             if (!arrived)
             {
                 MessageBox.Show(Application.Current.GetActiveWindow(), "VAM移动超时，未收到到位确认！", "超时警告",
@@ -236,7 +236,7 @@ namespace CVWaferProber.ViewModels
 
             //await _client.ZToMainCameraAsync();
 
-            bool arrived = await _client.SendMoveCommandAndWaitAsync("gm", 120);
+            bool arrived = await _client.SendMoveCommandAndWaitAsync("gm", 240);
             if (!arrived)
             {
                 MessageBox.Show(Application.Current.GetActiveWindow(), "AOI移动超时，未收到到位确认！", "超时警告",
@@ -257,7 +257,7 @@ namespace CVWaferProber.ViewModels
             RefreshAllCommands();
 
             //await _client.ZAllUpAsync();
-            bool arrived = await _client.SendMoveCommandAndWaitAsync("gu", 120);
+            bool arrived = await _client.SendMoveCommandAndWaitAsync("gu", 240);
             if (!arrived)
             {
                 MessageBox.Show(Application.Current.GetActiveWindow(),"LiftAll移动超时，未收到到位确认！", "超时警告",

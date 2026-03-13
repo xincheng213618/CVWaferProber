@@ -1,0 +1,1 @@
+dotnet restore --source  C:\Users\a\.nuget

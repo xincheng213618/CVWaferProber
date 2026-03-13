@@ -1,4 +1,5 @@
 ﻿using CVWaferProber.Core.Events;
+using CVWaferProber.Core.ViewModels;
 using log4net.Repository.Hierarchy;
 using System.Timers;
 using System.Windows;
@@ -9,6 +10,16 @@ using WaferComm.StateMachine;
 
 namespace WaferComm.StateMachine
 {
+
+    public class ProberStateStatus:ViewModelBase
+    {
+
+        public static ProberStateStatus Instance { get; set; } = new ProberStateStatus();
+
+        public string CurrentWaferId { get => _CurrentWaferId; set { _CurrentWaferId = value; OnPropertyChanged(); } }
+        private string _CurrentWaferId = string.Empty;
+    }
+
     public static class ProberStateMachineLocation
     {
         public static event EventHandler<string> LocationChanged;
@@ -454,7 +465,7 @@ namespace WaferComm.StateMachine
         private void ResetStatus(ProberStatus status)
         {
             status.CurrentLotId = null;
-            status.CurrentWaferId = null;
+            ProberStateStatus.Instance.CurrentWaferId = null;
         }
 
         private void OnCommandReceived(CommandReceivedEvent @event)
@@ -479,7 +490,13 @@ namespace WaferComm.StateMachine
         private void UpdateStatusFromCommand(string command)
         {
             // 根据收到的指令更新状态信息
-            if (command.StartsWith("r") && command.Length == 3)
+             if (command.StartsWith("WaferId:") && command.Length > 1)
+            {
+                ProberStateStatus.Instance.CurrentWaferId = command.Substring(8);
+                logger.Info(ProberStateStatus.Instance.CurrentWaferId);
+                EventAggregator.Publish(new StateTransitionEvent(_currentStatus.CurrentState, _currentStatus.CurrentState, true, null));
+            }
+            else if (command.StartsWith("r") && command.Length == 3)
             {
                 //_currentStatus
             }
@@ -538,10 +555,6 @@ namespace WaferComm.StateMachine
                 {
                     _currentStatus.TotalDies = totalDies;
                 }
-            }
-            else if (command.StartsWith("b") && command.Length > 1)
-            {
-                _currentStatus.CurrentWaferId = command.Substring(1);
             }
             else if (command.StartsWith("V") && command.Length > 1)
             {
@@ -705,7 +718,6 @@ namespace WaferComm.StateMachine
             {
                 CurrentState = _currentStatus.CurrentState,
                 LastStateChange = _currentStatus.LastStateChange,
-                CurrentWaferId = _currentStatus.CurrentWaferId,
                 CurrentLotId = _currentStatus.CurrentLotId,
                 TestedDies = _currentStatus.TestedDies,
                 TotalDies = _currentStatus.TotalDies,

@@ -25,7 +25,7 @@ namespace WaferComm.Client
         private volatile bool _isMoving;
         private TaskCompletionSource<bool>? _moveCompletionSource;
         private readonly object _moveLock = new object();
-        private const string MOVE_COMPLETE_RESPONSE = "$67#"; // 到位确认响应
+        private const string MOVE_COMPLETE_RESPONSE = "$$67#"; // 到位确认响应
 
         /// <summary>
         /// 是否正在执行移动指令

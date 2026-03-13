@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CVWaferProber.Core.ViewModels;
+using System;
 
 namespace WaferComm.StateMachine
 {
@@ -372,12 +373,11 @@ namespace WaferComm.StateMachine
     /// <summary>
     /// 状态机状态
     /// </summary>
-    public class ProberStatus
+    public class ProberStatus :ViewModelBase
     {
         public ProberState CurrentState { get; set; }
         public DateTime LastStateChange { get; set; }
         public TimeSpan CurrentStateDuration => DateTime.Now - LastStateChange;
-        public string CurrentWaferId { get; set; }
         public string CurrentLotId { get; set; }
         public string CurrentMappingFile { get; set; }
         public int TestedDies { get; set; }

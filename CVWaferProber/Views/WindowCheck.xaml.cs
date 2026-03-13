@@ -33,6 +33,12 @@ namespace CVWaferProber.Views
         {
             InitializeComponent();
         }
+
+        private void Window_Initialized(object sender, EventArgs e)
+        {
+            _client = ProberClientService.Instance.ProberClient;
+        }
+
         private bool CheckAndWarnIfMoving()
         {
             if (_client.IsMoving)
@@ -54,7 +60,7 @@ namespace CVWaferProber.Views
             logger.Info("Raise the equipment");
 
             //await _client.ZAllUpAsync();
-            bool arrived = await _client.SendMoveCommandAndWaitAsync("gmc", 120);
+            bool arrived = await _client.SendMoveCommandAndWaitAsync("gmc", 240);
             if (!arrived)
             {
                 MessageBox.Show(Application.Current.GetActiveWindow(), "LiftAll移动超时，未收到到位确认！", "超时警告",
@@ -70,7 +76,7 @@ namespace CVWaferProber.Views
             logger.Info("Raise the equipment");
 
             //await _client.ZAllUpAsync();
-            bool arrived = await _client.SendMoveCommandAndWaitAsync("gac", 120);
+            bool arrived = await _client.SendMoveCommandAndWaitAsync("gac", 240);
             if (!arrived)
             {
                 MessageBox.Show(Application.Current.GetActiveWindow(), "LiftAll移动超时，未收到到位确认！", "超时警告",
@@ -80,9 +86,6 @@ namespace CVWaferProber.Views
 
         }
 
-        private void Window_Initialized(object sender, EventArgs e)
-        {
-            _client = ProberClientService.Instance.ProberClient;
-        }
+
     }
 }

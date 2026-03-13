@@ -105,8 +105,10 @@ namespace CVWaferProber.Services
             }
             else if (@event.ToState == ProberState.WaferLoaded)
             {
+                //这里在WaferLoaded的时候查询 Waferid
+                //logger.Info($"CurrentWaferId：{ProberStateStatus.Instance.CurrentWaferId}");
                 //_mappingDataViewModel?.LoadMappingFile(_proberState.GetStatus().CurrentMappingFile);
-                _mappingDataViewModel.WaferId = _proberState.GetStatus().CurrentWaferId;
+
             }
             if (logger.IsInfoEnabled) logger.InfoFormat("StateTransition {0} => {1}", @event.FromState.ToString(), @event.ToState.ToString());
             _connectionInfo.DevCurrentState = _proberState.CurrentState;

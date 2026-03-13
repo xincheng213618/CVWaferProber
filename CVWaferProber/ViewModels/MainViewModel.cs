@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using WaferComm.Core;
+using WaferComm.StateMachine;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 
@@ -100,6 +101,8 @@ namespace CVWaferProber.ViewModels
             }
         }
         public ToolsBarConfig ToolsBarConfig => ConfigService.Instance.GetRequiredService<ToolsBarConfig>();
+
+        public ProberStateStatus ProberStateStatus { get; set; }= ProberStateStatus.Instance;
 
         #region 面板显示状态属性
         // 1. 面板显示状态属性（右上角相机面板默认隐藏）
