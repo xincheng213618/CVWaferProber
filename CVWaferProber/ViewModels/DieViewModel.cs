@@ -135,6 +135,11 @@ namespace CVWaferProber.ViewModels
 
         private string _probingCardSN = "na";
         public string ProbingCardSN { get => _probingCardSN; set => SetProperty(ref _probingCardSN, value); }
+
+
+        public double? LuminanceUniformity { get; set; }
+
+
         #endregion
 
         #region 构造函数（保留原有+初始化定时器标识）

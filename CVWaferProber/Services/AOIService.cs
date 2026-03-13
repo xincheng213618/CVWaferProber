@@ -112,6 +112,14 @@ namespace CVWaferProber.Services
                 {
                     foreach (var result in results)
                     {
+                        if (result.ImgFile.Contains("w255"))
+                        {
+                            logger.Info($"W255: {result.ImgFile}");
+
+                            double LuminanceUniformity = SimpleLuminanceUniformity.Calculate(result.ImgFile, 30);
+                            dieViewModel.LuminanceUniformity = LuminanceUniformity;
+                        }
+
                         AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
                         var aoiDetails = AlgResultService.GetCommDetailResult(result.Id);
                         if (aoiDetails != null && aoiDetails.Count == 1)
@@ -149,7 +157,6 @@ namespace CVWaferProber.Services
 
                                 }
                             }
-                            break;
                         }
                     }
                 }
@@ -1078,22 +1085,6 @@ namespace CVWaferProber.Services
                 // 继续执行，使用空的光谱数据
             }
 
-            // 读取全局配置的IVL导出路径
-            //string ivlRootPath = ConfigManager.Config.ExportPathSettings?.AoiExportPath ?? @"D:\Project\AOI";
-            //if (!Directory.Exists(ivlRootPath))
-            //{
-            //    Directory.CreateDirectory(ivlRootPath);
-            //    logger.Info($"Create IVL export directory：{ivlRootPath}");
-            //}
-
-            //// 导出IVL数据（如果有）
-            //if (measurements != null && measurements.Any() && wavelengths != null && wavelengths.Length > 0)
-            //{
-            //    string ivlFileName = $"IVL_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-            //    string ivlFullExportPath = Path.Combine(ivlRootPath, ivlFileName);
-            //    CustomIVLVM.ExportToCsv(ivlFullExportPath, measurements, wavelengths);
-            //    logger.Info($"IVL data exported to：{ivlFullExportPath}");
-            //}
 
             #region aoi数据导出
             string aoiRootPath = ConfigManager.Config.ExportPathSettings?.AoiExportPath ?? @"D:\Project\AOI";
@@ -1102,7 +1093,7 @@ namespace CVWaferProber.Services
                 Directory.CreateDirectory(aoiRootPath);
                 logger.Info($"Create AOI export directory：{aoiRootPath}");
             }
-            string WaferId = ProberStateStatus.Instance.CurrentWaferId ?? "00001";
+            string WaferId = SanitizeFileName(ProberStateStatus.Instance.CurrentWaferId) ?? "00001";
             string aoiFileName;
             if (WaferProberData.RunDateTime != null)
             {
@@ -1124,6 +1115,18 @@ namespace CVWaferProber.Services
             logger.Info($"AOI CSV data exported to：{aoiFullExportPath}");
             #endregion
         }
+
+        public static string SanitizeFileName(string fileName)
+        {
+            // 定义非法字符
+            char[] invalidChars = Path.GetInvalidFileNameChars();
+            foreach (char c in invalidChars)
+            {
+                fileName = fileName.Replace(c, '_'); // 将非法字符替换为下划线或其他合法字符
+            }
+            return fileName;
+        }
+
         /// <summary>
         /// 追加AOI数据到CSV文件（而不是覆盖）
         /// </summary>
@@ -1319,7 +1322,10 @@ namespace CVWaferProber.Services
             row.Add(string.IsNullOrEmpty(dieViewModel.AOIGradeLevel) ? "Na" : dieViewModel.AOIGradeLevel); // 8. AOI GradeLevel
             row.Add("2"); // 9. Defect Density(%)
             row.Add(string.IsNullOrEmpty(dieViewModel.BlackPattern) ? "Na" : dieViewModel.BlackPattern); // 10. Black Pattern
-            row.Add("Na"); // 11. Uniformity
+
+            string LuminanceUniformity = dieViewModel.LuminanceUniformity ==null? "Na":dieViewModel.LuminanceUniformity.ToString();
+
+            row.Add(LuminanceUniformity); // 11. Uniformity
             row.Add(string.IsNullOrEmpty(measurement.Luminance.ToString("F0")) ? "Na" : measurement.Luminance.ToString("F0")); // 12. Luminance(nit)
 
 
@@ -1433,7 +1439,9 @@ namespace CVWaferProber.Services
             row.Add(string.IsNullOrEmpty(dieViewModel.AOIGradeLevel) ? "Na" : dieViewModel.AOIGradeLevel); // AOI GradeLevel
             row.Add("Na"); // Defect Density(%) - 默认值
             row.Add(string.IsNullOrEmpty(dieViewModel.BlackPattern) ? "Na" : dieViewModel.BlackPattern); // Black Pattern
-            row.Add("0.55"); // Uniformity - 默认值
+
+            string LuminanceUniformity = dieViewModel.LuminanceUniformity == null ? "Na" : dieViewModel.LuminanceUniformity.ToString();
+            row.Add(LuminanceUniformity); // Uniformity - 默认值
             row.Add("Na"); // Luminance(nit) - 默认值
             row.Add("Na"); // Voltage(v)
             row.Add("Na"); // Current(mA)
