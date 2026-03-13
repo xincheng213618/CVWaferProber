@@ -54,6 +54,8 @@ namespace CVWaferProber.ViewModels
     {
         private static readonly ILog logger = LogManager.GetLogger(typeof(MappingDataViewModel));
 
+        // 新增：标记自动测试的第一个Die
+        public bool _isFirstDieInAutoTest = true;
         private static MappingDataViewModel _instance;
         private static readonly object _locker = new();
         public static MappingDataViewModel GetInstance()
@@ -936,6 +938,8 @@ namespace CVWaferProber.ViewModels
 
         public void StartAutoFlow()
         {
+            // 新增：初始化第一个Die标记
+            _isFirstDieInAutoTest = true;
             // 新增：检查是否选择了Die
             if (SelectedItem == null || !(SelectedItem is DieViewModel))
             {
@@ -1014,6 +1018,8 @@ namespace CVWaferProber.ViewModels
             ResetProgressBars(); // 重置进度条
             CalculateYieldBySerialNumber();
             _ = SaveLastSessionIfNeededAsync();
+            // 新增：重置第一个Die标记
+            _isFirstDieInAutoTest = true;
         }
         #endregion
 
@@ -1165,6 +1171,18 @@ namespace CVWaferProber.ViewModels
         {
             if (e.preDie != null) e.preDie.UnSelected();
             SelectedItem = e.nextDie;
+            // 新增：仅IVL测试且是第一个Die时，切换到总览图
+            if (_isFirstDieInAutoTest && SelectedWPFlow?.FlowType.ToString().Contains("IVL") == true)
+            {
+                // 调用DockMainWindow的切换方法（总览图）
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var mainVM = (MainViewModel)Application.Current.MainWindow.DataContext;
+                    mainVM.ActivateSpectralInnerTabAction?.Invoke();
+                });
+                // 标记为非第一个Die，后续不再切换
+                _isFirstDieInAutoTest = false;
+            }
             StartSingleDieTest(e.nextDie); // 下一个Die开始测试，重置单Die进度
         }
 
