@@ -1,16 +1,20 @@
 ﻿using ChipMapping.ViewModels;
 using ColorVision.Core.Entities;
+using ColorVision.UI;
 using CVCommCore;
 using CVDB.Services.Algorithm;
 using CVDB.Services.Image;
+using CVDB.Services.SMU;
 using CVMysql;
 using CVWaferProber.Core.Config;
 using CVWaferProber.Core.Models;
 using CVWaferProber.Core.Models.Enums;
 using CVWaferProber.Core.Recipes;
+using CVWaferProber.Core.ViewModels;
 using CVWaferProber.ViewModels;
 using CVWPFCamImageCtrl;
 using CVWPFSpectrometerCtrl.ViewModels;
+using FlowEngineLib;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -24,6 +28,15 @@ using System.Windows;
 
 namespace CVWaferProber.Services
 {
+    public class AOIServiceConfig:ViewModelBase,IConfig
+    {
+        public static AOIServiceConfig Instance => ConfigService.Instance.GetRequiredService<AOIServiceConfig>();
+
+        public string Format { get => _Format; set { _Format = value; OnPropertyChanged();  } }
+        private string _Format = "F4";
+
+    }
+
 
     public static class CVAlgorithmNative
     {
@@ -1308,13 +1321,16 @@ namespace CVWaferProber.Services
             row.Add(string.IsNullOrEmpty(dieViewModel.BlackPattern) ? "Na" : dieViewModel.BlackPattern); // 10. Black Pattern
             row.Add("Na"); // 11. Uniformity
             row.Add(string.IsNullOrEmpty(measurement.Luminance.ToString("F0")) ? "Na" : measurement.Luminance.ToString("F0")); // 12. Luminance(nit)
-            row.Add(string.IsNullOrEmpty(measurement.Voltage.ToString("F2")) ? "Na" : measurement.Voltage.ToString("F2")); // 13. Voltage(v)
-            row.Add(string.IsNullOrEmpty(measurement.Current.ToString("F2")) ? "Na" : measurement.Current.ToString("F2")); // 14. Current(mA)
 
-            List<VScgdMeasureResultSmu> lists = MysqlControler.GetInstance().Sql.Select<VScgdMeasureResultSmu>().Where(a => a.BatchId == dieViewModel.Id).ToList();
+
+            MysqlControler.GetInstance().Sql.Select<VScgdMeasureResultSmu>().Where(a => a.BatchId == dieViewModel.Id).ToList();
+
+
+            List<VScgdMeasureResultSmu> lists = MysqlControler.GetInstance().Sql.Select<VScgdMeasureResultSmu>().Where(a => a.BatchCode == dieViewModel.SerialNumber).ToList();
 
             string b_v = "Na";
             string b_i = "Na";
+            string Format = AOIServiceConfig.Instance.Format ?? string.Empty;
 
             if (lists.Count == 2)
             {
@@ -1322,11 +1338,21 @@ namespace CVWaferProber.Services
                 {
                     if (item.Channel == 1)
                     {
-                        b_v = item.VResult?.ToString();
-                        b_i = item.IResult?.ToString();
+                        b_v = item.VResult?.ToString(Format);
+                        b_i = item.IResult?.ToString(Format);
+                    }
+                    if (item.Channel == 0)
+                    {
+                        measurement.Voltage = (float)item.VResult;
+                        measurement.Current = (float)item.IResult;
                     }
                 }
             }
+
+
+            row.Add(string.IsNullOrEmpty(measurement.Voltage.ToString(Format)) ? "Na" : measurement.Voltage.ToString(Format)); // 13. Voltage(v)
+            row.Add(string.IsNullOrEmpty(measurement.Current.ToString(Format)) ? "Na" : measurement.Current.ToString(Format)); // 14. Current(mA)
+
             row.Add(b_v);
             row.Add(b_i);
 
