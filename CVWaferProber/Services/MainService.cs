@@ -540,6 +540,15 @@ namespace CVWaferProber.Services
                 StopBreakpointTimer(); //  测试完成，停止自动保存
                 BreakpointMemoryService.ClearBreakpoint(); // 清除无用断点
             }
+            // 新增：重置第一个Die标记
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var mappingVM = _mainVM?.DataMappingVM;
+                if (mappingVM != null)
+                {
+                    mappingVM._isFirstDieInAutoTest = true;
+                }
+            });
             // 新增：手动测试异常结束时，重置IsManualTesting
             if (!isAuto)
             {
