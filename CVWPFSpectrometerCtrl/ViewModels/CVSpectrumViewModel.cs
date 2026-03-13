@@ -2351,8 +2351,14 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 VI_viewModel.LoadData(serialNumber);
 
                 var results = SpectrumResultService.LoadResultByBatchCode(serialNumber);
-                if (results == null || results.Count == 0) return;
-
+                //if (results == null || results.Count == 0) return;
+                if (results == null || results.Count == 0)
+                {
+                    // Even without spectrum data, refresh overview charts 
+                    // so IV/VI overview plots display correctly
+                    InitializeOverviewSeries();
+                    return;
+                }
                 IL_viewModel.LoadData(results);
                 VL_viewModel.LoadData(results);
                 Power_L_viewModel.LoadData(results);
