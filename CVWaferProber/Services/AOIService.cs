@@ -271,57 +271,53 @@ namespace CVWaferProber.Services
         {
             try
             {
-                // 加载 AOI 分析结果（GradeLevel、BlackPattern 等显示字段）
-                await Task.Run(() =>
+                var results = AlgResultService.LoadAlgResultByBatchCode(dieViewModel.SerialNumber!);
+                if (results != null && results.Count > 0)
                 {
-                    var results = AlgResultService.LoadAlgResultByBatchCode(dieViewModel.SerialNumber!);
-                    if (results != null && results.Count > 0)
+                    foreach (var result in results)
                     {
-                        foreach (var result in results)
+                        if (result.ImgFile.Contains("w255"))
                         {
-                            if (result.ImgFile.Contains("w255"))
-                            {
-                                double LuminanceUniformity = SimpleLuminanceUniformity.Calculate(result.ImgFile, 30);
-                                dieViewModel.LuminanceUniformity = LuminanceUniformity;
-                            }
+                            double LuminanceUniformity = SimpleLuminanceUniformity.Calculate(result.ImgFile, 30);
+                            dieViewModel.LuminanceUniformity = LuminanceUniformity;
+                        }
 
-                            AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
-                            var aoiDetails = AlgResultService.GetCommDetailResult(result.Id);
-                            if (aoiDetails != null && aoiDetails.Count == 1)
+                        AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
+                        var aoiDetails = AlgResultService.GetCommDetailResult(result.Id);
+                        if (aoiDetails != null && aoiDetails.Count == 1)
+                        {
+                            var resultJson = aoiDetails[0].Result;
+                            if (!string.IsNullOrEmpty(resultJson))
                             {
-                                var resultJson = aoiDetails[0].Result;
-                                if (!string.IsNullOrEmpty(resultJson))
+                                var detailResult = JsonConvert.DeserializeObject<DetailResult_CommFile_V2>(resultJson);
+                                if (detailResult != null && !string.IsNullOrEmpty(detailResult.ResultFileName) && File.Exists(detailResult.ResultFileName))
                                 {
-                                    var detailResult = JsonConvert.DeserializeObject<DetailResult_CommFile_V2>(resultJson);
-                                    if (detailResult != null && !string.IsNullOrEmpty(detailResult.ResultFileName) && File.Exists(detailResult.ResultFileName))
+                                    if (result.ImgFileType == -13)
                                     {
-                                        if (result.ImgFileType == -13)
+                                        string gradeStr = File.ReadAllText(detailResult.ResultFileName);
+                                        var gradeResult = JsonConvert.DeserializeObject<FindPixelDefectsForRebuildPicGradingV2>(gradeStr);
+                                        if (gradeResult != null)
                                         {
-                                            string gradeStr = File.ReadAllText(detailResult.ResultFileName);
-                                            var gradeResult = JsonConvert.DeserializeObject<FindPixelDefectsForRebuildPicGradingV2>(gradeStr);
-                                            if (gradeResult != null)
+                                            await Application.Current.Dispatcher.InvokeAsync(() =>
                                             {
-                                                Application.Current.Dispatcher.Invoke(() =>
-                                                {
-                                                    dieViewModel.AOIGradeLevel = gradeResult?.GradeLevel ?? "na";
-                                                });
-                                            }
-                                        }
-                                        if (result.ImgFileType == 49)
-                                        {
-                                            string darkJson = File.ReadAllText(detailResult.ResultFileName);
-                                            var darkResult = JsonConvert.DeserializeObject<DarkResultDto>(darkJson);
-                                            Application.Current.Dispatcher.Invoke(() =>
-                                            {
-                                                dieViewModel.BlackPattern = darkResult?.GradeLevel ?? "na";
+                                                dieViewModel.AOIGradeLevel = gradeResult?.GradeLevel ?? "na";
                                             });
                                         }
+                                    }
+                                    if (result.ImgFileType == 49)
+                                    {
+                                        string darkJson = File.ReadAllText(detailResult.ResultFileName);
+                                        var darkResult = JsonConvert.DeserializeObject<DarkResultDto>(darkJson);
+                                        Application.Current.Dispatcher.Invoke(() =>
+                                        {
+                                            dieViewModel.BlackPattern = darkResult?.GradeLevel ?? "na";
+                                        });
                                     }
                                 }
                             }
                         }
                     }
-                });
+                }
 
                 // 仅加载图像用于显示，不修改状态
                 _testCompletedForCurrentDie = true; // 标记为已完成，使用批量加载模式

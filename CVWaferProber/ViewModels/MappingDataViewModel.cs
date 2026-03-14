@@ -1,4 +1,5 @@
 ﻿using ChipMapping.Models;
+using ChipMapping.Models.HZCC;
 using ChipMapping.ViewModels;
 using ColorVision.Core.Entities;
 using ColorVision.UI;
@@ -67,79 +68,6 @@ namespace CVWaferProber.ViewModels
                 return _instance;
             }
         }
-
-        #region DataGrid 行选择
-        /*
-        private bool? _selectAllAOI = false;
-        private bool _isUpdatingFromHeader_AOI;
-        public bool? SelectAllAOI
-        {
-            get => _selectAllAOI;
-            set
-            {
-                UpdateDataGridRowsEnabled(value, (item, val) => item.IsAOIEnabled = val, ref _isUpdatingFromHeader_AOI);
-                if (!Equals(_selectAllAOI, value))
-                {
-                    _selectAllAOI = value;
-                    OnPropertyChanged();
-                    UpdateSelectAllAOIState();
-                }
-            }
-        }
-
-
-        private bool? _selectAllIVL = false;
-        private bool _isUpdatingFromHeader_IVL;
-        public bool? SelectAllIVL
-        {
-            get => _selectAllIVL;
-            set
-            {
-                UpdateDataGridRowsEnabled(value, (item, val) => item.IsIVLEnabled = val, ref _isUpdatingFromHeader_IVL);
-                if (!Equals(_selectAllIVL, value))
-                {
-                    _selectAllIVL = value;
-                    OnPropertyChanged();
-                    UpdateSelectAllIVLState();
-                }
-            }
-        }
-
-        private bool? _selectAllEQE = false;
-        private bool _isUpdatingFromHeader_EQE;
-        public bool? SelectAllEQE
-        {
-            get => _selectAllEQE;
-            set
-            {
-                UpdateDataGridRowsEnabled(value, (item, val) => item.IsEQEEnabled = val, ref _isUpdatingFromHeader_EQE);
-                if (!Equals(_selectAllEQE, value))
-                {
-                    _selectAllEQE = value;
-                    OnPropertyChanged();
-                    UpdateSelectAllEQEState();
-                }
-            }
-        }
-
-        private bool? _selectAllVAM = false;
-        private bool _isUpdatingFromHeader_VAM;
-        public bool? SelectAllVAM
-        {
-            get => _selectAllVAM;
-            set
-            {
-                UpdateDataGridRowsEnabled(value, (item, val) => item.IsVAMEnabled = val, ref _isUpdatingFromHeader_VAM);
-                if (!Equals(_selectAllVAM, value))
-                {
-                    _selectAllVAM = value;
-                    OnPropertyChanged();
-                    UpdateSelectAllVAMState();
-                }
-            }
-        }
-        */
-        #endregion DataGrid 行选择
 
         public event EventHandler<WPFlowViewModel> ActivateCorrespondingPanel;
         public ChipMappingControlViewModel CustomMappingVM { get; private set; }
@@ -426,7 +354,8 @@ namespace CVWaferProber.ViewModels
             set => SetProperty(ref _isIVLCameraEnabled, value);
         }
         private bool selfClick = true;
-        private DataGrid? _dataGrid;
+
+        public  DataGrid? _dataGrid { get; set; }
 
         private string _yieldInfo = "0/0 (0.00%)";
         public string YieldInfo
@@ -728,28 +657,16 @@ namespace CVWaferProber.ViewModels
                 return;
             }
 
-            // 4. 安全更新UI
-            try
+
+            Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                Application.Current.Dispatcher.InvokeAsync(() =>
+                if (SingleDieTestProgress < 100 && TotalTestCount > 0)
                 {
-                    if (SingleDieTestProgress < 100 && TotalTestCount > 0)
-                    {
-                        SingleDieTestProgress = newProgress;
-                        OnPropertyChanged(nameof(SingleDieTestProgress));
-                        OnPropertyChanged(nameof(ProgressText));
-                        UpdateTotalProgress();
-                    }
-                }).Wait(TimeSpan.FromMilliseconds(200));
-            }
-            catch (TaskCanceledException)
-            {
-                timer?.Stop();
-            }
-            catch (Exception ex) when (ex.InnerException is TaskCanceledException)
-            {
-                timer?.Stop();
-            }
+                    SingleDieTestProgress = newProgress;
+                }
+            }, System.Windows.Threading.DispatcherPriority.Background);
+
+            timer?.Stop();
         }
         /// <summary>
         /// 更新单个Die进度 - 由DieViewModel定时器触发
@@ -830,7 +747,7 @@ namespace CVWaferProber.ViewModels
                 : 0;
 
             TotalTestProgress = Math.Min(100, completedProgress + currentDieContribution);
-            // 强制更新UI绑定
+
             Application.Current.Dispatcher.Invoke(() =>
             {
                 OnPropertyChanged(nameof(TotalTestProgress));
@@ -869,29 +786,6 @@ namespace CVWaferProber.ViewModels
                 OnPropertyChanged(nameof(ProgressTextAll));
                 OnPropertyChanged(nameof(CurrentDieInfo));
             });
-            //Application.Current.Dispatcher.Invoke(() =>
-            //{
-            //    // 停止定时器
-            //    _progressUpdateTimer.Stop();
-
-            //    SingleDieTestProgress = 0;
-            //    TotalTestProgress = 0;
-            //    TotalTestCount = 0;
-            //    CompletedTestCount = 0;
-            //    CurrentDieInfo = string.Empty;
-
-            //    // 同步重置手动测试标记
-            //    IsManualTesting = false;
-
-            //    // 触发所有进度相关属性变更
-            //    OnPropertyChanged(nameof(SingleDieTestProgress));
-            //    OnPropertyChanged(nameof(TotalTestProgress));
-            //    OnPropertyChanged(nameof(TotalTestCount));
-            //    OnPropertyChanged(nameof(CompletedTestCount));
-            //    OnPropertyChanged(nameof(ProgressText));
-            //    OnPropertyChanged(nameof(ProgressTextAll));
-            //    OnPropertyChanged(nameof(CurrentDieInfo));
-            //});
         }
         #endregion
 
@@ -1084,13 +978,15 @@ namespace CVWaferProber.ViewModels
                     Application.Current.Dispatcher.Invoke(() =>
                     {
                         CustomMappingVM?.UpdateSelectedChipCount();
-
                     });
                 });
-                //CustomMappingVM.SetSelectedChip((uint)die.Id);
-                DieResultDisplay(die);
+                MainService.Instance.ResultDisplay(die);
+                CalculateYieldBySerialNumber();
             }
-            else selfClick = true;
+            else
+            {
+                selfClick = true;
+            }
         }
 
         private void OnChipDieSelected(object? sender, ChipViewModel chip)
@@ -1152,11 +1048,6 @@ namespace CVWaferProber.ViewModels
 
         private void RefreshStatus(object? obj) => _dataGrid?.Items.Refresh();
 
-        private void DieResultDisplay(DieViewModel dieViewModel)
-        {
-            MainService.Instance.ResultDisplay(dieViewModel);
-            CalculateYieldBySerialNumber();
-        }
 
         public void InitializeServive(MainService main)
         {
@@ -1168,36 +1059,6 @@ namespace CVWaferProber.ViewModels
 
         private void OnTestingCompleted(object? sender, TestCompletedEventArgs e)
         {
-            DoEndTesting(e.IsAuto);
-        }
-
-        private void OnAutoTestingNextDie(object? sender, (DieViewModel? preDie, DieViewModel nextDie) e)
-        {
-            Application.Current.Dispatcher.Invoke(() => { MoveNextSel(e); });
-        }
-
-        private void MoveNextSel((DieViewModel? preDie, DieViewModel nextDie) e)
-        {
-            if (e.preDie != null) e.preDie.UnSelected();
-            SelectedItem = e.nextDie;
-            // 新增：仅IVL测试且是第一个Die时，切换到总览图
-            if (_isFirstDieInAutoTest && SelectedWPFlow?.FlowType.ToString().Contains("IVL") == true)
-            {
-                // 调用DockMainWindow的切换方法（总览图）
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    var mainVM = (MainViewModel)Application.Current.MainWindow.DataContext;
-                    mainVM.ActivateSpectralInnerTabAction?.Invoke();
-                });
-                // 标记为非第一个Die，后续不再切换
-                _isFirstDieInAutoTest = false;
-            }
-            StartSingleDieTest(e.nextDie); // 下一个Die开始测试，重置单Die进度
-        }
-
-        private void DoEndTesting(bool isAuto)
-        {
-            //CompletedTestCount = Math.Min(CompletedTestCount + 1, TotalTestCount);
             EnableBtnGUI(true);
             CalculateYieldBySerialNumber();
             AutoExportSummaryResult();
@@ -1206,11 +1067,31 @@ namespace CVWaferProber.ViewModels
             OnPropertyChanged(nameof(ProgressText));
 
             // 关键：测试完成后重置IsManualTesting=false
-            if (!isAuto) IsManualTesting = false;
-            if (isAuto && CompletedTestCount >= TotalTestCount) ResetProgressBars(); // 自动测试全部完成，重置进度条
-
-            // ========== 测试整体结束时立即保存（无防抖） ==========            
+            if (!e.IsAuto) IsManualTesting = false;
+            if (e.IsAuto && CompletedTestCount >= TotalTestCount) ResetProgressBars(); // 自动测试全部完成，重置进度条
             _ = SaveLastSessionIfNeededAsync();
+        }
+
+        private void OnAutoTestingNextDie(object? sender, (DieViewModel? preDie, DieViewModel nextDie) e)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                if (e.preDie != null) e.preDie.UnSelected();
+                SelectedItem = e.nextDie;
+                // 新增：仅IVL测试且是第一个Die时，切换到总览图
+                if (_isFirstDieInAutoTest && SelectedWPFlow?.FlowType.ToString().Contains("IVL") == true)
+                {
+                    // 调用DockMainWindow的切换方法（总览图）
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        var mainVM = (MainViewModel)Application.Current.MainWindow.DataContext;
+                        mainVM.ActivateSpectralInnerTabAction?.Invoke();
+                    });
+                    // 标记为非第一个Die，后续不再切换
+                    _isFirstDieInAutoTest = false;
+                }
+                StartSingleDieTest(e.nextDie); // 下一个Die开始测试，重置单Die进度
+            });
         }
 
         public void EnableBtnGUI(bool enabled)
@@ -1314,13 +1195,6 @@ namespace CVWaferProber.ViewModels
             if (groupIndex % 2 == 1) currentGroup.Reverse();
             result.AddRange(currentGroup);
             return result;
-        }
-
-        public List<DieViewModel> GetSortedResultsLinq(List<DieViewModel> testQueue)
-        {
-            return testQueue.GroupBy(d => d.MapY).OrderBy(g => g.Key)
-                .SelectMany((g, index) => index % 2 == 0 ? g.OrderBy(d => d.MapX) : g.OrderByDescending(d => d.MapX))
-                .ToList();
         }
 
         public void OpenSummaryConfig()
@@ -1664,11 +1538,6 @@ namespace CVWaferProber.ViewModels
             CustomMappingVM.SetSelectedChips(selectedIds);
         }
 
-        public void SetDataGrid(DataGrid dataGrid)
-        {
-            _dataGrid = dataGrid;
-            UpdateDataGridColumns();
-        }
 
         public void LoadMappingFile(string mappingFile)
         {

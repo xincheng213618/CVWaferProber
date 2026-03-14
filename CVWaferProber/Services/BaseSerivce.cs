@@ -104,8 +104,12 @@ namespace CVWaferProber.Services
         {
             AutoTestingNextCompleted?.Invoke(this, dieViewModel);
             if (IsAutoExportData)
-            {
-                AutoExportData(dieViewModel);
+            {     
+                Task.Run(() =>
+                {
+                    try { AutoExportData(dieViewModel); }
+                    catch (Exception ex) { logger.Error("Auto export failed", ex); }
+                });
             }
         }
 

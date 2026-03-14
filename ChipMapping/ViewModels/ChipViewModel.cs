@@ -87,38 +87,6 @@ namespace ChipMapping.ViewModels
                 }
             }
         }
-        private bool _isBlinking = false;
-
-        public bool IsBlinking
-        {
-            get => _isBlinking;
-            set => SetProperty(ref _isBlinking, value);
-        }
-
-        //// 闪烁时的填充颜色
-        //public SolidColorBrush? BlinkFill { get; private set; }
-
-        //private void InitializeBlinkTimer()
-        //{
-        //    _blinkTimer = new DispatcherTimer();
-        //    _blinkTimer.Interval = TimeSpan.FromMilliseconds(500); // 500ms闪烁一次
-        //    _blinkTimer.Tick += BlinkTimer_Tick;
-        //}
-
-        //private void StartBlinking()
-        //{
-        //    // 保存原始颜色
-        //    _originalFill = GetStatusBrush(Status);
-        //    BlinkFill = new SolidColorBrush(Colors.White);
-        //    _blinkTimer?.Start();
-        //}
-
-        //public void StopBlinking()
-        //{
-        //    _blinkTimer?.Stop();
-        //    IsBlinking = false;
-        //}
-
         public void SetStatus(ChipStatus status)
         {
             _chipData.Status = status;
@@ -126,24 +94,15 @@ namespace ChipMapping.ViewModels
             OnPropertyChanged(nameof(Status));
             OnPropertyChanged(nameof(GetCurrentFill)); // 状态改变时也更新颜色
         }
-        //private void BlinkTimer_Tick(object? sender, System.EventArgs e)
-        //{
-        //    IsBlinking = !IsBlinking;
-        //}
 
-        private SolidColorBrush GetStatusBrush(ChipStatus? status)
-        {
-            return ChipStatusTool.GetStatusBrush(status);
-        }
 
         public SolidColorBrush? GetCurrentFill()
         {
-            // 如果被选中，返回白色；否则返回状态对应的颜色
             if (IsSelected)
             {
                 return _selectedBrush;
             }
-            return GetStatusBrush(Status);
+            return ChipStatusTool.GetStatusBrush(Status);
         }
 
         public string ToolTip =>
