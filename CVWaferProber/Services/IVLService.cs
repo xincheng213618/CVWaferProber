@@ -153,8 +153,6 @@ namespace CVWaferProber.Services
             {
                 FlowResultDisplayAsync(dieViewModel);
             }
-            //CustomIVLVM.ClearResult();
-            //CustomIVLVM.LoadData(dieViewModel.SerialNumber, dieViewModel.IsIVLCameraEnabled);
         }
 
         protected override ChipStatus GetResultStatus(string serialNumber)
@@ -172,102 +170,10 @@ namespace CVWaferProber.Services
                     CustomIVLVM.ClearResult();
                     CustomIVLVM.LoadData(dieViewModel.SerialNumber, dieViewModel.IsIVLCameraEnabled);
                 });
-
-                // 【关键修改1】只生成CSV内容，不直接导出文件
-                //string csvContent = GenerateCsvContent(dieViewModel, "IVL");
-                // 【关键修改2】构建Summary数据（对接AutoExportHelper的TestSummaryData）
-                //AutoExportHelper.TestSummaryData summaryData = BuildIVLSummaryData(dieViewModel);
-
                 
             });
             return ChipStatus.IVL_COMPLETED;
         }
-        /// <summary>
-        /// 【核心新增】生成IVL专属CSV内容（仅拼接字符串，不写文件）
-        /// 对接AutoExportHelper的导出规范
-        /// </summary>
-        /// <param name="die">测试芯片</param>
-        /// <param name="category">固定为"IVL"</param>
-        /// <param name="temperature">温度数据</param>
-        /// <returns>拼接好的CSV字符串</returns>
-        //public string GenerateCsvContent(DieViewModel die, string category)
-        //{
-        //    try
-        //    {
-        //        if (category != "IVL")
-        //        {
-        //            throw new ArgumentException((string)Application.Current.FindResource("IVLServiceonlysupportsCSV"));
-        //        }
-
-        //        // 1. IVL CSV表头（与截图/业务匹配）
-        //        string ivlHeader = "Voltage/V,Current/mA,Lv(cd/m2),IP,BlueLight,cx,cy,u',v',CCT(K),Dominant Wavelength(nm),Saturation(%),Peak Wavelength(nm),FWHM,Temperature(℃)";
-
-        //        // 2. 构建CSV数据行（从光谱数据/DieViewModel中读取）
-        //        StringBuilder csvRows = new StringBuilder();
-        //        csvRows.AppendLine(ivlHeader);
-
-        //        // 如果有多个数据行，遍历_spectrumDataList；这里以单行为例
-        //        if (_currentSpectrumData != null)
-        //        {
-        //            string row = $"{_currentSpectrumData.Voltage:F5}," +
-        //                         $"{_currentSpectrumData.Current:F4}," +
-        //                         $"{_currentSpectrumData.Luminance:F1}," +
-        //                         $"{_currentSpectrumData.IP}," +
-        //                         $"{_currentSpectrumData.Blue:F2}," +
-        //                         $"{_currentSpectrumData.CIE_x:F6}," +
-        //                         $"{_currentSpectrumData.CIE_y:F6}," +
-        //                         $"{_currentSpectrumData.CIE_u:F6}," +
-        //                         $"{_currentSpectrumData.CIE_v:F6}," +
-        //                         $"{_currentSpectrumData.CCT:F1}," +
-        //                         $"{_currentSpectrumData.PeakWavelength:F2}," +
-        //                         $"{_currentSpectrumData.fPur:F4}," +
-        //                         $"{_currentSpectrumData.PeakWavelength:F2}," +
-        //                         $"{_currentSpectrumData.FHW:F1}," +
-        //                         $"{_chipMappingControlViewModel.Temperatures:F1}";
-        //            csvRows.AppendLine(row);
-        //        }
-        //        else
-        //        {
-        //            logger.Warn( "IVL data is empty，SN：{die.SerialNumber}");//" : $"IVL数据为空
-        //            csvRows.AppendLine(",,,,,,,,,,,,,,"); // 空行兜底
-        //        }
-
-        //        return csvRows.ToString().TrimEnd();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        logger.Error( "Failed to generate IVL.CSV content", ex);// : "生成IVL.CSV内容失败"
-        //        throw;
-        //    }
-        //}
-
-        /// <summary>
-        /// 【核心新增】构建IVL的Summary数据（对接AutoExportHelper的TestSummaryData）
-        /// </summary>
-        //private AutoExportHelper.TestSummaryData BuildIVLSummaryData(DieViewModel die)
-        //{
-        //    return new AutoExportHelper.TestSummaryData
-        //    {
-        //        IVSelected = "Y",          // IVL测试选中，标记为Y
-        //        IVLSelected = "Y",         // 截图中重复的IV Selected，同步为Y
-        //        AOISelected = "N",         // 未选AOI，标记为N
-        //        VAMSelected = "N",         // 未选VAM，标记为N
-        //        EQESelected = "N",         // 未选EQE，标记为N
-        //        /*   假数据   */
-        //        LightOnStatus =/* die.LightOnStatus ??*/  "na",
-        //        Register =/* die.Register ??*/ "na",
-        //        Pixels = /*die.Pixels ?? */"na",
-        //        /*            */
-        //        AOIGradeLevel = "na",
-        //        BlackPatterns = "na",
-        //        Temperature = _chipMappingControlViewModel.Temperatures.ToString() ?? "na",
-        //        PixelLogic = "na",
-        //        MeasurePin = "na",
-        //        Pressure = _chipMappingControlViewModel.Pressure ?? "na",
-        //        TouchDownCounts = _chipMappingControlViewModel.TDCount != 0? _chipMappingControlViewModel.TDCount: 0,
-        //        ProbingCardID = _chipMappingControlViewModel.SN ?? "na",
-        //    };
-        //}
 
         /// <summary>
         /// 重写基类EndTesting（确保流程结束时停止定时器）
@@ -279,43 +185,7 @@ namespace CVWaferProber.Services
 
         }
 
-        // 仅暴露“生成CSV内容”的方法（不执行文件写入，只返回内容）
-        //public string GenerateCsvContent(DieViewModel die)
-        //{
-        //    // 原有CSV内容生成逻辑（只拼接字符串，不写文件）
-        //    string ivlHeader = "Voltage/V,Current/mA,Lv(cd/m2),IP,BlueLight,cx,cy,u',v',CCT(K),Dominant Wavelength(nm),Saturation(%),Peak Wavelength(nm),FWHM,Temperature(℃)";
-        //    var dataRows = BuildIVLCsvDataRows(die);
-        //    return AutoExportHelper.GenerateCsvWithWavelengths(ivlHeader, dataRows, die.Wavelengths, die.Intensities);
-        //}
-        /// <summary> 
-        /// 构建IVL CSV的数据行
-        /// </summary>
-        private List<string> BuildIVLCsvDataRows(DieViewModel die)
-        {
-            var dataRows = new List<string>();
-            // 从光谱数据中获取IVL相关数据（假设你已缓存了_currentSpectrumData）
-            if (_currentSpectrumData != null)
-            {
-                string row = $"{_currentSpectrumData.Voltage:F5}," +
-                                 $"{_currentSpectrumData.Current:F4}," +
-                                 $"{_currentSpectrumData.Luminance:F1}," +
-                                 $"{_currentSpectrumData.IP}," +
-                                 $"{_currentSpectrumData.Blue:F2}," +
-                                 $"{_currentSpectrumData.CIE_x:F6}," +
-                                 $"{_currentSpectrumData.CIE_y:F6}," +
-                                 $"{_currentSpectrumData.CIE_u:F6}," +
-                                 $"{_currentSpectrumData.CIE_v:F6}," +
-                                 $"{_currentSpectrumData.CCT:F1}," +
-                                 $"{_currentSpectrumData.PeakWavelength:F2}," +
-                                 $"{_currentSpectrumData.fPur:F4}," +
-                                 $"{_currentSpectrumData.PeakWavelength:F2}," +
-                                 $"{_currentSpectrumData.FHW:F1},";
-                                 //$"{_chipMappingControlViewModel.Temperatures:F1}";
-                dataRows.Add(row);
-            }
-            return dataRows;
-        }
-        //WPFlowViewModel wpfFlowViewModel { get; set; }
+
 
         public override void AutoExportData(DieViewModel dieViewModel)
         {
@@ -366,26 +236,7 @@ namespace CVWaferProber.Services
                 // 继续执行，使用空的光谱数据
             }
 
-           /* var Measurements = CustomIVLVM.Measurements;
-            var Wavelengths = CustomIVLVM.Wavelengths;
-            var ivMeasurements = CustomIVLVM?.IVMeasurements;
-
-
-            //这里如果配置的时IV 就走IV的解析
-            if (WaferProberData.SelectedWPFlow.Name == "IV-Sweep")
-            {
-                // 读取全局配置的IVL导出路径（核心修改点2）
-                string ivRootPath = ConfigManager.Config.ExportPathSettings?.IvExportPath ?? @"D:\Project\IV";
-                // 确保目录存在
-                if (!Directory.Exists(ivRootPath))
-                {
-                    Directory.CreateDirectory(ivRootPath);
-                    logger.Info($"Create IV export directory：{ivRootPath}");
-                }
-                ExportIVDataOnly(serialNumber, ivRootPath, ivMeasurements);
-                return;
-            }*/
-            // ========== 核心判断逻辑：基于数据特征而非流程类型 ==========
+            // ========== 基于数据特征而非流程类型 ==========
             bool hasSpectrumData = measurements?.Any() == true && wavelengths != null && wavelengths.Length > 0;
             bool hasIVDataOnly = ivMeasurements?.Any() == true && !hasSpectrumData;
 
@@ -421,30 +272,6 @@ namespace CVWaferProber.Services
 
             // 3. 无有效数据 → 跳过导出
             logger.Info($"No valid IV/IVL data for {serialNumber}, skip export");
-            //// 读取全局配置的IVL导出路径（核心修改点2）
-            //string ivlRootPath = ConfigManager.Config.ExportPathSettings?.IvlExportPath ?? @"D:\Project\IVL";
-
-            //// 确保目录存在
-            //if (!Directory.Exists(ivlRootPath))
-            //{
-            //    Directory.CreateDirectory(ivlRootPath);
-            //    logger.Info($"Create IVL export directory：{ivlRootPath}");
-            //}
-
-            //logger.Info($"ivl measurements Count {measurements.Count}");
-
-            //// 6. 常规IVL数据导出（原有逻辑） // 构造文件名（包含SerialNumber+时间戳）
-            //if (measurements?.Any() == true && wavelengths != null && wavelengths.Length > 0)
-            //{
-            //    string fileName = $"IVL_Data_{serialNumber}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-            //    string fullExportPath = Path.Combine(ivlRootPath, fileName);
-            //    CustomIVLVM?.ExportToCsv(fullExportPath, measurements, wavelengths);
-            //    logger.Info($"Full IVL data exported to：{fullExportPath}");
-            //}
-            //else
-            //{
-            //    logger.Info("No valid IV/IVL data available for export");
-            //}
         }
 
         private void ExportIVDataOnly(string serialNumber, string exportPath, ObservableCollection<IVMeasurement> ivMeasurements)

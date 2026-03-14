@@ -423,7 +423,8 @@ namespace CVWaferProber.ViewModels
                 if (SetProperty(ref _singleDieTestProgress, Math.Max(0, Math.Min(100, value))))
                 {
                     UpdateTotalProgress(); // 单Die进度更新同步总进度
-                    OnPropertyChanged(nameof(ProgressText));
+                    OnPropertyChanged();
+                    ProgressText = $"{SingleDieTestProgress:F1}%";
                 }
             }
         }
@@ -454,7 +455,6 @@ namespace CVWaferProber.ViewModels
                 if (SetProperty(ref _completedTestCount, value))
                 {
                     UpdateTotalProgress(); // 完成数更新同步总进度
-                    OnPropertyChanged(nameof(ProgressText));
                     OnPropertyChanged(nameof(ProgressTextAll));
 
                 }
@@ -468,14 +468,18 @@ namespace CVWaferProber.ViewModels
             get => _currentDieInfo;
             set => SetProperty(ref _currentDieInfo, value);
         }
-
+        private string _ProgressText;
         // 进度文本（绑定到界面，显示详细进度信息）
         public string ProgressText
         {
             get
             {
-                if (TotalTestCount == 0) return "Not started";
-                return $"{SingleDieTestProgress:F1}%";
+                return _ProgressText;
+            }
+            set
+            {
+                _ProgressText = value;
+                OnPropertyChanged();
             }
         }
         public string ProgressTextAll
@@ -491,6 +495,8 @@ namespace CVWaferProber.ViewModels
         #region 构造函数（保留原有+初始化进度属性）
         public DateTime _currentDieStartTime;
         public int _currentDiePredictSeconds = 60; // 默认60秒
+
+
         public System.Timers.Timer _progressUpdateTimer;
         public MappingDataViewModel()
         {
@@ -611,20 +617,6 @@ namespace CVWaferProber.ViewModels
         /// </summary>
         private void OnProgressUpdateTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e)
         {
-            // 1. 从 sender 获取当前触发事件的定时器实例
-            var timer = sender as System.Timers.Timer;
-            if (timer == null) return;
-
-            // 2. 前置防护：检查应用和调度器是否可用
-            if (Application.Current == null ||
-                Application.Current.Dispatcher == null ||
-                Application.Current.Dispatcher.HasShutdownStarted)
-            {
-                // 应用已关闭，安全停止当前触发的定时器
-                timer?.Stop();
-                return;
-            }
-
             // 3. 核心业务逻辑
             double newProgress = 0;
             bool shouldStopTimer = false;
@@ -653,7 +645,7 @@ namespace CVWaferProber.ViewModels
 
             if (shouldStopTimer)
             {
-                timer?.Stop();
+                _progressUpdateTimer?.Stop();
                 return;
             }
 
@@ -665,8 +657,6 @@ namespace CVWaferProber.ViewModels
                     SingleDieTestProgress = newProgress;
                 }
             }, System.Windows.Threading.DispatcherPriority.Background);
-
-            timer?.Stop();
         }
         /// <summary>
         /// 更新单个Die进度 - 由DieViewModel定时器触发
@@ -858,12 +848,16 @@ namespace CVWaferProber.ViewModels
                     SelectedFlowRunCout++;
                 }
             }
-
-
             if (SelectedFlowRunCout == 0)
             {
                 MessageBox.Show(SelectedWPFlow.FlowType.ToString() + Environment.NewLine + "Plese select die for testing first!", (string)Application.Current.FindResource("Prompt"), MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
+            }
+            //清除當前測試狀態
+            foreach (var item in _testQueue)
+            {
+                item.Die.ResetUI();
+                item.Die.chipViewModel?.SetStatus(ChipStatus.WAITING);
             }
 
             var selectedDice = GetSelectedDieTestItems();
@@ -872,8 +866,11 @@ namespace CVWaferProber.ViewModels
             TestingReady(_testQueue);
             EnableBtnGUI(false);
             // 2. 启动自动测试
-
+            _progressUpdateTimer.Start();
             WaferProberData.SelectedWPFlow = _selectedWPFlow;
+
+
+
             MainService.Instance.StartAutoTesting(_selectedWPFlow, selectedDice);
         }
 
@@ -971,7 +968,7 @@ namespace CVWaferProber.ViewModels
 
         private void OnSelectedChanged(object? value)
         {
-            if (IsNotProcessing && value is DieViewModel die && selfClick)
+            if (value is DieViewModel die && selfClick)
             {
                 DebounceTimer.AddOrResetTimer("UpdateSelectedChipCount", 30, () =>
                 {
@@ -2145,24 +2142,6 @@ namespace CVWaferProber.ViewModels
         public MainService mainService { get; private set; }
         #endregion
 
-        /// <summary>
-        /// 重启进度更新定时器（恢复测试时调用）
-        /// </summary>
-        public void RestartProgressTimer()
-        {
-            if (_progressUpdateTimer == null)
-            {
-                _progressUpdateTimer = new System.Timers.Timer(1000);
-                _progressUpdateTimer.Elapsed += OnProgressUpdateTimerElapsed;
-                _progressUpdateTimer.AutoReset = true;
-            }
-            // 仅当未运行时启动
-            if (!_progressUpdateTimer.Enabled)
-            {
-                _progressUpdateTimer.Start();
-                logger.Debug("Progress timer restarted");
-            }
-        }
         #region 新增：订阅 TestResults 中 Die 的变更以触发自动保存（防抖）
         private void SubscribeToSaveEvents()
         {
@@ -2189,10 +2168,7 @@ namespace CVWaferProber.ViewModels
         private void Die_PropertyChangedForSave(object? sender, PropertyChangedEventArgs e)
         {
             if (sender == null) return;
-            if (e.PropertyName == nameof(DieViewModel.IsAOIEnabled) ||
-        e.PropertyName == nameof(DieViewModel.IsIVLEnabled) ||
-        e.PropertyName == nameof(DieViewModel.IsEQEEnabled) ||
-        e.PropertyName == nameof(DieViewModel.IsVAMEnabled))
+            if (e.PropertyName == nameof(DieViewModel.IsAOIEnabled) || e.PropertyName == nameof(DieViewModel.IsIVLEnabled) || e.PropertyName == nameof(DieViewModel.IsEQEEnabled) || e.PropertyName == nameof(DieViewModel.IsVAMEnabled))
             {
                 DebounceTimer.AddOrResetTimer("UpdateChipMappingSelectedCount", 50, () => 
                 {

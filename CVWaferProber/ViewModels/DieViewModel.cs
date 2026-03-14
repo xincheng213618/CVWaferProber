@@ -104,10 +104,11 @@ namespace CVWaferProber.ViewModels
         public decimal MotionAxisY { get; set; }
         public decimal MotionAxisZ { get; set; }
         public ChipViewModel? chipViewModel { get; set; }
+
+
         public string? DataValue => string.Format("{0:F4}", chipViewModel?.DataValue);
 
-        // 动态属性（保留原有）
-        private string _aoiGradeLevel = "na";
+        private string _aoiGradeLevel = "";
         public string AOIGradeLevel { get => _aoiGradeLevel; set => SetProperty(ref _aoiGradeLevel, value); }
 
         private string _lightOnStatus = "na";
@@ -119,7 +120,7 @@ namespace CVWaferProber.ViewModels
         private string _finalClass = "na";
         public string FinalClass { get => _finalClass; set => SetProperty(ref _finalClass, value); }
 
-        private string _blackPattern = "na";
+        private string _blackPattern = "";
         public string BlackPattern { get => _blackPattern; set => SetProperty(ref _blackPattern, value); }
 
         private string _temperature = "na";
@@ -137,8 +138,9 @@ namespace CVWaferProber.ViewModels
         private string _probingCardSN = "na";
         public string ProbingCardSN { get => _probingCardSN; set => SetProperty(ref _probingCardSN, value); }
 
+        public double LuminanceUniformity { get=> _LuminanceUniformity; set{ _LuminanceUniformity = value; OnPropertyChanged(); } }
+        private double _LuminanceUniformity = 0;
 
-        public double? LuminanceUniformity { get; set; }
 
 
         #endregion
@@ -400,6 +402,19 @@ namespace CVWaferProber.ViewModels
             chipViewModel.IsSelected = false;
         }
 
+        public void ResetUI()
+        {
+            StartTestTime = null;
+            EndTestTime = null;
+            TotalTime = null;
+            AOIGradeLevel = "";
+            BlackPattern = "";
+            MotionAxisX = 0;
+            MotionAxisY = 0;
+            MotionAxisZ = 0;
+            LuminanceUniformity = 0;
+        }
+
         /// <summary>
         /// 重置状态 - 集成进度逻辑：停止定时器，重置进度相关参数
         /// </summary>
@@ -412,12 +427,11 @@ namespace CVWaferProber.ViewModels
             TotalTime = null;
             SerialNumber = null;
             CurrentTestStep = 0;
+
             // 重置动态属性
-            AOIGradeLevel = "na";
             LightOnStatus = "na";
             RegisterPixels = "na";
             FinalClass = "na";
-            BlackPattern = "na";
             Temperature = "na";
             PixelLogic = "na";
             Pressure = "0,0,0,0";

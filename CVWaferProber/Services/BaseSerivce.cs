@@ -62,7 +62,8 @@ namespace CVWaferProber.Services
                     else
                     {
                         ChipStatus status = GetResultStatus(dieViewModel.SerialNumber);
-                        dieViewModel.ChangeStatus(status, true);
+                        logger.Error(response.Message);
+                        dieViewModel.ChangeStatus(ChipStatus.OVERTIME, true);
                     }
                 }
                 else

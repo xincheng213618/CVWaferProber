@@ -45,7 +45,7 @@ namespace CVWaferProber.Core.Models
         {
             return status switch
             {
-                ChipStatus.WAITING => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0xFF)),
+                ChipStatus.WAITING => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(150,0, 0, 0xFF)),
                 ChipStatus.TESTING => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0xFF, 0)),
                 ChipStatus.IVL_TESTING => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0xFF, 0)),
                 ChipStatus.EQE_TESTING => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0xFF, 0)),

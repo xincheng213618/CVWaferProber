@@ -10,17 +10,8 @@ namespace ChipMapping.Converters
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
-            if (values.Length >= 3 &&
-                values[0] is bool isSelected &&
-                values[2] is ChipStatus status)
+            if (values.Length >= 2 && values[0] is bool isSelected &&  values[1] is ChipStatus status)
             {
-                // 如果被选中，返回白色
-                if (isSelected)
-                {
-                    return new SolidColorBrush(Colors.DeepSkyBlue);
-                }
-
-                // 否则根据状态返回颜色
                 return ChipStatusTool.GetStatusBrush(status);
             }
 

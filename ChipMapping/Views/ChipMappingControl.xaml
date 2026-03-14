@@ -60,15 +60,14 @@
                 <Setter.Value>
                     <MultiBinding Converter="{StaticResource BlinkFillConverter}">
                         <Binding Path="IsSelected" />
-                        <Binding Path="IsBlinking" />
                         <Binding Path="Status" />
                     </MultiBinding>
                 </Setter.Value>
             </Setter>
             <Setter Property="Stroke" Value="{Binding IsSelected, Converter={StaticResource SelectedToStrokeBrushConverter}}" />
-            <Setter Property="StrokeThickness" Value="{Binding IsSelected, Converter={StaticResource SelectedToStrokeThicknessConverter}}" />
-            <Setter Property="RadiusX" Value="1" />
-            <Setter Property="RadiusY" Value="1" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="RadiusX" Value="2" />
+            <Setter Property="RadiusY" Value="2" />
             <Setter Property="ToolTip">
                 <Setter.Value>
                     <ToolTip
@@ -161,7 +160,6 @@
         <ToolBar Grid.Row="0" Grid.ColumnSpan="3">
             <!--<Button Content="刷新" Command="{Binding RefreshCommand}"/>
             <Separator/>-->
-
             <!--  缩放控制  -->
             <Button Command="{Binding ZoomInCommand}">
                 <!--  直接使用 FontAwesome 控件，Kind 属性指定图标类型  -->
@@ -189,106 +187,31 @@
 
             <Separator />
 
-            <!--  行列布局控制  -->
-            <!--
-            <TextBlock
-                Margin="5,0"
-                VerticalAlignment="Center"
-                Text="Layout:" />
-            <TextBlock
-                Margin="2,0"
-                VerticalAlignment="Center"
-                Text="Row:" />
-            <TextBox IsEnabled="False" Text="{Binding Rows}" />
-            <TextBlock
-                Margin="2,0"
-                VerticalAlignment="Center"
-                Text="Col:" />
-            <TextBox IsEnabled="False" Text="{Binding Columns}" />
-            <Separator />-->
-            <TextBlock
-                Margin="5,0"
-                VerticalAlignment="Center"
-                Text="{x:Static properties:Resources.Temperature}" />
+            <TextBlock Margin="5,0"  VerticalAlignment="Center" Text="{x:Static properties:Resources.Temperature}" />
             <TextBox IsEnabled="False" Text="{Binding Temperatures, StringFormat='{}{0}℃'}" />
             <Separator />
-            <TextBlock
-                Margin="2,0"
-                VerticalAlignment="Center"
-                Text="Probe Pressure:" />
+            <TextBlock Margin="2,0" VerticalAlignment="Center"  Text="Probe Pressure:" />
             <TextBox IsEnabled="False" Text="{Binding Pressure}" />
             <Separator />
-            <TextBlock
-                Margin="5,0"
-                VerticalAlignment="Center"
-                Text="Probe Card SN:" />
+            <TextBlock Margin="5,0"  VerticalAlignment="Center"  Text="Probe Card SN:" />
             <TextBox IsEnabled="False" Text="{Binding SN}" />
             <Separator />
-            <TextBlock
-                Margin="2,0"
-                VerticalAlignment="Center"
-                Text="TD Count:" />
+            <TextBlock  Margin="2,0"  VerticalAlignment="Center" Text="TD Count:" />
             <TextBox IsEnabled="False" Text="{Binding TDCount}" />
             <Separator />
-            <TextBlock
-                Margin="2,0"
-                VerticalAlignment="Center"
-                Text="Total:" />
+            <TextBlock  Margin="2,0"  VerticalAlignment="Center"  Text="SelectCout:" />
             <TextBox IsEnabled="False" Text="{Binding DieTotal}" />
             <Separator />
-            <TextBlock
-                Margin="2,0"
-                VerticalAlignment="Center"
-                Text="Yield:" />
+            <TextBlock  Margin="2,0"  VerticalAlignment="Center"   Text="Yield:" />
             <TextBox IsEnabled="False" Text="{Binding YieldInfo}" />
-
-            <!--
-            <TextBlock Text="间距:" VerticalAlignment="Center" Margin="5,0"/>
-            <TextBlock Text="水平:" VerticalAlignment="Center" Margin="2,0"/>
-            <TextBox Text="{Binding HorizontalSpacing}" ToolTip="水平间距"/>
-            <TextBlock Text="垂直:" VerticalAlignment="Center" Margin="2,0"/>
-            <TextBox Text="{Binding VerticalSpacing}" ToolTip="垂直间距"/>
-
-            <TextBlock Text="起始:" VerticalAlignment="Center" Margin="5,0"/>
-            <TextBlock Text="X:" VerticalAlignment="Center" Margin="2,0"/>
-            <TextBox Text="{Binding StartX}" ToolTip="起始X坐标"/>
-            <TextBlock Text="Y:" VerticalAlignment="Center" Margin="2,0"/>
-            <TextBox Text="{Binding StartY}" ToolTip="起始Y坐标"/>
-            -->
-
-
-
-
-            <!-- 筛选控制
-            <TextBlock Text="筛选:" VerticalAlignment="Center" Margin="5,0"/>
-            <CheckBox Content="正常" IsChecked="{Binding FilterStatus, Converter={StaticResource EnumBooleanConverter}, ConverterParameter={x:Static enums:ChipStatus.OK}}"/>
-            <CheckBox Content="NG_AOI" IsChecked="{Binding FilterStatus, Converter={StaticResource EnumBooleanConverter}, ConverterParameter={x:Static enums:ChipStatus.AOI_NG}}"/>
-            <CheckBox Content="NG_Line" IsChecked="{Binding FilterStatus, Converter={StaticResource EnumBooleanConverter}, ConverterParameter={x:Static enums:ChipStatus.AOI_LINE_NG}}"/>
-            <CheckBox Content="不亮" IsChecked="{Binding FilterStatus, Converter={StaticResource EnumBooleanConverter}, ConverterParameter={x:Static enums:ChipStatus.BLIND}}"/>
-            -->
         </ToolBar>
-
-
-        <!--  主画布区域 Grid.ColumnSpan="2"  -->
+        
         <Grid Grid.Row="1" Margin="0,0,0,0">
-            <ScrollViewer
-                Background="White"
-                BorderBrush="#FFCCCCCC"
-                BorderThickness="0,1"
-                HorizontalScrollBarVisibility="Auto"
-                VerticalScrollBarVisibility="Auto">
-                <Canvas
-                    x:Name="MainCanvas"
-                    Width="{Binding CanvasWidth}"
-                    Height="{Binding CanvasHeight}"
-                    Background="{StaticResource GridPattern}"
-                    MouseLeave="MainCanvas_MouseLeave"
-                    MouseMove="MainCanvas_MouseMove">
-
+            <ScrollViewer Background="White"  BorderBrush="#FFCCCCCC"  BorderThickness="0,1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                <Canvas  x:Name="MainCanvas"  Width="{Binding CanvasWidth}" Height="{Binding CanvasHeight}"  Background="{StaticResource GridPattern}"  MouseLeave="MainCanvas_MouseLeave" MouseMove="MainCanvas_MouseMove">
                     <Canvas.LayoutTransform>
                         <ScaleTransform ScaleX="{Binding Scale}" ScaleY="{Binding Scale}" />
                     </Canvas.LayoutTransform>
-
                     <ItemsControl ItemsSource="{Binding FilteredChips}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -303,10 +226,7 @@
                         </ItemsControl.ItemContainerStyle>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Rectangle
-                                    MouseLeftButtonDown="Rectangle_MouseLeftButtonDown"
-                                    MouseRightButtonDown="Rectangle_MouseRightButtonDown"
-                                    Style="{StaticResource ChipRectangleStyle}">
+                                <Rectangle  MouseLeftButtonDown="Rectangle_MouseLeftButtonDown" MouseRightButtonDown="Rectangle_MouseRightButtonDown"  Style="{StaticResource ChipRectangleStyle}">
                                     <Rectangle.RenderTransform>
                                         <TranslateTransform X="{Binding Width, Converter={StaticResource CenterOffsetConverter}}" Y="{Binding Height, Converter={StaticResource CenterOffsetConverter}}" />
                                     </Rectangle.RenderTransform>
@@ -318,81 +238,26 @@
 
             </ScrollViewer>
 
-            <!--  详细信息面板 Visibility="{Binding SelectedChip, Converter={StaticResource NullToVisibilityConverter}}"  -->
             <Border Style="{StaticResource DetailsPanelStyle}" Visibility="Hidden">
                 <StackPanel>
-                    <TextBlock
-                        Margin="0,0,0,10"
-                        FontSize="14"
-                        FontWeight="Bold"
-                        Text="Detail Info" />
-                    <TextBlock
-                        MaxWidth="300"
-                        Text="{Binding ChipDetails}"
-                        TextWrapping="Wrap" />
-                    <Button
-                        Margin="0,10,0,0"
-                        Padding="10,2"
-                        HorizontalAlignment="Right"
-                        Click="ClearSelectionButton_Click"
-                        Content="ClearSelected" />
+                    <TextBlock  Margin="0,0,0,10" FontSize="14" FontWeight="Bold" Text="Detail Info" />
+                    <TextBlock  MaxWidth="300" Text="{Binding ChipDetails}"  TextWrapping="Wrap" />
+                    <Button  Margin="0,10,0,0"  Padding="10,2" HorizontalAlignment="Right" Click="ClearSelectionButton_Click"  Content="ClearSelected" />
                 </StackPanel>
             </Border>
         </Grid>
-        <!--<StatusBar Grid.Row="2">
-            <StatusBarItem>
-                <TextBlock Text="{Binding Temperature, StringFormat=Temperature: {0:F1}°C}" />
-            </StatusBarItem>
-            <StatusBarItem>
-                <TextBlock Text="{Binding Pressure, StringFormat=Pressure: {0:F1}kPa}" />
-            </StatusBarItem>
-            <StatusBarItem>
-                <TextBlock Text="{Binding SN, StringFormat=ProbeCardSN: {0:F1}}" />
-            </StatusBarItem>
-            <StatusBarItem>
-                <TextBlock Text="{Binding TDCount, StringFormat=TDCount: {0:F1}}" />
-            </StatusBarItem>
-
-        </StatusBar>-->
-        <GridSplitter
-            Grid.Row="1"
-            Grid.Column="1"
-            Width="2"
-            HorizontalAlignment="Stretch"
-            Background="Transparent"
-            ShowsPreview="True" />
+        <GridSplitter Grid.Row="1" Grid.Column="1"    Width="2"   HorizontalAlignment="Stretch"  Background="Transparent" ShowsPreview="True" />
         <Grid Grid.Row="1" Grid.Column="2">
-            <Border
-                Background="White"
-                BorderBrush="#FFCCCCCC"
-                BorderThickness="1"
-                CornerRadius="4">
+            <Border  Background="White"  BorderBrush="#FFCCCCCC"  BorderThickness="1" CornerRadius="4">
                 <StackPanel>
-                    <!--  标题  -->
-                    <TextBlock
-                        Margin="5,5,5,2"
-                        FontSize="12"
-                        FontWeight="Bold"
-                        Text="{DynamicResource StatusPanel.Title}" />
-                    <!--  分隔线  -->
-                    <Rectangle
-                        Height="1"
-                        Margin="0,2,0,2"
-                        Fill="#FFE0E0E0" />
-                    <!--  状态列表：循环绑定ChipStatus的状态+颜色+说明  -->
+                    <TextBlock  Margin="5,5,5,2" FontSize="12" FontWeight="Bold" Text="{DynamicResource StatusPanel.Title}" />
+                    <Rectangle  Height="1" Margin="0,2,0,2" Fill="#FFE0E0E0" />
+                    
                     <ItemsControl ItemsSource="{Binding StatusTips}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Margin="5,2" Orientation="Horizontal">
-                                    <!--  颜色方块  -->
-                                    <Rectangle
-                                        Width="12"
-                                        Height="12"
-                                        Margin="0,0,5,0"
-                                        Fill="{Binding Color}"
-                                        Stroke="#FFCCCCCC"
-                                        StrokeThickness="1" />
-                                    <!--  状态说明  -->
+                                    <Rectangle  Width="12" Height="12"  Margin="0,0,5,0" Fill="{Binding Color}" Stroke="#FFCCCCCC"  StrokeThickness="1" />
                                     <TextBlock FontSize="11" Text="{Binding Description}" />
                                 </StackPanel>
                             </DataTemplate>

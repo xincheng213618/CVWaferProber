@@ -310,9 +310,21 @@ namespace CVWaferProber.Services
 
         public void ResultDisplay(DieViewModel dieViewModel)
         {
-            foreach (var item in flowServices)
+            if (dieViewModel.IsAOIEnabled)
             {
-                item.Value.ResultDisplay(dieViewModel);
+                flowServices[CVWaferProberFlowType.AOI].ResultDisplay(dieViewModel);
+            }
+            if (dieViewModel.IsEQEEnabled)
+            {
+                flowServices[CVWaferProberFlowType.EQE].ResultDisplay(dieViewModel);
+            }
+            if (dieViewModel.IsVAMEnabled)
+            {
+                flowServices[CVWaferProberFlowType.VAM].ResultDisplay(dieViewModel);
+            }
+            if (dieViewModel.IsIVLEnabled)
+            {
+                flowServices[CVWaferProberFlowType.IVL].ResultDisplay(dieViewModel);
             }
         }
 

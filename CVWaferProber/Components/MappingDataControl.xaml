@@ -852,7 +852,7 @@
                                         Header="{DynamicResource Maping.GridHeader.TestStatus}"
                                         IsReadOnly="True" />
                                     <DataGridTextColumn
-                                        Binding="{Binding DataValue, Mode=OneWay}"
+                                        Binding="{Binding LuminanceUniformity,StringFormat=F3, Mode=OneWay}"
                                         Header="{DynamicResource Maping.GridHeader.Uniformity}"
                                         IsReadOnly="True" />
                                     <DataGridTextColumn

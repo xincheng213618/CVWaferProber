@@ -51,7 +51,6 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
         }
         private PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = -100, DefaultMax = 6, DefaultMaxRange = 5000000000000000000};
-        private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = -100, DefaultMax = 10, DefaultMaxRange = 2000000000000000000 };
 
         private void InitializePlotModel()
         {
@@ -86,13 +85,8 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
-                Minimum = AxisY.DefaultMin,
-                Maximum = AxisY.DefaultMax,
-                MaximumRange = AxisY.DefaultMaxRange,
-                //IsZoomEnabled = false, // 禁用缩放（避免用户手动改变范围，如需保留可设为true）
                 IsPanEnabled = false
             };
-            AxisCfg(yAxis, AxisY);
 
             _plotModel.Axes.Add(xAxis);
             _plotModel.Axes.Add(yAxis);
@@ -251,11 +245,6 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 xAxis.Maximum = AxisX.DefaultMax;
                 xAxis.AbsoluteMinimum = AxisX.DefaultMin;
                 xAxis.AbsoluteMaximum = AxisX.DefaultMaxRange;
-
-                yAxis.Minimum = AxisY.DefaultMin;
-                yAxis.Maximum = AxisY.DefaultMax;
-                yAxis.AbsoluteMinimum = AxisY.DefaultMin;
-                yAxis.AbsoluteMaximum = AxisY.DefaultMaxRange;
             }
 
             PlotModel.InvalidatePlot(true);

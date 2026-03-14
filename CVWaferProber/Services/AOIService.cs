@@ -1274,8 +1274,6 @@ namespace CVWaferProber.Services
             row.Add(string.IsNullOrEmpty(measurement.Luminance.ToString("F0")) ? "Na" : measurement.Luminance.ToString("F0")); // 12. Luminance(nit)
 
 
-            MysqlControler.GetInstance().Sql.Select<VScgdMeasureResultSmu>().Where(a => a.BatchId == dieViewModel.Id).ToList();
-
 
             List<VScgdMeasureResultSmu> lists = MysqlControler.GetInstance().Sql.Select<VScgdMeasureResultSmu>().Where(a => a.BatchCode == dieViewModel.SerialNumber).ToList();
 

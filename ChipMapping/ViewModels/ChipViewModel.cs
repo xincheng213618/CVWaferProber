@@ -74,8 +74,8 @@ namespace ChipMapping.ViewModels
                     {
                         _width_old = _width;
                         _height_old = _height;
-                        Width += 5;
-                        Height += 5;
+                        Width += 2;
+                        Height += 2;
                         //StartBlinking();
                     }
                     else

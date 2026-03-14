@@ -620,9 +620,7 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             }
         }
         #endregion Tab
-        // 默认轴范围
-        private PlotAxesCfg AxisX = new PlotAxesCfg() { DefaultMin = 350, DefaultMax = 800, DefaultMaxRange = 500 };
-        private PlotAxesCfg AxisY = new PlotAxesCfg() { DefaultMin = 0, DefaultMax = float.NaN, DefaultMaxRange = float.NaN };
+        
         // public ICommand EQEExportCommand { get; }
         public string DeviceCode { get; set; }
 
@@ -2046,7 +2044,6 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
             };
-            AxisCfg(xAxis, AxisX);
 
             // 设置Y轴（强度）
             var yAxis = new LinearAxis
@@ -2056,7 +2053,6 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot,
             };
-            AxisCfg(yAxis, AxisY);
 
             PlotModel.Axes.Add(xAxis);
             PlotModel.Axes.Add(yAxis);
@@ -2093,10 +2089,6 @@ namespace CVWPFSpectrometerCtrl.ViewModels
         {
             var xAxis = PlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Bottom) as LinearAxis;
             var yAxis = PlotModel.Axes.FirstOrDefault(a => a.Position == AxisPosition.Left) as LinearAxis;
-
-            if (xAxis != null) AxisCfg(xAxis, AxisX);
-
-            if (yAxis != null) AxisCfg(yAxis, AxisY);
         }
         public void UpdateSpectrumData(double[] wavelengths, double[] intensities)
         {
@@ -2141,7 +2133,6 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             var textAnnotation = new TextAnnotation
             {
                 Text = (string)Application.Current.FindResource("Pleaseselectspectral"),
-                TextPosition = new DataPoint((AxisX.DefaultMin + AxisX.DefaultMax) / 2, (AxisY.DefaultMin + AxisY.DefaultMax) / 2),
                 TextColor = OxyColors.Gray,
                 FontSize = 16,
                 TextHorizontalAlignment = OxyPlot.HorizontalAlignment.Center,
@@ -2276,15 +2267,6 @@ namespace CVWPFSpectrometerCtrl.ViewModels
                 PlotControl.Plot.Clear();
                 PlotControl.Refresh();
             }
-
-            // 清空SpectrumControl
-            //if (_spectralCtrl != null)
-            //{
-            //    _spectralCtrl.SpectralData.SetData(new float[0], new float[0]);
-            //    _spectralCtrl.InvalidateVisual();
-            //}
-            // 新增：清空EQE曲线缓存
-            //_eqeSeriesCache.Clear();
         }
 
         private void LoadCameraData(string serialNumber)
@@ -2301,11 +2283,6 @@ namespace CVWPFSpectrometerCtrl.ViewModels
             foreach (var result in results)
             {
                 AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
-                //if (resultType == AlgorithmResultType.POI_Y || resultType == AlgorithmResultType.POI_XYZ)
-                //{
-                //    lv_results.Add(result);
-                //}
-                //else
                 if (resultType == AlgorithmResultType.PoiAnalysis)
                 {
                     var details = AlgResultService.GetCommDetailResult(result.Id);

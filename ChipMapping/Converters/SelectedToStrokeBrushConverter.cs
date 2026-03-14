@@ -7,11 +7,13 @@ namespace ChipMapping.Converters
 {
     public class SelectedToStrokeBrushConverter : IValueConverter
     {
+        public static SolidColorBrush solidColorBrush = Brushes.Blue;
+
+        public static SolidColorBrush solidColorBrush1 = new SolidColorBrush(Color.FromArgb(50,125, 125, 125));
+
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return (value is bool isSelected && isSelected) ?
-                new SolidColorBrush(Color.FromRgb(0, 100, 255)) : // 更亮的蓝色
-                new SolidColorBrush(Color.FromRgb(51, 51, 51));
+            return (value is bool isSelected && isSelected) ? solidColorBrush : solidColorBrush1;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

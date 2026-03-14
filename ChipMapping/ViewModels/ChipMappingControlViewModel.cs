@@ -23,7 +23,7 @@ namespace ChipMapping.ViewModels
         private const int CHIP_COUNT = 5000;
         private readonly Random _random = new Random();
         private readonly DispatcherTimer _renderTimer;
-        private double _scale = 1.0;
+        private double _scale = 1.3;
         private string _statusText = (string)Application.Current.FindResource("State.Ready");
         private string _mousePositionText = "X: 0, Y: 0";
         private double _renderProgress;
@@ -614,10 +614,6 @@ namespace ChipMapping.ViewModels
 
         private void UpdateCanvasSize()
         {
-            //CanvasWidth = _screenWidth;
-            //CanvasHeight = _screenHeight;
-            //OnPropertyChanged(nameof(CanvasWidth));
-            //OnPropertyChanged(nameof(CanvasHeight));
             if (Chips.Count > 0)
             {
                 double maxX = Chips.Max(c => c.Position.X) + 50; // 预留50px边缘空间
