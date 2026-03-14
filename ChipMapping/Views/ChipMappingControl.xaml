@@ -207,11 +207,30 @@
         </ToolBar>
         
         <Grid Grid.Row="1" Margin="0,0,0,0">
-            <ScrollViewer Background="White"  BorderBrush="#FFCCCCCC"  BorderThickness="0,1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                <Canvas  x:Name="MainCanvas"  Width="{Binding CanvasWidth}" Height="{Binding CanvasHeight}"  Background="{StaticResource GridPattern}"  MouseLeave="MainCanvas_MouseLeave" MouseMove="MainCanvas_MouseMove">
+            <Border
+                x:Name="CanvasContainer"
+                Background="White"
+                BorderBrush="#FFCCCCCC"
+                BorderThickness="0,1"
+                ClipToBounds="True"
+                MouseLeftButtonDown="CanvasContainer_MouseLeftButtonDown"
+                MouseLeftButtonUp="CanvasContainer_MouseLeftButtonUp"
+                MouseMove="CanvasContainer_MouseMove"
+                MouseWheel="CanvasContainer_MouseWheel"
+                SizeChanged="CanvasContainer_SizeChanged">
+                <Canvas
+                    x:Name="MainCanvas"
+                    Width="{Binding CanvasWidth}"
+                    Height="{Binding CanvasHeight}"
+                    Background="{StaticResource GridPattern}"
+                    MouseLeave="MainCanvas_MouseLeave"
+                    MouseMove="MainCanvas_MouseMove">
                     <Canvas.LayoutTransform>
                         <ScaleTransform ScaleX="{Binding Scale}" ScaleY="{Binding Scale}" />
                     </Canvas.LayoutTransform>
+                    <Canvas.RenderTransform>
+                        <TranslateTransform x:Name="PanTransform" />
+                    </Canvas.RenderTransform>
                     <ItemsControl ItemsSource="{Binding FilteredChips}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -226,7 +245,7 @@
                         </ItemsControl.ItemContainerStyle>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Rectangle  MouseLeftButtonDown="Rectangle_MouseLeftButtonDown" MouseRightButtonDown="Rectangle_MouseRightButtonDown"  Style="{StaticResource ChipRectangleStyle}">
+                                <Rectangle MouseLeftButtonDown="Rectangle_MouseLeftButtonDown" MouseRightButtonDown="Rectangle_MouseRightButtonDown" Style="{StaticResource ChipRectangleStyle}">
                                     <Rectangle.RenderTransform>
                                         <TranslateTransform X="{Binding Width, Converter={StaticResource CenterOffsetConverter}}" Y="{Binding Height, Converter={StaticResource CenterOffsetConverter}}" />
                                     </Rectangle.RenderTransform>
@@ -235,8 +254,7 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </Canvas>
-
-            </ScrollViewer>
+            </Border>
 
             <Border Style="{StaticResource DetailsPanelStyle}" Visibility="Hidden">
                 <StackPanel>
