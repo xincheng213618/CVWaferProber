@@ -12,7 +12,7 @@ namespace CVWPFSpectrometerCtrl
     /// </summary>
     public static class PlotViewAutoFitBehavior
     {
-        private const string AutoFitMenuHeader = "自适应";
+        private const string AutoFitMenuHeader = "Autoscale";
 
         public static readonly DependencyProperty EnabledProperty =
             DependencyProperty.RegisterAttached(
