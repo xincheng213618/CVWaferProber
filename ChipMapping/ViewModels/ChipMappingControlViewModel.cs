@@ -107,70 +107,73 @@ namespace ChipMapping.ViewModels
             StatusTips.Add(new StatusTip
             {
                 Status = ChipStatus.WAITING,
-                Color = new SolidColorBrush(Colors.Blue), // 蓝
+                Color = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0xFF)), // 蓝
                 Description = (string)Application.Current.FindResource("StatusPanel.WAITING")
             });
 
             StatusTips.Add(new StatusTip
             {
                 Status = ChipStatus.TESTING,
-                Color = new SolidColorBrush(Colors.Yellow), // 黄
+                Color = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0xFF, 0)), // 黄
                 Description = (string)Application.Current.FindResource("StatusPanel.TESTING")
             });
             StatusTips.Add(new StatusTip
             {
                 Status = ChipStatus.OK,
-                Color = new SolidColorBrush(Colors.Green), // 绿
+                Color = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x7C, 0xFC, 0)), // 绿
                 Description = (string)Application.Current.FindResource("StatusPanel.OK")
             });
+
             StatusTips.Add(new StatusTip
             {
                 Status = ChipStatus.AOI_NG,
-                Color = new SolidColorBrush(Colors.Red), // 红
+                Color = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0, 0)), // 红
                 Description = (string)Application.Current.FindResource("StatusPanel.AOI_NG")
             });
             StatusTips.Add(new StatusTip
             {
+                Status = ChipStatus.FAILED,
+                Color = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0, 0)), // 
+                Description = (string)Application.Current.FindResource("StatusPanel.FAILED")
+            });
+
+            StatusTips.Add(new StatusTip
+            {
                 Status = ChipStatus.DW_NG,
-                Color = new SolidColorBrush(Colors.Orange), // 橙
+                Color = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0xA5, 0)), // 橙
                 Description = (string)Application.Current.FindResource("StatusPanel.DW_NG")
             });
             StatusTips.Add(new StatusTip
             {
                 Status = ChipStatus.BLIND,
-                Color = new SolidColorBrush(Colors.Gray), // 灰
+                Color = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x80, 0x80, 0x80)), // 灰
                 Description = (string)Application.Current.FindResource("StatusPanel.BLIND")
             });
             StatusTips.Add(new StatusTip
             {
                 Status = ChipStatus.CAL_NG,
-                Color = new SolidColorBrush(Colors.Purple), // 紫
+                Color = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x80, 0, 0x80)), // 紫
                 Description = (string)Application.Current.FindResource("StatusPanel.CAL_NG")
             });
             StatusTips.Add(new StatusTip
             {
                 Status = ChipStatus.I2C_NG,
-                Color = new SolidColorBrush(Colors.White), // 白
+                Color = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0xFF, 0xFF)), // 白
                 Description = (string)Application.Current.FindResource("StatusPanel.I2C_NG")
             });
             StatusTips.Add(new StatusTip
             {
                 Status = ChipStatus.AOI_LINE_NG,
-                Color = new SolidColorBrush(Colors.Olive), // 橄榄
+                Color = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0xC0, 0xCB)), // 
                 Description = (string)Application.Current.FindResource("StatusPanel.AOI_LINE_NG")
             });
             StatusTips.Add(new StatusTip
             {
-                Status = ChipStatus.IVL_TESTING,
-                Color = new SolidColorBrush(Colors.LightYellow), // 浅黄
-                Description = (string)Application.Current.FindResource("StatusPanel.IVL_TESTING")
+                Status = ChipStatus.SKIP,
+                Color = new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 127, 0)), // 
+                Description = (string)Application.Current.FindResource("StatusPanel.SKIP")
             });
-            StatusTips.Add(new StatusTip
-            {
-                Status = ChipStatus.IVL_COMPLETED,
-                Color = new SolidColorBrush(Colors.LightGreen), // 浅绿
-                Description = (string)Application.Current.FindResource("StatusPanel.IVL_COMPLETED")
-            });
+            
             // 可继续添加其他状态...
         }
         #endregion
