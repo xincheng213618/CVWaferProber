@@ -13,6 +13,7 @@ namespace ChipMapping.ViewModels
         public ChipData? ChipData { get => _chipData; set { _chipData = value; } }
         
         private static readonly SolidColorBrush _selectedBrush = new SolidColorBrush(Colors.White);
+        private static readonly SolidColorBrush _focusedBrush = new SolidColorBrush(Color.FromRgb(0, 200, 255));
         private Point _position;
         private Point _raw_position;
         //private Point _map_position;
@@ -21,6 +22,7 @@ namespace ChipMapping.ViewModels
         private double _width_old = 6;
         private double _height_old = 3;
         private bool _isSelected;
+        private bool _isFocused;
         //private bool _isBlinking;
         //private DispatcherTimer? _blinkTimer;
         //private SolidColorBrush? _originalFill;
@@ -70,20 +72,31 @@ namespace ChipMapping.ViewModels
             {
                 if (SetProperty(ref _isSelected, value))
                 {
-                    if (_isSelected)
+                    OnPropertyChanged(nameof(GetCurrentFill));
+                }
+            }
+        }
+
+        public bool IsFocused
+        {
+            get => _isFocused;
+            set
+            {
+                if (SetProperty(ref _isFocused, value))
+                {
+                    if (_isFocused)
                     {
                         _width_old = _width;
                         _height_old = _height;
                         Width += 2;
                         Height += 2;
-                        //StartBlinking();
                     }
                     else
                     {
-                        //StopBlinking();
                         Width = _width_old;
                         Height = _height_old;
                     }
+                    OnPropertyChanged(nameof(GetCurrentFill));
                 }
             }
         }
@@ -98,6 +111,10 @@ namespace ChipMapping.ViewModels
 
         public SolidColorBrush? GetCurrentFill()
         {
+            if (IsFocused)
+            {
+                return _focusedBrush;
+            }
             if (IsSelected)
             {
                 return _selectedBrush;

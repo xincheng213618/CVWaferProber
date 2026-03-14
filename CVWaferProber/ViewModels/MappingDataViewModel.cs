@@ -131,7 +131,6 @@ namespace CVWaferProber.ViewModels
         }
 
         private bool? _selectAllAOI = false;
-        private bool _isUpdatingFromHeader_AOI = false;
         public bool? SelectAllAOI
         {
             get => _selectAllAOI;
@@ -139,21 +138,25 @@ namespace CVWaferProber.ViewModels
             {
                 if (!Equals(_selectAllAOI, value))
                 {
-                    // 标记开始更新，避免循环
-                    bool oldUpdatingState = _isUpdatingFromHeader_AOI;
-                    _isUpdatingFromHeader_AOI = true;
-
                     _selectAllAOI = value;
                     OnPropertyChanged();
 
                     // 当用户点击全选复选框时，更新所有项的选中状态
-                    if (!oldUpdatingState && value.HasValue)
+                    if (value.HasValue && !_isBatchUpdating)
                     {
                         bool newState = value.Value;
-                        foreach (var item in TestResults)
+                        _isBatchUpdating = true;
+                        try
                         {
-                            if (item.IsAOIEnabled != newState)
-                                item.IsAOIEnabled = newState;
+                            foreach (var item in TestResults)
+                            {
+                                if (item.IsAOIEnabled != newState)
+                                    item.IsAOIEnabled = newState;
+                            }
+                        }
+                        finally
+                        {
+                            _isBatchUpdating = false;
                         }
 
                         // 刷新DataGrid
@@ -165,19 +168,12 @@ namespace CVWaferProber.ViewModels
                         // 更新ChipMapping中的选中数量
                         UpdateChipMappingSelectedCount();
                     }
-
-                    // 更新全选状态（基于实际选中项）
-                    UpdateSelectAllAOIState();
-
-                    // 标记更新结束
-                    _isUpdatingFromHeader_AOI = false;
                 }
             }
         }
 
 
         private bool? _selectAllIVL = false;
-        private bool _isUpdatingFromHeader_IVL = false;
         public bool? SelectAllIVL
         {
             get => _selectAllIVL;
@@ -185,21 +181,25 @@ namespace CVWaferProber.ViewModels
             {
                 if (!Equals(_selectAllIVL, value))
                 {
-                    // 标记开始更新，避免循环
-                    bool oldUpdatingState = _isUpdatingFromHeader_IVL;
-                    _isUpdatingFromHeader_IVL = true;
-
                     _selectAllIVL = value;
                     OnPropertyChanged();
 
                     // 当用户点击全选复选框时，更新所有项的选中状态
-                    if (!oldUpdatingState && value.HasValue)
+                    if (value.HasValue && !_isBatchUpdating)
                     {
                         bool newState = value.Value;
-                        foreach (var item in TestResults)
+                        _isBatchUpdating = true;
+                        try
                         {
-                            if (item.IsIVLEnabled != newState)
-                                item.IsIVLEnabled = newState;
+                            foreach (var item in TestResults)
+                            {
+                                if (item.IsIVLEnabled != newState)
+                                    item.IsIVLEnabled = newState;
+                            }
+                        }
+                        finally
+                        {
+                            _isBatchUpdating = false;
                         }
 
                         // 刷新DataGrid
@@ -211,12 +211,6 @@ namespace CVWaferProber.ViewModels
                         // 更新ChipMapping中的选中数量
                         UpdateChipMappingSelectedCount();
                     }
-
-                    // 更新全选状态（基于实际选中项）
-                    UpdateSelectAllIVLState();
-
-                    // 标记更新结束
-                    _isUpdatingFromHeader_IVL = false;
                 }
             }
         }
@@ -224,7 +218,6 @@ namespace CVWaferProber.ViewModels
 
 
         private bool? _selectAllEQE = false;
-        private bool _isUpdatingFromHeader_EQE = false;
         public bool? SelectAllEQE
         {
             get => _selectAllEQE;
@@ -232,21 +225,25 @@ namespace CVWaferProber.ViewModels
             {
                 if (!Equals(_selectAllEQE, value))
                 {
-                    // 标记开始更新，避免循环
-                    bool oldUpdatingState = _isUpdatingFromHeader_EQE;
-                    _isUpdatingFromHeader_EQE = true;
-
                     _selectAllEQE = value;
                     OnPropertyChanged();
 
                     // 当用户点击全选复选框时，更新所有项的选中状态
-                    if (!oldUpdatingState && value.HasValue)
+                    if (value.HasValue && !_isBatchUpdating)
                     {
                         bool newState = value.Value;
-                        foreach (var item in TestResults)
+                        _isBatchUpdating = true;
+                        try
                         {
-                            if (item.IsEQEEnabled != newState)
-                                item.IsEQEEnabled = newState;
+                            foreach (var item in TestResults)
+                            {
+                                if (item.IsEQEEnabled != newState)
+                                    item.IsEQEEnabled = newState;
+                            }
+                        }
+                        finally
+                        {
+                            _isBatchUpdating = false;
                         }
 
                         // 刷新DataGrid
@@ -258,19 +255,12 @@ namespace CVWaferProber.ViewModels
                         // 更新ChipMapping中的选中数量
                         UpdateChipMappingSelectedCount();
                     }
-
-                    // 更新全选状态（基于实际选中项）
-                    UpdateSelectAllEQEState();
-
-                    // 标记更新结束
-                    _isUpdatingFromHeader_EQE = false;
                 }
             }
         }
   
 
         private bool? _selectAllVAM = false;
-        private bool _isUpdatingFromHeader_VAM = false;
         public bool? SelectAllVAM
         {
             get => _selectAllVAM;
@@ -279,21 +269,25 @@ namespace CVWaferProber.ViewModels
 
                 if (!Equals(_selectAllVAM, value))
                 {
-                    // 标记开始更新，避免循环
-                    bool oldUpdatingState = _isUpdatingFromHeader_VAM;
-                    _isUpdatingFromHeader_VAM = true;
-
                     _selectAllVAM = value;
                     OnPropertyChanged();
 
                     // 当用户点击全选复选框时，更新所有项的选中状态
-                    if (!oldUpdatingState && value.HasValue)
+                    if (value.HasValue && !_isBatchUpdating)
                     {
                         bool newState = value.Value;
-                        foreach (var item in TestResults)
+                        _isBatchUpdating = true;
+                        try
                         {
-                            if (item.IsVAMEnabled != newState)
-                                item.IsVAMEnabled = newState;
+                            foreach (var item in TestResults)
+                            {
+                                if (item.IsVAMEnabled != newState)
+                                    item.IsVAMEnabled = newState;
+                            }
+                        }
+                        finally
+                        {
+                            _isBatchUpdating = false;
                         }
 
                         // 刷新DataGrid
@@ -314,12 +308,6 @@ namespace CVWaferProber.ViewModels
                         // 更新ChipMapping中的选中数量
                         UpdateChipMappingSelectedCount();
                     }
-
-                    // 更新全选状态（基于实际选中项）
-                    UpdateSelectAllVAMState();
-
-                    // 标记更新结束
-                    _isUpdatingFromHeader_VAM = false;
                 }
             }
         }
@@ -970,13 +958,15 @@ namespace CVWaferProber.ViewModels
         {
             if (value is DieViewModel die && selfClick)
             {
-                DebounceTimer.AddOrResetTimer("UpdateSelectedChipCount", 30, () =>
+                // 同步映射图中的焦点状态
+                if (CustomMappingVM != null)
                 {
-                    Application.Current.Dispatcher.Invoke(() =>
+                    var chip = CustomMappingVM.Chips.FirstOrDefault(c => c.Id == (uint)die.Id);
+                    if (chip != null)
                     {
-                        CustomMappingVM?.UpdateSelectedChipCount();
-                    });
-                });
+                        CustomMappingVM.SelectedChip = chip;
+                    }
+                }
                 MainService.Instance.ResultDisplay(die);
                 CalculateYieldBySerialNumber();
             }
@@ -1232,7 +1222,7 @@ namespace CVWaferProber.ViewModels
 
         private void AOI_Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(DieViewModel.IsAOIEnabled) && !_isUpdatingFromHeader_AOI)
+            if (e.PropertyName == nameof(DieViewModel.IsAOIEnabled) && !_isBatchUpdating)
             {
                 UpdateSelectAllAOIState();
                 // 新增：当单个Die的AOI启用状态改变时，更新Total
@@ -1261,7 +1251,7 @@ namespace CVWaferProber.ViewModels
 
         private void IVL_Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(DieViewModel.IsIVLEnabled) && !_isUpdatingFromHeader_IVL)
+            if (e.PropertyName == nameof(DieViewModel.IsIVLEnabled) && !_isBatchUpdating)
             {
                 UpdateSelectAllIVLState();
                 // 新增：当单个Die的IVL启用状态改变时，更新Total
@@ -1290,7 +1280,7 @@ namespace CVWaferProber.ViewModels
 
         private void EQE_Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(DieViewModel.IsEQEEnabled) && !_isUpdatingFromHeader_EQE)
+            if (e.PropertyName == nameof(DieViewModel.IsEQEEnabled) && !_isBatchUpdating)
             {
                 UpdateSelectAllEQEState();
                 // 新增：当单个Die的EQE启用状态改变时，更新Total
@@ -1321,7 +1311,7 @@ namespace CVWaferProber.ViewModels
 
         private void VAM_Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(DieViewModel.IsVAMEnabled) && !_isUpdatingFromHeader_VAM)
+            if (e.PropertyName == nameof(DieViewModel.IsVAMEnabled) && !_isBatchUpdating)
             {
                 UpdateSelectAllVAMState();
                 // 新增：当单个Die的VAM启用状态改变时，更新Total
@@ -1333,64 +1323,72 @@ namespace CVWaferProber.ViewModels
         {
             if (TestResults.Count == 0)
             {
-                SelectAllAOI = false;
+                _selectAllAOI = false;
+                OnPropertyChanged(nameof(SelectAllAOI));
                 return;
             }
             int selectedCount = TestResults.Count(item => item.IsAOIEnabled);
-            SelectAllAOI = selectedCount switch
+            _selectAllAOI = selectedCount switch
             {
                 0 => false,
                 var c when c == TestResults.Count => true,
                 _ => null
             };
+            OnPropertyChanged(nameof(SelectAllAOI));
         }
 
         private void UpdateSelectAllIVLState()
         {
             if (TestResults.Count == 0)
             {
-                SelectAllIVL = false;
+                _selectAllIVL = false;
+                OnPropertyChanged(nameof(SelectAllIVL));
                 return;
             }
             int selectedCount = TestResults.Count(item => item.IsIVLEnabled);
-            SelectAllIVL = selectedCount switch
+            _selectAllIVL = selectedCount switch
             {
                 0 => false,
                 var c when c == TestResults.Count => true,
                 _ => null
             };
+            OnPropertyChanged(nameof(SelectAllIVL));
         }
 
         private void UpdateSelectAllEQEState()
         {
             if (TestResults.Count == 0)
             {
-                SelectAllEQE = false;
+                _selectAllEQE = false;
+                OnPropertyChanged(nameof(SelectAllEQE));
                 return;
             }
             int selectedCount = TestResults.Count(item => item.IsEQEEnabled);
-            SelectAllEQE = selectedCount switch
+            _selectAllEQE = selectedCount switch
             {
                 0 => false,
                 var c when c == TestResults.Count => true,
                 _ => null
             };
+            OnPropertyChanged(nameof(SelectAllEQE));
         }
 
         private void UpdateSelectAllVAMState()
         {
             if (TestResults.Count == 0)
             {
-                SelectAllVAM = false;
+                _selectAllVAM = false;
+                OnPropertyChanged(nameof(SelectAllVAM));
                 return;
             }
             int selectedCount = TestResults.Count(item => item.IsVAMEnabled);
-            SelectAllVAM = selectedCount switch
+            _selectAllVAM = selectedCount switch
             {
                 0 => false,
                 var c when c == TestResults.Count => true,
                 _ => null
             };
+            OnPropertyChanged(nameof(SelectAllVAM));
         }
 
         private async void ExecuteInvertSelectAOI(object obj)
@@ -1398,7 +1396,6 @@ namespace CVWaferProber.ViewModels
             try
             {
                 _isBatchUpdating = true; 
-                _isUpdatingFromHeader_AOI = true;
                 Mouse.OverrideCursor = Cursors.Wait;
 
                 // 批量设置
@@ -1418,7 +1415,7 @@ namespace CVWaferProber.ViewModels
             }
             finally
             {
-                _isUpdatingFromHeader_AOI = false;
+                _isBatchUpdating = false;
                 Mouse.OverrideCursor = null;
             }
            
@@ -1428,11 +1425,8 @@ namespace CVWaferProber.ViewModels
         {
             try
             {
-                _isUpdatingFromHeader_IVL = true;
+                _isBatchUpdating = true;
                 Mouse.OverrideCursor = Cursors.Wait;
-
-                // 计算目标状态
-                bool targetState = !TestResults.FirstOrDefault()?.IsIVLEnabled ?? false;
 
                 // 批量设置
                 foreach (var item in TestResults)
@@ -1451,7 +1445,7 @@ namespace CVWaferProber.ViewModels
             }
             finally
             {
-                _isUpdatingFromHeader_IVL = false;
+                _isBatchUpdating = false;
                 Mouse.OverrideCursor = null;
             }
         }
@@ -1460,11 +1454,8 @@ namespace CVWaferProber.ViewModels
         {
             try
             {
-                _isUpdatingFromHeader_EQE = true;
+                _isBatchUpdating = true;
                 Mouse.OverrideCursor = Cursors.Wait;
-
-                // 计算目标状态
-                bool targetState = !TestResults.FirstOrDefault()?.IsEQEEnabled ?? false;
 
                 // 批量设置
                 foreach (var item in TestResults)
@@ -1483,7 +1474,7 @@ namespace CVWaferProber.ViewModels
             }
             finally
             {
-                _isUpdatingFromHeader_EQE = false;
+                _isBatchUpdating = false;
                 Mouse.OverrideCursor = null;
             }
         }
@@ -1492,11 +1483,8 @@ namespace CVWaferProber.ViewModels
         {
             try
             {
-                _isUpdatingFromHeader_VAM = true;
+                _isBatchUpdating = true;
                 Mouse.OverrideCursor = Cursors.Wait;
-
-                // 计算目标状态
-                bool targetState = !TestResults.FirstOrDefault()?.IsVAMEnabled ?? false;
 
                 // 批量设置
                 foreach (var item in TestResults)
@@ -1515,7 +1503,7 @@ namespace CVWaferProber.ViewModels
             }
             finally
             {
-                _isUpdatingFromHeader_VAM = false;
+                _isBatchUpdating = false;
                 Mouse.OverrideCursor = null;
             }
         }

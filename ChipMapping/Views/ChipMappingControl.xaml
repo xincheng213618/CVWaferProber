@@ -59,12 +59,13 @@
             <Setter Property="Fill">
                 <Setter.Value>
                     <MultiBinding Converter="{StaticResource BlinkFillConverter}">
+                        <Binding Path="IsFocused" />
                         <Binding Path="IsSelected" />
                         <Binding Path="Status" />
                     </MultiBinding>
                 </Setter.Value>
             </Setter>
-            <Setter Property="Stroke" Value="{Binding IsSelected, Converter={StaticResource SelectedToStrokeBrushConverter}}" />
+            <Setter Property="Stroke" Value="{Binding IsFocused, Converter={StaticResource SelectedToStrokeBrushConverter}}" />
             <Setter Property="StrokeThickness" Value="1" />
             <Setter Property="RadiusX" Value="2" />
             <Setter Property="RadiusY" Value="2" />
