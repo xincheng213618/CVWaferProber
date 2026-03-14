@@ -218,10 +218,10 @@ namespace ChipMapping.ViewModels
             get => _selectedChip;
             set
             {
-                // 清除之前选中的芯片
+                // 清除之前选中的芯片的焦点状态
                 if (_selectedChip != null && value != _selectedChip)
                 {
-                    _selectedChip.IsSelected = false;
+                    _selectedChip.IsFocused = false;
                 }
                 if (_DisabledInput) { return; }
                 if (SetProperty(ref _selectedChip, value))
@@ -229,7 +229,7 @@ namespace ChipMapping.ViewModels
                     // 设置新选中的芯片
                     if (_selectedChip != null)
                     {
-                        _selectedChip.IsSelected = true;
+                        _selectedChip.IsFocused = true;
                         // 同步行列信息
                         SelectedChipRow = _selectedChip.Row;
                         SelectedChipColumn = _selectedChip.Column;
@@ -287,7 +287,7 @@ namespace ChipMapping.ViewModels
             TemperatureManager.TemperatureChanged -= OnTemperatureChanged;
             if (SelectedChip != null)
             {
-                SelectedChip.IsSelected = false;
+                SelectedChip.IsFocused = false;
             }
             SelectedChip = null;
         }
@@ -347,7 +347,7 @@ namespace ChipMapping.ViewModels
         {
             if (SelectedChip != null)
             {
-                SelectedChip.IsSelected = false;
+                SelectedChip.IsFocused = false;
             }
             foreach (var chip in Chips)
             {
