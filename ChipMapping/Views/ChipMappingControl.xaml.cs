@@ -12,6 +12,10 @@ namespace ChipMapping.Views
     /// </summary>
     public partial class ChipMappingControl : UserControl
     {
+        private const double MinZoomScale = 0.1;
+        private const double MaxZoomScale = 5.0;
+        private const double ZoomStepFactor = 1.1;
+
         public static readonly DependencyProperty ValueChangedCommandProperty =
            DependencyProperty.Register(
                "ValueChangedCommand",
@@ -87,7 +91,7 @@ namespace ChipMapping.Views
             double scaleX = containerWidth / canvasWidth;
             double scaleY = containerHeight / canvasHeight;
             double fitScale = Math.Min(scaleX, scaleY);
-            fitScale = Math.Max(0.1, Math.Min(5.0, fitScale));
+            fitScale = Math.Max(MinZoomScale, Math.Min(MaxZoomScale, fitScale));
 
             viewModel.Scale = fitScale;
 
@@ -112,10 +116,10 @@ namespace ChipMapping.Views
             if (DataContext is not ChipMappingControlViewModel viewModel) return;
 
             var mousePos = e.GetPosition(CanvasContainer);
-            double zoomFactor = e.Delta > 0 ? 1.1 : 1.0 / 1.1;
+            double zoomFactor = e.Delta > 0 ? ZoomStepFactor : 1.0 / ZoomStepFactor;
 
             double oldScale = viewModel.Scale;
-            double newScale = Math.Max(0.1, Math.Min(5.0, oldScale * zoomFactor));
+            double newScale = Math.Max(MinZoomScale, Math.Min(MaxZoomScale, oldScale * zoomFactor));
             double actualFactor = newScale / oldScale;
 
             // 调整平移，使鼠标所指点保持不变
