@@ -302,7 +302,7 @@ namespace CVWPFCamImageCtrl
 
                 SelectLatestImageItem(imageItem);
 
-            }, DispatcherPriority.Send); // 强制正常优先级，确保集合先刷新
+            }, DispatcherPriority.Normal ); // 强制正常优先级，确保集合先刷新
 
             // 实时预览开启时，延迟500ms
             if (IsRealTimePreviewEnabled)
@@ -315,7 +315,7 @@ namespace CVWPFCamImageCtrl
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 imageItem.Status = "Loaded";
-            }, DispatcherPriority.Send);
+            }, DispatcherPriority.Normal);
         }
         /// <summary>
         /// 实时添加单张Camera Measurement（测试过程中调用）
@@ -355,7 +355,7 @@ namespace CVWPFCamImageCtrl
 
                 // 核心：自动选中最新添加的图片
                 SelectLatestImageItem(imageItem);
-            }, DispatcherPriority.Send);
+            }, DispatcherPriority.Normal);
 
             // 实时预览开启时，延迟500ms
             if (IsRealTimePreviewEnabled)
@@ -367,7 +367,7 @@ namespace CVWPFCamImageCtrl
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 imageItem.Status = "Loaded";
-            }, DispatcherPriority.Send);
+            }, DispatcherPriority.Normal);
         }
         /// <summary>
         /// 核心方法：自动选中最新添加的图片项
