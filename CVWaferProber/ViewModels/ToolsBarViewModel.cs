@@ -89,6 +89,12 @@ namespace CVWaferProber.ViewModels
                     Config.CameraPosition = "e";
                     logger.Info("Machine position Out of position");
                 }
+                else if (ProberClientService.Instance.ProberClient.IsMoving)
+                {
+                    Config.CameraPosition = "Axismoving";
+                   
+                    logger.Info("Axis Moving");
+                }
             };
 
             _mainVM = mainVM;
