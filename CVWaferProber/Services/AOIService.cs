@@ -184,49 +184,6 @@ namespace CVWaferProber.Services
                                 ? ChipStatus.AOI_NG
                                 : ChipStatus.OK);
                     }
-                    //// 确保加载了当前Die的光谱数据
-                    //if (CustomIVLVM != null)
-                    //{
-                    //    // 加载当前die的光谱数据
-                    //    CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
-
-                    //    // 获取最新的Measurement
-                    //    var measurements = CustomIVLVM.Measurements;
-                    //    if (measurements != null && measurements.Count > 0)
-                    //    {
-                    //        // 通常取第一个测量值，如果有多个可能需要选择特定的
-
-                    //        var actualLuminance = measurements[0].Luminance;
-                    //        var LuminanceRecipe = AOIRecipes.Instance.Luminance;
-
-                    //        logger.Info($"Luminance comparison - Min: {LuminanceRecipe.Min}, Max: {LuminanceRecipe.Max}, Actual: {actualLuminance}");
-
-                    //        if (LuminanceRecipe.IsUse)
-                    //        {
-                    //            // 执行阈值比较
-                    //            if (actualLuminance < LuminanceRecipe.Min || actualLuminance > LuminanceRecipe.Max)
-                    //            {
-                    //                var finalStatus = ChipStatus.AOI_NG;
-                    //                dieViewModel.ChangeStatus(finalStatus);
-                    //                logger.Info($"Luminance out of range ({actualLuminance}) -> Setting status to AOI_NG");
-                    //            }
-                    //            else
-                    //            {
-                    //                var finalStatus = ChipStatus.OK;
-                    //                dieViewModel.ChangeStatus(finalStatus);
-                    //                logger.Info($"Luminance within range ({actualLuminance}) -> Setting status to OK");
-                    //            }
-                    //        }
-
-
-                    //        logger.Info($"Actual Luminance for Die {dieViewModel.SerialNumber}: {actualLuminance}");
-                    //    }
-                    //    else
-                    //    {
-                    //        logger.Warn($"No measurements found for Die {dieViewModel.SerialNumber}");
-                    //    }
-                    //}
-                    //else return;
                 });
             }
             catch (Exception ex)
@@ -241,20 +198,6 @@ namespace CVWaferProber.Services
             return finalStatus;
         }
 
-        /// <summary>
-        /// 获取导出目录
-        /// </summary>
-        private string GetExportDirectory()
-        {
-            string baseDirectory = ConfigManager.Config.ExportPathSettings.AoiExportPath;
-            string dateDirectory = DateTime.Now.ToString("yyyyMMdd");
-            string fullPath = Path.Combine(baseDirectory, dateDirectory);
-
-            if (!Directory.Exists(fullPath))
-                Directory.CreateDirectory(fullPath);
-
-            return fullPath;
-        }
 
         public override async Task StartTestingAsync(DieViewModel dieViewModel, WPFlowViewModel selectedWPFlow, bool hasNext, bool tranStatus = true)
         {
@@ -264,67 +207,10 @@ namespace CVWaferProber.Services
             dieViewModel.ChangeStatus(ChipStatus.TESTING);
             ClearResult();
             await RunFlowAsync(selectedWPFlow, dieViewModel, hasNext, tranStatus);
-            // 测试完成后，检查Luminance阈值并更新状态
-            //await CheckLuminanceThresholdAndUpdateStatus(dieViewModel);
         }
 
-        /// <summary>
-        /// 检查Luminance阈值并更新状态
-        /// </summary>
-        //private async Task CheckLuminanceThresholdAndUpdateStatus(DieViewModel dieViewModel)
-        //{
-        //    try
-        //    {
-        //        // 等待一小段时间确保数据加载完成
-        //        await Task.Delay(500);
 
-        //        double? actualLuminance = null;
 
-        //        await Application.Current.Dispatcher.InvokeAsync(() =>
-        //        {
-        //            if (CustomIVLVM != null)
-        //            {
-        //                // 重新加载当前die的光谱数据以确保获取最新值
-        //                CustomIVLVM.LoadSpectrumData(dieViewModel.SerialNumber);
-        //                var measurements = CustomIVLVM.Measurements;
-        //                if (measurements != null && measurements.Count > 0)
-        //                {
-        //                    actualLuminance = measurements[0].Luminance;
-        //                }
-        //            }
-        //        });
-
-        //        if (actualLuminance.HasValue)
-        //        {
-        //            var (minThreshold, maxThreshold) = GetLuminanceThresholds();
-
-        //            if (minThreshold.HasValue && maxThreshold.HasValue)
-        //            {
-        //                if (actualLuminance.Value < minThreshold.Value || actualLuminance.Value > maxThreshold.Value)
-        //                {
-        //                    await Application.Current.Dispatcher.InvokeAsync(() =>
-        //                    {
-        //                        dieViewModel.ChangeStatus(ChipStatus.AOI_NG);
-        //                        logger.Info($"Luminance out of range ({actualLuminance}) -> Updated status to AOI_NG for Die {dieViewModel.SerialNumber}");
-        //                    });
-        //                }
-        //                else
-        //                {
-        //                    await Application.Current.Dispatcher.InvokeAsync(() =>
-        //                    {
-        //                        dieViewModel.ChangeStatus(ChipStatus.OK);
-        //                        logger.Info($"Luminance within range ({actualLuminance}) -> Updated status to OK for Die {dieViewModel.SerialNumber}");
-        //                    });
-        //                }
-        //                // 如果已经在其他地方设置为OK，这里可以保持不变
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        logger.Error($"Failed to check Luminance threshold", ex);
-        //    }
-        //}
         private void ClearResult()
         {
             Application.Current?.Dispatcher?.Invoke(() =>
@@ -339,20 +225,25 @@ namespace CVWaferProber.Services
             var results = AlgResultService.LoadAlgResultByBatchCode(serialNumber);
             if (results != null && results.Count > 0)
             {
+                bool hasError = false;
                 foreach (var result in results)
                 {
                     if (result.ResultCode.HasValue && result.ResultCode.Value != 0)
                     {
+                        hasError = true;
                         var aoi = AlgResultService.GetCommDetailResult(result.Id);
                         if (aoi != null && aoi.Count == 1)
                         {
                             OLED_AOI_Result_E eResult = JsonConvert.DeserializeObject<OLED_AOI_Result_E>(aoi[0].Result);
                             status = ChipStatusTool.GetStatusFromErrCode(eResult.ResultCode);
                             if (logger.IsInfoEnabled) logger.InfoFormat("AOI Result => {0}", status.ToString());
-
                             break;
                         }
                     }
+                }
+                if (!hasError)
+                {
+                    status = ChipStatus.OK;
                 }
             }
             return status;
@@ -368,10 +259,82 @@ namespace CVWaferProber.Services
             else
             {
                 CustomImageVM?.ClearImageResult();
-                // 改为异步执行
-                _ = FlowResultDisplayAsync(dieViewModel);
+                // ✅ 修复：仅加载显示结果，不重新判断状态
+                _ = LoadResultForDisplayAsync(dieViewModel);
             }
         }
+
+        /// <summary>
+        /// 仅加载并显示结果，不修改Die状态（用于用户点击切换Die时）
+        /// </summary>
+        private async Task LoadResultForDisplayAsync(DieViewModel dieViewModel)
+        {
+            try
+            {
+                // 加载 AOI 分析结果（GradeLevel、BlackPattern 等显示字段）
+                await Task.Run(() =>
+                {
+                    var results = AlgResultService.LoadAlgResultByBatchCode(dieViewModel.SerialNumber!);
+                    if (results != null && results.Count > 0)
+                    {
+                        foreach (var result in results)
+                        {
+                            if (result.ImgFile.Contains("w255"))
+                            {
+                                double LuminanceUniformity = SimpleLuminanceUniformity.Calculate(result.ImgFile, 30);
+                                dieViewModel.LuminanceUniformity = LuminanceUniformity;
+                            }
+
+                            AlgorithmResultType resultType = (AlgorithmResultType)result.ImgFileType;
+                            var aoiDetails = AlgResultService.GetCommDetailResult(result.Id);
+                            if (aoiDetails != null && aoiDetails.Count == 1)
+                            {
+                                var resultJson = aoiDetails[0].Result;
+                                if (!string.IsNullOrEmpty(resultJson))
+                                {
+                                    var detailResult = JsonConvert.DeserializeObject<DetailResult_CommFile_V2>(resultJson);
+                                    if (detailResult != null && !string.IsNullOrEmpty(detailResult.ResultFileName) && File.Exists(detailResult.ResultFileName))
+                                    {
+                                        if (result.ImgFileType == -13)
+                                        {
+                                            string gradeStr = File.ReadAllText(detailResult.ResultFileName);
+                                            var gradeResult = JsonConvert.DeserializeObject<FindPixelDefectsForRebuildPicGradingV2>(gradeStr);
+                                            if (gradeResult != null)
+                                            {
+                                                Application.Current.Dispatcher.Invoke(() =>
+                                                {
+                                                    dieViewModel.AOIGradeLevel = gradeResult?.GradeLevel ?? "na";
+                                                });
+                                            }
+                                        }
+                                        if (result.ImgFileType == 49)
+                                        {
+                                            string darkJson = File.ReadAllText(detailResult.ResultFileName);
+                                            var darkResult = JsonConvert.DeserializeObject<DarkResultDto>(darkJson);
+                                            Application.Current.Dispatcher.Invoke(() =>
+                                            {
+                                                dieViewModel.BlackPattern = darkResult?.GradeLevel ?? "na";
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // 仅加载图像用于显示，不修改状态
+                _testCompletedForCurrentDie = true; // 标记为已完成，使用批量加载模式
+                await LoadImageResultAsync(dieViewModel.chipViewModel!.ChipData, dieViewModel.SerialNumber!);
+
+                // ✅ 关键：这里不调用 dieViewModel.ChangeStatus()，保持原有状态不变
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Failed to load result for display: {ex.Message}", ex);
+            }
+        }
+
 
         /// <summary>
         /// 核心：加载AOI测试结果图片
@@ -387,23 +350,9 @@ namespace CVWaferProber.Services
 
             try
             {
-                // 判断是否开启实时预览
-                if (CustomImageVM.IsRealTimePreviewEnabled && !_testCompletedForCurrentDie)
-                {
-                    logger.Info($"Real-time preview enabled, loading images one by one during test for {serialNumber}");
-                    // 并行执行两个加载任务
-                    var analysisTask = LoadAnalysisImagesRealTimeAsync(serialNumber);
-                    var cameraTask = LoadCameraMeasurementsRealTimeAsync(serialNumber);
-
-                    // 等待两个任务完成
-                    await Task.WhenAll(analysisTask, cameraTask);
-                }
-                else
-                {
-                    // 非实时模式：原有批量加载逻辑
-                    await LoadAnalysisImagesAsync(serialNumber);
-                    await LoadCameraMeasurementsAsync(serialNumber);
-                }
+                // 非实时模式：原有批量加载逻辑
+                await LoadAnalysisImagesAsync(serialNumber);
+                await LoadCameraMeasurementsAsync(serialNumber);
 
                 // 加载POI分析数据
                 await Task.Run(() => LoadPoiAnalysisData(serialNumber, chipData));

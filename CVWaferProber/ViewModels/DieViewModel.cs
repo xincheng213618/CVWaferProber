@@ -93,6 +93,7 @@ namespace CVWaferProber.ViewModels
         }
 
         public ChipStatus? Status => chipViewModel?.Status;
+
         public string? DisplayStatus => Status.HasValue ? ChipStatusTool.GetStatusDisplay(Status.Value, IsChinese) : "Unknown";
 
         public DateTime? EndTestTime { get; set; }

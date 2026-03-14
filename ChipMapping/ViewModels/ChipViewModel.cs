@@ -10,7 +10,7 @@ namespace ChipMapping.ViewModels
     public class ChipViewModel : ViewModelBase
     {
         private ChipData? _chipData;
-        public ChipData? ChipData { get => _chipData; private set { _chipData = value; } }
+        public ChipData? ChipData { get => _chipData; set { _chipData = value; } }
         
         private static readonly SolidColorBrush _selectedBrush = new SolidColorBrush(Colors.White);
         private Point _position;
