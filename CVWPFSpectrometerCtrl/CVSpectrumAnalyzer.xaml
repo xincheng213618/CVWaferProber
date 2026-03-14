@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CVWPFSpectrometerCtrl.ViewModels"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ctrl="clr-namespace:CVWPFSpectrometerCtrl"
     xmlns:oxy="http://oxyplot.org/wpf"
     xmlns:wpf="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
     d:Height="720"
@@ -17,6 +18,10 @@
     <UserControl.Resources>
         <con:BooleanToWidthConverter x:Key="BooleanToWidthConverter" />
         <con:BooleanToIndexConverter x:Key="BooleanToIndexConverter" />
+        <!--  为所有 OxyPlot PlotView 添加右键菜单"自适应"功能  -->
+        <Style TargetType="oxy:PlotView">
+            <Setter Property="ctrl:PlotViewAutoFitBehavior.Enabled" Value="True" />
+        </Style>
     </UserControl.Resources>
 
     <!--  外层TabControl：标题固定在底部  -->
