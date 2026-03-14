@@ -617,8 +617,8 @@ namespace ChipMapping.ViewModels
         {
             if (Chips.Count > 0)
             {
-                double maxX = Chips.Max(c => c.Position.X) + 50; // 预留50px边缘空间
-                double maxY = Chips.Max(c => c.Position.Y) + 50;
+                double maxX = Chips.Max(c => c.Position.X) + 10; // 预留50px边缘空间
+                double maxY = Chips.Max(c => c.Position.Y) + 10;
                 CanvasWidth = Math.Max(maxX, _screenWidth);
                 CanvasHeight = Math.Max(maxY, _screenHeight);
             }
