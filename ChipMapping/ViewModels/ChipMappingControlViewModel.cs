@@ -72,6 +72,11 @@ namespace ChipMapping.ViewModels
         public ICommand ZoomOutCommand { get; }
         public ICommand ResetCommand { get; }
 
+        /// <summary>
+        /// 视图请求自适应缩放时触发
+        /// </summary>
+        public event EventHandler? FitToViewRequested;
+
         public ChipMappingControlViewModel()
         {
             // 订阅静态温度事件
@@ -82,7 +87,7 @@ namespace ChipMapping.ViewModels
             RefreshCommand = new RelayCommand(_ => Refresh());
             ZoomInCommand = new RelayCommand(_ => Scale *= 1.1);
             ZoomOutCommand = new RelayCommand(_ => Scale *= 0.9);
-            ResetCommand = new RelayCommand(_ => Scale =1);
+            ResetCommand = new RelayCommand(_ => FitToViewRequested?.Invoke(this, EventArgs.Empty));
 
             _renderTimer = new DispatcherTimer();
             _renderTimer.Interval = TimeSpan.FromMilliseconds(100);
@@ -628,6 +633,8 @@ namespace ChipMapping.ViewModels
             }
             OnPropertyChanged(nameof(CanvasWidth));
             OnPropertyChanged(nameof(CanvasHeight));
+            // 画布大小更新后触发自适应缩放
+            FitToViewRequested?.Invoke(this, EventArgs.Empty);
         }
 
         private void Refresh()
