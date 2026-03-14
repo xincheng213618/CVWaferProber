@@ -260,19 +260,15 @@ namespace ChipMapping.ViewModels
         /// <param name="chipIds">要选中的芯片ID列表</param>
         public void SetSelectedChips(List<uint> chipIds)
         {
-            // 先取消所有选中
+            var selectedSet = new HashSet<uint>(chipIds);
+
+            // 一次遍历完成选中/取消选中，避免重复遍历和O(n*m)查找
             foreach (var chip in Chips)
             {
-                chip.IsSelected = false;
-            }
-
-            // 选中指定ID的芯片
-            foreach (var id in chipIds)
-            {
-                var chip = Chips.FirstOrDefault(c => c.Id == id);
-                if (chip != null)
+                bool shouldBeSelected = chip.Id.HasValue && selectedSet.Contains(chip.Id.Value);
+                if (chip.IsSelected != shouldBeSelected)
                 {
-                    chip.IsSelected = true;
+                    chip.IsSelected = shouldBeSelected;
                 }
             }
 
