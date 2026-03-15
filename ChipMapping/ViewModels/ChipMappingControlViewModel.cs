@@ -218,10 +218,10 @@ namespace ChipMapping.ViewModels
             get => _selectedChip;
             set
             {
-                // 清除之前选中的芯片
+                // 清除之前选中的芯片的焦点状态
                 if (_selectedChip != null && value != _selectedChip)
                 {
-                    _selectedChip.IsSelected = false;
+                    _selectedChip.IsFocused = false;
                 }
                 if (_DisabledInput) { return; }
                 if (SetProperty(ref _selectedChip, value))
@@ -229,7 +229,7 @@ namespace ChipMapping.ViewModels
                     // 设置新选中的芯片
                     if (_selectedChip != null)
                     {
-                        _selectedChip.IsSelected = true;
+                        _selectedChip.IsFocused = true;
                         // 同步行列信息
                         SelectedChipRow = _selectedChip.Row;
                         SelectedChipColumn = _selectedChip.Column;
@@ -260,19 +260,15 @@ namespace ChipMapping.ViewModels
         /// <param name="chipIds">要选中的芯片ID列表</param>
         public void SetSelectedChips(List<uint> chipIds)
         {
-            // 先取消所有选中
+            var selectedSet = new HashSet<uint>(chipIds);
+
+            // 一次遍历完成选中/取消选中，避免重复遍历和O(n*m)查找
             foreach (var chip in Chips)
             {
-                chip.IsSelected = false;
-            }
-
-            // 选中指定ID的芯片
-            foreach (var id in chipIds)
-            {
-                var chip = Chips.FirstOrDefault(c => c.Id == id);
-                if (chip != null)
+                bool shouldBeSelected = chip.Id.HasValue && selectedSet.Contains(chip.Id.Value);
+                if (chip.IsSelected != shouldBeSelected)
                 {
-                    chip.IsSelected = true;
+                    chip.IsSelected = shouldBeSelected;
                 }
             }
 
@@ -291,7 +287,7 @@ namespace ChipMapping.ViewModels
             TemperatureManager.TemperatureChanged -= OnTemperatureChanged;
             if (SelectedChip != null)
             {
-                SelectedChip.IsSelected = false;
+                SelectedChip.IsFocused = false;
             }
             SelectedChip = null;
         }
@@ -351,7 +347,7 @@ namespace ChipMapping.ViewModels
         {
             if (SelectedChip != null)
             {
-                SelectedChip.IsSelected = false;
+                SelectedChip.IsFocused = false;
             }
             foreach (var chip in Chips)
             {
@@ -621,8 +617,8 @@ namespace ChipMapping.ViewModels
         {
             if (Chips.Count > 0)
             {
-                double maxX = Chips.Max(c => c.Position.X) + 50; // 预留50px边缘空间
-                double maxY = Chips.Max(c => c.Position.Y) + 50;
+                double maxX = Chips.Max(c => c.Position.X) + 10; // 预留50px边缘空间
+                double maxY = Chips.Max(c => c.Position.Y) + 10;
                 CanvasWidth = Math.Max(maxX, _screenWidth);
                 CanvasHeight = Math.Max(maxY, _screenHeight);
             }
