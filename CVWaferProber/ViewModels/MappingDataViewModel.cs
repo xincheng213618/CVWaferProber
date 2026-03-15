@@ -968,21 +968,25 @@ namespace CVWaferProber.ViewModels
 
         private void OnSelectedChanged(object? value)
         {
-            if (value is DieViewModel die && selfClick)
+            if (value is DieViewModel die)
             {
-                DebounceTimer.AddOrResetTimer("UpdateSelectedChipCount", 30, () =>
+                if (selfClick)
                 {
-                    Application.Current.Dispatcher.Invoke(() =>
+                    DebounceTimer.AddOrResetTimer("UpdateSelectedChipCount", 30, () =>
                     {
-                        CustomMappingVM?.UpdateSelectedChipCount();
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            CustomMappingVM?.UpdateSelectedChipCount();
+                        });
                     });
-                });
+                }
+                else
+                {
+                    selfClick = true;
+                }
+
                 MainService.Instance.ResultDisplay(die);
                 CalculateYieldBySerialNumber();
-            }
-            else
-            {
-                selfClick = true;
             }
         }
 
