@@ -112,7 +112,7 @@ namespace ChipMapping.ViewModels
             StatusTips.Add(new StatusTip
             {
                 Status = ChipStatus.WAITING,
-                Color = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0xFF)), // 蓝
+                Color = new SolidColorBrush(System.Windows.Media.Color.FromArgb(150, 0, 0, 0xFF)), // 蓝
                 Description = (string)Application.Current.FindResource("StatusPanel.WAITING")
             });
 
