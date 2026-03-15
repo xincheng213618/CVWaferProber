@@ -15,6 +15,10 @@ namespace ChipMapping.Converters
         {
             if (values.Length >= 3 && values[0] is bool isFocused && values[1] is bool isSelected && values[2] is ChipStatus status)
             {
+                if (status >= ChipStatus.TESTING)
+                {
+                    return ChipStatusTool.GetStatusBrush(status);
+                }
                 if (isFocused)
                     return _focusedBrush;
                 if (isSelected)
