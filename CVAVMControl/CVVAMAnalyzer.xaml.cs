@@ -58,8 +58,7 @@ namespace CVAVMControl
         private ExportDataType displayChannel1 = ExportDataType.Y;
         private int displayRadius = 40; // Default display radius angle
                                         // CVVAMAnalyzer.cs 中新增定时器
-        private DispatcherTimer? _resourceCleanTimer;
-        // 移除动态位置相关变量，新增固定面板配置
+
         private bool _isHovering = false; // 仅标记是否悬浮，不跟踪坐标
         private readonly object _lockObj = new object(); // 线程锁，避免并发更新
 
@@ -243,41 +242,14 @@ namespace CVAVMControl
             txtLinePolarInterval.TextChanged += (s, e) => UpdateLinePolarIntervalText();
             txtAzimuthInterval.TextChanged += (s, e) => UpdateAzimuthIntervalText();
 
-            // 初始化悬浮信息面板（样式匹配目标图）
-            // 初始化定时器：5分钟未使用VAM则释放资源
-            _resourceCleanTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromMinutes(20)
-            };
-            _resourceCleanTimer.Tick += (s, e) =>
-            {
-                if (!IsVisible) // 面板隐藏且5分钟未使用
-                {
-                    ResetDataWithoutDispose();
-                    _resourceCleanTimer.Stop();
-                }
-            };
             InitializeEvents();
-            this.IsVisibleChanged += OnCVVAMAnalyzerVisibleChanged;
+
             //this.Unloaded += CVVAMAnalyzer_Unloaded;
             // 新增：初始化DllAllCircleData字典
             DllAllCircleData = new Dictionary<(int polar, double azimuth), RgbSample>();
         }
-        /// <summary>
-        /// 当控件可见性发生变化时触发
-        /// </summary>
-        private void OnCVVAMAnalyzerVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            // 当控件变为可见时，重新设置图表的Autoscale
-            if (IsVisible)
-            {
-                // 延迟一小段时间确保UI已完全加载
-                Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    ResetChartScales();
-                }), DispatcherPriority.Render);
-            }
-        }
+
+
         /// <summary>
         /// 重置图表缩放为AutoScale
         /// </summary>
@@ -298,8 +270,6 @@ namespace CVAVMControl
                     wpfPlotRCircle.Plot.Axes.AutoScale();
                     wpfPlotRCircle.Refresh();
                 }
-
-                //logger.Info("图表已重置为AutoScale");
             }
             catch (Exception ex)
             {
@@ -310,19 +280,9 @@ namespace CVAVMControl
         {
             this.EventAggregator = eventAggregator == null ? CVWPEventAggregatorInstance.Instance : eventAggregator;
             this.EventAggregator.Subscribe<VAMFlowCompletedEvent>(OnFlowCompleted);
-            //this.EventAggregator.Subscribe<VAMFlowStartingEvent>(OnFlowStarting);
             this.EventAggregator.Subscribe<VAMResultGUIClearEvent>(OnResultGUIClear);
-            //订阅自动导出CSV事件
-            //this.EventAggregator.Subscribe<VAMAutoExportCsvEvent>(OnAutoExportCsv);
         }
 
-
-        // 表格的导出模型（角度+多采样点值）
-        private class VamMatrixExportModel
-        {
-            public double Angle { get; set; } // B列：角度
-            public List<double> AllSampleValues { get; set; } = new List<double>(); // C~N列：该角度的所有采样点值
-        }
 
         private void OnFlowCompleted(VAMFlowCompletedEvent @event)
         {
@@ -947,29 +907,12 @@ namespace CVAVMControl
 
             double r2 = imageActualRadius * imageActualRadius;
 
-            //for (int i = 0; i < mat8U.Cols; i++)
-            //{
-            //    for (int j = 0; j < mat8U.Rows; j++)
-            //    {
-            //        if ((Math.Pow(i- imageActualRadius,2)+Math.Pow(j- imageActualRadius,2))> r2)
-            //        {
-            //            mat8U.At<char>(i, j) = (char)0;
-            //        }
-            //    }
-            //}
-
-
             Cv2.ApplyColorMap(mat8U, colorMat, ColormapTypes.Jet);
             normalizedMat.Dispose();
             mat8U.Dispose();
 
-            // ========== 基础参数（核心修改：动态计算图像实际有效半径） ==========
-            OpenCvSharp.Point centerPoint = new OpenCvSharp.Point(
-                colorMat.Width / 2,  // 图像中心X（动态取图像宽度的一半）
-                colorMat.Height / 2  // 图像中心Y（动态取图像高度的一半）
-            );
-            // 动态计算“图像实际有效半径”：取图像宽/高的较小值的一半（确保圆环在图像内）
-            // 动态计算“角度系数”：让最大圆环的半径刚好等于图像实际有效半径
+            OpenCvSharp.Point centerPoint = new OpenCvSharp.Point( colorMat.Width / 2,   colorMat.Height / 2  );
+
             double dynamicConoscopeCoefficient = imageActualRadius / MaxAngle;
 
 
@@ -1241,16 +1184,6 @@ namespace CVAVMControl
             wpfPlotDiameterLine.Refresh();
         }
 
-        private List<System.Windows.Point> BuildDataPoint(double[] positions, double[] values)
-        {
-            var result = new List<System.Windows.Point>();
-            for (int i = 0; i < positions.Length; i++)
-            {
-                result.Add(new System.Windows.Point(positions[i], values[i]));
-            }
-            return result;
-        }
-
         string DC = (string)Application.Current.FindResource("Plot.Title.DiameterLine");
         string RC = (string)Application.Current.FindResource("VAM.RCircle");
         string CDC = (string)Application.Current.FindResource("VAM.CircumferentialDistributionCurve");
@@ -1446,35 +1379,7 @@ namespace CVAVMControl
 
             imgDisplay.Source = null;
         }
-        /// <summary>
-        /// 公开方法：强制刷新图表缩放
-        /// </summary>
-        public void RefreshChartsAutoScale()
-        {
-            if (!IsVisible) return;
 
-            try
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    ResetChartScales();
-                });
-            }
-            catch (Exception ex)
-            {
-                logger.Error("Failed to refresh chart AutoScale", ex);
-            }
-        }
-        public void UpdateVAMParams(double maxAngle, double conoscopeCoefficient)
-        {
-            // 更新VAM的核心参数（与坐标/角度映射逻辑强相关）
-            this.MaxAngle = maxAngle;
-            this.ConoscopeCoefficient = conoscopeCoefficient;
-
-            // 参数更新后可同步刷新显示（若需要）
-            this.displayAngle = 120; // 重置默认显示角度（根据业务需求调整）
-            this.displayRadius = 40; // 重置默认显示半径
-        }
         private void ExtractPixelValues(int ix, int iy, out double X, out double Y, out double Z)
         {
             X = Y = Z = 0;
@@ -1485,13 +1390,6 @@ namespace CVAVMControl
                 Y = YMat.At<float>(iy, ix);
             if (ZMat != null && !ZMat.Empty() && ix < ZMat.Width && iy < ZMat.Height)
                 Z = ZMat.At<float>(iy, ix);
-
-            //if (XMat != null)
-            //    X = XMat.At<float>(iy, ix);
-            //if (YMat != null)
-            //    Y = YMat.At<float>(iy, ix);
-            //if (ZMat != null)
-            //    Z = ZMat.At<float>(iy, ix);
         }
 
 
@@ -1505,17 +1403,6 @@ namespace CVAVMControl
                 _ => 0
             };
         }
-        private double GetChannelValue(VamSamplePoint sample, ExportChannel channel)
-        {
-            return channel switch
-            {
-                ExportChannel.X => sample.X,
-                ExportChannel.Y => sample.Y,
-                ExportChannel.Z => sample.Z,
-                _ => 0
-            };
-        }
-
 
         private void BtnExportDiameter_Click1(object sender, RoutedEventArgs e)
         {
@@ -1577,9 +1464,6 @@ namespace CVAVMControl
             }
         }
 
-        /// <summary>
-        /// 导出DLL返回的单个角度数据到CSV
-        /// </summary>
         /// <summary>
         /// 导出单个角度的DLL数据（目标表格格式）
         /// </summary>
@@ -2311,434 +2195,6 @@ namespace CVAVMControl
             }
         }
 
-        /// <summary>
-        /// 批量调用DLL获取所有极角+方位角的圆环全量数据（对齐CallVamDllForAllAzimuth）
-        /// </summary>
-        /// <param name="polarStart">极角起始值</param>
-        /// <param name="polarEnd">极角结束值</param>
-        /// <param name="polarStep">极角间隔</param>
-        /// <param name="azimuthSampleCount">方位角采样点数</param>
-        /// <returns>是否调用成功</returns>
-        //public bool CallVamDllForAllCircle(int polarStart, int polarEnd, int polarStep, int azimuthSampleCount)
-        //{
-        //    // 初始化返回状态
-        //    bool isSuccess = false;
-
-        //    try
-        //    {
-        //        // 步骤1：基础校验（同直径线批量调用逻辑）
-        //        if (!IsMatSafe(XMat) || !IsMatSafe(YMat) || !IsMatSafe(ZMat) || center.X == 0 || center.Y == 0)
-        //        {
-        //            logger.Error($"{FindResource("Datanotloadedorimagecenternotinitialized")}");
-        //            return false;
-        //        }
-
-        //        // 步骤2：极角参数合法性校验
-        //        if (polarStep <= 0)
-        //        {
-        //            logger.Error($"{FindResource("Thepolarangleintervalmustbepositiveinteger")}");
-        //            // 在UI线程显示消息框
-        //            Application.Current.Dispatcher.Invoke(() =>
-        //            {
-        //                MessageBox.Show($"{FindResource("Thepolarangleintervalmustbepositiveinteger")}",
-        //                    $"{FindResource("Parametererror")}", MessageBoxButton.OK, MessageBoxImage.Warning);
-        //            });
-        //            return false;
-        //        }
-        //        if (azimuthSampleCount <= 0)
-        //        {
-        //            logger.Error($"{FindResource("Azimuthsamplingpointsmustbepositiveinteger")}");
-        //            // 在UI线程显示消息框
-        //            Application.Current.Dispatcher.Invoke(() =>
-        //            {
-        //                MessageBox.Show($"{FindResource("Azimuthsamplingpointsmustbepositiveinteger")}",
-        //                    $"{FindResource("Parametererror")}", MessageBoxButton.OK, MessageBoxImage.Warning);
-        //            });
-        //            return false;
-        //        }
-        //        // 极角范围限制（-60°~60°，符合VAM业务规则）
-        //        polarStart = Math.Clamp(polarStart, -60, 60);
-        //        polarEnd = Math.Clamp(polarEnd, -60, 60);
-
-        //        // 步骤3：获取图像基础参数（复用已有逻辑）
-        //        int imgWidth = YMat.Width;
-        //        int imgHeight = YMat.Height;
-        //        int bpp = YMat.Depth() switch
-        //        {
-        //            MatType.CV_8U => 8,
-        //            MatType.CV_16U => 16,
-        //            MatType.CV_32F => 32,
-        //            _ => 16
-        //        };
-
-        //        // 步骤4：校验XYZ数据
-        //        if (dataXyz == null)
-        //        {
-        //            logger.Error($"{FindResource("XYZImagedataisempty")}");
-        //            return false;
-        //        }
-
-        //        // 步骤5：构建ImageData入参（复用已有逻辑）
-        //        ImageData xyzImageData = new ImageData
-        //        {
-        //            _w = imgWidth,
-        //            _h = imgHeight,
-        //            _bpp = bpp,
-        //            _channels = 3,
-        //            data = dataXyz
-        //        };
-        //        ImageData bgrImageData = new ImageData
-        //        {
-        //            _w = imgWidth,
-        //            _h = imgHeight,
-        //            _bpp = bpp,
-        //            _channels = 3,
-        //            data = null // 无BGR数据时传null
-        //        };
-
-        //        // 步骤6：初始化/清空缓存字典
-        //        if (DllAllCircleData == null)
-        //        {
-        //            DllAllCircleData = new Dictionary<(int polar, double azimuth), RgbSample>();
-        //        }
-        //        // 在UI线程清空数据
-        //        Application.Current.Dispatcher.Invoke(() =>
-        //        {
-        //            DllAllCircleData.Clear();
-        //        });
-
-        //        // 步骤7：遍历极角范围（支持正负极角）
-        //        int polarAngle = polarStart;
-        //        while (polarAngle <= polarEnd)
-        //        {
-        //            // 步骤7.1：遍历方位角（按采样点数均分0~360°）
-        //            double azimuthStep = 360.0 / azimuthSampleCount;
-        //            for (int i = 0; i < azimuthSampleCount; i++)
-        //            {
-        //                double currentAzimuth = i * azimuthStep; // 0°, 1°, 2°...359°
-
-        //                // 注意：需要在UI线程中获取txtLinePolarRHO的值
-        //                int polarRHO = 60; // 默认值
-        //                int _pointNumLine = 360; // 默认值
-
-        //                // 在UI线程中获取界面控件的值
-        //                Application.Current.Dispatcher.Invoke(() =>
-        //                {
-        //                    // 先获取极角范围
-        //                    polarRHO = int.TryParse(txtLinePolarRHO.Text.Trim(), out int rho) ? rho : 60;
-        //                    // 由间隔角度计算采样点数
-        //                    _pointNumLine = (int)(Math.Abs(2 * polarRHO) / _linePolarInterval) + 1;
-        //                });
-
-        //                // 步骤7.2：构建R圆模式的JSON参数（适配DLL要求）
-        //                string circleJson = JsonConvert.SerializeObject(new
-        //                {
-        //                    debugCfg = new
-        //                    {
-        //                        Debug = false,
-        //                        debugPath = "Result\\",
-        //                        debugImgResize = 2
-        //                    },
-        //                    azimuthalAngle = currentAzimuth, // 方位角（0~360°）
-        //                    polar_RHO = polarAngle,          // 极角（当前遍历的半径角度）
-        //                    polar_Angle = 60.0,              // 固定60°（VAM业务默认值）
-        //                    pixelToAngle = ConoscopeCoefficient,
-        //                    pointNumLine = _pointNumLine,    // 全局采样点配置
-        //                    pointNumCircle = azimuthSampleCount, // 方位角采样点数
-        //                    center = new { x = center.X, y = center.Y },
-        //                    displayChannel = displayChannel.ToString() // 当前选中通道
-        //                });
-
-        //                // 步骤7.3：调用DLL封装方法
-        //                string resultJson;
-        //                ImageData showImage;
-        //                CV_AliResType callResult = CallCV_Ali_calcVam(
-        //                    bgrImageData,
-        //                    xyzImageData,
-        //                    circleJson,
-        //                    out resultJson,
-        //                    out showImage
-        //                );
-
-        //                // 步骤7.4：清理showImage内存（避免泄漏）
-        //                if (showImage.data != null)
-        //                {
-        //                    Array.Clear(showImage.data, 0, showImage.data.Length);
-        //                    showImage.data = null;
-        //                }
-
-        //                // 步骤7.5：处理DLL返回结果
-        //                if (callResult != CV_AliResType.SUCCESS && callResult != CV_AliResType.PART_SUCCESS)
-        //                {
-        //                    logger.Warn($"{$"{FindResource("VAM.RCircle")}"}{polarAngle}° {$"{FindResource("Azimuth")}"}{currentAzimuth:F1}° DLL{$"{FindResource("Callfailed")}"}");
-        //                    continue;
-        //                }
-
-        //                // 步骤7.6：解析JSON结果
-        //                string cleanResultJson = resultJson.Trim('\0').Trim();
-        //                if (string.IsNullOrEmpty(cleanResultJson))
-        //                {
-        //                    logger.Warn($"{$"{FindResource("VAM.RCircle")}"}{polarAngle}°  {$"{FindResource("Azimuth")}"}{currentAzimuth:F1}° {$"{FindResource("nullJSON")}"}");
-        //                    continue;
-        //                }
-
-        //                // 步骤7.7：反序列化结果并存入缓存
-        //                try
-        //                {
-        //                    VamResultRoot vamResult = JsonConvert.DeserializeObject<VamResultRoot>(cleanResultJson);
-        //                    if (vamResult?.result?.circle?.Data != null && vamResult.result.circle.Data.Count > 0)
-        //                    {
-        //                        // 找到当前方位角对应的采样点
-        //                        var targetSample = vamResult.result.circle.Data
-        //                            .FirstOrDefault(p => Math.Abs(p.position - currentAzimuth) < 0.1); // 误差允许0.1°
-
-        //                        if (targetSample != null)
-        //                        {
-        //                            // 转换为RgbSample格式存入缓存
-        //                            var rgbSample = new RgbSample
-        //                            {
-        //                                Position = currentAzimuth,
-        //                                X = targetSample.X,
-        //                                Y = targetSample.Y,
-        //                                Z = targetSample.Z
-        //                            };
-
-        //                            // 在UI线程更新字典
-        //                            Application.Current.Dispatcher.Invoke(() =>
-        //                            {
-        //                                DllAllCircleData.Add((polarAngle, currentAzimuth), rgbSample);
-        //                            });
-        //                            isSuccess = true; // 有有效数据则标记成功
-        //                        }
-        //                    }
-        //                }
-        //                catch (JsonException ex)
-        //                {
-        //                    logger.Error($"{$"{FindResource("VAM.RCircle")}"}{polarAngle}° {$"{FindResource("Azimuth")}"}{currentAzimuth:F1}° {$"{FindResource("JSONEX")}"}", ex);
-        //                    continue;
-        //                }
-        //            }
-
-        //            // 步骤7.8：步进极角
-        //            polarAngle += polarStep;
-        //        }
-
-        //        // 步骤8：日志输出统计信息
-        //        logger.Info($"Execution completed - Angular range[{polarStart}~{polarEnd}]° interval{polarStep}° | Azimuth sampling {azimuthSampleCount}points | Valid data{DllAllCircleData.Count}items");
-
-        //        // 步骤9：空数据兜底提示
-        //        if (!isSuccess)
-        //        {
-        //            Application.Current.Dispatcher.Invoke(() =>
-        //            {
-        //                MessageBox.Show($"{FindResource("nullRdata")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
-        //            });
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        logger.Error($"{FindResource("Executionexception")}", ex);
-        //        Application.Current.Dispatcher.Invoke(() =>
-        //        {
-        //            MessageBox.Show($"{FindResource("Failedtobatchfetchringdata")}：{ex.Message}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Error);
-        //        });
-        //        isSuccess = false;
-        //    }
-
-        //    return isSuccess;
-        //    //// 初始化返回状态
-        //    //bool isSuccess = false;
-
-        //    //try
-        //    //{
-        //    //    // 步骤1：基础校验（同直径线批量调用逻辑）
-        //    //    if (!IsMatSafe(XMat) || !IsMatSafe(YMat) || !IsMatSafe(ZMat) || center.X == 0 || center.Y == 0)
-        //    //    {
-        //    //        logger.Error($"{FindResource("Datanotloadedorimagecenternotinitialized")}");
-        //    //        return false;
-        //    //    }
-
-        //    //    // 步骤2：极角参数合法性校验
-        //    //    if (polarStep <= 0)
-        //    //    {
-        //    //        logger.Error($"{FindResource("Thepolarangleintervalmustbepositiveinteger")}");
-        //    //        MessageBox.Show($"{FindResource("Thepolarangleintervalmustbepositiveinteger")}", $"{FindResource("Parametererror")}", MessageBoxButton.OK, MessageBoxImage.Warning);
-        //    //        return false;
-        //    //    }
-        //    //    if (azimuthSampleCount <= 0)
-        //    //    {
-        //    //        logger.Error($"{FindResource("Azimuthsamplingpointsmustbepositiveinteger")}");
-        //    //        MessageBox.Show($"{FindResource("Azimuthsamplingpointsmustbepositiveinteger")}", $"{FindResource("Parametererror")}", MessageBoxButton.OK, MessageBoxImage.Warning);
-        //    //        return false;
-        //    //    }
-        //    //    // 极角范围限制（-60°~60°，符合VAM业务规则）
-        //    //    polarStart = Math.Clamp(polarStart, -60, 60);
-        //    //    polarEnd = Math.Clamp(polarEnd, -60, 60);
-
-        //    //    // 步骤3：获取图像基础参数（复用已有逻辑）
-        //    //    int imgWidth = YMat.Width;
-        //    //    int imgHeight = YMat.Height;
-        //    //    int bpp = YMat.Depth() switch
-        //    //    {
-        //    //        MatType.CV_8U => 8,
-        //    //        MatType.CV_16U => 16,
-        //    //        MatType.CV_32F => 32,
-        //    //        _ => 16
-        //    //    };
-
-        //    //    // 步骤4：校验XYZ数据
-        //    //    if (dataXyz == null)
-        //    //    {
-        //    //        logger.Error($"{FindResource("XYZImagedataisempty")}");
-        //    //        return false;
-        //    //    }
-
-        //    //    // 步骤5：构建ImageData入参（复用已有逻辑）
-        //    //    ImageData xyzImageData = new ImageData
-        //    //    {
-        //    //        _w = imgWidth,
-        //    //        _h = imgHeight,
-        //    //        _bpp = bpp,
-        //    //        _channels = 3,
-        //    //        data = dataXyz
-        //    //    };
-        //    //    ImageData bgrImageData = new ImageData
-        //    //    {
-        //    //        _w = imgWidth,
-        //    //        _h = imgHeight,
-        //    //        _bpp = bpp,
-        //    //        _channels = 3,
-        //    //        data = null // 无BGR数据时传null
-        //    //    };
-
-        //    //    // 步骤6：初始化/清空缓存字典
-        //    //    if (DllAllCircleData == null)
-        //    //    {
-        //    //        DllAllCircleData = new Dictionary<(int polar, double azimuth), RgbSample>();
-        //    //    }
-        //    //    DllAllCircleData.Clear();
-
-        //    //    // 步骤7：遍历极角范围（支持正负极角）
-        //    //    int polarAngle = polarStart;
-        //    //    while (polarAngle <= polarEnd)
-        //    //    {
-        //    //        // 步骤7.1：遍历方位角（按采样点数均分0~360°）
-        //    //        double azimuthStep = 360.0 / azimuthSampleCount;
-        //    //        for (int i = 0; i < azimuthSampleCount; i++)
-        //    //        {
-        //    //            double currentAzimuth = i * azimuthStep; // 0°, 1°, 2°...359°
-        //    //                                                     // 先获取极角范围
-        //    //            int polarRHO = int.TryParse(txtLinePolarRHO.Text.Trim(), out int rho) ? rho : 60;
-        //    //            // 由间隔角度计算采样点数
-        //    //            int _pointNumLine = (int)(Math.Abs(2 * polarRHO) / _linePolarInterval) + 1;
-        //    //            // 步骤7.2：构建R圆模式的JSON参数（适配DLL要求）
-        //    //            string circleJson = JsonConvert.SerializeObject(new
-        //    //            {
-        //    //                debugCfg = new
-        //    //                {
-        //    //                    Debug = false,
-        //    //                    debugPath = "Result\\",
-        //    //                    debugImgResize = 2
-        //    //                },
-        //    //                azimuthalAngle = currentAzimuth, // 方位角（0~360°）
-        //    //                polar_RHO = polarAngle,          // 极角（当前遍历的半径角度）
-        //    //                polar_Angle = 60.0,              // 固定60°（VAM业务默认值）
-        //    //                pixelToAngle = ConoscopeCoefficient,
-        //    //                pointNumLine = _pointNumLine,    // 全局采样点配置
-        //    //                pointNumCircle = azimuthSampleCount, // 方位角采样点数
-        //    //                center = new { x = center.X, y = center.Y },
-        //    //                displayChannel = displayChannel.ToString() // 当前选中通道
-        //    //            });
-
-        //    //            // 步骤7.3：调用DLL封装方法
-        //    //            string resultJson;
-        //    //            ImageData showImage;
-        //    //            CV_AliResType callResult = CallCV_Ali_calcVam(
-        //    //                bgrImageData,
-        //    //                xyzImageData,
-        //    //                circleJson,
-        //    //                out resultJson,
-        //    //                out showImage
-        //    //            );
-
-        //    //            // 步骤7.4：清理showImage内存（避免泄漏）
-        //    //            if (showImage.data != null)
-        //    //            {
-        //    //                Array.Clear(showImage.data, 0, showImage.data.Length);
-        //    //                showImage.data = null;
-        //    //            }
-
-        //    //            // 步骤7.5：处理DLL返回结果
-        //    //            if (callResult != CV_AliResType.SUCCESS && callResult != CV_AliResType.PART_SUCCESS)
-        //    //            {
-        //    //                logger.Warn($"{$"{FindResource("VAM.RCircle")}"}{polarAngle}° {$"{FindResource("Azimuth")}"}{currentAzimuth:F1}° DLL{$"{FindResource("Callfailed")}"}");
-        //    //                continue;
-        //    //            } //，{ $"{FindResource("Errorcode")}"}：{ callResult}
-
-        //    //            // 步骤7.6：解析JSON结果
-        //    //            string cleanResultJson = resultJson.Trim('\0').Trim();
-        //    //            if (string.IsNullOrEmpty(cleanResultJson))
-        //    //            {
-        //    //                logger.Warn($"{$"{FindResource("VAM.RCircle")}"}{polarAngle}°  {$"{FindResource("Azimuth")}"}{currentAzimuth:F1}° {$"{FindResource("nullJSON")}"}");
-        //    //                continue;
-        //    //            }
-
-        //    //            // 步骤7.7：反序列化结果并存入缓存
-        //    //            try
-        //    //            {
-        //    //                VamResultRoot vamResult = JsonConvert.DeserializeObject<VamResultRoot>(cleanResultJson);
-        //    //                if (vamResult?.result?.circle?.Data != null && vamResult.result.circle.Data.Count > 0)
-        //    //                {
-        //    //                    // 找到当前方位角对应的采样点
-        //    //                    var targetSample = vamResult.result.circle.Data
-        //    //                        .FirstOrDefault(p => Math.Abs(p.position - currentAzimuth) < 0.1); // 误差允许0.1°
-
-        //    //                    if (targetSample != null)
-        //    //                    {
-        //    //                        // 转换为RgbSample格式存入缓存
-        //    //                        var rgbSample = new RgbSample
-        //    //                        {
-        //    //                            Position = currentAzimuth,
-        //    //                            X = targetSample.X,
-        //    //                            Y = targetSample.Y,
-        //    //                            Z = targetSample.Z
-        //    //                        };
-        //    //                        DllAllCircleData.Add((polarAngle, currentAzimuth), rgbSample);
-        //    //                        isSuccess = true; // 有有效数据则标记成功
-        //    //                    }
-        //    //                }
-        //    //            }
-        //    //            catch (JsonException ex)
-        //    //            {
-        //    //                logger.Error($"{$"{FindResource("VAM.RCircle")}"}{polarAngle}° {$"{FindResource("Azimuth")}"}{currentAzimuth:F1}° {$"{FindResource("JSONEX")}"}", ex);
-        //    //                continue;
-        //    //            }
-        //    //        }
-
-        //    //        // 步骤7.8：步进极角
-        //    //        polarAngle += polarStep;
-        //    //    }
-
-        //    //    // 步骤8：日志输出统计信息
-        //    //    logger.Info($"Execution completed - Angular range[{polarStart}~{polarEnd}]° interval{polarStep}° | Azimuth sampling {azimuthSampleCount}points | Valid data{DllAllCircleData.Count}items");
-
-
-        //    //    // 步骤9：空数据兜底提示
-        //    //    if (!isSuccess)
-        //    //    {
-        //    //        MessageBox.Show($"{FindResource("nullRdata")}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Information);
-        //    //    }
-        //    //}
-        //    //catch (Exception ex)
-        //    //{
-        //    //    logger.Error($"{FindResource("Executionexception")}", ex);
-        //    //    MessageBox.Show($"{FindResource("Failedtobatchfetchringdata")}：{ex.Message}", $"{FindResource("Prompt")}", MessageBoxButton.OK, MessageBoxImage.Error);
-        //    //    isSuccess = false;
-        //    //}
-
-        //    //return isSuccess;
-        //}
-
         public async Task<bool> CallVamDllForAllCircleAsync(int polarStart, int polarEnd, int polarStep, int azimuthSampleCount, Action<int> onProgressUpdate = null)
         {
             // 初始化返回状态
@@ -3174,19 +2630,6 @@ namespace CVAVMControl
         }
         #endregion
 
-        #region
-
-        // 辅助方法：读取单个像素的字节数组（适配不同Mat类型）
-        private byte[] GetPixelBytes(Mat mat, int x, int y)
-        {
-            int elementSize = mat.ElemSize1();
-            byte[] bytes = new byte[elementSize];
-            IntPtr pixelPtr = mat.Ptr(y, x); // 获取单个像素的指针
-            Marshal.Copy(pixelPtr, bytes, 0, elementSize);
-            return bytes;
-        }
-
-        #endregion
         #region 实现图表更新方法（从 DLL 结果刷新）
         /// <summary>
         /// 使用DLL返回的直径线数据更新图表
